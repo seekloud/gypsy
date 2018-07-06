@@ -56,3 +56,4 @@ backend/target/
 frontend/target/
 project/project/
 project/target/
+.idea/
