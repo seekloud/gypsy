@@ -61,6 +61,11 @@ package object snake {
                  )
 
   object Boundary{
+    val w = 3600
+    val h = 1800
+  }
+
+  object Window {
     val w = 1200
     val h = 600
   }
