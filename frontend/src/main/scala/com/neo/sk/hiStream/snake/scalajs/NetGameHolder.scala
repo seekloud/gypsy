@@ -102,7 +102,6 @@ object NetGameHolder extends js.JSApp {
     }
   }
 
-
 //不同步就更新，同步就设置为不同步
   def gameLoop(): Unit = {
     if (wsSetup) {
