@@ -22,7 +22,7 @@ object NetGameHolder extends js.JSApp {
 
 
   val bounds = Point(Boundary.w, Boundary.h)
-  val window = Point(Window.w, Window.h)
+
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -81,6 +81,7 @@ object NetGameHolder extends js.JSApp {
 //每隔一段间隔就执行gameLoop（同步更新）
     dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
   }
+
 //绘制背景
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.Black.toString()
