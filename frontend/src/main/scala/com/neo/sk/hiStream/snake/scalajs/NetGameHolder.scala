@@ -146,7 +146,9 @@ object NetGameHolder extends js.JSApp {
     val foods = data.foodDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     println(s"basePoint${basePoint}")
-    ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
+    val offx = window.x/2 - basePoint._1
+    val offy =window.y/2 - basePoint._2
+    //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
     //println(s"players ${players}")
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
@@ -159,14 +161,14 @@ object NetGameHolder extends js.JSApp {
           //ctx.strokeStyle = MyColors.myHeader
           ctx.fillStyle = MyColors.myHeader
           ctx.beginPath()
-          ctx.arc(cell.x,cell.y,cell.radius,0,2*Math.PI)
+          ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
           ctx.restore()
         } else {
           //        ctx.strokeStyle = MyColors.otherHeader
           ctx.fillStyle = MyColors.otherHeader
           ctx.beginPath()
-          ctx.arc(cell.x,cell.y,cell.radius,0,2*Math.PI)
+          ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
         }
       }
@@ -180,7 +182,7 @@ object NetGameHolder extends js.JSApp {
         case _ => "rgba(120, 131, 140, 1)"
       }
       ctx.beginPath()
-      ctx.arc(x,y,4,0,2*Math.PI)
+      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
     }
 
