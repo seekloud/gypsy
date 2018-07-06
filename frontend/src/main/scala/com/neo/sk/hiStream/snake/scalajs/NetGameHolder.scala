@@ -22,9 +22,7 @@ object NetGameHolder extends js.JSApp {
 
 
   val bounds = Point(Boundary.w, Boundary.h)
-  //绘制格子的大小
-//  val canvasUnit = 10
-//  val canvasBoundary = bounds * canvasUnit
+  val window = Point(Window.w, Window.h)
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -181,8 +179,6 @@ object NetGameHolder extends js.JSApp {
       ctx.fill()
     }
 
-
-
     ctx.fillStyle = "rgb(250, 250, 250)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -196,9 +192,6 @@ object NetGameHolder extends js.JSApp {
         firstCome = false
         val baseLine = 1
         ctx.font = "12px Helvetica"
-//        drawTextLine(s"YOU: id=[${myStar.id}]    name=[${myStar.name.take(32)}]", leftBegin, 0, baseLine)
-//        drawTextLine(s"your kill = ${myStar.kill}", leftBegin, 1, baseLine)
-//        drawTextLine(s"your score = ${myStar.score} ", leftBegin, 2, baseLine)
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 30, 10)
