@@ -1,6 +1,6 @@
-package com.neo.sk.hiStream
+package com.neo.sk.gypsy
 
-import com.neo.sk.hiStream.snake.Protocol
+import com.neo.sk.gypsy.snake.Protocol
 
 /**
   * User: Taoz
@@ -26,8 +26,6 @@ object TmpTest {
 
     val m1 = decode[Protocol.GameMessage](jsonStr)
     println("m1:", m1)
-
-
 
 
   }

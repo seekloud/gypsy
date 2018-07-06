@@ -1,11 +1,11 @@
-package com.neo.sk.hiStream.snake
+package com.neo.sk.gypsy.snake
 
 import java.awt.event.KeyEvent
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.neo.sk.hiStream.snake.Protocol.MousePosition
+import com.neo.sk.gypsy.snake.Protocol.MousePosition
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory

@@ -1,4 +1,4 @@
-package com.neo.sk.hiStream.snake
+package com.neo.sk.gypsy.snake
 
 import org.slf4j.LoggerFactory
 

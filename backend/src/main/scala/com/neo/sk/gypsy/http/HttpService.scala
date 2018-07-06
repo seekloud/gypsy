@@ -1,4 +1,4 @@
-package com.neo.sk.hiStream.http
+package com.neo.sk.gypsy.http
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
@@ -34,7 +34,7 @@ trait HttpService extends SnakeService with ResourceService{
 
 
   val routes =
-    pathPrefix("hiStream") {
+    pathPrefix("gypsy") {
       snakeRoute ~
       netSnakeRoute ~
       resourceRoutes

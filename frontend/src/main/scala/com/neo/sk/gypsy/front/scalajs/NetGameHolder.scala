@@ -1,7 +1,7 @@
-package com.neo.sk.hiStream.snake.scalajs
+package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.hiStream.snake.Protocol.{GridDataSync, MousePosition}
-import com.neo.sk.hiStream.snake._
+import com.neo.sk.gypsy.snake.Protocol.{GridDataSync, MousePosition}
+import com.neo.sk.gypsy.snake._
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _, _}
@@ -357,7 +357,7 @@ object NetGameHolder extends js.JSApp {
 
   def getWebSocketUri(document: Document, nameOfChatParticipant: String): String = {
     val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-    s"$wsProtocol://${dom.document.location.host}/hiStream/netSnake/join?name=$nameOfChatParticipant"
+    s"$wsProtocol://${dom.document.location.host}/gypsy/netSnake/join?name=$nameOfChatParticipant"
   }
 
   def p(msg: String) = {
