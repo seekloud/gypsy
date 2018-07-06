@@ -1,4 +1,4 @@
-package com.neo.sk.hiStream.common
+package com.neo.sk.gypsy.common
 
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory

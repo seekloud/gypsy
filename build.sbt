@@ -8,7 +8,7 @@ val scalaV = "2.12.6"
 val projectName = "gypsy"
 val projectVersion = "1.0.0"
 
-val projectMainClass = "com.neo.sk.hiStream.Boot"
+val projectMainClass = "com.neo.sk.gypsy.Boot"
 
 def commonSettings = Seq(
   version := projectVersion,
@@ -75,9 +75,9 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
     // If you need to specify main classes manually, use packSettings and packMain
     //packSettings,
     // [Optional] Creating `hello` command that calls org.mydomain.Hello#main(Array[String])
-    packMain := Map("hiStream" -> projectMainClass),
-    packJvmOpts := Map("hiStream" -> Seq("-Xmx64m", "-Xms32m")),
-    packExtraClasspath := Map("hiStream" -> Seq("."))
+    packMain := Map("gypsy" -> projectMainClass),
+    packJvmOpts := Map("gypsy" -> Seq("-Xmx64m", "-Xms32m")),
+    packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(
     libraryDependencies ++= Dependencies.backendDependencies

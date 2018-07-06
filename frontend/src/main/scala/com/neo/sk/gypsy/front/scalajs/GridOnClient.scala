@@ -1,6 +1,6 @@
-package com.neo.sk.hiStream.snake.scalajs
+package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.hiStream.snake.{Grid, Point}
+import com.neo.sk.gypsy.snake.{Grid, Point}
 
 /**
   * User: Taoz

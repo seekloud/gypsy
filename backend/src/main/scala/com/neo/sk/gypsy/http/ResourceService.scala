@@ -1,4 +1,4 @@
-package com.neo.sk.hiStream.http
+package com.neo.sk.gypsy.http
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter

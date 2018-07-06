@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaSbtSettings">
+    <option name="customVMPath" />
+    <option name="linkedExternalProjectsSettings">
+      <SbtProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/backend" />
+            <option value="$PROJECT_DIR$/backend/project" />
+            <option value="$PROJECT_DIR$/frontend" />
+            <option value="$PROJECT_DIR$/frontend/project" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/shared" />
+            <option value="$PROJECT_DIR$/shared/.js" />
+            <option value="$PROJECT_DIR$/shared/.js/project" />
+            <option value="$PROJECT_DIR$/shared/.jvm" />
+            <option value="$PROJECT_DIR$/shared/.jvm/project" />
+          </set>
+        </option>
+        <option name="sbtVersion" value="1.1.6" />
+      </SbtProjectSettings>
+    </option>
+  </component>
+</project>

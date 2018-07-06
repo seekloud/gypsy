@@ -1,8 +1,8 @@
-package com.neo.sk.hiStream.snake
+package com.neo.sk.gypsy.snake
 
 import java.awt.event.KeyEvent
 
-import com.neo.sk.hiStream.snake.Protocol.MousePosition
+import com.neo.sk.gypsy.snake.Protocol.MousePosition
 
 import scala.math._
 import scala.util.Random
