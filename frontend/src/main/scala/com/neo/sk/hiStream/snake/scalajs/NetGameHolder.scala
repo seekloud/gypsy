@@ -22,7 +22,7 @@ object NetGameHolder extends js.JSApp {
 
 
   val bounds = Point(Boundary.w, Boundary.h)
-  val window = Point(Window.w, Window.h)
+
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -64,8 +64,8 @@ object NetGameHolder extends js.JSApp {
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
     drawGameOff()
-    canvas.width = window.x
-    canvas.height = window.y
+    canvas.width = bounds.x
+    canvas.height = bounds.y
 
     joinButton.onclick = { (event: MouseEvent) =>
       joinGame(nameField.value)
@@ -90,7 +90,7 @@ object NetGameHolder extends js.JSApp {
 //边框;提示文字
   def drawGameOff(): Unit = {
     ctx.fillStyle = Color.Black.toString()
-    ctx.fillRect(0, 0, window.x , window.y )
+    ctx.fillRect(0, 0, bounds.x , bounds.y )
     ctx.fillStyle = "rgb(250, 250, 250)"
     if (firstCome) {
       ctx.font = "36px Helvetica"
@@ -129,7 +129,6 @@ object NetGameHolder extends js.JSApp {
   }
 
   def drawGrid(uid: Long, data: GridDataSync): Unit = {
-
 //绘制黑色背景
     val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
     if(loop * speed >= 600){
@@ -138,16 +137,13 @@ object NetGameHolder extends js.JSApp {
       loop += 1
     }
     val setoff = loop * speed
-    ctx.drawImage(img,0,setoff - 1800,3600,1800)
-    ctx.drawImage(img,0,setoff,3600,1800)
+    ctx.drawImage(img,0,setoff - 600,1200,600)
+    ctx.drawImage(img,0,setoff,1200,600)
 //蛇头、蛇身、苹果数据
 
     val players = data.playerDetails
     val foods = data.foodDetails
-    val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
-    println(s"basePoint${basePoint}")
-    ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
-    //println(s"players ${players}")
+    println(s"players ${players}")
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
