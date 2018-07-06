@@ -114,7 +114,7 @@ trait Grid {
       //val keyCode = actMap.get(star.id)
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
-          MousePosition(x-6,y-129)
+          MousePosition(x-6-600,y-129-300)
         case _=>
           MousePosition(player.targetX,player.targetY)
       }
@@ -127,7 +127,7 @@ trait Grid {
         var newSpeed = cell.speed
         val newDirection = {
           //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
-          val target = MousePosition(mouseAct.clientX - player.x,mouseAct.clientY-player.y)
+          val target = MousePosition(mouseAct.clientX ,mouseAct.clientY)
           val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
           val deg = atan2(target.clientY,target.clientX)
           val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
