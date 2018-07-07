@@ -43,7 +43,7 @@ trait Grid {
   //食物列表
   var food = Map[Point, Int]()
   //食物池
-  var foodPool = 30
+  var foodPool = 100
   //玩家列表
   var playerMap = Map.empty[Long,Player]
 

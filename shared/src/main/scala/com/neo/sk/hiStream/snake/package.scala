@@ -1,6 +1,6 @@
 package com.neo.sk.hiStream
 
-
+import scala.math._
 
 /**
   * User: Taoz
@@ -56,8 +56,8 @@ package object snake {
   case class Cell(
                  x:Int,
                  y:Int,
-                 mass:Double = 1,
-                 radius:Double = 4,
+                 mass:Double = 10,
+                 radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12
                  )
 

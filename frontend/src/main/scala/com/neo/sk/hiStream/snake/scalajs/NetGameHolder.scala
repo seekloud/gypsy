@@ -43,6 +43,7 @@ object NetGameHolder extends js.JSApp {
   var speed = 2
 
   val watchKeys = Set(
+    KeyCode.E,
     KeyCode.Space,
     KeyCode.Left,
     KeyCode.Up,
@@ -50,9 +51,10 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Down,
     KeyCode.F2
   )
+
   object MyColors {
     val background = "#fff"
-    val stripe = "rgba(181, 181, 181, 0.3)"
+    val stripe = "rgba(181, 181, 181, 0.5)"
     val myHeader = "#cccccc"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
@@ -174,37 +176,39 @@ object NetGameHolder extends js.JSApp {
     players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
-        if (id == uid) {
-          ctx.save()
-          //ctx.strokeStyle = MyColors.myHeader
-          ctx.fillStyle = MyColors.myHeader
+          ctx.fillStyle = color.toInt match{
+            case 0 => "red"
+            case 1 => "orange"
+            case 2  => "yellow"
+            case 3  => "green"
+            case 4  => "blue"
+            case 5  => "purple"
+            case 6  => "black"
+            case _  => "blue"
+          }
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
-          ctx.restore()
-        } else {
-          //        ctx.strokeStyle = MyColors.otherHeader
-          ctx.fillStyle = MyColors.otherHeader
-          ctx.beginPath()
-          ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
-          ctx.fill()
-        }
       }
-
     }
 //为不同分值的苹果填充不同颜色
-    foods.foreach { case Food(score, x, y) =>
-      ctx.fillStyle = score match {
-        case 10 => "rgba(189, 194, 199, 1)"
-        case 5 => "rgba(159, 167, 173, 1)"
-        case _ => "rgba(120, 131, 140, 1)"
+    foods.foreach { case Food(color, x, y) =>
+      ctx.fillStyle = color match{
+        case 0 => "red"
+        case 1 => "orange"
+        case 2  => "yellow"
+        case 3  => "green"
+        case 4  => "blue"
+        case 5  => "purple"
+        case 6  => "black"
+        case _  => "blue"
       }
       ctx.beginPath()
       ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
     }
 
-    ctx.fillStyle = "rgb(250, 250, 250)"
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
 
