@@ -35,7 +35,9 @@ object NetGameHolder extends js.JSApp {
   //长连接状态
   var wsSetup = false
   var justSynced = false
-
+//条纹
+  val stripeX = scala.collection.immutable.Range(0,bounds.y,50)
+  val stripeY = scala.collection.immutable.Range(0,bounds.x,100)
   //背景移动
   var loop = 0
   var speed = 2
@@ -48,8 +50,9 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Down,
     KeyCode.F2
   )
-
   object MyColors {
+    val background = "#fff"
+    val stripe = "rgba(181, 181, 181, 0.3)"
     val myHeader = "#cccccc"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
@@ -129,19 +132,7 @@ object NetGameHolder extends js.JSApp {
   }
 
   def drawGrid(uid: Long, data: GridDataSync): Unit = {
-
-//绘制黑色背景
-    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-    if(loop * speed >= 600){
-      loop = 0
-    }else{
-      loop += 1
-    }
-    val setoff = loop * speed
-    ctx.drawImage(img,0,setoff - 1800,3600,1800)
-    ctx.drawImage(img,0,setoff,3600,1800)
-//蛇头、蛇身、苹果数据
-
+    //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
@@ -150,10 +141,37 @@ object NetGameHolder extends js.JSApp {
     val offy =window.y/2 - basePoint._2
     //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
     //println(s"players ${players}")
+//    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
+//    if(loop * speed >= 600){
+//      loop = 0
+//    }else{
+//      loop += 1
+//    }
+//    val setoff = loop * speed
+//    ctx.drawImage(img,0,setoff - 1800,3600,1800)
+//    ctx.drawImage(img,0,setoff,3600,1800)
+//绘制背景
+    ctx.fillStyle = MyColors.background
+    ctx.fillRect(0,0,window.x,window.y)
+//绘制条纹
+    ctx.strokeStyle = MyColors.stripe
+    stripeX.map{l=>
+      ctx.beginPath()
+      ctx.moveTo(0,l +offy);
+      ctx.lineTo(bounds.x,l +offy);
+      ctx.stroke();
+    }
+    stripeY.map{l=>
+      ctx.beginPath()
+      ctx.moveTo(l +offx,0);
+      ctx.lineTo(l +offx,bounds.y);
+      ctx.stroke();
+    }
+
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,x,y,tx,ty,kill,pro,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
         if (id == uid) {
@@ -330,14 +348,14 @@ object NetGameHolder extends js.JSApp {
           historyRank = history
         case Protocol.FeedApples(foods) =>
           writeToArea(s"food feeded = $foods") //for debug.
-          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.score)
+          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
         case data: Protocol.GridDataSync =>
           //writeToArea(s"grid data got: $msgData")
           //TODO here should be better code.
           grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
           grid.frameCount = data.frameCount
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-          grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.score).toMap
+          grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
 //          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
 //          val gridMap = appleMap ++ starMap
 //          grid.grid = gridMap

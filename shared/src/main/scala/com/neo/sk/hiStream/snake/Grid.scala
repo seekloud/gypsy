@@ -37,9 +37,9 @@ trait Grid {
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
   val coverRate = 0
   var frameCount = 0l
-  //每个网格上的点（Point）对应一种Spot状态（body，header，Apple，Nome）
- // var grid = Map[Point, Spot]()
 
+  //食物质量
+  val foodMass = 1
   //食物列表
   var food = Map[Point, Int]()
   //食物池
@@ -47,7 +47,6 @@ trait Grid {
   //玩家列表
   var playerMap = Map.empty[Long,Player]
 
-  //var stars = Map.empty[Long,StarDt]
   //操作列表  帧数->(用户ID->操作)
   var actionMap = Map.empty[Long, Map[Long, Int]]
 
@@ -161,9 +160,9 @@ trait Grid {
         var newMass = cell.mass
 
         food.foreach{
-          case (p, mass)=>
+          case (p, color)=>
             if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
-              newMass += mass
+              newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
             }
