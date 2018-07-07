@@ -25,7 +25,7 @@ package object snake {
 //  //圆心detail，包括用户id，半径，积分，坐标
 //  case class Cd(id:Long,radius:Double,score:Double,x:Int,y:Int)
 
-  case class Food(score:Int, x:Int, y:Int)
+  case class Food(color:Int, x:Int, y:Int)
 
 
 //网格上的一个点
@@ -44,6 +44,7 @@ package object snake {
   case class Player(
                    id:Long,
                    name:String,
+                   color:String,
                    x:Int,
                    y:Int,
                    targetX:Int = 0,

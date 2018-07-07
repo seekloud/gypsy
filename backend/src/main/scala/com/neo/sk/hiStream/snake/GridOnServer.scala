@@ -2,6 +2,8 @@ package com.neo.sk.hiStream.snake
 
 import org.slf4j.LoggerFactory
 
+import scala.util.Random
+
 /**
   * User: Taoz
   * Date: 9/3/2016
@@ -33,7 +35,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
-      playerMap += id -> Player(id,name,center.x,center.y,0,0,0,true,List(Cell(center.x,center.y)))
+      val color = new Random(System.nanoTime()).nextInt(7)
+      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,List(Cell(center.x,center.y)))
 //      grid += center -> Center(id, 5.0, 0.0)
 //      stars += id -> StarDt(id, name, center)
     }
