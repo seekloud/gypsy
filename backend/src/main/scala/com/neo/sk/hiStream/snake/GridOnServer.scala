@@ -84,14 +84,9 @@ class GridOnServer(override val boundary: Point) extends Grid {
     var appleNeeded = appleCount
     while (appleNeeded > 0) {
       val p = randomEmptyPoint()
-      val score = random.nextDouble() match {
-        case x if x > 0.95 => 10
-        case x if x > 0.8 => 5
-        case x => 1
-      }
-      val f = Food(score,p.x,p.y)
-      feededApples ::= Food(score,p.x,p.y)
-      food += (p->score)
+      val color = random.nextInt(7)
+      feededApples ::= Food(color,p.x,p.y)
+      food += (p->color)
       appleNeeded -= 1
     }
   }
