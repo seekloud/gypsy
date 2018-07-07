@@ -137,6 +137,7 @@ object NetGameHolder extends js.JSApp {
     //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
+    val masses = data.massDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
@@ -207,7 +208,21 @@ object NetGameHolder extends js.JSApp {
       ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
     }
-
+    masses.foreach { case Mass(x,y,_,_,color,mass,r,_) =>
+      ctx.fillStyle = color match{
+        case 0 => "red"
+        case 1 => "orange"
+        case 2  => "yellow"
+        case 3  => "green"
+        case 4  => "blue"
+        case 5  => "purple"
+        case 6  => "black"
+        case _  => "blue"
+      }
+      ctx.beginPath()
+      ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
+      ctx.fill()
+    }
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -360,6 +375,7 @@ object NetGameHolder extends js.JSApp {
           grid.frameCount = data.frameCount
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+          grid.massList = data.massDetails
 //          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
 //          val gridMap = appleMap ++ starMap
 //          grid.grid = gridMap

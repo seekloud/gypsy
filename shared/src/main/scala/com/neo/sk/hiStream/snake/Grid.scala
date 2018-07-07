@@ -2,6 +2,7 @@ package com.neo.sk.hiStream.snake
 
 import java.awt.event.KeyEvent
 
+import com.neo.sk.hiStream.snake
 import com.neo.sk.hiStream.snake.Protocol.MousePosition
 
 import scala.math._
@@ -38,6 +39,7 @@ trait Grid {
   val coverRate = 0
   var frameCount = 0l
 
+
   //食物质量
   val foodMass = 1
   //食物列表
@@ -46,7 +48,10 @@ trait Grid {
   var foodPool = 100
   //玩家列表
   var playerMap = Map.empty[Long,Player]
-
+  //喷出小球列表
+  var massList = List[Mass]()
+  val shotMass = 10
+  val shotSpeed = 40
   //操作列表  帧数->(用户ID->操作)
   var actionMap = Map.empty[Long, Map[Long, Int]]
 
@@ -93,7 +98,29 @@ trait Grid {
   def feedApple(appleCount: Int): Unit
 //食物更新
   private[this] def updateSpots() = {
+//更新喷出小球的位置
+    massList = massList.map{mass=>
+      val deg = Math.atan2(mass.targetY, mass.targetX)
+      val deltaY = mass.speed * Math.sin(deg)
+      val deltaX = mass.speed * Math.cos(deg)
 
+      var newSpeed = mass.speed
+      var newX = mass.x
+      var newY = mass.y
+      newSpeed -= 2
+      if (newSpeed < 0) newSpeed = 0
+      if (!(deltaY).isNaN) newY += deltaY.toInt
+      if (!(deltaX).isNaN) newX += deltaX.toInt
+
+      val borderCalc = mass.radius.ceil.toInt
+
+      if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+      if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+      if (newX < borderCalc) newX = borderCalc
+      if (newY < borderCalc) newY = borderCalc
+
+      mass.copy(x = newX,y = newY,speed = newSpeed)
+    }
     feedApple(foodPool + playerMap.size * 3 - food.size)
   }
 
@@ -116,6 +143,13 @@ trait Grid {
           MousePosition(x-6-600,y-129-300)
         case _=>
           MousePosition(player.targetX,player.targetY)
+      }
+
+      var shot = false
+      val keyAct = actMap.get(player.id) match{
+        case Some(KeyEvent.VK_E)=>
+          shot = true
+        case _ =>
       }
 
       var newKill = player.kill
@@ -167,6 +201,14 @@ trait Grid {
               food -= p
             }
         }
+        massList.foreach{
+          case p:Mass=>
+            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius - p.radius)) {
+              newMass += p.mass
+              newRadius = 4 + sqrt(newMass) * mass2rRate
+              massList = massList.filterNot(l=>l==p)
+            }
+        }
         playerMap.filterNot(_._1 == player.id).foreach{ p=>
           p._2.cells.map{otherCell=>
             if(cell.radius < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * coverRate)){
@@ -177,6 +219,12 @@ trait Grid {
               newKill +=  1
             }
           }
+        }
+
+        if (shot == true && cell.mass > shotMass*2){
+          newMass -= shotMass
+          newRadius = 4 + sqrt(newMass) * 6
+          massList ::= snake.Mass(cell.x,cell.y,player.targetX,player.targetY,player.color.toInt,shotMass,4 + sqrt(shotMass) * 6,shotSpeed)
         }
         Cell(newX,newY,newMass,newRadius,newSpeed)
       }.filterNot(_.mass == 0)
@@ -229,7 +277,8 @@ trait Grid {
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
-      foodDetails
+      foodDetails,
+      massList
     )
   }
 }
