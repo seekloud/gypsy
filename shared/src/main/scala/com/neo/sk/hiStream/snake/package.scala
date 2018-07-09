@@ -55,7 +55,9 @@ package object snake {
   case class Cell(
                  x:Int,
                  y:Int,
+                 //质量
                  mass:Double = 1,
+                 //半径
                  radius:Double = 4,
                  speed:Double = 12
                  )
