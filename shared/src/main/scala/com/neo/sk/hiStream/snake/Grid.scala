@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.snake
 
 import java.awt.event.KeyEvent
 
+import com.neo.sk.gypsy.snake
 import com.neo.sk.gypsy.snake.Point
 import com.neo.sk.gypsy.snake.Protocol.MousePosition
 
