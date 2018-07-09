@@ -158,13 +158,14 @@ trait Grid {
       //此处算法针对只有一个cell的player
       val newCells = player.cells.map{cell=>
         var newSpeed = cell.speed
+        //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
+        val target = MousePosition(mouseAct.clientX ,mouseAct.clientY)
+        val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
+        val deg = atan2(target.clientY,target.clientX)
+        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         val newDirection = {
-          //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
-          val target = MousePosition(mouseAct.clientX ,mouseAct.clientY)
-          val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
-          val deg = atan2(target.clientY,target.clientX)
-          val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-          val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+
 
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
@@ -182,7 +183,7 @@ trait Grid {
               }else 8 + 20/cbrt(cell.radius)
             }
           }
-          println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
+          //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
         //cell移动+边界检测
@@ -203,7 +204,7 @@ trait Grid {
         }
         massList.foreach{
           case p:Mass=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius - p.radius)) {
+            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius - p.radius * coverRate)) {
               newMass += p.mass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               massList = massList.filterNot(l=>l==p)
@@ -224,7 +225,10 @@ trait Grid {
         if (shot == true && cell.mass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
-          massList ::= snake.Mass(cell.x,cell.y,player.targetX,player.targetY,player.color.toInt,shotMass,4 + sqrt(shotMass) * 6,shotSpeed)
+          val massRadius = 4 + sqrt(shotMass) * 6
+          val massX = (cell.x + (newRadius + massRadius) * degX).toInt
+          val massY = (cell.y + (newRadius + massRadius) * degY).toInt
+          massList ::= snake.Mass(massX,massY,player.targetX,player.targetY,player.color.toInt,shotMass,massRadius,shotSpeed)
         }
         Cell(newX,newY,newMass,newRadius,newSpeed)
       }.filterNot(_.mass == 0)
