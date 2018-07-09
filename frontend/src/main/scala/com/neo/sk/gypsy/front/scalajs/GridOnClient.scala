@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.snake.{Grid, Point}
-
+import com.neo.sk.gypsy.shared.ptcl.Grid
+import com.neo.sk.gypsy.shared.ptcl.Point
 /**
   * User: Taoz
   * Date: 9/3/2016
