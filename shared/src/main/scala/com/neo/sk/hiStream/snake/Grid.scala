@@ -166,7 +166,6 @@ trait Grid {
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         val newDirection = {
 
-
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
           }else{
