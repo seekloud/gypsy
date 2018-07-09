@@ -1,3 +1,5 @@
-val a = List(1,2,3,4)
- a.filterNot(s => s==1)
-a
+import scala.util.Random
+
+val a = 1
+a += 2
+
