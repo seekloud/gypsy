@@ -1,10 +1,10 @@
-package com.neo.sk.gypsy.snake
+package com.neo.sk.gypsy.shared.ptcl
 
 import java.awt.event.KeyEvent
 
-import com.neo.sk.gypsy.snake
-import com.neo.sk.gypsy.snake.Point
-import com.neo.sk.gypsy.snake.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.Point
+import Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl
 
 import scala.math._
 import scala.util.Random
@@ -211,7 +211,7 @@ trait Grid {
             }
         }
         playerMap.filterNot(_._1 == player.id).foreach{ p=>
-          p._2.cells.map{otherCell=>
+          p._2.cells.foreach{ otherCell=>
             if(cell.radius < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * coverRate)){
               newMass = 0
             }else if(cell.radius > otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * coverRate)){
@@ -228,7 +228,7 @@ trait Grid {
           val massRadius = 4 + sqrt(shotMass) * 6
           val massX = (cell.x + (newRadius + massRadius) * degX).toInt
           val massY = (cell.y + (newRadius + massRadius) * degY).toInt
-          massList ::= snake.Mass(massX,massY,player.targetX,player.targetY,player.color.toInt,shotMass,massRadius,shotSpeed)
+          massList ::= ptcl.Mass(massX,massY,player.targetX,player.targetY,player.color.toInt,shotMass,massRadius,shotSpeed)
         }
         Cell(newX,newY,newMass,newRadius,newSpeed)
       }.filterNot(_.mass == 0)
