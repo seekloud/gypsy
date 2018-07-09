@@ -38,8 +38,6 @@ class GridOnServer(override val boundary: Point) extends Grid {
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(7)
       playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,List(Cell(center.x,center.y)))
-//      grid += center -> Center(id, 5.0, 0.0)
-//      stars += id -> StarDt(id, name, center)
     }
     waitingJoin = Map.empty[Long, String]
   }
