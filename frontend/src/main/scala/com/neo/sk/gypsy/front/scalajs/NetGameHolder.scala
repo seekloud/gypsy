@@ -259,6 +259,7 @@ object NetGameHolder extends js.JSApp {
           }
         }
       }
+      //在画布上监听鼠标事件
       canvas.onmousemove = {(e:dom.MouseEvent)=>{
         gameStream.send(MousePosition(e.pageX,e.pageY).asJson.noSpaces)
       }
