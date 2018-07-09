@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy.snake
+package com.neo.sk.gypsy.shared.ptcl
 
 /**
   * User: Taoz

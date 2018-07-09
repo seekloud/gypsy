@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy
+package com.neo.sk.gypsy.shared
 
 import scala.math._
 
@@ -7,7 +7,24 @@ import scala.math._
   * Date: 8/29/2016
   * Time: 9:48 PM
   */
-package object snake {
+package object ptcl {
+
+
+  trait CommonRsp {
+    val errCode: Int
+    val msg: String
+  }
+
+
+  final case class ErrorRsp(
+                             errCode: Int,
+                             msg: String
+                           ) extends CommonRsp
+
+  final case class SuccessRsp(
+                               errCode: Int = 0,
+                               msg: String = "ok"
+                             ) extends CommonRsp
 
 ////排行榜信息
   case class Score(id: Long, n: String, k: Int, score: Double, t: Option[Long] = None)

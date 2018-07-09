@@ -1,7 +1,8 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.snake.Protocol.{GridDataSync, MousePosition}
-import com.neo.sk.gypsy.snake._
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _, _}

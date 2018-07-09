@@ -5,7 +5,8 @@ import java.awt.event.KeyEvent
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.neo.sk.gypsy.snake.Protocol.MousePosition
+import com.neo.sk.gypsy.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory
