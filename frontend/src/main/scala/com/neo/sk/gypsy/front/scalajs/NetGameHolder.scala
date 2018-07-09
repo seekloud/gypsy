@@ -22,7 +22,7 @@ object NetGameHolder extends js.JSApp {
 
 
   val bounds = Point(Boundary.w, Boundary.h)
-
+  val window = Point(Window.w, Window.h)
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -35,12 +35,15 @@ object NetGameHolder extends js.JSApp {
   //长连接状态
   var wsSetup = false
   var justSynced = false
-
+//条纹
+  val stripeX = scala.collection.immutable.Range(0,bounds.y,50)
+  val stripeY = scala.collection.immutable.Range(0,bounds.x,100)
   //背景移动
   var loop = 0
   var speed = 2
 
   val watchKeys = Set(
+    KeyCode.E,
     KeyCode.Space,
     KeyCode.Left,
     KeyCode.Up,
@@ -50,6 +53,8 @@ object NetGameHolder extends js.JSApp {
   )
 
   object MyColors {
+    val background = "#fff"
+    val stripe = "rgba(181, 181, 181, 0.5)"
     val myHeader = "#cccccc"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
@@ -64,8 +69,8 @@ object NetGameHolder extends js.JSApp {
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
     drawGameOff()
-    canvas.width = bounds.x
-    canvas.height = bounds.y
+    canvas.width = window.x
+    canvas.height = window.y
 
     joinButton.onclick = { (event: MouseEvent) =>
       joinGame(nameField.value)
@@ -90,7 +95,7 @@ object NetGameHolder extends js.JSApp {
 //边框;提示文字
   def drawGameOff(): Unit = {
     ctx.fillStyle = Color.Black.toString()
-    ctx.fillRect(0, 0, bounds.x , bounds.y )
+    ctx.fillRect(0, 0, window.x , window.y )
     ctx.fillStyle = "rgb(250, 250, 250)"
     if (firstCome) {
       ctx.font = "36px Helvetica"
@@ -129,58 +134,96 @@ object NetGameHolder extends js.JSApp {
   }
 
   def drawGrid(uid: Long, data: GridDataSync): Unit = {
-//绘制黑色背景
-    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-    if(loop * speed >= 600){
-      loop = 0
-    }else{
-      loop += 1
-    }
-    val setoff = loop * speed
-    ctx.drawImage(img,0,setoff - 600,1200,600)
-    ctx.drawImage(img,0,setoff,1200,600)
-//蛇头、蛇身、苹果数据
-
+    //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
-    println(s"players ${players}")
+    val masses = data.massDetails
+    val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
+    println(s"basePoint${basePoint}")
+    val offx = window.x/2 - basePoint._1
+    val offy =window.y/2 - basePoint._2
+    //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
+    //println(s"players ${players}")
+//    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
+//    if(loop * speed >= 600){
+//      loop = 0
+//    }else{
+//      loop += 1
+//    }
+//    val setoff = loop * speed
+//    ctx.drawImage(img,0,setoff - 1800,3600,1800)
+//    ctx.drawImage(img,0,setoff,3600,1800)
+//绘制背景
+    ctx.fillStyle = MyColors.background
+    ctx.fillRect(0,0,window.x,window.y)
+//绘制条纹
+    ctx.strokeStyle = MyColors.stripe
+    stripeX.map{l=>
+      ctx.beginPath()
+      ctx.moveTo(0,l +offy);
+      ctx.lineTo(bounds.x,l +offy);
+      ctx.stroke();
+    }
+    stripeY.map{l=>
+      ctx.beginPath()
+      ctx.moveTo(l +offx,0);
+      ctx.lineTo(l +offx,bounds.y);
+      ctx.stroke();
+    }
+
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,x,y,tx,ty,kill,pro,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
-        if (id == uid) {
-          ctx.save()
-          //ctx.strokeStyle = MyColors.myHeader
-          ctx.fillStyle = MyColors.myHeader
+          ctx.fillStyle = color.toInt match{
+            case 0 => "red"
+            case 1 => "orange"
+            case 2  => "yellow"
+            case 3  => "green"
+            case 4  => "blue"
+            case 5  => "purple"
+            case 6  => "black"
+            case _  => "blue"
+          }
           ctx.beginPath()
-          ctx.arc(cell.x,cell.y,cell.radius,0,2*Math.PI)
+          ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
-          ctx.restore()
-        } else {
-          //        ctx.strokeStyle = MyColors.otherHeader
-          ctx.fillStyle = MyColors.otherHeader
-          ctx.beginPath()
-          ctx.arc(cell.x,cell.y,cell.radius,0,2*Math.PI)
-          ctx.fill()
-        }
       }
-
     }
 //为不同分值的苹果填充不同颜色
-    foods.foreach { case Food(score, x, y) =>
-      ctx.fillStyle = score match {
-        case 10 => "rgba(189, 194, 199, 1)"
-        case 5 => "rgba(159, 167, 173, 1)"
-        case _ => "rgba(120, 131, 140, 1)"
+    foods.foreach { case Food(color, x, y) =>
+      ctx.fillStyle = color match{
+        case 0 => "red"
+        case 1 => "orange"
+        case 2  => "yellow"
+        case 3  => "green"
+        case 4  => "blue"
+        case 5  => "purple"
+        case 6  => "black"
+        case _  => "blue"
       }
       ctx.beginPath()
-      ctx.arc(x,y,4,0,2*Math.PI)
+      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
     }
-
-    ctx.fillStyle = "rgb(250, 250, 250)"
+    masses.foreach { case Mass(x,y,_,_,color,mass,r,_) =>
+      ctx.fillStyle = color match{
+        case 0 => "red"
+        case 1 => "orange"
+        case 2  => "yellow"
+        case 3  => "green"
+        case 4  => "blue"
+        case 5  => "purple"
+        case 6  => "black"
+        case _  => "blue"
+      }
+      ctx.beginPath()
+      ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
+      ctx.fill()
+    }
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
 
@@ -325,14 +368,15 @@ object NetGameHolder extends js.JSApp {
           historyRank = history
         case Protocol.FeedApples(foods) =>
           writeToArea(s"food feeded = $foods") //for debug.
-          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.score)
+          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
         case data: Protocol.GridDataSync =>
           //writeToArea(s"grid data got: $msgData")
           //TODO here should be better code.
           grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
           grid.frameCount = data.frameCount
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-          grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.score).toMap
+          grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+          grid.massList = data.massDetails
 //          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
 //          val gridMap = appleMap ++ starMap
 //          grid.grid = gridMap
