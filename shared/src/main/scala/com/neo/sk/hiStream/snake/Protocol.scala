@@ -12,7 +12,8 @@ object Protocol {
   case class GridDataSync(
     frameCount: Long,
     playerDetails: List[Player],
-    foodDetails: List[Food]
+    foodDetails: List[Food],
+    massDetails: List[Mass]
   ) extends GameMessage
 
 
