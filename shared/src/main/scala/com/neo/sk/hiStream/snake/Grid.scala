@@ -29,7 +29,7 @@ trait Grid {
 
   val defaultLength = 5
   val appleNum = 6
-  val appleLife = 100
+  val appleLife = 200
   val historyRankLength = 5
 
   val slowDown = 2
@@ -221,7 +221,7 @@ trait Grid {
           }
         }
 
-        if (shot == true && cell.mass > shotMass*2){
+        if (shot == true && cell.mass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
           massList ::= snake.Mass(cell.x,cell.y,player.targetX,player.targetY,player.color.toInt,shotMass,4 + sqrt(shotMass) * 6,shotSpeed)

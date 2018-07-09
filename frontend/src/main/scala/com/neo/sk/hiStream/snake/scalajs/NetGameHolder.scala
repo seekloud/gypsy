@@ -259,14 +259,7 @@ object NetGameHolder extends js.JSApp {
       index += 1
       drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
-//绘制历史排行
-//    val historyRankBaseLine = 1
-//    index = 0
-//    drawTextLine(s" --- History Rank --- ", rightBegin, index, historyRankBaseLine)
-//    historyRank.foreach { score =>
-//      index += 1
-//      drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, historyRankBaseLine)
-//    }
+
 
   }
 //绘制一条信息
