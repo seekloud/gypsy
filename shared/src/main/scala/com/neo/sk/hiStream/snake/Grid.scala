@@ -130,8 +130,8 @@ trait Grid {
           val target = MousePosition(mouseAct.clientX - player.x,mouseAct.clientY-player.y)
           val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
           val deg = atan2(target.clientY,target.clientX)
-          val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-          val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+          val degX = if(cos(deg).isNaN) 0 else cos(deg)
+          val degY = if(sin(deg).isNaN) 0 else sin(deg)
 
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
@@ -162,17 +162,17 @@ trait Grid {
 
         food.foreach{
           case (p, mass)=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
+            if(sqrt(pow(p.x - cell.x,2.0) + pow(p.y - cell.y,2.0)) < (cell.radius + 4)) {
               newMass += mass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
             }
         }
         playerMap.filterNot(_._1 == player.id).foreach{ p=>
-          p._2.cells.map{otherCell=>
-            if(cell.radius < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * coverRate)){
+          p._2.cells.foreach{ otherCell=>
+            if(cell.radius < otherCell.radius && sqrt(pow(cell.x - otherCell.x,2.0) + pow(cell.y - otherCell.y,2.0)) < (otherCell.radius - cell.radius * coverRate)){
               newMass = 0
-            }else if(cell.radius > otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * coverRate)){
+            }else if(cell.radius > otherCell.radius && sqrt(pow(cell.x - otherCell.x,2.0) + pow(cell.y - otherCell.y,2.0)) < (cell.radius - otherCell.radius * coverRate)){
               newMass +=  otherCell.mass
               newRadius = 4 + sqrt(newMass) * 6
               newKill +=  1
@@ -182,7 +182,7 @@ trait Grid {
         Cell(newX,newY,newMass,newRadius,newSpeed)
       }.filterNot(_.mass == 0)
 
-      if(newCells.length == 0){
+      if(newCells.isEmpty){
         //println(s"newCells${newCells}")
          Left(0L)
       }else{
