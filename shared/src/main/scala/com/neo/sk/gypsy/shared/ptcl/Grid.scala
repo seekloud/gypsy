@@ -41,7 +41,8 @@ trait Grid {
   var frameCount = 0l
 //合并时间间隔
   val mergeInterval = 5 * 1000
-
+//最小分裂大小
+  val splitLimit = 20
   //食物质量
   val foodMass = 1
   //食物列表
@@ -153,10 +154,8 @@ trait Grid {
       val keyAct = actMap.get(player.id) match{
         case Some(KeyEvent.VK_E)=>
           shot = true
-          println("11111111111111")
         case Some(KeyEvent.VK_F)=>
           split = true
-          println("222222222222222222222")
         case _ =>
       }
 
@@ -204,11 +203,6 @@ trait Grid {
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
-
-
-
-
-
         food.foreach{
           case (p, color)=>
             if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
@@ -273,7 +267,7 @@ trait Grid {
         var splitMass = 0.0
         var splitRadius = 0.0
         var splitSpeed = 0.0
-        if (split == true ){
+        if (split == true && cell.mass > splitLimit){
           println("come here")
           newSplitTime = System.currentTimeMillis()
           splitMass = newMass/2
