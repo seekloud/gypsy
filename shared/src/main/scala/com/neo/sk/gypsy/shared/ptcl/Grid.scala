@@ -195,7 +195,6 @@ trait Grid {
               }
             }
           }
-
           //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
