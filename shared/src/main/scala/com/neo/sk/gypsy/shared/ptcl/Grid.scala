@@ -40,7 +40,7 @@ trait Grid {
   val coverRate = 0
   var frameCount = 0l
 //合并时间间隔
-  val mergeInterval = 5 * 1000
+  val mergeInterval = 8 * 1000
 //最小分裂大小
   val splitLimit = 20
   //食物质量
@@ -268,17 +268,15 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         if (split == true && cell.mass > splitLimit){
-          println("come here")
           newSplitTime = System.currentTimeMillis()
-          splitMass = newMass/2
-          newMass = newMass/2
-          splitRadius = 4 + sqrt(newMass) * 6
+          splitMass = (newMass/2).toInt
+          newMass = newMass - splitMass
+          splitRadius = 4 + sqrt(splitMass) * 6
           newRadius = 4 + sqrt(newMass) * 6
           splitSpeed = 30 + 20/cbrt(cell.radius)
           splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
         }
-        println(s"${Cell(splitX,splitY,splitMass,splitRadius,splitSpeed)}")
         List(Cell(newX,newY,newMass,newRadius,newSpeed),Cell(splitX,splitY,splitMass,splitRadius,splitSpeed))
       }.filterNot(_.mass==0)
 
