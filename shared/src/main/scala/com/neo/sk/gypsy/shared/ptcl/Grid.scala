@@ -141,23 +141,28 @@ trait Grid {
       //val keyCode = actMap.get(star.id)
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
+          //相对屏幕中央的位置
           MousePosition(x-6-600,y-129-300)
         case _=>
           MousePosition(player.targetX,player.targetY)
       }
 
       var shot = false
+      var split = false
       val keyAct = actMap.get(player.id) match{
         case Some(KeyEvent.VK_E)=>
           shot = true
+        case Some(KeyEvent.VK_SPACE)=>
+          split = true
         case _ =>
       }
 
       var newKill = player.kill
+      var newSplitTime = player.lastSplit
 
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
-      val newCells = player.cells.map{cell=>
+      var newCells = player.cells.flatMap{cell=>
         var newSpeed = cell.speed
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX ,mouseAct.clientY)
@@ -166,7 +171,10 @@ trait Grid {
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         val newDirection = {
-
+          //指针在圆内，静止
+          if(cell.speed > 8 + 20/cbrt(cell.radius)){
+            newSpeed -= 3
+          }
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
           }else{
@@ -185,6 +193,10 @@ trait Grid {
           }
           //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
+        }
+        //自身cell合并检测
+        player.cells.filterNot(p=> p == cell).map{cell2=>
+
         }
         //cell移动+边界检测
         val newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
@@ -221,7 +233,7 @@ trait Grid {
             }
           }
         }
-
+//喷射小球
         if (shot == true && cell.mass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
@@ -230,8 +242,24 @@ trait Grid {
           val massY = (cell.y + (newRadius + massRadius) * degY).toInt
           massList ::= ptcl.Mass(massX,massY,player.targetX,player.targetY,player.color.toInt,shotMass,massRadius,shotSpeed)
         }
-        Cell(newX,newY,newMass,newRadius,newSpeed)
-      }.filterNot(_.mass == 0)
+//分裂
+        var splitX = 0
+        var splitY = 0
+        var splitMass = 0.0
+        var splitRadius = 0.0
+        var splitSpeed = 0.0
+        if (split == true ){
+          newSplitTime = System.currentTimeMillis()
+          splitMass = newMass/2
+          newMass = newMass/2
+          splitRadius = 4 + sqrt(newMass) * 6
+          newRadius = 4 + sqrt(newMass) * 6
+          splitSpeed = 30 + 20/cbrt(cell.radius)
+          splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
+          splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
+        }
+        List(Cell(newX,newY,newMass,newRadius,newSpeed),Cell(splitX,splitY,splitMass,splitRadius,splitSpeed))
+      }.filterNot(_.mass==0)
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
@@ -241,7 +269,7 @@ trait Grid {
         val length = newCells.length
         val newX = newCells.map(_.x).sum/length
         val newY = newCells.map(_.y).sum/length
-        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, cells = newCells))
+        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, lastSplit = newSplitTime,cells = newCells))
       }
 
     }
