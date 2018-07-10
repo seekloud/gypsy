@@ -148,7 +148,7 @@ trait Grid {
         case _=>
           MousePosition(player.targetX,player.targetY)
       }
-
+      var killer = 0L
       var shot = false
       var split = false
       val keyAct = actMap.get(player.id) match{
@@ -223,10 +223,10 @@ trait Grid {
           p._2.cells.foreach{ otherCell=>
             if(cell.radius < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * coverRate)){
               newMass = 0
+              killer = p._1
             }else if(cell.radius > otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * coverRate)){
               newMass +=  otherCell.mass
               newRadius = 4 + sqrt(newMass) * 6
-              newKill +=  1
             }
           }
         }
@@ -284,7 +284,7 @@ trait Grid {
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
-         Left(0L)
+         Left(killer)
       }else{
         //println(s"newCells2${newCells}")
         val length = newCells.length
@@ -299,15 +299,21 @@ trait Grid {
     //var mapKillCounter = Map.empty[Long, Int]
     var updatedPlayers = List.empty[Player]
 
+    var killerMap = List.empty[Long]
     val acts = actionMap.getOrElse(frameCount, Map.empty[Long, Int])
 
     val mouseAct = mouseActionMap.getOrElse(frameCount,Map.empty[Long, MousePosition])
     playerMap.values.map(updateAStar(_, acts,mouseAct)).foreach {
       case Right(s) => updatedPlayers ::= s
-      case Left(killerId) =>
+      case Left(killerId) => killerMap ::= killerId
         //mapKillCounter += killerId -> (mapKillCounter.getOrElse(killerId, 0) + 1)
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
+    killerMap.foreach{killer=>
+      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0,0))))
+      val killNumber = a.kill
+      playerMap += (killer -> a.copy(kill = killNumber+1))
+    }
   }
 
 
