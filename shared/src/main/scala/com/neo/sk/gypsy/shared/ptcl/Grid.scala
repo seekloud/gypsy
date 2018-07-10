@@ -39,7 +39,8 @@ trait Grid {
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
   val coverRate = 0
   var frameCount = 0l
-
+//合并时间间隔
+  val mergeInterval = 5 * 1000
 
   //食物质量
   val foodMass = 1
@@ -152,8 +153,10 @@ trait Grid {
       val keyAct = actMap.get(player.id) match{
         case Some(KeyEvent.VK_E)=>
           shot = true
-        case Some(KeyEvent.VK_SPACE)=>
+          println("11111111111111")
+        case Some(KeyEvent.VK_F)=>
           split = true
+          println("222222222222222222222")
         case _ =>
       }
 
@@ -165,7 +168,7 @@ trait Grid {
       var newCells = player.cells.flatMap{cell=>
         var newSpeed = cell.speed
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
-        val target = MousePosition(mouseAct.clientX ,mouseAct.clientY)
+        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
@@ -173,38 +176,39 @@ trait Grid {
         val newDirection = {
           //指针在圆内，静止
           if(cell.speed > 8 + 20/cbrt(cell.radius)){
-            newSpeed -= 3
-          }
-          if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
-            newSpeed = target.clientX / degX
+            newSpeed -= 2
           }else{
-            if(distance < cell.radius){
-              //println("在圆内")
-              if(cell.speed>0){
-                //println("come here")
-                newSpeed=cell.speed - slowDown
-              }else newSpeed=0
-              //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
+            if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
+              newSpeed = target.clientX / degX
             }else{
-              newSpeed=if(cell.speed < 8 + 20/cbrt(cell.radius)){
-                cell.speed + slowDown
-              }else 8 + 20/cbrt(cell.radius)
+              if(distance < cell.radius){
+                //println("在圆内")
+                if(cell.speed>0){
+                  //println("come here")
+                  newSpeed=cell.speed - slowDown
+                }else newSpeed=0
+                //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
+              }else{
+                newSpeed=if(cell.speed < 8 + 20/cbrt(cell.radius)){
+                  cell.speed + slowDown
+                }else 8 + 20/cbrt(cell.radius)
+              }
             }
           }
+
           //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
-        //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).map{cell2=>
-
-        }
         //cell移动+边界检测
-        val newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
-        val newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
-
+        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
+        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
+
+
+
+
 
         food.foreach{
           case (p, color)=>
@@ -233,6 +237,28 @@ trait Grid {
             }
           }
         }
+        //自身cell合并检测
+        player.cells.filterNot(p=> p == cell).map{cell2=>
+          val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
+          val radiusTotal = cell.radius + cell2.radius
+          if (distance < radiusTotal) {
+            if (player.lastSplit > System.currentTimeMillis() - mergeInterval) {
+              if (cell.x < cell2.x) newX -= 1
+              else if (cell.x > cell2.x) newX += 1
+              if (cell.y < cell2.y) newY  -= 1
+              else if (cell.y > cell2.y) newY += 1
+            }
+            else if (distance < radiusTotal / 1.75) {
+              if(cell.radius > cell2.radius){
+                newMass += cell2.mass
+                newRadius = 4 + sqrt(newMass) * mass2rRate
+              }else if(cell.radius < cell2.radius){
+                newMass = 0
+                newRadius = 0
+              }
+            }
+          }
+        }
 //喷射小球
         if (shot == true && cell.mass > shotMass*3){
           newMass -= shotMass
@@ -249,6 +275,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         if (split == true ){
+          println("come here")
           newSplitTime = System.currentTimeMillis()
           splitMass = newMass/2
           newMass = newMass/2
@@ -258,6 +285,7 @@ trait Grid {
           splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
         }
+        println(s"${Cell(splitX,splitY,splitMass,splitRadius,splitSpeed)}")
         List(Cell(newX,newY,newMass,newRadius,newSpeed),Cell(splitX,splitY,splitMass,splitRadius,splitSpeed))
       }.filterNot(_.mass==0)
 
