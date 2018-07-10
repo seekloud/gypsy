@@ -90,7 +90,7 @@ trait Grid {
 //
   def update() = {
     //println(s"-------- grid update frameCount= $frameCount ---------")
-    updateSnakes()
+    updatePlayer()
     updateSpots()
     actionMap -= frameCount
     frameCount += 1
@@ -136,7 +136,7 @@ trait Grid {
   }
 
 //移动，碰撞检测
-  private[this] def updateSnakes() = {
+  private[this] def updatePlayer() = {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
       //val keyCode = actMap.get(star.id)
       val mouseAct = mouseActMap.get(player.id) match{
