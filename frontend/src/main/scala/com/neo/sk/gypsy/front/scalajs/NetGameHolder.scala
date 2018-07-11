@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.front.scalajs
 
+import com.neo.sk.gypsy.front.utils.LayuiJs
+import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
@@ -12,6 +14,7 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import scala.scalajs.js
+import scala.scalajs.js.UndefOr
 
 /**
   * User: Taoz
@@ -78,6 +81,7 @@ object NetGameHolder extends js.JSApp {
       event.preventDefault()
     }
     nameField.focus()
+    //按回车
     nameField.onkeypress = { (event: KeyboardEvent) =>
       if (event.keyCode == 13) {
         joinButton.click()

@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=0">
   <title>justTest</title>
+
+  <script src="/gypsy/static/js/layui.js"></script>
+  <link rel="stylesheet" href="/gypsy/static/css/layui.css">
 </head>
 <body>
 
@@ -23,6 +27,44 @@
   <!--<img id="background" style="width:3600px;height:1800px" src="/gypsy/static/img/back3.jpg">-->
   <script type="text/javascript" src="/gypsy/static/sjsout/frontend-fastopt.js"></script>
   <!--<script type="text/javascript" src="/gypsy/frontend-launcher.js"></script>-->
+
+  <script>
+      //一般直接写在一个js文件中
+      layui.use(['layer', 'form','element'], function(){
+          var layer = layui.layer
+              ,form = layui.form
+              , element = layui.element;
+
+         /* layer.ready(
+              function () {
+                  layer.open({
+                      type: 1
+                      ,title: false //不显示标题栏
+                      ,closeBtn: false
+                      ,area: ['500px','500px']
+                      ,shade: 0.8
+                      ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
+                      ,resize: false
+                      ,btn: ['登陆', '注册']
+                      ,btnAlign: 'c'//按钮居中对齐
+                      ,scrollbar:false
+                      ,moveType: 1 //拖拽模式，0或者1
+                      ,content: ' <form action="#">\n' +
+                      '    <label for="name">Name: </label><input id="name" class="name" type="text" />\n' +
+                      '    <input id="join" class="join" type="button" value="Join!"/>\n' +
+                      '  </form>'
+                      ,success: function(layero){
+                          var btn = layero.find('.layui-layer-btn');
+                          btn.find('.layui-layer-btn0').attr({
+                              href: 'http://www.layui.com/'
+                              ,target: '_blank'
+                          });
+                      }})
+              }
+          )*/
+      });
+
+  </script>
 
 
 </body>
