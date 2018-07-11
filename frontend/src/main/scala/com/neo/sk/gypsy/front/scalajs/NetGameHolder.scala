@@ -193,6 +193,9 @@ object NetGameHolder extends js.JSApp {
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
+        ctx.font = "24px Helvetica"
+        ctx.fillStyle = MyColors.background
+        ctx.fillText(s"${name}", cell.x +offx-12, cell.y +offy -18)
       }
     }
 //为不同分值的苹果填充不同颜色
