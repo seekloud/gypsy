@@ -55,6 +55,7 @@ object NetGameHolder extends js.JSApp {
   )
 
   object MyColors {
+    val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
     val myHeader = "#cccccc"
@@ -85,7 +86,7 @@ object NetGameHolder extends js.JSApp {
         event.preventDefault()
       }
     }
-//每隔一段间隔就执行gameLoop（同步更新）
+//每隔一段间隔就执行gameLoop（同步更新，重画）
     dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
   }
 
@@ -254,12 +255,15 @@ object NetGameHolder extends js.JSApp {
     }
 //绘制当前排行
     ctx.font = "12px Helvetica"
-    val currentRankBaseLine = 5
+    ctx.fillStyle = MyColors.rankList
+    ctx.fillRect(window.x-200,20,150,250)
+    val currentRankBaseLine = 3
     var index = 0
-    drawTextLine(s" --- Current Rank --- ", rightBegin, index, currentRankBaseLine)
+    ctx.fillStyle = MyColors.background
+    drawTextLine(s"—————排行榜—————", rightBegin, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
-      drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
 //绘制历史排行
 //    val historyRankBaseLine = 1
