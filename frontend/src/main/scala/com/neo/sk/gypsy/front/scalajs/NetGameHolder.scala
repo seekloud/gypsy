@@ -280,12 +280,12 @@ object NetGameHolder extends js.JSApp {
   def joinGame(name: String): Unit = {
     joinButton.disabled = true
     val playground = dom.document.getElementById("playground")
-    playground.innerHTML = s"Trying to join game as '$name'..."
+    //playground.innerHTML = s"Trying to join game as '$name'..."
     val gameStream = new WebSocket(getWebSocketUri(dom.document, name))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
-      playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
+      //playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
       wsSetup = true
       canvas.focus()
       //在画布上监听键盘事件
@@ -329,7 +329,7 @@ object NetGameHolder extends js.JSApp {
 
     gameStream.onerror = { (event: ErrorEvent) =>
       drawGameOff()
-      playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
+      //playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
       joinButton.disabled = false
       wsSetup = false
       nameField.focus()
@@ -392,7 +392,7 @@ object NetGameHolder extends js.JSApp {
 
     gameStream.onclose = { (event: Event) =>
       drawGameOff()
-      playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
+      //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
       joinButton.disabled = false
       wsSetup = false
       nameField.focus()

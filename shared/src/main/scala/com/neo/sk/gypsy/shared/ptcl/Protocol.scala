@@ -43,6 +43,15 @@ object Protocol {
 
   case class MousePosition(clientX:Double,clientY:Double)
 
+  case class CollisionObj(
+                         id:Long,
+                         objType:String,
+                         x:Double,
+                         y:Double,
+                         radius:Double,
+                         mass:Double
+                         )
+
   val frameRate = 100
 
 }
