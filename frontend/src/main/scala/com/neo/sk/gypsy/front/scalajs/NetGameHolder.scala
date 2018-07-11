@@ -48,6 +48,7 @@ object NetGameHolder extends js.JSApp {
 
   val watchKeys = Set(
     KeyCode.E,
+    KeyCode.F,
     KeyCode.Space,
     KeyCode.Left,
     KeyCode.Up,
@@ -144,7 +145,7 @@ object NetGameHolder extends js.JSApp {
     val foods = data.foodDetails
     val masses = data.massDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
-    println(s"basePoint${basePoint}")
+    //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
     //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
@@ -179,7 +180,7 @@ object NetGameHolder extends js.JSApp {
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
           ctx.fillStyle = color.toInt match{
