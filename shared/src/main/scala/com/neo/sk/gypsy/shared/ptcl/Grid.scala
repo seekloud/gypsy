@@ -43,6 +43,8 @@ trait Grid {
   val mergeInterval = 8 * 1000
 //最小分裂大小
   val splitLimit = 20
+  //分裂初始速度
+  val splitBaseSpeed = 40
   //食物质量
   val foodMass = 1
   //食物列表
@@ -273,7 +275,7 @@ trait Grid {
           newMass = newMass - splitMass
           splitRadius = 4 + sqrt(splitMass) * 6
           newRadius = 4 + sqrt(newMass) * 6
-          splitSpeed = 30 + 20/cbrt(cell.radius)
+          splitSpeed = splitBaseSpeed + 2*cbrt(cell.radius)
           splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
         }
