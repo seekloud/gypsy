@@ -37,8 +37,8 @@ object NetGameHolder extends js.JSApp {
   var wsSetup = false
   var justSynced = false
 //条纹
-  val stripeX = scala.collection.immutable.Range(0,bounds.y,50)
-  val stripeY = scala.collection.immutable.Range(0,bounds.x,100)
+  val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
+  val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
   //背景移动
   var loop = 0
   var speed = 2
@@ -265,14 +265,7 @@ object NetGameHolder extends js.JSApp {
       index += 1
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
-//绘制历史排行
-//    val historyRankBaseLine = 1
-//    index = 0
-//    drawTextLine(s" --- History Rank --- ", rightBegin, index, historyRankBaseLine)
-//    historyRank.foreach { score =>
-//      index += 1
-//      drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, historyRankBaseLine)
-//    }
+
 
   }
 //绘制一条信息
