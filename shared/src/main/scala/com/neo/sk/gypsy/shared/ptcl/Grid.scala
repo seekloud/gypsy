@@ -24,6 +24,9 @@ trait Grid {
 
   def info(msg: String): Unit
 
+
+
+
   val random = new Random(System.nanoTime())
 
   val step = 8
