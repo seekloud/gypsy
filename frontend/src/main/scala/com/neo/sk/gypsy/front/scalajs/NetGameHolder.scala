@@ -54,7 +54,8 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Up,
     KeyCode.Right,
     KeyCode.Down,
-    KeyCode.F2
+    KeyCode.F2,
+    KeyCode.Escape
   )
 
   object MyColors {
@@ -281,7 +282,7 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-  def joinGame(name: String): Unit = {
+  def joinGame(name: String,password:String="",userType:Int=0): Unit = {
     joinButton.disabled = true
     val playground = dom.document.getElementById("playground")
     playground.innerHTML = s"Trying to join game as '$name'..."
@@ -409,7 +410,7 @@ object NetGameHolder extends js.JSApp {
 
   def getWebSocketUri(document: Document, nameOfChatParticipant: String): String = {
     val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-    s"$wsProtocol://${dom.document.location.host}/gypsy/netSnake/join?name=$nameOfChatParticipant"
+    s"$wsProtocol://${dom.document.location.host}/gypsy/user/guestLogin?name=$nameOfChatParticipant"
   }
 
   def p(msg: String) = {
