@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.shared.ptcl.Point
@@ -62,6 +63,8 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
+//  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
+
 //用户离开，从列表中去掉
   def removePlayer(id: Long): Option[Player] = {
     val r = playerMap.get(id)
@@ -70,7 +73,6 @@ trait Grid {
     }
     r
   }
-
 
   def addAction(id: Long, keyCode: Int) = {
     addActionWithFrame(id, keyCode, frameCount)
@@ -81,7 +83,6 @@ trait Grid {
     val tmp = map + (id -> keyCode)
     actionMap += (frame -> tmp)
   }
-
   def addMouseAction(id: Long, x:Double, y:Double) = {
     addMouseActionWithFrame(id, x, y,  frameCount)
   }
@@ -90,7 +91,6 @@ trait Grid {
     val tmp = map + (id -> MousePosition(x,y))
     mouseActionMap += (frame -> tmp)
   }
-
 //
   def update() = {
     //println(s"-------- grid update frameCount= $frameCount ---------")
