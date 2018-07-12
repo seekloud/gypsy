@@ -5,18 +5,17 @@ import java.awt.Rectangle
 import com.neo.sk.gypsy.shared.ptcl.Protocol.CollisionObj
 import com.sun.xml.internal.bind.v2.util.CollisionCheckStack
 
-object QuadTree {
+import scala.collection.mutable.ArrayBuffer
+
+
 class Quadtree {
   private val MAX_OBJECTS = 10
   private val MAX_LEVELS = 5
 
-
   private var level = 0
-  private var objects = List[CollisionObj]()
+  private var objects = ArrayBuffer[CollisionObj]()
   private var bounds:Rectangle = new Rectangle(0,0,Boundary.w,Boundary.h)
   private var nodes = new Array[Quadtree](4)
-
-  //import com.neo.sk.gypsy.shared.ptcl.QuadTree.Quadtree
 
   /*
     * 构造函数
@@ -24,13 +23,13 @@ class Quadtree {
   def this(pLevel: Int, pBounds: Rectangle) {
     this()
     this.level = pLevel
-    this.objects = List[CollisionObj]()
+    this.objects = ArrayBuffer[CollisionObj]()
     bounds = pBounds
     nodes = new Array[Quadtree](4)
   }
 //清空
   def clear(): Unit = {
-    objects = List[CollisionObj]()
+    objects = ArrayBuffer[CollisionObj]()
     for (i <- 0 until nodes.length) {
       if (nodes(i) != null) {
         nodes(i).clear()
@@ -44,7 +43,6 @@ class Quadtree {
     val subHeight = (bounds.getHeight() / 2).toInt
     val x = bounds.getX().toInt
     val y = bounds.getY().toInt
-
     nodes(0) = new Quadtree(level+1, new Rectangle(x + subWidth, y, subWidth, subHeight))
     nodes(1) = new Quadtree(level+1, new Rectangle(x, y, subWidth, subHeight))
     nodes(2) = new Quadtree(level+1, new Rectangle(x, y + subHeight, subWidth, subHeight))
@@ -73,7 +71,6 @@ class Quadtree {
   }
 //插入
   def insert(obj:CollisionObj) {
-
     // 插入到子节点
     if (nodes(0) != null) {
       val index = getIndex(obj)
@@ -82,10 +79,8 @@ class Quadtree {
         return
       }
     }
-
     // 还没分裂或者插入到子节点失败，只好留给父节点了
-    objects ::= obj
-
+    objects += obj
     // 超容量后如果没有分裂则分裂
     if (objects.length > MAX_OBJECTS && level < MAX_LEVELS) {
       if (nodes(0) == null) {
@@ -96,7 +91,7 @@ class Quadtree {
       while (i < objects.size) {
         val index = getIndex(objects(i))
         if (index != -1) {
-         // nodes(index).insert(objects.drop())
+          nodes(index).insert(objects.remove(i))
         }
         else {
           i += 1
@@ -104,5 +99,12 @@ class Quadtree {
       }
     }
   }
+//搜索范围内碰撞体
+  def retrieve(returnObjects: ArrayBuffer[CollisionObj], obj:CollisionObj): ArrayBuffer[CollisionObj] = {
+    val index = getIndex(obj)
+    if (index != -1 && nodes(0) != null) nodes(index).retrieve(returnObjects, obj)
+    returnObjects ++= objects
+    returnObjects
+  }
  }
-}
+
