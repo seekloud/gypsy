@@ -44,10 +44,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   implicit val scoreOrdering = new Ordering[Score] {
     override def compare(x: Score, y: Score): Int = {
-      var r = y.k - x.k
-      if (r == 0) {
-        r = (y.score - x.score).toInt
-      }
+      var r = (y.score - x.score).toInt
       if (r == 0) {
         r = (x.id - y.id).toInt
       }
@@ -60,10 +57,10 @@ class GridOnServer(override val boundary: Point) extends Grid {
     var historyChange = false
     currentRank.foreach { cScore =>
       historyRankMap.get(cScore.id) match {
-        case Some(oldScore) if cScore.k > oldScore.k =>
+        case Some(oldScore) if cScore.score > oldScore.score =>
           historyRankMap += (cScore.id -> cScore)
           historyChange = true
-        case None if cScore.k > historyRankThreshold =>
+        case None if cScore.score > historyRankThreshold =>
           historyRankMap += (cScore.id -> cScore)
           historyChange = true
         case _ => //do nothing.
@@ -72,7 +69,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
     if (historyChange) {
       historyRankList = historyRankMap.values.toList.sorted.take(historyRankLength)
-      historyRankThreshold = historyRankList.lastOption.map(_.k).getOrElse(-1)
+      historyRankThreshold = historyRankList.lastOption.map(_.score.toInt).getOrElse(-1)
       historyRankMap = historyRankList.map(s => s.id -> s).toMap
     }
 
