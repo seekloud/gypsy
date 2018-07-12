@@ -40,8 +40,8 @@ object NetGameHolder extends js.JSApp {
   var wsSetup = false
   var justSynced = false
 //条纹
-  val stripeX = scala.collection.immutable.Range(0,bounds.y,50)
-  val stripeY = scala.collection.immutable.Range(0,bounds.x,100)
+  val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
+  val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
   //背景移动
   var loop = 0
   var speed = 2
@@ -59,6 +59,7 @@ object NetGameHolder extends js.JSApp {
   )
 
   object MyColors {
+    val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
     val myHeader = "#cccccc"
@@ -90,7 +91,7 @@ object NetGameHolder extends js.JSApp {
         event.preventDefault()
       }
     }
-//每隔一段间隔就执行gameLoop（同步更新）
+//每隔一段间隔就执行gameLoop（同步更新，重画）
     dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
   }
 
@@ -197,6 +198,9 @@ object NetGameHolder extends js.JSApp {
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
+        ctx.font = "24px Helvetica"
+        ctx.fillStyle = MyColors.background
+        ctx.fillText(s"${name}", cell.x +offx-12, cell.y +offy -18)
       }
     }
 //为不同分值的苹果填充不同颜色
@@ -259,21 +263,17 @@ object NetGameHolder extends js.JSApp {
     }
 //绘制当前排行
     ctx.font = "12px Helvetica"
-    val currentRankBaseLine = 5
+    ctx.fillStyle = MyColors.rankList
+    ctx.fillRect(window.x-200,20,150,250)
+    val currentRankBaseLine = 3
     var index = 0
-    drawTextLine(s" --- Current Rank --- ", rightBegin, index, currentRankBaseLine)
+    ctx.fillStyle = MyColors.background
+    drawTextLine(s"—————排行榜—————", rightBegin, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
-      drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
-//绘制历史排行
-//    val historyRankBaseLine = 1
-//    index = 0
-//    drawTextLine(s" --- History Rank --- ", rightBegin, index, historyRankBaseLine)
-//    historyRank.foreach { score =>
-//      index += 1
-//      drawTextLine(s"[$index]: ${score.n.+("   ").take(3)} kill=${score.k} score=${score.score}", rightBegin, index, historyRankBaseLine)
-//    }
+
 
   }
 //绘制一条信息

@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.shared.ptcl.Point
@@ -43,6 +44,8 @@ trait Grid {
   val mergeInterval = 8 * 1000
 //最小分裂大小
   val splitLimit = 20
+  //分裂初始速度
+  val splitBaseSpeed = 40
   //食物质量
   val foodMass = 1
   //食物列表
@@ -60,6 +63,8 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
+//  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
+
 //用户离开，从列表中去掉
   def removePlayer(id: Long): Option[Player] = {
     val r = playerMap.get(id)
@@ -68,7 +73,6 @@ trait Grid {
     }
     r
   }
-
 
   def addAction(id: Long, keyCode: Int) = {
     addActionWithFrame(id, keyCode, frameCount)
@@ -79,7 +83,6 @@ trait Grid {
     val tmp = map + (id -> keyCode)
     actionMap += (frame -> tmp)
   }
-
   def addMouseAction(id: Long, x:Double, y:Double) = {
     addMouseActionWithFrame(id, x, y,  frameCount)
   }
@@ -88,7 +91,6 @@ trait Grid {
     val tmp = map + (id -> MousePosition(x,y))
     mouseActionMap += (frame -> tmp)
   }
-
 //
   def update() = {
     //println(s"-------- grid update frameCount= $frameCount ---------")
@@ -273,7 +275,7 @@ trait Grid {
           newMass = newMass - splitMass
           splitRadius = 4 + sqrt(splitMass) * 6
           newRadius = 4 + sqrt(newMass) * 6
-          splitSpeed = 30 + 20/cbrt(cell.radius)
+          splitSpeed = splitBaseSpeed + 2*cbrt(cell.radius)
           splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
         }
