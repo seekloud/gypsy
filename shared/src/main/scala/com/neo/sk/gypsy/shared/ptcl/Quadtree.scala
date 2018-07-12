@@ -9,13 +9,13 @@ import scala.collection.mutable.ArrayBuffer
 
 
 class Quadtree {
-  private val MAX_OBJECTS = 10
-  private val MAX_LEVELS = 5
+   val MAX_OBJECTS = 10
+   val MAX_LEVELS = 5
 
-  private var level = 0
-  private var objects = ArrayBuffer[CollisionObj]()
-  private var bounds:Rectangle = new Rectangle(0,0,Boundary.w,Boundary.h)
-  private var nodes = new Array[Quadtree](4)
+   var level = 0
+   var objects = ArrayBuffer[CollisionObj]()
+   var bounds:Rectangle = new Rectangle(0,0,Boundary.w,Boundary.h)
+   var nodes = new Array[Quadtree](4)
 
   /*
     * 构造函数

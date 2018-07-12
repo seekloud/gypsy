@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.{CollisionObj, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl
 
+import scala.collection.mutable.ArrayBuffer
 import scala.math._
 import scala.util.Random
 
@@ -319,9 +320,6 @@ trait Grid {
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
-
-
-
   }
 
   def initQuadtree():Unit = {
@@ -336,6 +334,21 @@ trait Grid {
     }
     massList.foreach{mass=>
       quad.insert(CollisionObj(0L,"mass",mass.x,mass.y,mass.radius,mass.mass))
+    }
+  }
+  def updatePlayers() = {
+    initQuadtree()
+    val playerInTree = quad.objects.filter(a=> a.objType == "cell")
+    var returnObj = ArrayBuffer[CollisionObj]()
+    for (i <- 0 until playerInTree.length){
+      quad.retrieve(returnObj,playerInTree(i))
+      for (j <- 0 until returnObj.length){
+        returnObj(j).objType match{
+          case "cell" =>
+          case "mass" =>
+          case "food" =>
+        }
+      }
     }
   }
 
