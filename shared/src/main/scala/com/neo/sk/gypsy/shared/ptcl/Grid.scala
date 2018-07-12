@@ -1,9 +1,10 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.shared.ptcl.Point
-import Protocol.MousePosition
+import Protocol.{CollisionObj, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl
 
 import scala.math._
@@ -64,6 +65,8 @@ trait Grid {
   var actionMap = Map.empty[Long, Map[Long, Int]]
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
+
+  var quad = new Quadtree(0,new Rectangle(0,0,Boundary.w,Boundary.h))
 
 //用户离开，从列表中去掉
   def removePlayer(id: Long): Option[Player] = {
@@ -316,8 +319,25 @@ trait Grid {
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
+
+
+
   }
 
+  def initQuadtree():Unit = {
+    quad.clear()
+    playerMap.foreach{player=>
+      player._2.cells.foreach{cell =>
+        quad.insert(CollisionObj(player._1,"cell",cell.x,cell.y,cell.radius,cell.mass))
+      }
+    }
+    food.foreach{food=>
+      quad.insert(CollisionObj(0L,"food",food._1.x,food._1.y,4,foodMass))
+    }
+    massList.foreach{mass=>
+      quad.insert(CollisionObj(0L,"mass",mass.x,mass.y,mass.radius,mass.mass))
+    }
+  }
 
 
 
