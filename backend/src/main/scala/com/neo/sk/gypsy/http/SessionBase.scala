@@ -48,7 +48,7 @@ object SessionBase{
   }
 }
 
-trait SessionBase extends SessionSupport with ServiceUtils{
+trait SessionBase extends SessionSupport with ServiceUtils with CirceSupport{
 
   import SessionBase._
 

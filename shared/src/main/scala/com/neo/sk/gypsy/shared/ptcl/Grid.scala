@@ -231,7 +231,7 @@ trait Grid {
           }
         }
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).map{cell2=>
+        player.cells.filterNot(p=> p == cell).foreach{ cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {

@@ -27,6 +27,8 @@ object Boot extends HttpService {
 
   override val timeout = Timeout(20 seconds) // for actor asks
 
+  override implicit val scheduler = system.scheduler
+
   val log: LoggingAdapter = Logging(system, getClass)
 
 

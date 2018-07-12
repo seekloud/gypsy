@@ -52,10 +52,8 @@ trait ResourceService {
     } ~
     pathPrefix("img") {
       getFromResourceDirectory("img")
-    } ~
-    pathPrefix("test") {
-      getFromDirectory("D:\\workstation\\sbt\\vigour\\logs\\test")
     }
+
   }
 
   //cache code copied from zhaorui.
