@@ -37,7 +37,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(7)
-      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),List(Cell(center.x,center.y)))
+      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)))
     }
     waitingJoin = Map.empty[Long, String]
   }

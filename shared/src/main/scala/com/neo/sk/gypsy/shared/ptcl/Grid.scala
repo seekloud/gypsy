@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.shared.ptcl
 
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
+import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.MousePosition
@@ -27,6 +28,7 @@ trait Grid {
 
   val random = new Random(System.nanoTime())
 
+  val cellIdgenerator = new AtomicInteger(1000000)
   val step = 8
 
   val defaultLength = 5
@@ -162,7 +164,7 @@ trait Grid {
 
       var newKill = player.kill
       var newSplitTime = player.lastSplit
-
+      var mergeCells = List[Cell]()
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
       var newCells = player.cells.flatMap{cell=>
@@ -232,6 +234,7 @@ trait Grid {
           }
         }
         //自身cell合并检测
+
         player.cells.filterNot(p=> p == cell).map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
@@ -244,8 +247,11 @@ trait Grid {
             }
             else if (distance < radiusTotal / 1.75) {
               if(cell.radius > cell2.radius){
-                newMass += cell2.mass
-                newRadius = 4 + sqrt(newMass) * mass2rRate
+                if(mergeCells.filter(_.id==cell2.id).isEmpty){
+                  newMass += cell2.mass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  mergeCells = cell2 :: mergeCells
+                }
               }else if(cell.radius < cell2.radius){
                 newMass = 0
                 newRadius = 0
@@ -268,6 +274,7 @@ trait Grid {
         var splitMass = 0.0
         var splitRadius = 0.0
         var splitSpeed = 0.0
+        var cellId = 0L
         if (split == true && cell.mass > splitLimit){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
@@ -277,8 +284,9 @@ trait Grid {
           splitSpeed = splitBaseSpeed + 2*cbrt(cell.radius)
           splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
+          cellId = cellIdgenerator.getAndIncrement().toLong
         }
-        List(Cell(newX,newY,newMass,newRadius,newSpeed),Cell(splitX,splitY,splitMass,splitRadius,splitSpeed))
+        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed))
       }.filterNot(_.mass==0)
 
       if(newCells.length == 0){
@@ -309,7 +317,7 @@ trait Grid {
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
     killerMap.foreach{killer=>
-      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0,0))))
+      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0L,0,0))))
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
