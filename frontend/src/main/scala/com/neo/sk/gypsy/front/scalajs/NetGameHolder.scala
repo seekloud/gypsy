@@ -92,14 +92,14 @@ object NetGameHolder extends js.JSApp {
 
 //绘制背景
   def drawGameOn(): Unit = {
-    ctx.fillStyle = Color.Black.toString()
+    ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 //边框;提示文字
   def drawGameOff(): Unit = {
-    ctx.fillStyle = Color.Black.toString()
+    ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, window.x , window.y )
-    ctx.fillStyle = "rgb(250, 250, 250)"
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
     if (firstCome) {
       ctx.font = "36px Helvetica"
       ctx.fillText("Welcome.", 150, 180)
@@ -280,12 +280,12 @@ object NetGameHolder extends js.JSApp {
   def joinGame(name: String): Unit = {
     joinButton.disabled = true
     val playground = dom.document.getElementById("playground")
-    playground.innerHTML = s"Trying to join game as '$name'..."
+    //playground.innerHTML = s"Trying to join game as '$name'..."
     val gameStream = new WebSocket(getWebSocketUri(dom.document, name))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
-      playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
+     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
       wsSetup = true
       canvas.focus()
       //在画布上监听键盘事件
@@ -329,7 +329,7 @@ object NetGameHolder extends js.JSApp {
 
     gameStream.onerror = { (event: ErrorEvent) =>
       drawGameOff()
-      playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
+      //playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
       joinButton.disabled = false
       wsSetup = false
       nameField.focus()
@@ -344,22 +344,22 @@ object NetGameHolder extends js.JSApp {
       val wsMsg = decode[Protocol.GameMessage](event.data.toString).right.get
       wsMsg match {
         case Protocol.Id(id) => myId = id
-        case Protocol.TextMsg(message) => writeToArea(s"MESSAGE: $message")
+        case Protocol.TextMsg(message) => //writeToArea(s"MESSAGE: $message")
         case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
         case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
         case a@Protocol.SnakeAction(id, keyCode, frame) =>
           if (frame > grid.frameCount) {
-            writeToArea(s"!!! got snake action=$a when i am in frame=${grid.frameCount}")
+            //writeToArea(s"!!! got snake action=$a when i am in frame=${grid.frameCount}")
           } else {
-            writeToArea(s"got snake action=$a")
+            //writeToArea(s"got snake action=$a")
           }
           grid.addActionWithFrame(id, keyCode, frame)
 
         case a@Protocol.SnakeMouseAction(id, x, y, frame) =>
           if (frame > grid.frameCount) {
-            writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
+            //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
           } else {
-            writeToArea(s"got snake mouse action=$a")
+            //writeToArea(s"got snake mouse action=$a")
           }
           grid.addMouseActionWithFrame(id, x, y, frame)
 
@@ -368,7 +368,7 @@ object NetGameHolder extends js.JSApp {
           currentRank = current
           historyRank = history
         case Protocol.FeedApples(foods) =>
-          writeToArea(s"food feeded = $foods") //for debug.
+          //writeToArea(s"food feeded = $foods") //for debug.
           grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
         case data: Protocol.GridDataSync =>
           //writeToArea(s"grid data got: $msgData")
@@ -378,21 +378,18 @@ object NetGameHolder extends js.JSApp {
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
           grid.massList = data.massDetails
-//          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
-//          val gridMap = appleMap ++ starMap
-//          grid.grid = gridMap
           justSynced = true
         //drawGrid(msgData.uid, data)
         case Protocol.NetDelayTest(createTime) =>
           val receiveTime = System.currentTimeMillis()
           val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
-          writeToArea(m)
+          //writeToArea(m)
       }
     }
 
     gameStream.onclose = { (event: Event) =>
       drawGameOff()
-      playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
+      //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
       joinButton.disabled = false
       wsSetup = false
       nameField.focus()
