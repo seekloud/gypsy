@@ -43,7 +43,7 @@ trait Grid {
 //合并时间间隔
   val mergeInterval = 8 * 1000
 //最小分裂大小
-  val splitLimit = 20
+  val splitLimit = 30
   //分裂初始速度
   val splitBaseSpeed = 40
   //食物质量
