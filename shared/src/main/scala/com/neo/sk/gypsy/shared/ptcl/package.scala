@@ -60,6 +60,7 @@ package object ptcl {
                    cells:List[Cell]
                    )
   case class Cell(
+                 id:Long,
                  x:Int,
                  y:Int,
                  mass:Double = 10,
