@@ -3,6 +3,7 @@ package com.neo.sk.gypsy.snake
 import com.neo.sk.gypsy.shared.ptcl._
 import org.slf4j.LoggerFactory
 
+import scala.math.sqrt
 import scala.util.Random
 
 /**
@@ -22,6 +23,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   private[this] var waitingJoin = Map.empty[Long, String]
   private[this] var feededApples: List[Food] = Nil
+  private[this] var addedVirus:List[Virus] = Nil
 
 
   var currentRank = List.empty[Score]
@@ -84,6 +86,18 @@ class GridOnServer(override val boundary: Point) extends Grid {
       feededApples ::= Food(color,p.x,p.y)
       food += (p->color)
       appleNeeded -= 1
+    }
+  }
+
+  override def addVirus(v: Int): Unit = {
+    addedVirus = Nil
+    var virusNeeded = v
+    while(virusNeeded > 0){
+      val p =randomEmptyPoint()
+      val mass = 100 + random.nextInt(100)
+      val radius = 4 + sqrt(mass) * mass2rRate
+      virus ::= Virus(p.x,p.y,mass,radius)
+      virusNeeded -= 1
     }
   }
 
