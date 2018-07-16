@@ -13,7 +13,8 @@ object Protocol {
     frameCount: Long,
     playerDetails: List[Player],
     foodDetails: List[Food],
-    massDetails: List[Mass]
+    massDetails: List[Mass],
+    virusDetails: List[Virus]
   ) extends GameMessage
 
 
