@@ -240,9 +240,7 @@ trait Grid {
             }
           }
         }
-
         //自身cell合并检测
-
         player.cells.filterNot(p=> p == cell).map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
@@ -271,7 +269,7 @@ trait Grid {
         //病毒碰撞检测
         virus.foreach{v=>
           if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
-            newMass = (newMass/v.splitNumber).toInt + v.mass
+            newMass = (newMass/v.splitNumber).toInt + (v.mass*0.5).toInt
             newRadius = 4 + sqrt(newMass) * mass2rRate
             newSplitTime = System.currentTimeMillis()
             val cellMass= (newMass/v.splitNumber).toInt
@@ -281,7 +279,7 @@ trait Grid {
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
               val startLen = newRadius + cellRadius
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+30)
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+40)
             }
 
             virus = virus.filterNot(_==v)
