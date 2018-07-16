@@ -32,8 +32,6 @@ trait Grid {
   val step = 8
 
   val defaultLength = 5
-  val appleNum = 6
-  val appleLife = 200
   val historyRankLength = 5
 
   val slowDown = 2
@@ -54,6 +52,10 @@ trait Grid {
   var food = Map[Point, Int]()
   //食物池
   var foodPool = 100
+  //病毒列表
+  var virus = List[Virus]()
+  //病毒数量
+  var virusNum:Int = 4
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
@@ -102,6 +104,7 @@ trait Grid {
   }
 
   def feedApple(appleCount: Int): Unit
+  def addVirus(virus: Int): Unit
 //食物更新
   private[this] def updateSpots() = {
 //更新喷出小球的位置
@@ -128,6 +131,7 @@ trait Grid {
       mass.copy(x = newX,y = newY,speed = newSpeed)
     }
     feedApple(foodPool + playerMap.size * 3 - food.size)
+    addVirus(virusNum - virus.size)
   }
 
 //随机返回一个空点坐标
