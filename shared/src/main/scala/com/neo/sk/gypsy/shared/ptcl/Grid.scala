@@ -147,7 +147,7 @@ trait Grid {
 //移动，碰撞检测
   private[this] def updatePlayer() = {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
-      //val keyCode = actMap.get(star.id)
+
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
           //相对屏幕中央的位置
@@ -168,8 +168,10 @@ trait Grid {
 
       var newKill = player.kill
       var newSplitTime = player.lastSplit
-      var mergeCells = List[Cell]()
-      var deleteCells = List[Cell]()
+      var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
+      var deleteCells = List[Cell]()//依据距离判断被删去的cell
+
+      var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
       var newCells = player.cells.flatMap{cell=>
@@ -238,6 +240,20 @@ trait Grid {
             }
           }
         }
+//        //病毒碰撞检测
+//        virus.foreach{v=>
+//          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
+//            newMass += newMass/v.splitNumber + v.mass
+//            newRadius = 4 + sqrt(newMass) * mass2rRate
+//            val baseAngle = 360/v.splitNumber
+//            for(i <- 0 until v.splitNumber){
+//
+//
+//            }
+//
+//            virus = virus.filterNot(_==v)
+//          }
+//        }
         //自身cell合并检测
 
         player.cells.filterNot(p=> p == cell).map{cell2=>
