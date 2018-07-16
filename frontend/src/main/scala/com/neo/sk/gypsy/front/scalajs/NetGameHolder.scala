@@ -141,6 +141,7 @@ object NetGameHolder extends js.JSApp {
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
+    val virus = data.virusDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
@@ -229,6 +230,14 @@ object NetGameHolder extends js.JSApp {
       ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
       ctx.fill()
     }
+
+    virus.foreach { case Virus(x,y,mass,radius,_) =>
+      ctx.fillStyle = "green"
+      ctx.beginPath()
+      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
+      ctx.fill()
+    }
+
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -378,6 +387,7 @@ object NetGameHolder extends js.JSApp {
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
           grid.massList = data.massDetails
+          grid.virus = data.virusDetails
           justSynced = true
         //drawGrid(msgData.uid, data)
         case Protocol.NetDelayTest(createTime) =>

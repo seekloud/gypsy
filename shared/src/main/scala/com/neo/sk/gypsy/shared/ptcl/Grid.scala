@@ -240,20 +240,7 @@ trait Grid {
             }
           }
         }
-//        //病毒碰撞检测
-//        virus.foreach{v=>
-//          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
-//            newMass += newMass/v.splitNumber + v.mass
-//            newRadius = 4 + sqrt(newMass) * mass2rRate
-//            val baseAngle = 360/v.splitNumber
-//            for(i <- 0 until v.splitNumber){
-//
-//
-//            }
-//
-//            virus = virus.filterNot(_==v)
-//          }
-//        }
+
         //自身cell合并检测
 
         player.cells.filterNot(p=> p == cell).map{cell2=>
@@ -279,6 +266,25 @@ trait Grid {
                 deleteCells = cell :: deleteCells
               }
             }
+          }
+        }
+        //病毒碰撞检测
+        virus.foreach{v=>
+          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
+            newMass = (newMass/v.splitNumber).toInt + v.mass
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSplitTime = System.currentTimeMillis()
+            val cellMass= (newMass/v.splitNumber).toInt
+            val cellRadius =  4 + sqrt(cellMass) * mass2rRate
+            val baseAngle = 2*Pi/v.splitNumber
+            for(i <- 0 until v.splitNumber){
+              val degX = cos(baseAngle * i)
+              val degY = sin(baseAngle * i)
+              val startLen = newRadius + cellRadius
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+30)
+            }
+
+            virus = virus.filterNot(_==v)
           }
         }
 //喷射小球
@@ -308,7 +314,7 @@ trait Grid {
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
           cellId = cellIdgenerator.getAndIncrement().toLong
         }
-        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed))
+        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
       }.filterNot(_.mass==0)
 
       val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
@@ -370,7 +376,8 @@ trait Grid {
       frameCount,
       playerDetails,
       foodDetails,
-      massList
+      massList,
+      virus
     )
   }
 }

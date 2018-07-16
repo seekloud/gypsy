@@ -94,7 +94,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     var virusNeeded = v
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
-      val mass = 100 + random.nextInt(100)
+      val mass = 50 + random.nextInt(50)
       val radius = 4 + sqrt(mass) * mass2rRate
       virus ::= Virus(p.x,p.y,mass,radius)
       virusNeeded -= 1
