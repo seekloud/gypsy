@@ -63,7 +63,7 @@ package object ptcl {
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 10,
+                 mass:Double = 100,
                  radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12
                  )

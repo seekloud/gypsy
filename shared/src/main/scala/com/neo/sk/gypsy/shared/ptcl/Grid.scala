@@ -165,6 +165,7 @@ trait Grid {
       var newKill = player.kill
       var newSplitTime = player.lastSplit
       var mergeCells = List[Cell]()
+      var deleteCells = List[Cell]()
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
       var newCells = player.cells.flatMap{cell=>
@@ -255,6 +256,7 @@ trait Grid {
               }else if(cell.radius < cell2.radius){
                 newMass = 0
                 newRadius = 0
+                deleteCells = cell :: deleteCells
               }
             }
           }
@@ -288,6 +290,10 @@ trait Grid {
         }
         List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed))
       }.filterNot(_.mass==0)
+
+      val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
+      //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
+      newCells = newCells ::: recoverCells
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
