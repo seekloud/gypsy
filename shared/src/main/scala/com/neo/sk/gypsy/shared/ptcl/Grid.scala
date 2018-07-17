@@ -171,7 +171,6 @@ trait Grid {
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
 
-      var mergeCellId = List[Long]()
       var mergeInFlame = false
       var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
       //对每一个cell单独计算速度、方向
@@ -320,7 +319,7 @@ trait Grid {
         List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
       }.filterNot(_.mass==0)
 
-      val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
+      //val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
       //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
       //newCells = newCells ::: recoverCells
 
