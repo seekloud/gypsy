@@ -172,11 +172,11 @@ trait Grid {
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
 
       var mergeCellId = List[Long]()
-
+      var mergeInFlame = false
       var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
-      var newCells = player.cells.flatMap{cell=>
+      var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
@@ -215,6 +215,7 @@ trait Grid {
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
+
         food.foreach{
           case (p, color)=>
             if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
@@ -243,7 +244,7 @@ trait Grid {
           }
         }
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).map{cell2=>
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
@@ -256,12 +257,14 @@ trait Grid {
             else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
                 if(mergeCells.filter(_.id==cell2.id).isEmpty && mergeCells.filter(_.id==cell.id).isEmpty && deleteCells.filter(_.id == cell.id).isEmpty){
+                  mergeInFlame = true
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
               }
-              else if(cell.radius < cell2.radius){
+              else if(cell.radius < cell2.radius && deleteCells.filter(_.id == cell.id).isEmpty && deleteCells.filter(_.id == cell2.id).isEmpty){
+                mergeInFlame = true
                 newMass = 0
                 newRadius = 0
                 deleteCells = cell :: deleteCells
@@ -271,7 +274,8 @@ trait Grid {
         }
         //病毒碰撞检测
         virus.foreach{v=>
-          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
+          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  mergeInFlame == false) {
+            virus = virus.filterNot(_==v)
             val cellMass= (newMass/(v.splitNumber+1)).toInt
             val cellRadius =  4 + sqrt(cellMass) * mass2rRate
             newMass = (newMass/(v.splitNumber+1)).toInt + (v.mass*0.5).toInt
@@ -284,7 +288,6 @@ trait Grid {
               val startLen = (newRadius + cellRadius)*1.2
               vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
             }
-            virus = virus.filterNot(_==v)
           }
         }
 //喷射小球
@@ -319,7 +322,7 @@ trait Grid {
 
       val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
       //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
-      newCells = newCells ::: recoverCells
+      //newCells = newCells ::: recoverCells
 
       //newCells = newCells.filterNot(c =>mergeCellId.contains(c))
 
