@@ -279,7 +279,7 @@ trait Grid {
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
               val startLen = newRadius + cellRadius
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+40)
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+20)
             }
 
             virus = virus.filterNot(_==v)

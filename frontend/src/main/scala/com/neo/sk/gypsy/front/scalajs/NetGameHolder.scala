@@ -68,6 +68,7 @@ object NetGameHolder extends js.JSApp {
   private[this] val joinButton = dom.document.getElementById("join").asInstanceOf[HTMLButtonElement]
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+  val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -232,10 +233,11 @@ object NetGameHolder extends js.JSApp {
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
-      ctx.fillStyle = "green"
-      ctx.beginPath()
-      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
-      ctx.fill()
+//      ctx.fillStyle = "green"
+//      ctx.beginPath()
+//      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
+//      ctx.fill()
+      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
     }
 
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
