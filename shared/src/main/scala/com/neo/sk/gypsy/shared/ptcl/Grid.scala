@@ -171,6 +171,8 @@ trait Grid {
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
 
+      var mergeCellId = List[Long]()
+
       var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
@@ -251,14 +253,15 @@ trait Grid {
               if (cell.y < cell2.y) newY  -= 1
               else if (cell.y > cell2.y) newY += 1
             }
-            else if (distance < radiusTotal / 1.75) {
+            else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
-                if(mergeCells.filter(_.id==cell2.id).isEmpty){
+                if(mergeCells.filter(_.id==cell2.id).isEmpty && mergeCells.filter(_.id==cell.id).isEmpty && deleteCells.filter(_.id == cell.id).isEmpty){
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
-              }else if(cell.radius < cell2.radius){
+              }
+              else if(cell.radius < cell2.radius){
                 newMass = 0
                 newRadius = 0
                 deleteCells = cell :: deleteCells
@@ -269,19 +272,18 @@ trait Grid {
         //病毒碰撞检测
         virus.foreach{v=>
           if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2)) {
-            newMass = (newMass/v.splitNumber).toInt + (v.mass*0.5).toInt
+            val cellMass= (newMass/(v.splitNumber+1)).toInt
+            val cellRadius =  4 + sqrt(cellMass) * mass2rRate
+            newMass = (newMass/(v.splitNumber+1)).toInt + (v.mass*0.5).toInt
             newRadius = 4 + sqrt(newMass) * mass2rRate
             newSplitTime = System.currentTimeMillis()
-            val cellMass= (newMass/v.splitNumber).toInt
-            val cellRadius =  4 + sqrt(cellMass) * mass2rRate
             val baseAngle = 2*Pi/v.splitNumber
             for(i <- 0 until v.splitNumber){
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
-              val startLen = newRadius + cellRadius
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed+20)
+              val startLen = (newRadius + cellRadius)*1.2
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
             }
-
             virus = virus.filterNot(_==v)
           }
         }
@@ -318,6 +320,8 @@ trait Grid {
       val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
       //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
       newCells = newCells ::: recoverCells
+
+      //newCells = newCells.filterNot(c =>mergeCellId.contains(c))
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
