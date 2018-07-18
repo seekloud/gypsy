@@ -10,6 +10,7 @@ import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
+import scala.math._
 
 import scala.scalajs.js
 
@@ -24,6 +25,9 @@ object NetGameHolder extends js.JSApp {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(Window.w, Window.h)
+
+  val littleMap = 200
+  val mapMargin = 20
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -255,8 +259,8 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
-        ctx.fillText(s"KILL: ${myStar.kill}", 30, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 300, 10)
+        ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
+        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -279,6 +283,37 @@ object NetGameHolder extends js.JSApp {
       index += 1
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
+    //绘制小地图
+    ctx.font = "12px Helvetica"
+    ctx.fillStyle = MyColors.rankList
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.strokeStyle = "black"
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
+    }
+    val margin = littleMap/3
+    ctx.fillStyle = MyColors.background
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+    players.filter(_.id==uid).headOption match {
+      case Some(player)=>
+        ctx.beginPath()
+        ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx.fill()
+        println(s"${basePoint._1},  ${basePoint._2}")
+    }
+
 
 
   }
