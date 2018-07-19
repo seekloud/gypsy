@@ -1,17 +1,29 @@
 package com.neo.sk.gypsy.front.scalajs
 
+import com.neo.sk.gypsy.front.common.Routes.UserRoute
+import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
+import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
+
+import scalatags.JsDom.all._
+import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.{Document => _, _}
+import org.scalajs.dom.html.{Element, Document => _, _}
 import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
+import scala.math._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
+import scala.scalajs.js.UndefOr
+import scalatags.JsDom.short.*
+import scalatags.generic.Attr
 
 /**
   * User: Taoz
@@ -24,6 +36,9 @@ object NetGameHolder extends js.JSApp {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(Window.w, Window.h)
+
+  val littleMap = 200
+  val mapMargin = 20
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -51,7 +66,8 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Up,
     KeyCode.Right,
     KeyCode.Down,
-    KeyCode.F2
+    KeyCode.F2,
+    KeyCode.Escape
   )
 
   object MyColors {
@@ -64,11 +80,9 @@ object NetGameHolder extends js.JSApp {
     val otherBody = "#696969"
   }
 
-  private[this] val roomField = dom.document.getElementById("room").asInstanceOf[HTMLInputElement]
-  private[this] val nameField = dom.document.getElementById("name").asInstanceOf[HTMLInputElement]
-  private[this] val joinButton = dom.document.getElementById("join").asInstanceOf[HTMLButtonElement]
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+  private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -76,20 +90,17 @@ object NetGameHolder extends js.JSApp {
     canvas.width = window.x
     canvas.height = window.y
 
-    joinButton.onclick = { (event: MouseEvent) =>
-      joinGame(roomField.value,nameField.value)
-      event.preventDefault()
+
+    dom.window.onload= {
+      (_: Event) =>
+      LoginPage.homePage()
     }
-    nameField.focus()
-    nameField.onkeypress = { (event: KeyboardEvent) =>
-      if (event.keyCode == 13) {
-        joinButton.click()
-        event.preventDefault()
-      }
+        //每隔一段间隔就执行gameLoop（同步更新，重画）
+        dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
     }
-//每隔一段间隔就执行gameLoop（同步更新，重画）
-    dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
-  }
+
+
+
 
 //绘制背景
   def drawGameOn(): Unit = {
@@ -142,6 +153,7 @@ object NetGameHolder extends js.JSApp {
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
+    val virus = data.virusDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
@@ -230,6 +242,15 @@ object NetGameHolder extends js.JSApp {
       ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
       ctx.fill()
     }
+
+    virus.foreach { case Virus(x,y,mass,radius,_) =>
+//      ctx.fillStyle = "green"
+//      ctx.beginPath()
+//      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
+//      ctx.fill()
+      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+    }
+
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -245,8 +266,8 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
-        ctx.fillText(s"KILL: ${myStar.kill}", 30, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 300, 10)
+        ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
+        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -269,6 +290,37 @@ object NetGameHolder extends js.JSApp {
       index += 1
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
+    //绘制小地图
+    ctx.font = "12px Helvetica"
+    ctx.fillStyle = MyColors.rankList
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.strokeStyle = "black"
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
+    }
+    val margin = littleMap/3
+    ctx.fillStyle = MyColors.background
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+    players.filter(_.id==uid).headOption match {
+      case Some(player)=>
+        ctx.beginPath()
+        ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx.fill()
+        println(s"${basePoint._1},  ${basePoint._2}")
+    }
+
 
 
   }
@@ -278,11 +330,9 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-  def joinGame(room:String,name: String): Unit = {
-    joinButton.disabled = true
-    val playground = dom.document.getElementById("playground")
-    //playground.innerHTML = s"Trying to join game as '$name'..."
-    val gameStream = new WebSocket(getWebSocketUri(dom.document,room,name))
+def joinGame(name: String, userType: Int = 0): Unit = {
+  val playground = dom.document.getElementById("playground")
+    val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, name, userType))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
@@ -297,7 +347,10 @@ object NetGameHolder extends js.JSApp {
             println(s"key down: [${e.keyCode}]")
             if (e.keyCode == KeyCode.F2) {
               gameStream.send("T" + System.currentTimeMillis())
-            } else {
+            } else if(e.keyCode == KeyCode.Escape){
+              gameStream.send("LEFT")
+              LoginPage.homePage()
+            }else {
               println(s"down+${e.keyCode.toString}")
               gameStream.send(e.keyCode.toString)
             }
@@ -305,8 +358,9 @@ object NetGameHolder extends js.JSApp {
           }
         }
       }
-      canvas.onmousemove = {(e:dom.MouseEvent)=>{
-        gameStream.send(MousePosition(e.pageX,e.pageY).asJson.noSpaces)
+      //在画布上监听鼠标事件
+      canvas.onmousemove = { (e: dom.MouseEvent) => {
+        gameStream.send(MousePosition(e.pageX, e.pageY).asJson.noSpaces)
       }
 
       }
@@ -330,10 +384,8 @@ object NetGameHolder extends js.JSApp {
 
     gameStream.onerror = { (event: ErrorEvent) =>
       drawGameOff()
-      //playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
-      joinButton.disabled = false
+      playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
       wsSetup = false
-      nameField.focus()
     }
 
 
@@ -379,31 +431,34 @@ object NetGameHolder extends js.JSApp {
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
           grid.massList = data.massDetails
+          grid.virus = data.virusDetails
           justSynced = true
         //drawGrid(msgData.uid, data)
         case Protocol.NetDelayTest(createTime) =>
           val receiveTime = System.currentTimeMillis()
           val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
           //writeToArea(m)
+        case msg@_ =>
+          println(s"unkown $msg")
+
+
       }
     }
 
     gameStream.onclose = { (event: Event) =>
       drawGameOff()
       //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
-      joinButton.disabled = false
       wsSetup = false
-      nameField.focus()
     }
 //写入消息区
-    def writeToArea(text: String): Unit =
-      playground.insertBefore(p(text), playground.firstChild)
+    def writeToArea(text: String): Unit ={
+      //playground.insertBefore(p(text), playground.firstChild)
+    }
+
+
+
   }
 
-  def getWebSocketUri(document: Document,room:String,nameOfChatParticipant: String): String = {
-    val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-    s"$wsProtocol://${dom.document.location.host}/gypsy/netSnake/join?room=${room}&name=$nameOfChatParticipant"
-  }
 
   def p(msg: String) = {
     val paragraph = dom.document.createElement("p")

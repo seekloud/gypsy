@@ -63,7 +63,7 @@ package object ptcl {
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 100,
+                 mass:Double = 10,
                  radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12
                  )
@@ -78,6 +78,13 @@ package object ptcl {
                  radius:Double,
                  speed:Double
                  )
+  case class Virus(
+                  x:Int,
+                  y:Int,
+                  mass:Double,
+                  radius:Double,
+                  splitNumber:Int = 7
+                  )
   object Boundary{
     val w = 3600
     val h = 1800

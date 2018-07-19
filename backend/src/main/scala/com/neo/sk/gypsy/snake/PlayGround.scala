@@ -135,6 +135,8 @@ object PlayGround {
               if (s.startsWith("T")) {
                 val timestamp = s.substring(1).toLong
                 NetTest(id, timestamp)
+              }else if(s.contains("LEFT")){
+                Left(id,name)
               } else {
                 decode[MousePosition](s) match{
                   case Right(mouse)=>
