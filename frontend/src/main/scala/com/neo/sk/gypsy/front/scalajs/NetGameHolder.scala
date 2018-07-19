@@ -17,6 +17,7 @@ import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
+import scala.math._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -35,6 +36,9 @@ object NetGameHolder extends js.JSApp {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(Window.w, Window.h)
+
+  val littleMap = 200
+  val mapMargin = 20
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
@@ -78,6 +82,7 @@ object NetGameHolder extends js.JSApp {
 
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+  val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -99,14 +104,14 @@ object NetGameHolder extends js.JSApp {
 
 //绘制背景
   def drawGameOn(): Unit = {
-    ctx.fillStyle = Color.Black.toString()
+    ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 //边框;提示文字
   def drawGameOff(): Unit = {
-    ctx.fillStyle = Color.Black.toString()
+    ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, window.x , window.y )
-    ctx.fillStyle = "rgb(250, 250, 250)"
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
     if (firstCome) {
       ctx.font = "36px Helvetica"
       ctx.fillText("Welcome.", 150, 180)
@@ -148,6 +153,7 @@ object NetGameHolder extends js.JSApp {
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
+    val virus = data.virusDetails
     val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
@@ -236,6 +242,15 @@ object NetGameHolder extends js.JSApp {
       ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
       ctx.fill()
     }
+
+    virus.foreach { case Virus(x,y,mass,radius,_) =>
+//      ctx.fillStyle = "green"
+//      ctx.beginPath()
+//      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
+//      ctx.fill()
+      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+    }
+
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -251,8 +266,8 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
-        ctx.fillText(s"KILL: ${myStar.kill}", 30, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 300, 10)
+        ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
+        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -275,6 +290,37 @@ object NetGameHolder extends js.JSApp {
       index += 1
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
+    //绘制小地图
+    ctx.font = "12px Helvetica"
+    ctx.fillStyle = MyColors.rankList
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.strokeStyle = "black"
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
+    }
+    val margin = littleMap/3
+    ctx.fillStyle = MyColors.background
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+    players.filter(_.id==uid).headOption match {
+      case Some(player)=>
+        ctx.beginPath()
+        ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx.fill()
+        println(s"${basePoint._1},  ${basePoint._2}")
+    }
+
 
 
   }
@@ -290,7 +336,7 @@ def joinGame(name: String, userType: Int = 0): Unit = {
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
-      playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
+     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
       wsSetup = true
       canvas.focus()
       //在画布上监听键盘事件
@@ -319,20 +365,20 @@ def joinGame(name: String, userType: Int = 0): Unit = {
 
       }
 
-      //      canvas.onkeyup = {
-      //        (e: dom.KeyboardEvent) => {
-      //          println(s"up: ${e.keyCode}")
-      //          if (watchKeys.contains(e.keyCode)) {
-      //            println(s"key up: [${e.keyCode}]")
-      //            if (e.keyCode == KeyCode.F2) {
-      //              gameStream.send("T" + System.currentTimeMillis())
-      //            } else {
-      //              gameStream.send(e.keyCode.toString)
-      //            }
-      //            e.preventDefault()
-      //          }
-      //        }
-      //      }
+//      canvas.onkeyup = {
+//        (e: dom.KeyboardEvent) => {
+//          println(s"up: ${e.keyCode}")
+//          if (watchKeys.contains(e.keyCode)) {
+//            println(s"key up: [${e.keyCode}]")
+//            if (e.keyCode == KeyCode.F2) {
+//              gameStream.send("T" + System.currentTimeMillis())
+//            } else {
+//              gameStream.send(e.keyCode.toString)
+//            }
+//            e.preventDefault()
+//          }
+//        }
+//      }
       event0
     }
 
@@ -351,22 +397,22 @@ def joinGame(name: String, userType: Int = 0): Unit = {
       val wsMsg = decode[Protocol.GameMessage](event.data.toString).right.get
       wsMsg match {
         case Protocol.Id(id) => myId = id
-        case Protocol.TextMsg(message) => writeToArea(s"MESSAGE: $message")
+        case Protocol.TextMsg(message) => //writeToArea(s"MESSAGE: $message")
         case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
         case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
         case a@Protocol.SnakeAction(id, keyCode, frame) =>
           if (frame > grid.frameCount) {
-            writeToArea(s"!!! got snake action=$a when i am in frame=${grid.frameCount}")
+            //writeToArea(s"!!! got snake action=$a when i am in frame=${grid.frameCount}")
           } else {
-            writeToArea(s"got snake action=$a")
+            //writeToArea(s"got snake action=$a")
           }
           grid.addActionWithFrame(id, keyCode, frame)
 
         case a@Protocol.SnakeMouseAction(id, x, y, frame) =>
           if (frame > grid.frameCount) {
-            writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
+            //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
           } else {
-            writeToArea(s"got snake mouse action=$a")
+            //writeToArea(s"got snake mouse action=$a")
           }
           grid.addMouseActionWithFrame(id, x, y, frame)
 
@@ -375,7 +421,7 @@ def joinGame(name: String, userType: Int = 0): Unit = {
           currentRank = current
           historyRank = history
         case Protocol.FeedApples(foods) =>
-          writeToArea(s"food feeded = $foods") //for debug.
+          //writeToArea(s"food feeded = $foods") //for debug.
           grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
         case data: Protocol.GridDataSync =>
           //writeToArea(s"grid data got: $msgData")
@@ -385,16 +431,13 @@ def joinGame(name: String, userType: Int = 0): Unit = {
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
           grid.massList = data.massDetails
-          //          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
-          //          val gridMap = appleMap ++ starMap
-          //          grid.grid = gridMap
+          grid.virus = data.virusDetails
           justSynced = true
         //drawGrid(msgData.uid, data)
         case Protocol.NetDelayTest(createTime) =>
           val receiveTime = System.currentTimeMillis()
           val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
-          writeToArea(m)
-
+          //writeToArea(m)
         case msg@_ =>
           println(s"unkown $msg")
 
@@ -404,12 +447,9 @@ def joinGame(name: String, userType: Int = 0): Unit = {
 
     gameStream.onclose = { (event: Event) =>
       drawGameOff()
-      playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
+      //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
       wsSetup = false
-
     }
-
-
 //写入消息区
     def writeToArea(text: String): Unit ={
       //playground.insertBefore(p(text), playground.firstChild)
