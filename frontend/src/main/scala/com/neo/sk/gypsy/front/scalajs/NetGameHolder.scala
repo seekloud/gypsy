@@ -64,6 +64,7 @@ object NetGameHolder extends js.JSApp {
     val otherBody = "#696969"
   }
 
+  private[this] val roomField = dom.document.getElementById("room").asInstanceOf[HTMLInputElement]
   private[this] val nameField = dom.document.getElementById("name").asInstanceOf[HTMLInputElement]
   private[this] val joinButton = dom.document.getElementById("join").asInstanceOf[HTMLButtonElement]
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
@@ -76,7 +77,7 @@ object NetGameHolder extends js.JSApp {
     canvas.height = window.y
 
     joinButton.onclick = { (event: MouseEvent) =>
-      joinGame(nameField.value)
+      joinGame(roomField.value,nameField.value)
       event.preventDefault()
     }
     nameField.focus()
@@ -277,11 +278,11 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-  def joinGame(name: String): Unit = {
+  def joinGame(room:String,name: String): Unit = {
     joinButton.disabled = true
     val playground = dom.document.getElementById("playground")
     //playground.innerHTML = s"Trying to join game as '$name'..."
-    val gameStream = new WebSocket(getWebSocketUri(dom.document, name))
+    val gameStream = new WebSocket(getWebSocketUri(dom.document,room,name))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
@@ -399,9 +400,9 @@ object NetGameHolder extends js.JSApp {
       playground.insertBefore(p(text), playground.firstChild)
   }
 
-  def getWebSocketUri(document: Document, nameOfChatParticipant: String): String = {
+  def getWebSocketUri(document: Document,room:String,nameOfChatParticipant: String): String = {
     val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-    s"$wsProtocol://${dom.document.location.host}/gypsy/netSnake/join?name=$nameOfChatParticipant"
+    s"$wsProtocol://${dom.document.location.host}/gypsy/netSnake/join?room=${room}&name=$nameOfChatParticipant"
   }
 
   def p(msg: String) = {
