@@ -27,6 +27,8 @@ object Boot extends HttpService {
 
   override val timeout = Timeout(20 seconds) // for actor asks
 
+  override implicit val scheduler = system.scheduler
+
   val log: LoggingAdapter = Logging(system, getClass)
 
 
@@ -36,7 +38,7 @@ object Boot extends HttpService {
     Http().bindAndHandle(routes, httpInterface, httpPort)
     log.info(s"Listen to the $httpInterface:$httpPort")
     log.info("Done.")
-    println(s"Server is listening on http://localhost:${httpPort}/gypsy/netSnake")
+    println(s"Server is listening on http://localhost:${httpPort}/gypsy/cell")
   }
 
 

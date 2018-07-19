@@ -32,31 +32,26 @@ trait SnakeService {
 
   implicit val timeout: Timeout
 
-  lazy val playGround = Map("1"->PlayGround.create("1",system),"2"->PlayGround.create("2",system))
+//  lazy val playGround = PlayGround.create(system)
 
-  val idGenerator = new AtomicInteger(1000000)
+//  val idGenerator = new AtomicInteger(1000000)
 
   private[this] val log = LoggerFactory.getLogger("com.neo.sk.gypsy.http.SnakeService")
 
 
-  val netSnakeRoute = {
-    (pathPrefix("netSnake") & get) {
-      pathEndOrSingleSlash {
-        getFromResource("html/netSnake.html")
-      } ~
+/*
+  val netSnakeRoute =
       path("join") {
-        parameter(
-          'room.as[String],
-          'name.as[String]
-        ) { (room,name) =>
-          handleWebSocketMessages(webSocketChatFlow(room,sender = name))
+        parameter('name) { name =>
+          handleWebSocketMessages(webSocketChatFlow(sender = name))
         }
       }
-    }
-  }
+*/
 
 
-  def webSocketChatFlow(room:String,sender: String): Flow[Message, Message, Any] =
+
+
+/*  def webSocketChatFlow(sender: String): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) =>
@@ -67,10 +62,10 @@ trait SnakeService {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(playGround(room).joinGame(idGenerator.getAndIncrement().toLong, sender)) // ... and route them through the chatFlow ...
+      .via(playGround.joinGame(idGenerator.getAndIncrement().toLong, sender)) // ... and route them through the chatFlow ...
       .map { msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-    }.withAttributes(ActorAttributes.supervisionStrategy(decider))    // ... then log any processing errors on stdin
+    }.withAttributes(ActorAttributes.supervisionStrategy(decider))    // ... then log any processing errors on stdin*/
 
 
   val decider: Supervision.Decider = {
