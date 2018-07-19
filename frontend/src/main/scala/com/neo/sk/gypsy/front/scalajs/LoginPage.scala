@@ -171,7 +171,8 @@ object LoginPage {
         if (nameField.value.trim.isEmpty) {
           LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
         } else {
-          joinGame(nameField.value)
+          //修改参数一为房间编号（简单版中为：11,12,21,22）
+          joinGame(nameField.value,nameField.value)
           LayuiJs.layer.close(guestIndex)
         }
     }
@@ -213,7 +214,7 @@ object LoginPage {
                     println(s"name or password error in login ${rsp.errCode} ")
                     LayuiJs.msg(rsp.msg, 5, 2000)
                   } else {
-                    joinGame(userName.value, 1)
+                    joinGame("11",userName.value, 1)
                     LayuiJs.layer.close(loginIndex)
                   }
                 case Left(e) =>
