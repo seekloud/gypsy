@@ -24,16 +24,19 @@ object LayuiJs {
     val `type` :js.UndefOr[Int] = js.undefined
     val title : js.UndefOr[Boolean]=js.undefined
     val closeBtn :js.UndefOr[Int] = js.undefined
-    val area :js.UndefOr[String] = js.undefined
+    val area :js.UndefOr[js.Array[String]] = js.undefined
     val skin :js.UndefOr[String] = js.undefined
     //阴影
-    val shade:js.UndefOr[String]=js.undefined
+    val shade:js.UndefOr[Float]=js.undefined
+    val id:js.UndefOr[String]=js.undefined
     //点击阴影关闭
     val shadeClose : js.UndefOr[Boolean]=js.undefined
     //是否允许浏览器出现滚动条
     val scrollbar:js.UndefOr[Boolean]=js.undefined
     //是否允许拉伸
     val resize:js.UndefOr[Boolean]=js.undefined
+    val btn:js.UndefOr[js.Array[String]] = js.undefined
+    val moveType:js.UndefOr[Int] = js.undefined
     val content : js.UndefOr[HTMLElement]=js.undefined
   }
 
@@ -51,6 +54,12 @@ object LayuiJs {
   @ScalaJSDefined
   trait ready extends js.Object{
     def ready:js.UndefOr[js.Function0[Any]] = js.undefined
+  }
+
+  @ScalaJSDefined
+  trait prompt extends js.Object{
+    val title:js.UndefOr[String] = js.undefined
+    val formType:js.UndefOr[Int]=js.undefined
   }
 
   @ScalaJSDefined
@@ -81,9 +90,12 @@ object LayuiJs {
   @JSGlobal("layer")
   object layer extends js.Object{
     def msg(msg:js.UndefOr[String],props:icon,func:js.Function0[Any]):Unit=js.native
-    def open(props:open):Unit=js.native
+    def open(props:open):js.UndefOr[Any]=js.native
     def photos(props:photos): Unit =js.native
     def ready(props:ready):Unit=js.native
+    def prompt(props:prompt,func:js.Function2[Any,Any,Any]):Unit=js.native
+    def close(index:js.UndefOr[Any]):Unit=js.native
+    def closeAll():Unit=js.native
   }
 
 
