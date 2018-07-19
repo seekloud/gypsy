@@ -60,6 +60,7 @@ package object ptcl {
                    cells:List[Cell]
                    )
   case class Cell(
+                 id:Long,
                  x:Int,
                  y:Int,
                  mass:Double = 10,
@@ -77,6 +78,13 @@ package object ptcl {
                  radius:Double,
                  speed:Double
                  )
+  case class Virus(
+                  x:Int,
+                  y:Int,
+                  mass:Double,
+                  radius:Double,
+                  splitNumber:Int = 7
+                  )
   object Boundary{
     val w = 3600
     val h = 1800
