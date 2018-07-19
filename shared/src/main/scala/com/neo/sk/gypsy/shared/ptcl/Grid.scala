@@ -151,7 +151,8 @@ trait Grid {
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
           //相对屏幕中央的位置
-          MousePosition(x-6-600,y-129-300)
+          println(s"x${x},y${y}")
+          MousePosition(x-111-600,y-48-300)
         case _=>
           MousePosition(player.targetX,player.targetY)
       }
