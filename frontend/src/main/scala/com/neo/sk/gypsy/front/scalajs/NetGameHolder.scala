@@ -82,7 +82,7 @@ object NetGameHolder extends js.JSApp {
 
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
