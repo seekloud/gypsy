@@ -1,20 +1,28 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.front.utils.LayuiJs
+import com.neo.sk.gypsy.front.common.Routes.UserRoute
+import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
+
+import scalatags.JsDom.all._
+import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.{Document => _, _}
+import org.scalajs.dom.html.{Element, Document => _, _}
 import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
+import scalatags.JsDom.short.*
+import scalatags.generic.Attr
 
 /**
   * User: Taoz
@@ -68,8 +76,6 @@ object NetGameHolder extends js.JSApp {
     val otherBody = "#696969"
   }
 
-  private[this] val nameField = dom.document.getElementById("name").asInstanceOf[HTMLInputElement]
-  private[this] val joinButton = dom.document.getElementById("join").asInstanceOf[HTMLButtonElement]
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
@@ -79,21 +85,17 @@ object NetGameHolder extends js.JSApp {
     canvas.width = window.x
     canvas.height = window.y
 
-    joinButton.onclick = { (event: MouseEvent) =>
-      joinGame(nameField.value)
-      event.preventDefault()
+
+    dom.window.onload= {
+      (_: Event) =>
+      LoginPage.homePage()
     }
-    nameField.focus()
-    //按回车
-    nameField.onkeypress = { (event: KeyboardEvent) =>
-      if (event.keyCode == 13) {
-        joinButton.click()
-        event.preventDefault()
-      }
+        //每隔一段间隔就执行gameLoop（同步更新，重画）
+        dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
     }
-//每隔一段间隔就执行gameLoop（同步更新，重画）
-    dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
-  }
+
+
+
 
 //绘制背景
   def drawGameOn(): Unit = {
@@ -282,11 +284,9 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-  def joinGame(name: String,password:String="",userType:Int=0): Unit = {
-    joinButton.disabled = true
-    val playground = dom.document.getElementById("playground")
-    playground.innerHTML = s"Trying to join game as '$name'..."
-    val gameStream = new WebSocket(getWebSocketUri(dom.document, name))
+def joinGame(name: String, userType: Int = 0): Unit = {
+  val playground = dom.document.getElementById("playground")
+    val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, name, userType))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()
@@ -301,7 +301,10 @@ object NetGameHolder extends js.JSApp {
             println(s"key down: [${e.keyCode}]")
             if (e.keyCode == KeyCode.F2) {
               gameStream.send("T" + System.currentTimeMillis())
-            } else {
+            } else if(e.keyCode == KeyCode.Escape){
+              gameStream.send("LEFT")
+              LoginPage.homePage()
+            }else {
               println(s"down+${e.keyCode.toString}")
               gameStream.send(e.keyCode.toString)
             }
@@ -310,35 +313,33 @@ object NetGameHolder extends js.JSApp {
         }
       }
       //在画布上监听鼠标事件
-      canvas.onmousemove = {(e:dom.MouseEvent)=>{
-        gameStream.send(MousePosition(e.pageX,e.pageY).asJson.noSpaces)
+      canvas.onmousemove = { (e: dom.MouseEvent) => {
+        gameStream.send(MousePosition(e.pageX, e.pageY).asJson.noSpaces)
       }
 
       }
 
-//      canvas.onkeyup = {
-//        (e: dom.KeyboardEvent) => {
-//          println(s"up: ${e.keyCode}")
-//          if (watchKeys.contains(e.keyCode)) {
-//            println(s"key up: [${e.keyCode}]")
-//            if (e.keyCode == KeyCode.F2) {
-//              gameStream.send("T" + System.currentTimeMillis())
-//            } else {
-//              gameStream.send(e.keyCode.toString)
-//            }
-//            e.preventDefault()
-//          }
-//        }
-//      }
+      //      canvas.onkeyup = {
+      //        (e: dom.KeyboardEvent) => {
+      //          println(s"up: ${e.keyCode}")
+      //          if (watchKeys.contains(e.keyCode)) {
+      //            println(s"key up: [${e.keyCode}]")
+      //            if (e.keyCode == KeyCode.F2) {
+      //              gameStream.send("T" + System.currentTimeMillis())
+      //            } else {
+      //              gameStream.send(e.keyCode.toString)
+      //            }
+      //            e.preventDefault()
+      //          }
+      //        }
+      //      }
       event0
     }
 
     gameStream.onerror = { (event: ErrorEvent) =>
       drawGameOff()
       playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
-      joinButton.disabled = false
       wsSetup = false
-      nameField.focus()
     }
 
 
@@ -384,34 +385,40 @@ object NetGameHolder extends js.JSApp {
           grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
           grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
           grid.massList = data.massDetails
-//          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
-//          val gridMap = appleMap ++ starMap
-//          grid.grid = gridMap
+          //          val starMap = data.stars.map(b => Point(b.center.x, b.center.y) -> Center(b.id, b.radius,b.score)).toMap
+          //          val gridMap = appleMap ++ starMap
+          //          grid.grid = gridMap
           justSynced = true
         //drawGrid(msgData.uid, data)
         case Protocol.NetDelayTest(createTime) =>
           val receiveTime = System.currentTimeMillis()
           val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
           writeToArea(m)
+
+        case msg@_ =>
+          println(s"unkown $msg")
+
+
       }
     }
 
     gameStream.onclose = { (event: Event) =>
       drawGameOff()
       playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
-      joinButton.disabled = false
       wsSetup = false
-      nameField.focus()
+
     }
+
+
 //写入消息区
-    def writeToArea(text: String): Unit =
-      playground.insertBefore(p(text), playground.firstChild)
+    def writeToArea(text: String): Unit ={
+      //playground.insertBefore(p(text), playground.firstChild)
+    }
+
+
+
   }
 
-  def getWebSocketUri(document: Document, nameOfChatParticipant: String): String = {
-    val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-    s"$wsProtocol://${dom.document.location.host}/gypsy/user/guestLogin?name=$nameOfChatParticipant"
-  }
 
   def p(msg: String) = {
     val paragraph = dom.document.createElement("p")

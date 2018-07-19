@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.http
 
+import akka.actor.Status
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive, Directive1, RequestContext}
@@ -119,7 +121,7 @@ trait SessionBase extends SessionSupport with ServiceUtils with CirceSupport{
         if(session.userInfo.userType == UserRolesType.comMember){
           f(session.userInfo)
         } else{
-          complete(noSessionError("您没有此项权限，请先登录。"))
+          redirect("/gypsy/cell",StatusCodes.SeeOther)
         }
 
       case None =>

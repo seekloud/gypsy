@@ -50,6 +50,11 @@ trait ResourceService {
         getFromResourceDirectory("sjsout")
       }
     } ~
+      pathPrefix("font") {
+        extractUnmatchedPath { path =>
+          getFromResourceDirectory("font")
+        }
+      }~
     pathPrefix("img") {
       getFromResourceDirectory("img")
     }

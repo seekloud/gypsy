@@ -10,7 +10,18 @@ object UserProtocol {
   case class UserLoginInfo(
                                name:String,
                                password:String,
-                               headImg:String,
                              )
+  case class UserLoginRsqJson(
+                         id:Long,
+                         name:String,
+                         headImg:String,
+                         score: Int
+                          )
+
+  case class UserLoginRsq(
+                         data:Option[UserLoginRsqJson],
+                         errCode: Int = 0,
+                         msg: String = "ok"
+                         )
 
 }
