@@ -32,7 +32,7 @@ trait SnakeService {
 
   implicit val timeout: Timeout
 
-  lazy val playGround = PlayGround.create(system)
+  lazy val playGround = Map("1"->PlayGround.create("1",system),"2"->PlayGround.create("2",system))
 
   val idGenerator = new AtomicInteger(1000000)
 
@@ -45,15 +45,18 @@ trait SnakeService {
         getFromResource("html/netSnake.html")
       } ~
       path("join") {
-        parameter('name) { name =>
-          handleWebSocketMessages(webSocketChatFlow(sender = name))
+        parameter(
+          'room.as[String],
+          'name.as[String]
+        ) { (room,name) =>
+          handleWebSocketMessages(webSocketChatFlow(room,sender = name))
         }
       }
     }
   }
 
 
-  def webSocketChatFlow(sender: String): Flow[Message, Message, Any] =
+  def webSocketChatFlow(room:String,sender: String): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) =>
@@ -64,7 +67,7 @@ trait SnakeService {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(playGround.joinGame(idGenerator.getAndIncrement().toLong, sender)) // ... and route them through the chatFlow ...
+      .via(playGround(room).joinGame(idGenerator.getAndIncrement().toLong, sender)) // ... and route them through the chatFlow ...
       .map { msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
     }.withAttributes(ActorAttributes.supervisionStrategy(decider))    // ... then log any processing errors on stdin
