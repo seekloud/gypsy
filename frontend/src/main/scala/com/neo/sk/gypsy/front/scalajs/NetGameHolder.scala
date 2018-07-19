@@ -330,9 +330,9 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-def joinGame(name: String, userType: Int = 0): Unit = {
+def joinGame(room:String,name: String, userType: Int = 0): Unit = {
   val playground = dom.document.getElementById("playground")
-    val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, name, userType))
+    val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document,room, name, userType))
     gameStream.onopen = { (event0: Event) =>
       println("come here")
       drawGameOn()

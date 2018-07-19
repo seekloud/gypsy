@@ -38,14 +38,18 @@ trait UserService extends ServiceUtils with SessionBase {
 
   implicit val timeout: Timeout
 
-  lazy val playGround = PlayGround.create(system)
+  lazy val playGround = Map(
+    "11"->PlayGround.create("11",system),
+    "12"->PlayGround.create("12",system),
+    "21"->PlayGround.create("21",system),
+    "22"->PlayGround.create("22",system))
 
   val idGenerator = new AtomicInteger(1000000)
   val secretKey = "dsacsodaux84fsdcs4wc32xm"
 
   private[this] val log = LoggerFactory.getLogger(getClass)
 
-  def webSocketChatFlow(sender: String, id: Long): Flow[Message, Message, Any] =
+  def webSocketChatFlow(room:String,sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) =>
@@ -56,7 +60,7 @@ trait UserService extends ServiceUtils with SessionBase {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(playGround.joinGame(id, sender)) // ... and route them through the chatFlow ...
+      .via(playGround.getOrElse(room,playGround("11")).joinGame(id, sender)) // ... and route them through the chatFlow ...
       .map { msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
@@ -72,12 +76,14 @@ trait UserService extends ServiceUtils with SessionBase {
   private val guestLogin = (path("guestLogin") & get) {
     loggingAction {
       _ =>
-        parameter('name.as[String]) {
-          name =>
+        parameter(
+          'room.as[String],
+          'name.as[String]) {
+          (room,name) =>
             val guestId = idGenerator.getAndIncrement()
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, guestId, name, ""), System.currentTimeMillis()).toSessionMap
             addSession(session) {
-              handleWebSocketMessages(webSocketChatFlow(name, guestId))
+              handleWebSocketMessages(webSocketChatFlow(room,name, guestId))
             }
         }
     }
@@ -158,7 +164,9 @@ trait UserService extends ServiceUtils with SessionBase {
   private val userLoginWs= path("userLoginWs") {
     memberAuth{
       user=>
-        handleWebSocketMessages(webSocketChatFlow(user.name, user.userId))
+        parameter('room.as[String]){room=>
+          handleWebSocketMessages(webSocketChatFlow(room,user.name, user.userId))
+        }
     }
   }
 
