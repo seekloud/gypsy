@@ -97,6 +97,7 @@ object NetGameHolder extends js.JSApp {
     }
         //每隔一段间隔就执行gameLoop（同步更新，重画）
         dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
+
     }
 
 
@@ -365,20 +366,6 @@ def joinGame(name: String, userType: Int = 0): Unit = {
 
       }
 
-//      canvas.onkeyup = {
-//        (e: dom.KeyboardEvent) => {
-//          println(s"up: ${e.keyCode}")
-//          if (watchKeys.contains(e.keyCode)) {
-//            println(s"key up: [${e.keyCode}]")
-//            if (e.keyCode == KeyCode.F2) {
-//              gameStream.send("T" + System.currentTimeMillis())
-//            } else {
-//              gameStream.send(e.keyCode.toString)
-//            }
-//            e.preventDefault()
-//          }
-//        }
-//      }
       event0
     }
 
@@ -396,15 +383,48 @@ def joinGame(name: String, userType: Int = 0): Unit = {
       //val wsMsg = read[Protocol.GameMessage](event.data.toString)
       val wsMsg = decode[Protocol.GameMessage](event.data.toString).right.get
       wsMsg match {
-        case Protocol.Id(id) => myId = id
+        case Protocol.Id(id) =>
+          myId = id
+          var timer1= -1
+          timer1= dom.window.setInterval(()=>deadCheck (myId,timer1),Protocol.frameRate)
+          def deadCheck(id:Long,timer:Int)={
+            grid.getGridData.deadPlayer.find(_.id==myId) match {
+              case Some(player)=>
+                val score=player.cells.map(_.mass).sum
+                LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score")
+                dom.window.clearInterval(timer1)
+
+            }
+
+          }
+
+        /*  var timer2= -1
+          timer1= dom.window.setInterval(()=> idCheck(myId,timer1),Protocol.frameRate)
+          def idCheck(id:Long,timer:Int) ={
+            grid.getGridData.playerDetails.find(_.id==myId) match {
+              case Some(player)=>
+                //LayuiJs.msg("你被干死了！！！！！！！！！")
+              dom.window.clearInterval(timer1)
+              timer2=dom.window.setInterval(()=> deadCheck(myId,timer2),Protocol.frameRate)
+            }
+          }
+          def deadCheck(id:Long,timer:Int)={
+            grid.getGridData.playerDetails.find(_.id==myId) match {
+              case None=>
+                LayuiJs.msg("你被干死了！！！！！！！！！")
+                dom.window.clearInterval(timer2)
+
+            }
+
+          }*/
+
+
         case Protocol.TextMsg(message) => //writeToArea(s"MESSAGE: $message")
         case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
         case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
         case a@Protocol.SnakeAction(id, keyCode, frame) =>
           if (frame > grid.frameCount) {
-            //writeToArea(s"!!! got snake action=$a when i am in frame=${grid.frameCount}")
           } else {
-            //writeToArea(s"got snake action=$a")
           }
           grid.addActionWithFrame(id, keyCode, frame)
 
@@ -417,11 +437,11 @@ def joinGame(name: String, userType: Int = 0): Unit = {
           grid.addMouseActionWithFrame(id, x, y, frame)
 
         case Protocol.Ranks(current, history) =>
-          //writeToArea(s"rank update. current = $current") //for debug.
+
           currentRank = current
           historyRank = history
         case Protocol.FeedApples(foods) =>
-          //writeToArea(s"food feeded = $foods") //for debug.
+
           grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
         case data: Protocol.GridDataSync =>
           //writeToArea(s"grid data got: $msgData")
@@ -460,7 +480,7 @@ def joinGame(name: String, userType: Int = 0): Unit = {
   }
 
 
-  def p(msg: String) = {
+ private[this] def p(msg: String) = {
     val paragraph = dom.document.createElement("p")
     paragraph.innerHTML = msg
     paragraph

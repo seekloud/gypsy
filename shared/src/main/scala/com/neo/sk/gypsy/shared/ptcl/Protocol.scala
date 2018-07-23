@@ -14,7 +14,8 @@ object Protocol {
     playerDetails: List[Player],
     foodDetails: List[Food],
     massDetails: List[Mass],
-    virusDetails: List[Virus]
+    virusDetails: List[Virus],
+    deadPlayer:List[Player]
   ) extends GameMessage
 
 

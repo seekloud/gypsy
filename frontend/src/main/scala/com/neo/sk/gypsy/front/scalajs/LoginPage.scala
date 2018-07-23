@@ -57,11 +57,17 @@ object LoginPage {
           )
         ),
         br(),
-        input(*.id := "guestLogin", `class` := "layui-btn layui-btn-warm layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "游客登录"),
+        button(*.id := "guestLogin", `class` := "layui-btn layui-btn-warm",  style := "margin-top:30px;margin-left:210px",
+          i( `class`:="layui-icon layui-icon-fire"), "游客登录"),
         br(),
-        input(*.id := "userLogin", `class` := "layui-btn layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "用户登陆"),
+        button(*.id := "userLogin", `class` := "layui-btn", style := "margin-top:30px;margin-left:210px",
+          i( `class`:="layui-icon layui-icon-user"), "用户登陆"),
         br(),
-        input(*.id := "userRegister", `class` := "layui-btn layui-btn-normal layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "用户注册"))
+        button(*.id := "userRegister", `class` := "layui-btn layui-btn-normal ", style := "margin-top:30px;margin-left:210px",
+          i( `class`:="layui-icon layui-icon-tree"),"用户注册"),
+        p(style := "margin-top:30px;margin-left:170px","小tips:F键分裂 E键吐出小球 Esc建呼出主菜单!")
+
+      )
 
     ).toString().asInstanceOf[HTMLElement]
   })
