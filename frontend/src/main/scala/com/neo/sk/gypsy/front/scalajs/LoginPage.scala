@@ -59,17 +59,11 @@ object LoginPage {
           )
         ),
         br(),
-        button(*.id := "guestLogin", `class` := "layui-btn layui-btn-warm",  style := "margin-top:30px;margin-left:210px",
-          i( `class`:="layui-icon layui-icon-fire"), "游客登录"),
+        input(*.id := "guestLogin", `class` := "layui-btn layui-btn-warm layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "游客登录"),
         br(),
-        button(*.id := "userLogin", `class` := "layui-btn", style := "margin-top:30px;margin-left:210px",
-          i( `class`:="layui-icon layui-icon-user"), "用户登陆"),
+        input(*.id := "userLogin", `class` := "layui-btn layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "用户登陆"),
         br(),
-        button(*.id := "userRegister", `class` := "layui-btn layui-btn-normal ", style := "margin-top:30px;margin-left:210px",
-          i( `class`:="layui-icon layui-icon-tree"),"用户注册"),
-        p(style := "margin-top:30px;margin-left:120px","小tips:F键分裂 E键吐出小球 Esc建呼出主菜单!")
-
-      )
+        input(*.id := "userRegister", `class` := "layui-btn layui-btn-normal layui-btn-sm", *.`type` := "button", style := "margin-top:30px;margin-left:220px", value := "用户注册"))
 
     ).toString().asInstanceOf[HTMLElement]
   })
@@ -89,6 +83,19 @@ object LoginPage {
       div(`class` := "user-login-box user-login-header",
         h2(style := "margin-bottom:10px;font-weight:300;font-size:30px;color:#000", "GypsyLogin")),
       div(`class` := "user-login-box user-login-body layui-form",
+        div(*.id := "room",
+          select(*.id := "roomId2",name := "home",
+            option(value := "", "房间"),
+            optgroup(attr("label") := "普通模式",
+              option(value := "11", "房间1"),
+              option(value := "12", "房间2"),
+              option(value := "21", "房间3"),
+              option(value := "22", "房间4")),
+            optgroup(attr("label") := "限时模式",
+              option(value := "1", attr("disabled") := "", "房间1"),
+              option(value := "2", attr("disabled") := "", "房间2")),
+          )
+        ),
         div(`class` := "layui-form-item",
           label(`class` := "user-login-icon layui-icon layui-icon-username", `for` := "user-login-username"),
           input(*.`type` := "text", name := "username", *.id := "user-login-username", attr("lay-verify") := "required", placeholder := "用户名", `class` := "layui-input")),
@@ -210,6 +217,7 @@ object LoginPage {
         val userLoginButton: Button = dom.document.getElementById("login").asInstanceOf[HTMLButtonElement]
         val login2register = dom.document.getElementById("login2register").asInstanceOf[HTMLButtonElement]
         val back2guest = dom.document.getElementById("back2guest").asInstanceOf[HTMLButtonElement]
+        val roomId:Input = dom.document.getElementById("roomId2").asInstanceOf[HTMLInputElement]
 
         userName.focus()
         userLoginButton.onclick = {
@@ -228,7 +236,11 @@ object LoginPage {
                     println(s"name or password error in login ${rsp.errCode} ")
                     LayuiJs.msg(rsp.msg, 5, 2000)
                   } else {
-                    joinGame("11",userName.value, 1)
+                    if(roomId.value !=""){
+                      joinGame(roomId.value,nameField.value,1)}
+                    else{
+                      joinGame("11",userName.value, 1)
+                    }
                     LayuiJs.layer.close(loginIndex)
                   }
                 case Left(e) =>
