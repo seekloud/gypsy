@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl
+
 import scala.math._
 import scala.util.Random
 
@@ -32,6 +33,7 @@ trait Grid {
 
   val defaultLength = 5
   val historyRankLength = 5
+
   val slowDown = 2
 //质量转半径率
   val mass2rRate = 6
@@ -64,8 +66,6 @@ trait Grid {
   var actionMap = Map.empty[Long, Map[Long, Int]]
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
-
-  var deadPlayerMap=Map.empty[Long,Player]
 
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
@@ -245,7 +245,7 @@ trait Grid {
           }
         }
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.foreach{ cell2=>
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
@@ -257,14 +257,14 @@ trait Grid {
             }
             else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
-                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)){
+                if(mergeCells.filter(_.id==cell2.id).isEmpty && mergeCells.filter(_.id==cell.id).isEmpty && deleteCells.filter(_.id == cell.id).isEmpty){
                   mergeInFlame = true
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
               }
-              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)){
+              else if(cell.radius < cell2.radius && deleteCells.filter(_.id == cell.id).isEmpty && deleteCells.filter(_.id == cell2.id).isEmpty){
                 mergeInFlame = true
                 newMass = 0
                 newRadius = 0
@@ -275,7 +275,7 @@ trait Grid {
         }
         //病毒碰撞检测
         virus.foreach{v=>
-          if((sqrt(pow(v.x - cell.x,2.0) + pow(v.y - cell.y,2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  !mergeInFlame && player.cells.size<5) {
+          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  mergeInFlame == false && player.cells.size<5) {
             virus = virus.filterNot(_==v)
             val cellMass= (newMass/(v.splitNumber+1)).toInt
             val cellRadius =  4 + sqrt(cellMass) * mass2rRate
@@ -292,7 +292,7 @@ trait Grid {
           }
         }
 //喷射小球
-        if (shot && cell.mass > shotMass*3){
+        if (shot == true && cell.mass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
           val massRadius = 4 + sqrt(shotMass) * 6
@@ -329,7 +329,6 @@ trait Grid {
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
-        deadPlayerMap+=(player.id->player)
          Left(killer)
       }else{
         //println(s"newCells2${newCells}")
@@ -340,6 +339,7 @@ trait Grid {
       }
 
     }
+
 
     //var mapKillCounter = Map.empty[Long, Int]
     var updatedPlayers = List.empty[Player]
@@ -372,23 +372,18 @@ trait Grid {
   def getGridData = {
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-    var deadPlayers:List[Player] = Nil
     food.foreach{
       case (p,mass) => foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
       case (id,player) => playerDetails ::= player
     }
-    deadPlayerMap.foreach{
-      case (id,player) => deadPlayers::=player
-    }
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
       massList,
-      virus,
-      deadPlayers
+      virus
     )
   }
 }
