@@ -68,6 +68,7 @@ object LoginPage {
     ).toString().asInstanceOf[HTMLElement]
   })
 
+
   private def loginModel = LayuiJs.layer.open(new LayuiJs.open {
     override val `type`: UndefOr[Int] = 1
     override val title: UndefOr[Boolean] = false
