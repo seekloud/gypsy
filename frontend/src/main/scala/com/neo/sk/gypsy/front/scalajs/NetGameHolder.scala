@@ -21,9 +21,7 @@ import scala.math._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
-import scalatags.JsDom.short.*
-import scalatags.generic.Attr
+
 
 /**
   * User: Taoz
@@ -83,6 +81,8 @@ object NetGameHolder extends js.JSApp {
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val windWidth = dom.window.innerWidth
+
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -360,7 +360,7 @@ def joinGame(room:String,name: String, userType: Int = 0): Unit = {
       }
       //在画布上监听鼠标事件
       canvas.onmousemove = { (e: dom.MouseEvent) => {
-        gameStream.send(MousePosition(e.pageX, e.pageY).asJson.noSpaces)
+        gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
       }
 
       }
