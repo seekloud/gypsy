@@ -65,7 +65,7 @@ object LoginPage {
         br(),
         button(*.id := "userRegister", `class` := "layui-btn layui-btn-normal ", style := "margin-top:30px;margin-left:210px",
           i( `class`:="layui-icon layui-icon-tree"),"用户注册"),
-        p(style := "margin-top:30px;margin-left:170px","小tips:F键分裂 E键吐出小球 Esc建呼出主菜单!")
+        p(style := "margin-top:30px;margin-left:150px","小tips:F键分裂 E键吐出小球 Esc建呼出主菜单!")
 
       )
 
