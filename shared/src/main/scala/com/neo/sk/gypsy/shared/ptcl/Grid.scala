@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl
-
 import scala.math._
 import scala.util.Random
 
@@ -33,7 +32,6 @@ trait Grid {
 
   val defaultLength = 5
   val historyRankLength = 5
-
   val slowDown = 2
 //质量转半径率
   val mass2rRate = 6
@@ -151,8 +149,9 @@ trait Grid {
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
           //相对屏幕中央的位置
-          println(s"x${x},y${y}")
-          MousePosition(x-111-600,y-48-300)
+          //println(s"x${x},y${y}")
+          //MousePosition(x-111-600,y-48-300)
+          MousePosition(x,y)
         case _=>
           MousePosition(player.targetX,player.targetY)
       }
