@@ -45,11 +45,11 @@ object LoginPage {
           label(*.`for` := "name", style := "margin-left:130px", s"Name:"),
           input(*.id := "guestName", *.`type` := "text", placeholder := "请输入用户名", maxlength := "25"),
           div(*.id := "room",
-            select(name := "home",
+            select(*.id := "roomId",name := "home",
               option(value := "", "房间"),
               optgroup(attr("label") := "普通模式",
-                option(value := "1", "房间1"),
-                option(value := "2", "房间2")),
+                option(value := "11", "房间1"),
+                option(value := "12", "房间2")),
               optgroup(attr("label") := "娱乐模式",
                 option(value := "1", attr("disabled") := "", "房间1"),
                 option(value := "2", attr("disabled") := "", "房间2")),
@@ -170,6 +170,7 @@ object LoginPage {
     val loginButton: Button = dom.document.getElementById("guestLogin").asInstanceOf[HTMLButtonElement]
     val userLoginButton: Button = dom.document.getElementById("userLogin").asInstanceOf[HTMLButtonElement]
     val userRegisterButton: Button = dom.document.getElementById("userRegister").asInstanceOf[HTMLButtonElement]
+    val roomId:Input = dom.document.getElementById("roomId").asInstanceOf[HTMLInputElement]
 
     nameField.focus()
     loginButton.onclick = {
@@ -178,7 +179,12 @@ object LoginPage {
           LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
         } else {
           //修改参数一为房间编号（简单版中为：11,12,21,22）
-          joinGame(nameField.value,nameField.value)
+          if(roomId.value !=""){
+            joinGame(roomId.value,nameField.value)}
+          else{
+            joinGame(nameField.value,nameField.value)
+          }
+
           LayuiJs.layer.close(guestIndex)
         }
     }
