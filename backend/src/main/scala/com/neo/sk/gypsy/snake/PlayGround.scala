@@ -39,7 +39,7 @@ object PlayGround {
   val log = LoggerFactory.getLogger(this.getClass)
 
 
-  def create(system: ActorSystem)(implicit executor: ExecutionContext): PlayGround = {
+  def create(room:String,system: ActorSystem)(implicit executor: ExecutionContext): PlayGround = {
 
     val ground = system.actorOf(Props(new Actor {
       var subscribers = Map.empty[Long, ActorRef]
@@ -120,9 +120,8 @@ object PlayGround {
         subscribers.foreach { case (_, ref) => ref ! gameOutPut }
       }
 
-
     }
-    ), "ground")
+    ), s"ground-${room}")
 
     import concurrent.duration._
     system.scheduler.schedule(3 seconds, Protocol.frameRate millis, ground, Sync) // sync tick
