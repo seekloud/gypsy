@@ -54,6 +54,9 @@ object PlayGround {
         case r@Join(id, name, subscriber) =>
           log.info(s"got $r")
           userMap += (id -> name)
+          //检测自己是否死亡
+//          import concurrent.duration._
+//          system.scheduler.schedule(1 seconds, Protocol.frameRate millis, ground, DeadCheck)
           context.watch(subscriber)
           subscribers += (id -> subscriber)
           grid.addSnake(id, name)
