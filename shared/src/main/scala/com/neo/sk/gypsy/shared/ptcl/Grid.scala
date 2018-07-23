@@ -244,12 +244,13 @@ trait Grid {
             }
           }
         }
+
         //自身cell合并检测
         player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
-            if (player.lastSplit > System.currentTimeMillis() - mergeInterval) {
+            if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
               if (cell.x < cell2.x) newX -= 1
               else if (cell.x > cell2.x) newX += 1
               if (cell.y < cell2.y) newY  -= 1
@@ -273,6 +274,7 @@ trait Grid {
             }
           }
         }
+
         //病毒碰撞检测
         virus.foreach{v=>
           if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  mergeInFlame == false && player.cells.size<5) {
@@ -291,8 +293,9 @@ trait Grid {
             }
           }
         }
+
 //喷射小球
-        if (shot == true && cell.mass > shotMass*3){
+        if (shot == true && newMass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
           val massRadius = 4 + sqrt(shotMass) * 6
@@ -319,7 +322,7 @@ trait Grid {
           cellId = cellIdgenerator.getAndIncrement().toLong
         }
         List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
-      }.filterNot(_.mass==0)
+      }.filterNot(_.mass<=0)
 
       //val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
       //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
