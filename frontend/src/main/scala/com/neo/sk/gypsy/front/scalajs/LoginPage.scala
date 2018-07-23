@@ -49,8 +49,10 @@ object LoginPage {
               option(value := "", "房间"),
               optgroup(attr("label") := "普通模式",
                 option(value := "11", "房间1"),
-                option(value := "12", "房间2")),
-              optgroup(attr("label") := "娱乐模式",
+                option(value := "12", "房间2"),
+                option(value := "21", "房间3"),
+                option(value := "22", "房间4")),
+              optgroup(attr("label") := "限时模式",
                 option(value := "1", attr("disabled") := "", "房间1"),
                 option(value := "2", attr("disabled") := "", "房间2")),
             )
