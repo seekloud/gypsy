@@ -347,9 +347,6 @@ object NetGameHolder extends js.JSApp {
         ctx.fill()
         //println(s"${basePoint._1},  ${basePoint._2}")
     }
-
-
-
   }
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)

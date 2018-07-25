@@ -174,11 +174,12 @@ trait Grid {
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
 
       var mergeInFlame = false
-      var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
+
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
       var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
+        var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
