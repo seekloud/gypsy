@@ -85,7 +85,7 @@ package object ptcl {
                   y:Int,
                   mass:Double,
                   radius:Double,
-                  splitNumber:Int = 7
+                  splitNumber:Int = 13
                   )
   object Boundary{
     val w = 3600

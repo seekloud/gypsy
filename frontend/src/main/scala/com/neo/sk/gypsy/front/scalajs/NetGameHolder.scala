@@ -160,7 +160,7 @@ object NetGameHolder extends js.JSApp {
     val offy =window.y/2 - basePoint._2
     val zoom = players.filter(_.id==uid).map(a=>(a.width,a.height)).headOption.getOrElse((30.0,30.0))
     var scale = 1.0
-    if(zoom._1 < 300 && zoom._2 < 300){
+    if(zoom._1 < 600 && zoom._2 < 300){
     }else{
       scale = List(300.0/zoom._2,600.0/zoom._1).min
     }
