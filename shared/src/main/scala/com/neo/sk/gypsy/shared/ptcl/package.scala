@@ -57,13 +57,15 @@ package object ptcl {
                    kill:Int = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
+                   width:Double =  8 + sqrt(10)*12,
+                   height:Double =  8 + sqrt(10)*12,
                    cells:List[Cell]
                    )
   case class Cell(
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 10,
+                 mass:Double = 300,
                  radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12
                  )

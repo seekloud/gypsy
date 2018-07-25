@@ -338,7 +338,11 @@ trait Grid {
         val length = newCells.length
         val newX = newCells.map(_.x).sum/length
         val newY = newCells.map(_.y).sum/length
-        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, lastSplit = newSplitTime,cells = newCells))
+        val left = newCells.map(a=>a.x-a.radius).min
+        val right = newCells.map(a=>a.x+a.radius).max
+        val bottom = newCells.map(a=>a.y-a.radius).min
+        val top = newCells.map(a=>a.y+a.radius).max
+        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, lastSplit = newSplitTime, width =right-left ,height = top-bottom,cells = newCells))
       }
 
     }
