@@ -165,6 +165,7 @@ object NetGameHolder extends js.JSApp {
     }else{
       scale = List(300.0/zoom._2,600.0/zoom._1).min
     }
+
     //println(s"scale:${scale}")
     //println(s"zoom${zoom}")
     //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
@@ -181,11 +182,13 @@ object NetGameHolder extends js.JSApp {
 //绘制背景
     ctx.fillStyle = MyColors.background
     ctx.fillRect(0,0,window.x,window.y)
+    ctx.save()
+    centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
     stripeX.map{l=>
       ctx.save()
-      centerScale(scale,window.x/2,window.y/2)
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.moveTo(0,l +offy);
       ctx.lineTo(bounds.x,l +offy);
@@ -194,7 +197,7 @@ object NetGameHolder extends js.JSApp {
     }
     stripeY.map{l=>
       ctx.save()
-      centerScale(scale,window.x/2,window.y/2)
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.moveTo(l +offx,0);
       ctx.lineTo(l +offx,bounds.y);
@@ -210,7 +213,7 @@ object NetGameHolder extends js.JSApp {
       cells.map{cell=>
 
           ctx.save()
-          centerScale(scale,window.x/2,window.y/2)
+          //centerScale(scale,window.x/2,window.y/2)
         println(s"${pro}")
         if(pro == true){
           println("true")
@@ -252,7 +255,7 @@ object NetGameHolder extends js.JSApp {
         case _  => "blue"
       }
       ctx.save()
-      centerScale(scale,window.x/2,window.y/2)
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
@@ -270,7 +273,7 @@ object NetGameHolder extends js.JSApp {
         case _  => "blue"
       }
       ctx.save()
-      centerScale(scale,window.x/2,window.y/2)
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
       ctx.fill()
@@ -283,11 +286,12 @@ object NetGameHolder extends js.JSApp {
 //      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
 //      ctx.fill()
       ctx.save()
-      centerScale(scale,window.x/2,window.y/2)
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
 
+    ctx.restore()
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
