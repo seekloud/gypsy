@@ -69,6 +69,7 @@ object NetGameHolder extends js.JSApp {
   )
 
   object MyColors {
+    val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
@@ -207,6 +208,17 @@ object NetGameHolder extends js.JSApp {
     players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,width,height,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
+
+          ctx.save()
+          centerScale(scale,window.x/2,window.y/2)
+        println(s"${pro}")
+        if(pro == true){
+          println("true")
+          ctx.fillStyle = MyColors.halo
+          ctx.beginPath()
+          ctx.arc(cell.x +offx,cell.y +offy,cell.radius+15,0,2*Math.PI)
+          ctx.fill()
+        }
           ctx.fillStyle = color.toInt match{
             case 0 => "red"
             case 1 => "orange"
@@ -217,8 +229,6 @@ object NetGameHolder extends js.JSApp {
             case 6  => "black"
             case _  => "blue"
           }
-          ctx.save()
-          centerScale(scale,window.x/2,window.y/2)
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()

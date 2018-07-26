@@ -174,7 +174,7 @@ trait Grid {
       var newSplitTime = player.lastSplit
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
-
+      var newProtected = player.protect
       var mergeInFlame = false
 
       //对每一个cell单独计算速度、方向
@@ -220,13 +220,14 @@ trait Grid {
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
-
         food.foreach{
           case (p, color)=>
             if(checkCollision(Point(cell.x,cell.y),p,cell.radius,4,-1)) {
               newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
+              if(newProtected == true)
+                newProtected = false
             }
         }
         massList.foreach{
@@ -237,7 +238,7 @@ trait Grid {
               massList = massList.filterNot(l=>l==p)
             }
         }
-        playerMap.filterNot(_._1 == player.id).foreach{ p=>
+        playerMap.filterNot(a => a._1 == player.id || a._2.protect == true).foreach{ p=>
           p._2.cells.foreach{ otherCell=>
             if(cell.radius *1.1 < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * 0.8)){
               newMass = 0
@@ -346,7 +347,7 @@ trait Grid {
         val right = newCells.map(a=>a.x+a.radius).max
         val bottom = newCells.map(a=>a.y-a.radius).min
         val top = newCells.map(a=>a.y+a.radius).max
-        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, lastSplit = newSplitTime, width =right-left ,height = top-bottom,cells = newCells))
+        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = newProtected, kill = newKill, lastSplit = newSplitTime, width =right-left ,height = top-bottom,cells = newCells))
       }
 
     }
