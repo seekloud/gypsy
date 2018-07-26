@@ -44,6 +44,8 @@ trait Grid {
   var frameCount = 0l
 //合并时间间隔
   val mergeInterval = 8 * 1000
+  //分裂时间间隔
+  val splitInterval = 2 * 1000
 //最小分裂大小
   val splitLimit = 30
   //分裂初始速度
@@ -315,7 +317,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32){
+        if (split == true && cell.mass > splitLimit && player.cells.size<32 && newSplitTime > System.currentTimeMillis() - splitInterval){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
