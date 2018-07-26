@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl
-
+import com.neo.sk.gypsy.shared.ptcl.utils._
 import scala.math._
 import scala.util.Random
 
@@ -34,7 +34,9 @@ trait Grid {
   val defaultLength = 5
   val historyRankLength = 5
 
-  val slowDown = 2
+  val slowBase = 4.5
+  val initMassLog = utils.logSlowDown(10,slowBase)
+  val acceleration  = 2
 //质量转半径率
   val mass2rRate = 6
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
@@ -186,9 +188,10 @@ trait Grid {
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         val newDirection = {
           //指针在圆内，静止
-          if(cell.speed > 8 + 20/cbrt(cell.radius)){
+          if(cell.speed > 15/slowdown){
             newSpeed -= 2
           }else{
             if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
@@ -198,13 +201,13 @@ trait Grid {
                 //println("在圆内")
                 if(cell.speed>0){
                   //println("come here")
-                  newSpeed=cell.speed - slowDown
+                  newSpeed=cell.speed - acceleration
                 }else newSpeed=0
                 //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
               }else{
-                newSpeed=if(cell.speed < 8 + 20/cbrt(cell.radius)){
-                  cell.speed + slowDown
-                }else 8 + 20/cbrt(cell.radius)
+                newSpeed=if(cell.speed < 15/slowdown){
+                  cell.speed + acceleration
+                }else 15/slowdown
               }
             }
           }
@@ -220,7 +223,7 @@ trait Grid {
 
         food.foreach{
           case (p, color)=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
+            if(checkCollision(Point(cell.x,cell.y),p,cell.radius,4,-1)) {
               newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
@@ -228,7 +231,7 @@ trait Grid {
         }
         massList.foreach{
           case p:Mass=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius - p.radius * coverRate)) {
+            if(checkCollision(Point(cell.x,cell.y),Point(p.x,p.y),cell.radius,p.radius,coverRate)) {
               newMass += p.mass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               massList = massList.filterNot(l=>l==p)
