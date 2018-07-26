@@ -164,8 +164,8 @@ object NetGameHolder extends js.JSApp {
     }else{
       scale = List(300.0/zoom._2,600.0/zoom._1).min
     }
-    println(s"scale:${scale}")
-    println(s"zoom${zoom}")
+    //println(s"scale:${scale}")
+    //println(s"zoom${zoom}")
     //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
     //println(s"players ${players}")
 //    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
