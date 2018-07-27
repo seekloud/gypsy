@@ -5,7 +5,7 @@ import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, captcha}
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, Captcha}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
