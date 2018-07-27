@@ -58,13 +58,15 @@ package object ptcl {
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
                    cells:List[Cell],
-                   var killerName:String= ""
+                   var killerName:String= "",
+                   width:Double =  8 + sqrt(10)*12,
+                   height:Double =  8 + sqrt(10)*12,
                    )
   case class Cell(
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 300,
+                 mass:Double = 10,
                  radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12
                  )
@@ -84,7 +86,7 @@ package object ptcl {
                   y:Int,
                   mass:Double,
                   radius:Double,
-                  splitNumber:Int = 7
+                  splitNumber:Int = 13
                   )
   object Boundary{
     val w = 3600
