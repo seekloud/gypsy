@@ -15,7 +15,7 @@ import com.neo.sk.gypsy.http.SessionBase.GypsySession
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserLoginRsqJson, UserRegisterInfo}
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.snake.PlayGround
 import com.neo.sk.gypsy.utils.SecureUtil
 import org.slf4j.LoggerFactory
@@ -170,10 +170,47 @@ trait UserService extends ServiceUtils with SessionBase {
     }
   }
 
+/*  private val getUserScore=(path("getUserScore") & pathEndOrSingleSlash & get){
+    memberAuth{
+      user=>
+        parameter('userId.as[Long]){
+          userId=>
+            dealFutureResult(
+              UserDao.getScoreById(userId).map{
+                score=>
+                  if(score.isEmpty){
+                    complete(UserScoreRsq(Some(0)))
+                  }else{
+                    complete(UserScoreRsq(Some(score.get)))
+                  }
+              }
+            )
+        }
+    }
+
+  }*/
+  private val updateMaxScore=(path("updateMaxScore") & pathEndOrSingleSlash & post){
+    memberAuth{
+      user=>
+        entity(as[Either[Error,UserMaxScore]]){
+          case Left(error)=>
+            log.warn(s"some error: $error")
+            complete(ErrorRsp(1002003, "Pattern error."))
+          case Right(score)=>
+            dealFutureResult(
+              UserDao.updateScoreById(score.id,score.score).map{
+                a=>
+                  complete(SuccessRsp())
+              }
+            )
+        }
+    }
+  }
+
 
   val userRoutes: Route =
     pathPrefix("user") {
-      guestLogin ~ userRegister ~ userLogin~userLoginWs
+      guestLogin ~ userRegister ~ userLogin~userLoginWs~updateMaxScore
 
     }
 

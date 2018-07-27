@@ -42,6 +42,8 @@ object Protocol {
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
 
   case class NetDelayTest(createTime: Long) extends GameMessage
+  
+  case class SnakeRestart(id:Long) extends GameMessage
 
   case class MousePosition(clientX:Double,clientY:Double)
 

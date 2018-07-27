@@ -24,4 +24,10 @@ object UserProtocol {
                          msg: String = "ok"
                          )
 
+  case class UserMaxScore(
+                         id:Long,
+                         score:Int
+                         )
+
+
 }

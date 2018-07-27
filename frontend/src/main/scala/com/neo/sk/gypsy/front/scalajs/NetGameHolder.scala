@@ -191,7 +191,7 @@ object NetGameHolder extends js.JSApp {
 //区分本玩家和其他玩家蛇身体的颜色
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
           ctx.fillStyle = color.toInt match{
@@ -314,12 +314,12 @@ object NetGameHolder extends js.JSApp {
         ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
       }
     }
-    players.filter(_.id==uid).headOption match {
+    players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
         ctx.fill()
-        println(s"${basePoint._1},  ${basePoint._2}")
+       // println(s"${basePoint._1},  ${basePoint._2}")
     }
 
 
@@ -331,7 +331,7 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-def joinGame(room:String,name: String, userType: Int = 0): Unit = {
+def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit = {
   val playground = dom.document.getElementById("playground")
     val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document,room, name, userType))
     gameStream.onopen = { (event0: Event) =>
@@ -385,15 +385,17 @@ def joinGame(room:String,name: String, userType: Int = 0): Unit = {
       wsMsg match {
         case Protocol.Id(id) =>
           myId = id
-          var timer1= -1
-          timer1= dom.window.setInterval(()=>deadCheck (myId,timer1),Protocol.frameRate)
+          var timer= -1
+          val start=System.currentTimeMillis()
+          timer= dom.window.setInterval(()=>deadCheck (myId,timer),Protocol.frameRate)
           def deadCheck(id:Long,timer:Int)={
             grid.getGridData.deadPlayer.find(_.id==myId) match {
               case Some(player)=>
                 val score=player.cells.map(_.mass).sum
-                LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score")
-                dom.window.clearInterval(timer1)
-
+                LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
+                DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
+                dom.window.clearInterval(timer)
+                grid.removeDeadPlayer(id)
             }
 
           }
@@ -458,6 +460,21 @@ def joinGame(room:String,name: String, userType: Int = 0): Unit = {
           val receiveTime = System.currentTimeMillis()
           val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
           //writeToArea(m)
+        case Protocol.SnakeRestart(id)=>
+            var timer= -1
+            val start=System.currentTimeMillis()
+            timer= dom.window.setInterval(()=>deadCheck (id,timer),Protocol.frameRate)
+            def deadCheck(id:Long,timer:Int)={
+              grid.getGridData.deadPlayer.find(_.id==id) match {
+                case Some(player)=>
+                  val score=player.cells.map(_.mass).sum
+                  DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
+                //  LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
+                  dom.window.clearInterval(timer)
+                  grid.removeDeadPlayer(id)
+              }
+            }
+
         case msg@_ =>
           println(s"unkown $msg")
 
