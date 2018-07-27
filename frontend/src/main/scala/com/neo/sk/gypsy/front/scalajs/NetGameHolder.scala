@@ -208,9 +208,9 @@ object NetGameHolder extends js.JSApp {
 
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName,width,height) =>
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,width,height,cells) =>
+   // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
 
@@ -356,7 +356,7 @@ object NetGameHolder extends js.JSApp {
         ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
       }
     }
-    players.find(_.id == uid) match {
+    players.filter(_.id==uid).headOption match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)

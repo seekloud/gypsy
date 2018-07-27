@@ -71,6 +71,8 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
+  var deadPlayerMap=Map.empty[Long,Player]
+
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
 //用户离开，从列表中去掉
@@ -253,7 +255,7 @@ trait Grid {
         }
 
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.foreach{ cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
@@ -376,7 +378,7 @@ trait Grid {
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
     killerMap.foreach{killer=>
-      val a= playerMap.getOrElse(killer, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0L,0,0))))
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
@@ -393,18 +395,23 @@ trait Grid {
   def getGridData = {
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
+    var deadPlayers:List[Player] = Nil
     food.foreach{
       case (p,mass) => foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
       case (id,player) => playerDetails ::= player
     }
+    deadPlayerMap.foreach{
+      case (id,player) => deadPlayers::=player
+    }
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
       massList,
-      virus
+      virus,
+      deadPlayers
     )
   }
 

@@ -1,11 +1,11 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
+import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{joinGame}
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, captcha}
+import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -204,7 +204,7 @@ object LoginPage {
         form.append("textproducer_char_string","0123456789qwertyuiopasdfghjklzxcvbnm")
         form.append("border","no")
         form.append("image_height","80")
-        Http.postFormAndParse[captcha](" http://route.showapi.com/26-4",form).map{
+        Http.postFormAndParse[Captcha](" http://route.showapi.com/26-4",form).map{
           case Right(rspc)=>
             if(rspc.showapi_res_code==0){
               val loginIndex = loginModel(rspc.showapi_res_body.img_path)

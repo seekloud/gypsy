@@ -99,12 +99,12 @@ package object ptcl {
   }
 
 
-  case class captcha(
+  case class Captcha(
                       showapi_res_error:String="",
                       showapi_res_code:Int,
-                      showapi_res_body:captchaBody
+                      showapi_res_body:CaptchaBody
   )
-  case class captchaBody(
+  case class CaptchaBody(
                           img_path_https:String,
                           ret_code:Int,
                           img_path:String,
