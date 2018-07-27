@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.shared.ptcl.Point
 import Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.utils._
 import scala.math._
 import scala.util.Random
 
@@ -32,7 +33,10 @@ trait Grid {
 
   val defaultLength = 5
   val historyRankLength = 5
-  val slowDown = 2
+
+  val slowBase = 4.5
+  val initMassLog = utils.logSlowDown(10,slowBase)
+  val acceleration  = 2
 //质量转半径率
   val mass2rRate = 6
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
@@ -40,6 +44,8 @@ trait Grid {
   var frameCount = 0l
 //合并时间间隔
   val mergeInterval = 8 * 1000
+  //分裂时间间隔
+  val splitInterval = 2 * 1000
 //最小分裂大小
   val splitLimit = 30
   //分裂初始速度
@@ -64,8 +70,6 @@ trait Grid {
   var actionMap = Map.empty[Long, Map[Long, Int]]
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
-
-  var deadPlayerMap=Map.empty[Long,Player]
 
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
@@ -172,22 +176,24 @@ trait Grid {
       var newSplitTime = player.lastSplit
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
-
+      var newProtected = player.protect
       var mergeInFlame = false
-      var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
+
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
       var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
+        var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         val newDirection = {
           //指针在圆内，静止
-          if(cell.speed > 8 + 20/cbrt(cell.radius)){
+          if(cell.speed > 15/slowdown){
             newSpeed -= 2
           }else{
             if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
@@ -197,13 +203,13 @@ trait Grid {
                 //println("在圆内")
                 if(cell.speed>0){
                   //println("come here")
-                  newSpeed=cell.speed - slowDown
+                  newSpeed=cell.speed - acceleration
                 }else newSpeed=0
                 //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
               }else{
-                newSpeed=if(cell.speed < 8 + 20/cbrt(cell.radius)){
-                  cell.speed + slowDown
-                }else 8 + 20/cbrt(cell.radius)
+                newSpeed=if(cell.speed < 15/slowdown){
+                  cell.speed + acceleration
+                }else 15/slowdown
               }
             }
           }
@@ -216,40 +222,42 @@ trait Grid {
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
-
         food.foreach{
           case (p, color)=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius + 4)) {
+            if(checkCollision(Point(cell.x,cell.y),p,cell.radius,4,-1)) {
               newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
+              if(newProtected == true)
+                newProtected = false
             }
         }
         massList.foreach{
           case p:Mass=>
-            if(sqrt(pow((p.x-cell.x),2.0) + pow((p.y-cell.y),2.0)) < (cell.radius - p.radius * coverRate)) {
+            if(checkCollision(Point(cell.x,cell.y),Point(p.x,p.y),cell.radius,p.radius,coverRate)) {
               newMass += p.mass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               massList = massList.filterNot(l=>l==p)
             }
         }
-        playerMap.filterNot(_._1 == player.id).foreach{ p=>
+        playerMap.filterNot(a => a._1 == player.id || a._2.protect == true).foreach{ p=>
           p._2.cells.foreach{ otherCell=>
-            if(cell.radius < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * coverRate)){
+            if(cell.radius *1.1 < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * 0.8)){
               newMass = 0
               killer = p._1
-            }else if(cell.radius > otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * coverRate)){
+            }else if(cell.radius > otherCell.radius * 1.1 && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * 0.8)){
               newMass +=  otherCell.mass
               newRadius = 4 + sqrt(newMass) * 6
             }
           }
         }
+
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.foreach{ cell2=>
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
-            if (player.lastSplit > System.currentTimeMillis() - mergeInterval) {
+            if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
               if (cell.x < cell2.x) newX -= 1
               else if (cell.x > cell2.x) newX += 1
               if (cell.y < cell2.y) newY  -= 1
@@ -257,14 +265,14 @@ trait Grid {
             }
             else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
-                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)){
+                if(mergeCells.filter(_.id==cell2.id).isEmpty && mergeCells.filter(_.id==cell.id).isEmpty && deleteCells.filter(_.id == cell.id).isEmpty){
                   mergeInFlame = true
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
               }
-              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)){
+              else if(cell.radius < cell2.radius && deleteCells.filter(_.id == cell.id).isEmpty && deleteCells.filter(_.id == cell2.id).isEmpty){
                 mergeInFlame = true
                 newMass = 0
                 newRadius = 0
@@ -273,9 +281,10 @@ trait Grid {
             }
           }
         }
+
         //病毒碰撞检测
         virus.foreach{v=>
-          if((sqrt(pow(v.x - cell.x,2.0) + pow(v.y - cell.y,2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  !mergeInFlame && player.cells.size<5) {
+          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  mergeInFlame == false ) {
             virus = virus.filterNot(_==v)
             val cellMass= (newMass/(v.splitNumber+1)).toInt
             val cellRadius =  4 + sqrt(cellMass) * mass2rRate
@@ -291,8 +300,9 @@ trait Grid {
             }
           }
         }
+
 //喷射小球
-        if (shot && cell.mass > shotMass*3){
+        if (shot == true && newMass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
           val massRadius = 4 + sqrt(shotMass) * 6
@@ -307,7 +317,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32){
+        if (split == true && cell.mass > splitLimit && player.cells.size<32 ){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
@@ -319,7 +329,7 @@ trait Grid {
           cellId = cellIdgenerator.getAndIncrement().toLong
         }
         List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
-      }.filterNot(_.mass==0)
+      }.filterNot(_.mass<=0)
 
       //val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
       //println(s"mergeCells${mergeCells},deleteCells${deleteCells},recoverCells${recoverCells}")
@@ -342,10 +352,15 @@ trait Grid {
         val length = newCells.length
         val newX = newCells.map(_.x).sum/length
         val newY = newCells.map(_.y).sum/length
-        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, kill = newKill, lastSplit = newSplitTime,cells = newCells))
+        val left = newCells.map(a=>a.x-a.radius).min
+        val right = newCells.map(a=>a.x+a.radius).max
+        val bottom = newCells.map(a=>a.y-a.radius).min
+        val top = newCells.map(a=>a.y+a.radius).max
+        Right(player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = newProtected, kill = newKill, lastSplit = newSplitTime, width =right-left ,height = top-bottom,cells = newCells))
       }
 
     }
+
 
     //var mapKillCounter = Map.empty[Long, Int]
     var updatedPlayers = List.empty[Player]
@@ -378,23 +393,18 @@ trait Grid {
   def getGridData = {
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-    var deadPlayers:List[Player] = Nil
     food.foreach{
       case (p,mass) => foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
       case (id,player) => playerDetails ::= player
     }
-    deadPlayerMap.foreach{
-      case (id,player) => deadPlayers::=player
-    }
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
       massList,
-      virus,
-      deadPlayers
+      virus
     )
   }
 

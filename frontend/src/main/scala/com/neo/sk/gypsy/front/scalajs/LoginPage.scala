@@ -108,17 +108,6 @@ object LoginPage {
           div(`class` := "layui-unselect layui-form-checkbox layui-form-checked", attr("lay-skin") := "primary",
             span("记住密码"),
             i(`class` := "layui-icon layui-icon-ok")),
-           /*select(*.id := "userroomId",name := "home",attr("lay-verify"):="",`class` := "layui-form-select", style := "margin-top: 7px; display",
-              option(value := "", "房间"),
-              optgroup(attr("label") := "普通模式",
-                option(value := "11", "房间1"),
-                option(value := "12", "房间2"),
-                option(value := "21", "房间3"),
-                option(value := "22", "房间4")),
-              optgroup(attr("label") := "限时模式",
-                option(value := "1", attr("disabled") := "", "房间1"),
-                option(value := "2", attr("disabled") := "", "房间2")),
-            ),*/
           a(`class` := "user-jump-change register-link", *.id := "login2register", style := "margin-top: 7px;", "注册账号")
         ),
         div(`class` := "layui-form-item",

@@ -69,6 +69,7 @@ object NetGameHolder extends js.JSApp {
   )
 
   object MyColors {
+    val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
@@ -97,7 +98,6 @@ object NetGameHolder extends js.JSApp {
     }
         //每隔一段间隔就执行gameLoop（同步更新，重画）
         dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
-
     }
 
 
@@ -155,10 +155,19 @@ object NetGameHolder extends js.JSApp {
     val foods = data.foodDetails
     val masses = data.massDetails
     val virus = data.virusDetails
-    val basePoint= players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
+    val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
+    val zoom = players.filter(_.id==uid).map(a=>(a.width,a.height)).headOption.getOrElse((30.0,30.0))
+    var scale = 1.0
+    if(zoom._1 < 600 && zoom._2 < 300){
+    }else{
+      scale = List(300.0/zoom._2,600.0/zoom._1).min
+    }
+
+    //println(s"scale:${scale}")
+    //println(s"zoom${zoom}")
     //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
     //println(s"players ${players}")
 //    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
@@ -173,27 +182,48 @@ object NetGameHolder extends js.JSApp {
 //绘制背景
     ctx.fillStyle = MyColors.background
     ctx.fillRect(0,0,window.x,window.y)
+    ctx.save()
+    centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
     stripeX.map{l=>
+      ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.moveTo(0,l +offy);
       ctx.lineTo(bounds.x,l +offy);
       ctx.stroke();
+      ctx.restore()
     }
     stripeY.map{l=>
+      ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.moveTo(l +offx,0);
       ctx.lineTo(l +offx,bounds.y);
       ctx.stroke();
+      ctx.restore()
     }
 
-//区分本玩家和其他玩家蛇身体的颜色
+
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
     players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName) =>
+
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,width,height,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
+
+          ctx.save()
+          //centerScale(scale,window.x/2,window.y/2)
+        println(s"${pro}")
+        if(pro == true){
+          println("true")
+          ctx.fillStyle = MyColors.halo
+          ctx.beginPath()
+          ctx.arc(cell.x +offx,cell.y +offy,cell.radius+15,0,2*Math.PI)
+          ctx.fill()
+        }
           ctx.fillStyle = color.toInt match{
             case 0 => "red"
             case 1 => "orange"
@@ -207,9 +237,11 @@ object NetGameHolder extends js.JSApp {
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
           ctx.fill()
+
         ctx.font = "24px Helvetica"
         ctx.fillStyle = MyColors.background
         ctx.fillText(s"${name}", cell.x +offx-12, cell.y +offy -18)
+        ctx.restore()
       }
     }
 //为不同分值的苹果填充不同颜色
@@ -224,9 +256,12 @@ object NetGameHolder extends js.JSApp {
         case 6  => "black"
         case _  => "blue"
       }
+      ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
       ctx.fill()
+        ctx.restore()
     }
     masses.foreach { case Mass(x,y,_,_,color,mass,r,_) =>
       ctx.fillStyle = color match{
@@ -239,9 +274,12 @@ object NetGameHolder extends js.JSApp {
         case 6  => "black"
         case _  => "blue"
       }
+      ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
       ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
       ctx.fill()
+      ctx.restore()
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
@@ -249,9 +287,13 @@ object NetGameHolder extends js.JSApp {
 //      ctx.beginPath()
 //      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
 //      ctx.fill()
+      ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+      ctx.restore()
     }
 
+    ctx.restore()
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
@@ -321,9 +363,11 @@ object NetGameHolder extends js.JSApp {
         ctx.fill()
        // println(s"${basePoint._1},  ${basePoint._2}")
     }
-
-
-
+  }
+  def centerScale(rate:Double,x:Double,y:Double) = {
+    ctx.translate(x,y)
+    ctx.scale(rate,rate)
+    ctx.translate(-x,-y)
   }
 //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -497,7 +541,7 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
   }
 
 
- private[this] def p(msg: String) = {
+  def p(msg: String) = {
     val paragraph = dom.document.createElement("p")
     paragraph.innerHTML = msg
     paragraph
