@@ -36,8 +36,16 @@ object LayuiJs {
     //是否允许拉伸
     val resize:js.UndefOr[Boolean]=js.undefined
     val btn:js.UndefOr[js.Array[String]] = js.undefined
+    //按钮排列
+    val btnAlign:UndefOr[String]=js.undefined
     val moveType:js.UndefOr[Int] = js.undefined
     val content : js.UndefOr[HTMLElement]=js.undefined
+    //按钮一的回调
+    def yes:js.UndefOr[js.Function2[Any,Any,Any]]=js.undefined
+    //按钮二的回调
+    def btn2:js.UndefOr[js.Function2[Any,Any,Any]]=js.undefined
+    //右上角关闭的回调
+    def cancel:js.UndefOr[js.Function0[Any]]=js.undefined
   }
 
   @ScalaJSDefined

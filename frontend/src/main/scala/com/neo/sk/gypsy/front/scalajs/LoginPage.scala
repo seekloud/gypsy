@@ -5,7 +5,7 @@ import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp}
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, captcha}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -35,12 +35,11 @@ object LoginPage {
     override val resize: UndefOr[Boolean] = false
     override val scrollbar: UndefOr[Boolean] = false
     override val content: UndefOr[HTMLElement] = div(
-      form(*.action := "#",
-        br(),
+        //br(),
         div(style := "position:center;margin:50px 146px",
           h1(*.id := "BigTitle", style := "font-size:30px", "欢迎来到Gypsy")
         ),
-        br(),
+        //br(),
         div(`class` := "nameInput",
           label(*.`for` := "name", style := "margin-left:130px", s"Name:"),
           input(*.id := "guestName", *.`type` := "text", placeholder := "请输入用户名", maxlength := "25"),
@@ -69,12 +68,10 @@ object LoginPage {
           i( `class`:="layui-icon layui-icon-tree"),"用户注册"),
         p(style := "margin-top:30px;margin-left:120px","小tips:F键分裂 E键吐出小球 Esc建呼出主菜单!")
 
-      )
-
     ).toString().asInstanceOf[HTMLElement]
   })
 
-  private def loginModel = LayuiJs.layer.open(new LayuiJs.open {
+  private def loginModel(captchaImgPath:String) = LayuiJs.layer.open(new LayuiJs.open {
     override val `type`: UndefOr[Int] = 1
     override val title: UndefOr[Boolean] = false
     override val closeBtn: UndefOr[Int] = 0
@@ -102,7 +99,7 @@ object LoginPage {
               input(*.`type` := "text", name := "vercode", *.id := "user-login-vercode", attr("lay-verify") := "required", placeholder := "图形验证码", `class` := "layui-input")),
             div(`class` := "layui-col-xs5",
               div(style := "margin-left: 10px;",
-                img(src := "https://www.oschina.net/action/user/captcha", `class` := "user-login-codeimg", *.id := "user-get-vercode"))
+                img(src := captchaImgPath, `class` := "user-login-codeimg", *.id := "user-get-vercode"))
             )
           )
         ),
@@ -111,6 +108,17 @@ object LoginPage {
           div(`class` := "layui-unselect layui-form-checkbox layui-form-checked", attr("lay-skin") := "primary",
             span("记住密码"),
             i(`class` := "layui-icon layui-icon-ok")),
+           /*select(*.id := "userroomId",name := "home",attr("lay-verify"):="",`class` := "layui-form-select", style := "margin-top: 7px; display",
+              option(value := "", "房间"),
+              optgroup(attr("label") := "普通模式",
+                option(value := "11", "房间1"),
+                option(value := "12", "房间2"),
+                option(value := "21", "房间3"),
+                option(value := "22", "房间4")),
+              optgroup(attr("label") := "限时模式",
+                option(value := "1", attr("disabled") := "", "房间1"),
+                option(value := "2", attr("disabled") := "", "房间2")),
+            ),*/
           a(`class` := "user-jump-change register-link", *.id := "login2register", style := "margin-top: 7px;", "注册账号")
         ),
         div(`class` := "layui-form-item",
@@ -201,53 +209,117 @@ object LoginPage {
 
     userLoginButton.onclick = {
       (_: MouseEvent) =>
-        val loginIndex = loginModel
-        LayuiJs.layer.close(guestIndex)
+        val form:FormData =new FormData()
+        form.append("showapi_appid","70696")
+        form.append("showapi_sign","a2d029e3526f43cebc4321b60697054f")
+        form.append("textproducer_char_string","0123456789qwertyuiopasdfghjklzxcvbnm")
+        form.append("border","no")
+        form.append("image_height","80")
+        Http.postFormAndParse[captcha](" http://route.showapi.com/26-4",form).map{
+          case Right(rspc)=>
+            if(rspc.showapi_res_code==0){
+              val loginIndex = loginModel(rspc.showapi_res_body.img_path)
+              LayuiJs.layer.close(guestIndex)
+              val userName: Input = dom.document.getElementById("user-login-username").asInstanceOf[HTMLInputElement]
+              val userPassword: Input = dom.document.getElementById("user-login-password").asInstanceOf[HTMLInputElement]
+              val vercode: Input = dom.document.getElementById("user-login-vercode").asInstanceOf[HTMLInputElement]
+              val userLoginButton: Button = dom.document.getElementById("login").asInstanceOf[HTMLButtonElement]
+              val login2register = dom.document.getElementById("login2register").asInstanceOf[HTMLButtonElement]
+              val back2guest = dom.document.getElementById("back2guest").asInstanceOf[HTMLButtonElement]
 
-        val userName: Input = dom.document.getElementById("user-login-username").asInstanceOf[HTMLInputElement]
-        val userPassword: Input = dom.document.getElementById("user-login-password").asInstanceOf[HTMLInputElement]
-        val vercode: Input = dom.document.getElementById("user-login-vercode").asInstanceOf[HTMLInputElement]
-        val userLoginButton: Button = dom.document.getElementById("login").asInstanceOf[HTMLButtonElement]
-        val login2register = dom.document.getElementById("login2register").asInstanceOf[HTMLButtonElement]
-        val back2guest = dom.document.getElementById("back2guest").asInstanceOf[HTMLButtonElement]
-
-        userName.focus()
-        userLoginButton.onclick = {
-          (_: MouseEvent) =>
-            if (userName.value.trim.isEmpty) {
-              LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
-            } else if (userPassword.value.trim.isEmpty) {
-              LayuiJs.msg("密码不能为空!", 0, 2000, 6)
-            } else if (vercode.value.trim.isEmpty) {
-              LayuiJs.msg("验证码错误!", 0, 2000, 6)
-            } else {
-              val bodyStr = UserLoginInfo(userName.value, userPassword.value).asJson.noSpaces
-              Http.postJsonAndParse[UserLoginRsq](UserRoute.userLogin, bodyStr).map {
-                case Right(rsp) =>
-                  if (rsp.errCode != 0) {
-                    println(s"name or password error in login ${rsp.errCode} ")
-                    LayuiJs.msg(rsp.msg, 5, 2000)
+              userName.focus()
+              userLoginButton.onclick = {
+                (_: MouseEvent) =>
+                  if (userName.value.trim.isEmpty) {
+                    LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
+                  } else if (userPassword.value.trim.isEmpty) {
+                    LayuiJs.msg("密码不能为空!", 0, 2000, 6)
+                  } else if (vercode.value.trim.isEmpty||vercode.value!=rspc.showapi_res_body.text) {
+                    LayuiJs.msg("验证码错误!", 0, 2000, 6)
                   } else {
-                    joinGame("11",userName.value, 1)
-                    LayuiJs.layer.close(loginIndex)
+                    val bodyStr = UserLoginInfo(userName.value, userPassword.value).asJson.noSpaces
+                    Http.postJsonAndParse[UserLoginRsq](UserRoute.userLogin, bodyStr).map {
+                      case Right(rsp) =>
+                        if (rsp.errCode != 0) {
+                          println(s"name or password error in login ${rsp.errCode} ")
+                          LayuiJs.msg(rsp.msg, 5, 2000)
+                        } else {
+                          joinGame("11",userName.value, 1,rsp.data.get.score)
+                          LayuiJs.layer.close(loginIndex)
+                        }
+                      case Left(e) =>
+                        println(s"parse error in login $e ")
+                        LayuiJs.msg(e.toString, 5, 2000)
+                    }
                   }
-                case Left(e) =>
-                  println(s"parse error in login $e ")
-                  LayuiJs.msg(e.toString, 5, 2000)
               }
+
+              back2guest.onclick = {
+                (_: MouseEvent) =>
+                  homePage()
+                  LayuiJs.layer.close(loginIndex)
+              }
+
+              login2register.onclick={
+                (_: MouseEvent) =>
+                  userRegisterButton.click()
+                  LayuiJs.layer.close(loginIndex)
+              }
+
+            }else{
+              println(s"${rspc.showapi_res_error} ")
+              val loginIndex = loginModel("https://www.oschina.net/action/user/captcha")
+              LayuiJs.layer.close(guestIndex)
+              val userName: Input = dom.document.getElementById("user-login-username").asInstanceOf[HTMLInputElement]
+              val userPassword: Input = dom.document.getElementById("user-login-password").asInstanceOf[HTMLInputElement]
+              val vercode: Input = dom.document.getElementById("user-login-vercode").asInstanceOf[HTMLInputElement]
+              val userLoginButton: Button = dom.document.getElementById("login").asInstanceOf[HTMLButtonElement]
+              val login2register = dom.document.getElementById("login2register").asInstanceOf[HTMLButtonElement]
+              val back2guest = dom.document.getElementById("back2guest").asInstanceOf[HTMLButtonElement]
+              userName.focus()
+              userLoginButton.onclick = {
+                (_: MouseEvent) =>
+                  if (userName.value.trim.isEmpty) {
+                    LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
+                  } else if (userPassword.value.trim.isEmpty) {
+                    LayuiJs.msg("密码不能为空!", 0, 2000, 6)
+                  } else if (vercode.value.trim.isEmpty) {
+                    LayuiJs.msg("验证码错误!", 0, 2000, 6)
+                  } else {
+                    val bodyStr = UserLoginInfo(userName.value, userPassword.value).asJson.noSpaces
+                    Http.postJsonAndParse[UserLoginRsq](UserRoute.userLogin, bodyStr).map {
+                      case Right(rsp) =>
+                        if (rsp.errCode != 0) {
+                          println(s"name or password error in login ${rsp.errCode} ")
+                          LayuiJs.msg(rsp.msg, 5, 2000)
+                        } else {
+                          joinGame("11",userName.value, 1,rsp.data.get.score)
+                          LayuiJs.layer.close(loginIndex)
+                        }
+                      case Left(e) =>
+                        println(s"parse error in login $e ")
+                        LayuiJs.msg(e.toString, 5, 2000)
+                    }
+                  }
+              }
+
+              back2guest.onclick = {
+                (_: MouseEvent) =>
+                  homePage()
+                  LayuiJs.layer.close(loginIndex)
+              }
+
+              login2register.onclick={
+                (_: MouseEvent) =>
+                  userRegisterButton.click()
+                  LayuiJs.layer.close(loginIndex)
+              }
+
             }
-        }
+          case Left(e)=>
+            println(s"parse error in login $e ")
+            LayuiJs.msg(e.toString, 5, 2000)
 
-        back2guest.onclick = {
-          (_: MouseEvent) =>
-            homePage()
-            LayuiJs.layer.close(loginIndex)
-        }
-
-        login2register.onclick={
-          (_: MouseEvent) =>
-            userRegisterButton.click()
-            LayuiJs.layer.close(loginIndex)
         }
     }
 

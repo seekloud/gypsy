@@ -329,6 +329,12 @@ trait Grid {
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
+        playerMap.get(killer) match {
+          case Some(killerPlayer)=>
+            player.killerName=killerPlayer.name
+          case _=>
+            player.killerName="unknown"
+        }
         deadPlayerMap+=(player.id->player)
          Left(killer)
       }else{
@@ -355,7 +361,7 @@ trait Grid {
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
     killerMap.foreach{killer=>
-      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0L,0,0))))
+      val a= playerMap.getOrElse(killer, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
@@ -390,5 +396,12 @@ trait Grid {
       virus,
       deadPlayers
     )
+  }
+
+  def removeDeadPlayer(id:Long)={
+    val r=deadPlayerMap.get(id)
+    if(r.isDefined){
+      deadPlayerMap -= id
+    }
   }
 }

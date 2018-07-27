@@ -57,7 +57,8 @@ package object ptcl {
                    kill:Int = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
-                   cells:List[Cell]
+                   cells:List[Cell],
+                   var killerName:String= ""
                    )
   case class Cell(
                  id:Long,
@@ -95,5 +96,17 @@ package object ptcl {
     val h = 600
   }
 
+
+  case class captcha(
+                      showapi_res_error:String="",
+                      showapi_res_code:Int,
+                      showapi_res_body:captchaBody
+  )
+  case class captchaBody(
+                          img_path_https:String,
+                          ret_code:Int,
+                          img_path:String,
+                          text:String
+                        )
 
 }
