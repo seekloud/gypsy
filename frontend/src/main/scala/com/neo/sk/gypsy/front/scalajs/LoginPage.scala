@@ -179,12 +179,12 @@ object LoginPage {
         } else {
           //修改参数一为房间编号（简单版中为：11,12,21,22）
           if(roomId.value !=""){
-            joinGame(roomId.value,nameField.value)}
-          else{
-            joinGame(nameField.value,nameField.value)
+            joinGame(roomId.value,nameField.value)
+            LayuiJs.layer.close(guestIndex)
           }
-
-          LayuiJs.layer.close(guestIndex)
+          else{
+            LayuiJs.msg("请选择房间", 5, 2000)
+          }
         }
     }
 
