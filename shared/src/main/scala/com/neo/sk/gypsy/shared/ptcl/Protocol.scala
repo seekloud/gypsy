@@ -7,7 +7,7 @@ package com.neo.sk.gypsy.shared.ptcl
   */
 object Protocol {
 
-  sealed trait GameMessage
+  sealed trait GameMessage extends WsServerSourceProtocol.WsMsgSource
 
   case class GridDataSync(
     frameCount: Long,
