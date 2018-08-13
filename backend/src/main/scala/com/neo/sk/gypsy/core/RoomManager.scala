@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import io.circe.{Decoder, Encoder}
 import com.neo.sk.gypsy.Boot.executor
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
+import com.neo.sk.gypsy.utils.CirceSupport
 
 /**
   * User: sky
@@ -24,6 +27,7 @@ object RoomManager {
   import io.circe.generic.semiauto._
   import io.circe.generic.auto._
   import io.circe.syntax._
+
 
   //todo 增加多房间模式
   private val log=LoggerFactory.getLogger(this.getClass)
@@ -69,8 +73,15 @@ object RoomManager {
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
       .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
-      .map { msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
+      .map {
+      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
+      /*case t:Protocol.GameMessage =>
+        //          TextMessage.apply(t.asJson.noSpaces)
+        TextMessage.Strict(t.asJson.noSpaces)
+
+      case x =>
+        TextMessage.apply("")*/
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
 
 
