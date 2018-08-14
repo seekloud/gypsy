@@ -41,9 +41,9 @@ object LayuiJs {
     val moveType:js.UndefOr[Int] = js.undefined
     val content : js.UndefOr[HTMLElement]=js.undefined
     //按钮一的回调
-    def yes:js.UndefOr[js.Function2[Any,Any,Any]]=js.undefined
+    def yes:js.UndefOr[js.Function0[Any]]=js.undefined
     //按钮二的回调
-    def btn2:js.UndefOr[js.Function2[Any,Any,Any]]=js.undefined
+    def btn2:js.UndefOr[js.Function0[Any]]=js.undefined
     //右上角关闭的回调
     def cancel:js.UndefOr[js.Function0[Any]]=js.undefined
   }

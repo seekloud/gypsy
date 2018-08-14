@@ -5,7 +5,7 @@ import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, Captcha}
+import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, Protocol, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -24,7 +24,7 @@ import scalatags.JsDom.short.*
 
 object DeadPage {
 
-  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,gameStream:WebSocket)={
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
       override val title: UndefOr[Boolean] = false
@@ -37,6 +37,19 @@ object DeadPage {
       override val moveType: UndefOr[Int] = 1
       override val resize: UndefOr[Boolean] = false
       override val scrollbar: UndefOr[Boolean] = false
+      override def yes() = {
+        println(KeyCode.Space.toString)
+        gameStream.send(KeyCode.Space.toString)
+        layer.closeAll()
+      } .asInstanceOf[js.Function0[Any]]
+
+      override def btn2(): UndefOr[js.Function0[Any]] = {
+        gameStream.send("LEFT")
+        gameStream.close()
+        wsSetup=false
+        layer.closeAll()
+        LoginPage.homePage()
+      }.asInstanceOf[js.Function0[ Any]]
       override val content: UndefOr[HTMLElement] = div(
         `class`:="dead-main",
         div(`class`:="user-login-box user-login-header",
