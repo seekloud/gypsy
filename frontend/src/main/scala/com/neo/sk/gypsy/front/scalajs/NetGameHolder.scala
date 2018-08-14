@@ -118,7 +118,7 @@ object NetGameHolder extends js.JSApp {
       ctx.fillText("Welcome.", 150, 180)
     } else {
       ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, connection lost.", 150, 180)
+      ctx.fillText("Ops, connection lost.", 350, 250)
     }
   }
 
@@ -318,7 +318,7 @@ object NetGameHolder extends js.JSApp {
           ctx.fillText("Please wait.", 150, 180)
         } else {
           ctx.font = "36px Helvetica"
-          ctx.fillText("Ops, Press Space Key To Restart!", 150, 180)
+          ctx.fillText("Ops, Loading....", 350, 250)
         }
     }
 //绘制当前排行
@@ -395,6 +395,10 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
             } else if(e.keyCode == KeyCode.Escape){
               gameStream.send("LEFT")
               LoginPage.homePage()
+              gameStream.close()
+              wsSetup=false
+            } else if(e.keyCode == KeyCode.Space){
+              println(s"down+${e.keyCode.toString}")
             }else {
               println(s"down+${e.keyCode.toString}")
               gameStream.send(e.keyCode.toString)
@@ -412,11 +416,12 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
 
       event0
     }
-
     gameStream.onerror = { (event: ErrorEvent) =>
       drawGameOff()
       playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
-      wsSetup = false
+      if (wsSetup) {
+        wsSetup = false
+      }
     }
 
 
@@ -436,8 +441,8 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
             grid.getGridData.deadPlayer.find(_.id==myId) match {
               case Some(player)=>
                 val score=player.cells.map(_.mass).sum
-                LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
-                DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
+               // LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
+                DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
                 dom.window.clearInterval(timer)
                 grid.removeDeadPlayer(id)
             }
@@ -512,7 +517,7 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
               grid.getGridData.deadPlayer.find(_.id==id) match {
                 case Some(player)=>
                   val score=player.cells.map(_.mass).sum
-                  DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
+                  DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
                 //  LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
                   dom.window.clearInterval(timer)
                   grid.removeDeadPlayer(id)
@@ -527,9 +532,10 @@ def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit =
     }
 
     gameStream.onclose = { (event: Event) =>
-      drawGameOff()
+      println("gameStream close")
+     // drawGameOff()
       //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
-      wsSetup = false
+    //  wsSetup = false
     }
 //写入消息区
     def writeToArea(text: String): Unit ={
