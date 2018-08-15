@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{joinGame}
+import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{joinGame,isDead}
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
