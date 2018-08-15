@@ -25,6 +25,7 @@ import scalatags.JsDom.short.*
 object DeadPage {
 
   def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,gameStream:WebSocket)={
+    isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
       override val title: UndefOr[Boolean] = false
@@ -32,13 +33,14 @@ object DeadPage {
       override val area: UndefOr[js.Array[String]] = js.Array("500px", "500px")
       override val shade: UndefOr[Float] = 0.2f
       override val id: UndefOr[String] = "user-Dead"
-      override val btn: UndefOr[js.Array[String]] = js.Array("继续","退出")
+      override val btn: UndefOr[js.Array[String]] = js.Array("重新开始","退出游戏")
       override val btnAlign: UndefOr[String] = "c"
       override val moveType: UndefOr[Int] = 1
       override val resize: UndefOr[Boolean] = false
       override val scrollbar: UndefOr[Boolean] = false
       override def yes() = {
         println(KeyCode.Space.toString)
+        isDead=false
         gameStream.send(KeyCode.Space.toString)
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
