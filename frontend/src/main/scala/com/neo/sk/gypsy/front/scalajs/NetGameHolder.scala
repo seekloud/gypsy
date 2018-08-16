@@ -208,7 +208,7 @@ object NetGameHolder extends js.JSApp {
 
     ctx.fillStyle = MyColors.otherBody
     //TODO 拖尾效果
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName,width,height) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,killerName,width,height,cells) =>
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
@@ -527,7 +527,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   }
 
   def deadCheck(id:Long,timer:Int,start:Long,maxScore:Int,gameStream:WebSocket)={
-    grid.getGridData.deadPlayer.find(_.id==id) match {
+    grid.getGridData(id).deadPlayer.find(_.id==id) match {
       case Some(player)=>
         val score=player.cells.map(_.mass).sum
         DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
