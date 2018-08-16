@@ -361,7 +361,7 @@ object NetGameHolder extends js.JSApp {
         ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
       }
     }
-    players.filter(_.id==uid).headOption match {
+    players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)

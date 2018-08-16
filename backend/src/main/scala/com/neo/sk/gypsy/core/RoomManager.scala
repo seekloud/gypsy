@@ -13,6 +13,7 @@ import akka.util.ByteString
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Protocol.ErrorGameMessage
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
 import com.neo.sk.gypsy.utils.CirceSupport
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
@@ -65,21 +66,17 @@ object RoomManager {
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
+        case BinaryMessage.Strict(msg)=>
+          val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
+          bytesDecode[Protocol.GameMessage](buffer) match {
+            case Right(req) => req
+            case Left(e) =>
+              log.error(s"decode binaryMessage failed,error:${e.message}")
+              ErrorGameMessage
+          }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          TextInfo(msg)
-
-        case BinaryMessage.Strict(bMsg) =>
-          //decode process.
-          val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
-          val msg =
-            bytesDecode[Protocol.GameMessage](buffer) match {
-              case Right(v) => v
-              case Left(e) =>
-                println(s"decode error: ${e.message}")
-                TextInfo("decode error")
-            }
-          msg
+          ErrorGameMessage
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
