@@ -20,4 +20,16 @@ object UserDao {
     )
   }
 
+  def getScoreById(id:Long)={
+    db.run(
+      tUser.filter(_.id===id).map(_.score).result.headOption
+    )
+  }
+
+  def updateScoreById(id:Long,score:Int)={
+    db.run(
+      tUser.filter(_.id===id ).map(_.score).update(score)
+    )
+  }
+
 }

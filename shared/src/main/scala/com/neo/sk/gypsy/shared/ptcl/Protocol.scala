@@ -15,7 +15,8 @@ object Protocol {
     foodDetails: List[Food],
     massDetails: List[Mass],
     virusDetails: List[Virus],
-    scale:Double
+    scale:Double,
+    deadPlayer:List[Player]
   ) extends GameMessage
 
 
@@ -43,7 +44,15 @@ object Protocol {
 
   case class NetDelayTest(createTime: Long) extends GameMessage
 
-  case class MousePosition(clientX:Double,clientY:Double)
+  case class SnakeRestart(id:Long) extends GameMessage
+
+  case class MousePosition(clientX:Double,clientY:Double)extends GameMessage
+
+  case class KeyCode(keyCode: Int)extends GameMessage
+
+  case object UserLeft extends GameMessage
+
+  case object ErrorGameMessage extends GameMessage
 
   val frameRate = 100
 
