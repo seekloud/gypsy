@@ -45,7 +45,6 @@ object RoomActor {
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
-//  case class TextInfo(msg: String) extends Command
 
 
 
@@ -160,24 +159,9 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[String, WsServerSourceProtocol.WsMsgSource, Any] = {
-    val in = Flow[String]
-      .map { s =>
-        if (s.startsWith("T")) {
-          val timestamp = s.substring(1).toLong
-          NetTest(id, timestamp)
-        }else if(s.contains("LEFT")){
-          Left(id,name)
-        } else {
-          decode[MousePosition](s) match{
-            case Right(mouse)=>
-              Mouse(id,mouse.clientX,mouse.clientY)
-            case k=>
-              log.debug(s"键盘事件$k")
-              Key(id, s.toInt)
-          }
-        }
-      }
+  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[RoomActor.Command, WsServerSourceProtocol.WsMsgSource, Any] = {
+    val in = Flow[RoomActor.Command]
+      .map {s => s}
       .to(sink(actor))
 
     val out =
