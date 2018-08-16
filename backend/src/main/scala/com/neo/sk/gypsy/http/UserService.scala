@@ -3,21 +3,24 @@ package com.neo.sk.gypsy.http
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Scheduler}
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshalling
 import akka.stream.scaladsl.Flow
 import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervision}
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{ErrorGameMessage, GameMessage, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.snake.PlayGround
 import com.neo.sk.gypsy.utils.SecureUtil
+import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContextExecutor
@@ -52,16 +55,31 @@ trait UserService extends ServiceUtils with SessionBase {
   def webSocketChatFlow(room:String,sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
+        case BinaryMessage.Strict(msg)=>
+          val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
+          bytesDecode[GameMessage](buffer) match {
+            case Right(req) => req
+            case Left(e) =>
+              log.error(s"decode binaryMessage failed,error:${e.message}")
+              ErrorGameMessage
+          }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          msg
+          ErrorGameMessage
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
+
       }
       .via(playGround.getOrElse(room,playGround("11")).joinGame(id, sender)) // ... and route them through the chatFlow ...
-      .map { msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
+      .map {
+      case msg:GameMessage =>
+        import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+        val sendBuffer = new MiddleBufferInJvm(4096)
+        BinaryMessage.Strict(ByteString(msg.fillMiddleBuffer(sendBuffer).result()))
+      case x=>
+        TextMessage.Strict(x.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
 
