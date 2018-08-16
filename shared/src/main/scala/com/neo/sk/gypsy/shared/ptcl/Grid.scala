@@ -72,6 +72,8 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
+  var deadPlayerMap=Map.empty[Long,Player]
+
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
 //用户离开，从列表中去掉
@@ -254,7 +256,7 @@ trait Grid {
         }
 
         //自身cell合并检测
-        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.map{cell2=>
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.foreach{ cell2=>
           val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
           val radiusTotal = cell.radius + cell2.radius
           if (distance < radiusTotal) {
@@ -340,6 +342,13 @@ trait Grid {
 
       if(newCells.length == 0){
         //println(s"newCells${newCells}")
+        playerMap.get(killer) match {
+          case Some(killerPlayer)=>
+            player.killerName=killerPlayer.name
+          case _=>
+            player.killerName="unknown"
+        }
+        deadPlayerMap+=(player.id->player)
          Left(killer)
       }else{
         //println(s"newCells2${newCells}")
@@ -397,7 +406,7 @@ trait Grid {
 
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-    var massDetails: List[Mass] = Nil
+    var deadPlayers:List[Player] = Nil
     food.foreach{
       case (p,mass) =>
         if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),p,4,width,height))
@@ -408,17 +417,24 @@ trait Grid {
         if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
-//    print(s"玩家信息：$playerDetails")
-//    print(s"食物信息：$foodDetails")
-
+    deadPlayerMap.foreach{
+      case (id,player) => deadPlayers::=player
+    }
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
       massList.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virus.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      scale
+      scale,
+      deadPlayers
     )
   }
 
+  def removeDeadPlayer(id:Long)={
+    val r=deadPlayerMap.get(id)
+    if(r.isDefined){
+      deadPlayerMap -= id
+    }
+  }
 }
