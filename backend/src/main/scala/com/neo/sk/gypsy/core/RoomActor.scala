@@ -45,6 +45,8 @@ object RoomActor {
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
+//  case class TextInfo(msg: String) extends Command
+
 
 
   val bounds = Point(Boundary.w, Boundary.h)
@@ -107,13 +109,16 @@ object RoomActor {
           grid.addMouseAction(id,x,y)
           dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,grid.frameCount))
           Behaviors.same
-        /*case r:Terminated(actor) =>
+
+       /* case Terminated(actor) =>
           log.warn(s"got $r")
           subscribers.find(_._2.equals(actor)).foreach { case (id, _) =>
             log.debug(s"got Terminated id = $id")
             subscribers -= id
             grid.removePlayer(id).foreach(s => dispatch(Protocol.PlayerLeft(id, s.name)))
-          }*/
+          }
+          Behaviors.same*/
+
         case Sync =>
           grid.update()
           val feedApples = grid.getFeededApple

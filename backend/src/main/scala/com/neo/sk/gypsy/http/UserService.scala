@@ -53,7 +53,7 @@ trait UserService extends ServiceUtils with SessionBase {
 
   private[this] val log = LoggerFactory.getLogger(getClass)
 
-  /*def webSocketChatFlow(room:String,sender: String, id: Long): Flow[Message, Message, Any] =
+/*  def webSocketChatFlow(room:String,sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) =>
