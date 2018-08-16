@@ -395,11 +395,11 @@ trait Grid {
 
   def getGridData(id:Long) = {
     myId = id
-    println(s"玩家id：$myId")
-    println(s"玩家列表：$playerMap")
+//    println(s"玩家id：$myId")
+//    println(s"玩家列表：$playerMap")
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-    println(s"zoom：$zoom")
+//    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2)
     val width = Window.w/scale/2
     val height = Window.h/scale/2
