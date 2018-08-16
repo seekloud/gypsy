@@ -56,7 +56,7 @@ package object ptcl {
                    targetY:Int = 0,
                    kill:Int = 0,
                    protect:Boolean = true,//出生保护
-                   lastSplit:Long = System.currentTimeMillis(),
+                   lastSplit:Long = 0L,
                    width:Double =  8 + sqrt(10)*12,
                    height:Double =  8 + sqrt(10)*12,
                    cells:List[Cell]
