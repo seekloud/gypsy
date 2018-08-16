@@ -7,27 +7,26 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.Flow
-import akka.util.ByteString
 import org.slf4j.LoggerFactory
+import akka.util.ByteString
 
 import scala.concurrent.duration._
-import io.circe.{Decoder, Encoder}
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
 import com.neo.sk.gypsy.utils.CirceSupport
+import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 
+import io.circe.generic.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
+import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * User: sky
   * Date: 2018/7/23
   * Time: 11:09
   */
 object RoomManager {
-  import io.circe._
-  import io.circe.generic.semiauto._
-  import io.circe.generic.auto._
-  import io.circe.syntax._
-
 
   //todo 增加多房间模式
   private val log=LoggerFactory.getLogger(this.getClass)
@@ -61,12 +60,14 @@ object RoomManager {
         }
     }
 
+//  import com.neo.sk.gypsy.utils.byteObject.ByteObject._
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
           msg
+
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
@@ -74,14 +75,13 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
       .map {
-      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
+//      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-      /*case t:Protocol.GameMessage =>
-        //          TextMessage.apply(t.asJson.noSpaces)
+      case t:Protocol.GameMessage =>
         TextMessage.Strict(t.asJson.noSpaces)
 
       case x =>
-        TextMessage.apply("")*/
+        TextMessage.apply("")
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
 
 
