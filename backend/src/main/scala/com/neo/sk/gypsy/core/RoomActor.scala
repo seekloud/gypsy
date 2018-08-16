@@ -7,9 +7,8 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, UserLeft}
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
 import io.circe.parser._
@@ -45,6 +44,7 @@ object RoomActor {
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
+  private case object UnkownAction extends Command
 
 
 
@@ -77,7 +77,7 @@ object RoomActor {
         case Join(id, name, subscriber) =>
           log.info(s"got $msg")
           userMap += (id -> name)
-          ctx.watch(subscriber)
+          ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
           grid.addSnake(id, name)
           dispatchTo(subscribersMap,id, Protocol.Id(id))
@@ -86,7 +86,7 @@ object RoomActor {
           Behaviors.same
         case Left(id, name) =>
           log.info(s"got $msg")
-          subscribersMap.get(id).foreach(ctx.unwatch)
+          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           subscribersMap.remove(id)
           grid.removePlayer(id)
           dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
@@ -159,9 +159,19 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[RoomActor.Command, WsServerSourceProtocol.WsMsgSource, Any] = {
-    val in = Flow[RoomActor.Command]
-      .map {s => s}
+  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
+    val in = Flow[Protocol.GameMessage]
+      .map {
+        case KeyCode(keyCode)=>
+          log.debug(s"键盘事件$keyCode")
+          Key(id,keyCode)
+        case MousePosition(clientX,clientY)=>
+          Mouse(id,clientX,clientY)
+        case UserLeft=>
+          Left(id,name)
+        case _=>
+          UnkownAction
+      }
       .to(sink(actor))
 
     val out =
