@@ -109,15 +109,6 @@ object RoomActor {
           dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,grid.frameCount))
           Behaviors.same
 
-       /* case Terminated(actor) =>
-          log.warn(s"got $r")
-          subscribers.find(_._2.equals(actor)).foreach { case (id, _) =>
-            log.debug(s"got Terminated id = $id")
-            subscribers -= id
-            grid.removePlayer(id).foreach(s => dispatch(Protocol.PlayerLeft(id, s.name)))
-          }
-          Behaviors.same*/
-
         case Sync =>
           grid.update()
           val feedApples = grid.getFeededApple
@@ -133,7 +124,6 @@ object RoomActor {
             dispatch(subscribersMap,Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           idle(userMap,subscribersMap,grid,tickCount+1)
-          Behaviors.same
         case NetTest(id, createTime) =>
           log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap,id, Protocol.NetDelayTest(createTime))
