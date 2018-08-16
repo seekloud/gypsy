@@ -5,11 +5,11 @@ import java.awt.event.KeyEvent
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, KeyCode, MousePosition, UserLeft}
 import io.circe.Decoder
 import io.circe.parser._
+import net.sf.ehcache.transaction.xa.commands.Command
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
@@ -25,7 +25,7 @@ import scala.language.postfixOps
 trait PlayGround {
 
 
-  def joinGame(id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[String, Protocol.GameMessage, Any]
+  def joinGame(id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, Protocol.GameMessage, Any]
 
   def syncData()
 
@@ -103,9 +103,6 @@ object PlayGround {
           if (tickCount % 20 == 1) {
             dispatch(Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
-        case NetTest(id, createTime) =>
-          log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(id, Protocol.NetDelayTest(createTime))
         case x =>
           log.warn(s"got unknown msg: $x")
       }
@@ -129,10 +126,20 @@ object PlayGround {
 
 
     new PlayGround {
-      override def joinGame(id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[String, Protocol.GameMessage, Any] = {
+      override def joinGame(id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, Protocol.GameMessage, Any] = {
         val in =
-          Flow[String]
-            .map { s =>
+          Flow[Protocol.GameMessage]
+            .map {
+              case KeyCode(keyCode)=>
+                log.debug(s"键盘事件$keyCode")
+                Key(id,keyCode)
+              case MousePosition(clientX,clientY)=>
+                Mouse(id,clientX,clientY)
+              case UserLeft=>
+                Left(id,name)
+              case _=>
+                UnkownAction
+              /*s =>
               if (s.startsWith("T")) {
                 val timestamp = s.substring(1).toLong
                 NetTest(id, timestamp)
@@ -147,7 +154,7 @@ object PlayGround {
                     Key(id, s.toInt)
                 }
 
-              }
+              }*/
             }
             .to(playInSink(id, name))
 
@@ -174,9 +181,11 @@ object PlayGround {
 
   private case class Mouse(id: Long, clientX:Double,clientY:Double) extends UserAction
 
-  private case class NetTest(id: Long, createTime: Long) extends UserAction
+ // private case class NetTest(id: Long, createTime: Long) extends UserAction
 
   private case object Sync extends UserAction
+
+  private case object UnkownAction extends UserAction
 
 
 }
