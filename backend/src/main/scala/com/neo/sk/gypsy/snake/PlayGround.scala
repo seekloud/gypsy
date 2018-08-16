@@ -62,7 +62,7 @@ object PlayGround {
           grid.addSnake(id, name)
           dispatchTo(id, Protocol.Id(id))
           dispatch(Protocol.NewSnakeJoined(id, name))
-          dispatch(grid.getGridData)
+          dispatch(grid.getGridData(id))
         case r@Left(id, name) =>
           log.info(s"got $r")
           subscribers.get(id).foreach(context.unwatch)
@@ -95,8 +95,10 @@ object PlayGround {
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
-            val gridData = grid.getGridData
-            dispatch(gridData)
+            userMap.foreach { user =>
+              val gridData = grid.getGridData(user._1)
+              dispatchTo(user._1,gridData)
+            }
           } else {
             if (feedApples.nonEmpty) {
               dispatch(Protocol.FeedApples(feedApples))
