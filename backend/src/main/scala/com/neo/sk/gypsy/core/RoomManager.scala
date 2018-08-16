@@ -16,10 +16,11 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
 import com.neo.sk.gypsy.utils.CirceSupport
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-
+import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * User: sky
@@ -66,6 +67,18 @@ object RoomManager {
       .collect {
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
+          TextInfo(msg)
+
+        case BinaryMessage.Strict(bMsg) =>
+          //decode process.
+          val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
+          val msg =
+            bytesDecode[Protocol.GameMessage](buffer) match {
+              case Right(v) => v
+              case Left(e) =>
+                println(s"decode error: ${e.message}")
+                TextInfo("decode error")
+            }
           msg
 
         // unpack incoming WS text messages...
@@ -78,8 +91,9 @@ object RoomManager {
 //      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
       case t:Protocol.GameMessage =>
-        TextMessage.Strict(t.asJson.noSpaces)
-
+        import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+        val sendBuffer = new MiddleBufferInJvm(4096)
+        BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>
         TextMessage.apply("")
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
