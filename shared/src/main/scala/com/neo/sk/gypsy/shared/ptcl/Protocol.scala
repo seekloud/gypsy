@@ -25,9 +25,6 @@ object Protocol {
 
 
 
-  case class TextMsg(
-    msg: String
-  ) extends GameMessage
 
   case class Id(id: Long) extends GameMessage
 
@@ -45,7 +42,13 @@ object Protocol {
   
   case class SnakeRestart(id:Long) extends GameMessage
 
-  case class MousePosition(clientX:Double,clientY:Double)
+  case class MousePosition(clientX:Double,clientY:Double)extends GameMessage
+
+  case class KeyCode(keyCode: Int)extends GameMessage
+
+  case object UserLeft extends GameMessage
+
+  case object ErrorGameMessage extends GameMessage
 
   val frameRate = 100
 

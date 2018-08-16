@@ -4,8 +4,8 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, SuccessRsp, Captcha}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, Protocol, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -24,7 +24,8 @@ import scalatags.JsDom.short.*
 
 object DeadPage {
 
-  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,gameStream:WebSocket)={
+    isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
       override val title: UndefOr[Boolean] = false
@@ -32,11 +33,25 @@ object DeadPage {
       override val area: UndefOr[js.Array[String]] = js.Array("500px", "500px")
       override val shade: UndefOr[Float] = 0.2f
       override val id: UndefOr[String] = "user-Dead"
-      override val btn: UndefOr[js.Array[String]] = js.Array("继续","退出")
+      override val btn: UndefOr[js.Array[String]] = js.Array("重新开始","退出游戏")
       override val btnAlign: UndefOr[String] = "c"
       override val moveType: UndefOr[Int] = 1
       override val resize: UndefOr[Boolean] = false
       override val scrollbar: UndefOr[Boolean] = false
+      override def yes() = {
+        println(KeyCode.Space.toString)
+        isDead=false
+        sendMsg(Protocol.KeyCode(KeyCode.Space),gameStream)
+        layer.closeAll()
+      } .asInstanceOf[js.Function0[Any]]
+
+      override def btn2(): UndefOr[js.Function0[Any]] = {
+        sendMsg(UserLeft,gameStream)
+        gameStream.close()
+        wsSetup=false
+        layer.closeAll()
+        LoginPage.homePage()
+      }.asInstanceOf[js.Function0[ Any]]
       override val content: UndefOr[HTMLElement] = div(
         `class`:="dead-main",
         div(`class`:="user-login-box user-login-header",

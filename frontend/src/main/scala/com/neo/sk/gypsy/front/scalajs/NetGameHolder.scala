@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.front.scalajs
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
@@ -17,10 +17,13 @@ import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
+
 import scala.math._
+import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
+import scala.scalajs.js.typedarray.ArrayBuffer
 
 
 /**
@@ -49,6 +52,8 @@ object NetGameHolder extends js.JSApp {
   //长连接状态
   var wsSetup = false
   var justSynced = false
+
+  var isDead=true
 //条纹
   val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
   val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
@@ -64,7 +69,7 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Up,
     KeyCode.Right,
     KeyCode.Down,
-    KeyCode.F2,
+   // KeyCode.F2,
     KeyCode.Escape
   )
 
@@ -118,7 +123,7 @@ object NetGameHolder extends js.JSApp {
       ctx.fillText("Welcome.", 150, 180)
     } else {
       ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, connection lost.", 150, 180)
+      ctx.fillText("Ops, connection lost....", 350, 250)
     }
   }
 
@@ -318,7 +323,7 @@ object NetGameHolder extends js.JSApp {
           ctx.fillText("Please wait.", 150, 180)
         } else {
           ctx.font = "36px Helvetica"
-          ctx.fillText("Ops, Press Space Key To Restart!", 150, 180)
+          ctx.fillText("Ops, Loading....", 350, 250)
         }
     }
 //绘制当前排行
@@ -375,176 +380,174 @@ object NetGameHolder extends js.JSApp {
   }
 
 //新用户加入游戏
-def joinGame(room:String,name: String, userType: Int = 0,maxScore:Int=0): Unit = {
+def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
   val playground = dom.document.getElementById("playground")
-    val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document,room, name, userType))
-    gameStream.onopen = { (event0: Event) =>
-      println("come here")
-      drawGameOn()
-     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
-      wsSetup = true
-      canvas.focus()
-      //在画布上监听键盘事件
-      canvas.onkeydown = {
-        (e: dom.KeyboardEvent) => {
-          println(s"keydown: ${e.keyCode}")
-          if (watchKeys.contains(e.keyCode)) {
-            println(s"key down: [${e.keyCode}]")
-            if (e.keyCode == KeyCode.F2) {
-              gameStream.send("T" + System.currentTimeMillis())
-            } else if(e.keyCode == KeyCode.Escape){
-              gameStream.send("LEFT")
-              LoginPage.homePage()
-            }else {
-              println(s"down+${e.keyCode.toString}")
-              gameStream.send(e.keyCode.toString)
-            }
-            e.preventDefault()
+  val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, room, name, userType))
+  gameStream.onopen = { (event0: Event) =>
+    println("come here")
+    drawGameOn()
+    // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
+    isDead = false
+    wsSetup = true
+    canvas.focus()
+    //在画布上监听键盘事件
+    canvas.onkeydown = {
+      (e: dom.KeyboardEvent) => {
+        println(s"keydown: ${e.keyCode}")
+        if (watchKeys.contains(e.keyCode)) {
+          println(s"key down: [${e.keyCode}]")
+          if (e.keyCode == KeyCode.Escape && !isDead) {
+            sendMsg(UserLeft, gameStream)
+            LoginPage.homePage()
+            gameStream.close()
+            wsSetup = false
+            isDead = true
+          } else if (e.keyCode == KeyCode.Space) {
+            println(s"down+${e.keyCode.toString}")
+          } else {
+            println(s"down+${e.keyCode.toString}")
+            sendMsg(Protocol.KeyCode(e.keyCode), gameStream)
           }
+          e.preventDefault()
         }
       }
-      //在画布上监听鼠标事件
-      canvas.onmousemove = { (e: dom.MouseEvent) => {
-        gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      }
+    }
+    //在画布上监听鼠标事件
+    canvas.onmousemove = { (e: dom.MouseEvent) => {
+      //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
+      sendMsg(MousePosition(e.pageX - windWidth / 2, e.pageY - 48 - window.y.toDouble / 2), gameStream)
 
-      }
-
-      event0
     }
 
-    gameStream.onerror = { (event: ErrorEvent) =>
-      drawGameOff()
-      playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
+    }
+
+    event0
+  }
+  gameStream.onerror = { (event: ErrorEvent) =>
+    drawGameOff()
+    playground.insertBefore(p(s"Failed: code: ${event.colno}"), playground.firstChild)
+    if (wsSetup) {
       wsSetup = false
     }
+  }
 
 
-    import io.circe.generic.auto._
-    import io.circe.parser._
+  import io.circe.generic.auto._
+  import io.circe.parser._
 
-    gameStream.onmessage = { (event: MessageEvent) =>
-      //val wsMsg = read[Protocol.GameMessage](event.data.toString)
-      val wsMsg = decode[Protocol.GameMessage](event.data.toString).right.get
-      wsMsg match {
-        case Protocol.Id(id) =>
-          myId = id
-          var timer= -1
-          val start=System.currentTimeMillis()
-          timer= dom.window.setInterval(()=>deadCheck (myId,timer),Protocol.frameRate)
-          def deadCheck(id:Long,timer:Int)={
-            grid.getGridData.deadPlayer.find(_.id==myId) match {
-              case Some(player)=>
-                val score=player.cells.map(_.mass).sum
-                LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
-                DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
-                dom.window.clearInterval(timer)
-                grid.removeDeadPlayer(id)
-            }
+  gameStream.onmessage = { (event: MessageEvent) =>
+    import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
+    //val wsMsg = read[Protocol.GameMessage](event.data.toString)
+    event.data match {
+      case blobMsg: Blob =>
+        val fr = new FileReader()
+        fr.readAsArrayBuffer(blobMsg)
+        fr.onloadend = { _: Event =>
+          val buf = fr.result.asInstanceOf[ArrayBuffer]
+          val middleDataInJs = new MiddleBufferInJs(buf)
+          bytesDecode[GameMessage](middleDataInJs) match {
+            case Right(data) =>
+              data match {
+                case Protocol.Id(id) =>
+                  myId = id
+                  var timer = -1
+                  val start = System.currentTimeMillis()
+                  timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
+                case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
+                case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
+                case Protocol.SnakeAction(id, keyCode, frame) =>
+                  if (frame > grid.frameCount) {
+                  } else {
+                  }
+                  grid.addActionWithFrame(id, keyCode, frame)
 
-          }
+                case Protocol.SnakeMouseAction(id, x, y, frame) =>
+                  if (frame > grid.frameCount) {
+                    //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
+                  } else {
+                    //writeToArea(s"got snake mouse action=$a")
+                  }
+                  grid.addMouseActionWithFrame(id, x, y, frame)
 
-        /*  var timer2= -1
-          timer1= dom.window.setInterval(()=> idCheck(myId,timer1),Protocol.frameRate)
-          def idCheck(id:Long,timer:Int) ={
-            grid.getGridData.playerDetails.find(_.id==myId) match {
-              case Some(player)=>
-                //LayuiJs.msg("你被干死了！！！！！！！！！")
-              dom.window.clearInterval(timer1)
-              timer2=dom.window.setInterval(()=> deadCheck(myId,timer2),Protocol.frameRate)
-            }
-          }
-          def deadCheck(id:Long,timer:Int)={
-            grid.getGridData.playerDetails.find(_.id==myId) match {
-              case None=>
-                LayuiJs.msg("你被干死了！！！！！！！！！")
-                dom.window.clearInterval(timer2)
+                case Protocol.Ranks(current, history) =>
 
-            }
+                  currentRank = current
+                  historyRank = history
+                case Protocol.FeedApples(foods) =>
 
-          }*/
+                  grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+                case data: Protocol.GridDataSync =>
+                  //writeToArea(s"grid data got: $msgData")
+                  //TODO here should be better code.
+                  grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
+                  grid.frameCount = data.frameCount
+                  grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
+                  grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+                  grid.massList = data.massDetails
+                  grid.virus = data.virusDetails
+                  justSynced = true
+                //drawGrid(msgData.uid, data)
+                case Protocol.NetDelayTest(createTime) =>
+                  val receiveTime = System.currentTimeMillis()
+                  val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
+                //writeToArea(m)
+                case Protocol.SnakeRestart(id) =>
+                  var timer = -1
+                  val start = System.currentTimeMillis()
+                  timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
+                case msg@_ =>
+                  println(s"unkown $msg")
 
-        case Protocol.TextMsg(message) => //writeToArea(s"MESSAGE: $message")
-        case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
-        case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
-        case a@Protocol.SnakeAction(id, keyCode, frame) =>
-          if (frame > grid.frameCount) {
-          } else {
-          }
-          grid.addActionWithFrame(id, keyCode, frame)
-
-        case a@Protocol.SnakeMouseAction(id, x, y, frame) =>
-          if (frame > grid.frameCount) {
-            //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
-          } else {
-            //writeToArea(s"got snake mouse action=$a")
-          }
-          grid.addMouseActionWithFrame(id, x, y, frame)
-
-        case Protocol.Ranks(current, history) =>
-
-          currentRank = current
-          historyRank = history
-        case Protocol.FeedApples(foods) =>
-
-          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
-        case data: Protocol.GridDataSync =>
-          //writeToArea(s"grid data got: $msgData")
-          //TODO here should be better code.
-          grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
-          grid.frameCount = data.frameCount
-          grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-          grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-          grid.massList = data.massDetails
-          grid.virus = data.virusDetails
-          justSynced = true
-        //drawGrid(msgData.uid, data)
-        case Protocol.NetDelayTest(createTime) =>
-          val receiveTime = System.currentTimeMillis()
-          val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
-          //writeToArea(m)
-        case Protocol.SnakeRestart(id)=>
-            var timer= -1
-            val start=System.currentTimeMillis()
-            timer= dom.window.setInterval(()=>deadCheck (id,timer),Protocol.frameRate)
-            def deadCheck(id:Long,timer:Int)={
-              grid.getGridData.deadPlayer.find(_.id==id) match {
-                case Some(player)=>
-                  val score=player.cells.map(_.mass).sum
-                  DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore)
-                //  LayuiJs.msg(s"你被干死了！！！！！！！！！${player.id}++++${player.kill}+++$score++++${player.killerName}")
-                  dom.window.clearInterval(timer)
-                  grid.removeDeadPlayer(id)
               }
-            }
+            case unknow =>
+              println(s"recv unknow msg:$unknow")
+          }
+        }
 
-        case msg@_ =>
-          println(s"unkown $msg")
-
-
-      }
+      case unknow =>
+        println(s"recv unknow msg:$unknow")
     }
-
-    gameStream.onclose = { (event: Event) =>
-      drawGameOff()
-      //playground.insertBefore(p("Connection to game lost. You can try to rejoin manually."), playground.firstChild)
-      wsSetup = false
-    }
-//写入消息区
-    def writeToArea(text: String): Unit ={
-      //playground.insertBefore(p(text), playground.firstChild)
-    }
-
-
 
   }
+
+  gameStream.onclose = { (event: Event) =>
+    println("gameStream close")
+    //  wsSetup = false
+  }
+
+  //写入消息区
+  def writeToArea(text: String): Unit = {
+    //playground.insertBefore(p(text), playground.firstChild)
+  }
+
+
+}
 
 
   def p(msg: String) = {
     val paragraph = dom.document.createElement("p")
     paragraph.innerHTML = msg
     paragraph
+  }
+
+  def deadCheck(id:Long,timer:Int,start:Long,maxScore:Int,gameStream:WebSocket)={
+    grid.getGridData.deadPlayer.find(_.id==id) match {
+      case Some(player)=>
+        val score=player.cells.map(_.mass).sum
+        DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
+        dom.window.clearInterval(timer)
+        grid.removeDeadPlayer(id)
+    }
+
+  }
+
+  private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(2048)
+
+  def sendMsg(msg: GameMessage, gameStream: WebSocket) = {
+    import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
+    gameStream.send(msg.fillMiddleBuffer(sendBuffer).result())
+
   }
 
 
