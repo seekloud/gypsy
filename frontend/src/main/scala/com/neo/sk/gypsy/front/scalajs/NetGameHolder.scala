@@ -147,7 +147,7 @@ object NetGameHolder extends js.JSApp {
    // println("开始绘画")
     if (wsSetup) {
     //  println(s"连接建立 ${wsSetup}")
-      val data = grid.getGridData
+      val data = grid.getGridData(myId)
       drawGrid(myId, data)
     } else {
       drawGameOff()
@@ -164,12 +164,7 @@ object NetGameHolder extends js.JSApp {
     //println(s"basePoint${basePoint}")
     val offx = window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
-    val zoom = players.filter(_.id==uid).map(a=>(a.width,a.height)).headOption.getOrElse((30.0,30.0))
-    var scale = 1.0
-    if(zoom._1 < 600 && zoom._2 < 300){
-    }else{
-      scale = List(300.0/zoom._2,600.0/zoom._1).min
-    }
+    var scale = data.scale
 
     //println(s"scale:${scale}")
     //println(s"zoom${zoom}")
@@ -212,8 +207,8 @@ object NetGameHolder extends js.JSApp {
 
 
     ctx.fillStyle = MyColors.otherBody
-    //TODO 拖尾效果
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells,killerName,width,height) =>
+
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,killerName,width,height,cells) =>
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
@@ -230,14 +225,22 @@ object NetGameHolder extends js.JSApp {
           ctx.fill()
         }
           ctx.fillStyle = color.toInt match{
-            case 0 => "red"
-            case 1 => "orange"
-            case 2  => "yellow"
-            case 3  => "green"
-            case 4  => "blue"
-            case 5  => "purple"
-            case 6  => "black"
-            case _  => "blue"
+//            case 0 => "red"
+//            case 1 => "orange"
+//            case 2  => "yellow"
+//            case 3  => "green"
+//            case 4  => "blue"
+//            case 5  => "purple"
+//            case 6  => "black"
+//            case _  => "blue"
+            case 0 => "#f3456d"
+            case 1 => "#f49930"
+            case 2  => "#f4d95b"
+            case 3  => "#4cd964"
+            case 4  => "#9fe0f6"
+            case 5  => "#bead92"
+            case 6  => "#cfe6ff"
+            case _  => "#de9dd6"
           }
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
@@ -252,14 +255,22 @@ object NetGameHolder extends js.JSApp {
 //为不同分值的苹果填充不同颜色
     foods.foreach { case Food(color, x, y) =>
       ctx.fillStyle = color match{
-        case 0 => "red"
-        case 1 => "orange"
-        case 2  => "yellow"
-        case 3  => "green"
-        case 4  => "blue"
-        case 5  => "purple"
-        case 6  => "black"
-        case _  => "blue"
+//        case 0 => "red"
+//        case 1 => "orange"
+//        case 2  => "yellow"
+//        case 3  => "green"
+//        case 4  => "blue"
+//        case 5  => "purple"
+//        case 6  => "black"
+//        case _  => "blue"
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2  => "#f4d95b"
+        case 3  => "#4cd964"
+        case 4  => "#9fe0f6"
+        case 5  => "#bead92"
+        case 6  => "#cfe6ff"
+        case _  => "#de9dd6"
       }
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
@@ -533,7 +544,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   }
 
   def deadCheck(id:Long,timer:Int,start:Long,maxScore:Int,gameStream:WebSocket)={
-    grid.getGridData.deadPlayer.find(_.id==id) match {
+    grid.getGridData(id).deadPlayer.find(_.id==id) match {
       case Some(player)=>
         val score=player.cells.map(_.mass).sum
         DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)

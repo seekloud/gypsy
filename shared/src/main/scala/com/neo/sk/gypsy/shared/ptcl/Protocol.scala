@@ -15,6 +15,7 @@ object Protocol {
     foodDetails: List[Food],
     massDetails: List[Mass],
     virusDetails: List[Virus],
+    scale:Double,
     deadPlayer:List[Player]
   ) extends GameMessage
 
@@ -25,6 +26,9 @@ object Protocol {
 
 
 
+  case class TextMsg(
+    msg: String
+  ) extends GameMessage
 
   case class Id(id: Long) extends GameMessage
 
@@ -39,7 +43,7 @@ object Protocol {
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
 
   case class NetDelayTest(createTime: Long) extends GameMessage
-  
+
   case class SnakeRestart(id:Long) extends GameMessage
 
   case class MousePosition(clientX:Double,clientY:Double)extends GameMessage
