@@ -82,7 +82,7 @@ object RoomActor {
           grid.addSnake(id, name)
           dispatchTo(subscribersMap,id, Protocol.Id(id))
           dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
-          dispatch(subscribersMap,grid.getGridData)
+          dispatch(subscribersMap,grid.getGridData(id))
           Behaviors.same
         case Left(id, name) =>
           log.info(s"got $msg")
@@ -113,8 +113,10 @@ object RoomActor {
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
-            val gridData = grid.getGridData
-            dispatch(subscribersMap,gridData)
+            userMap.foreach { user =>
+              val gridData = grid.getGridData(user._1)
+              dispatchTo(subscribersMap,user._1,gridData)
+            }
           } else {
             if (feedApples.nonEmpty) {
               dispatch(subscribersMap,Protocol.FeedApples(feedApples))
