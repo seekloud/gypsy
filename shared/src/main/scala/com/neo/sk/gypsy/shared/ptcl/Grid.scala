@@ -26,6 +26,7 @@ trait Grid {
 
   def info(msg: String): Unit
 
+  var myId = 0L
   val random = new Random(System.nanoTime())
 
   val cellIdgenerator = new AtomicInteger(1000000)
@@ -195,12 +196,12 @@ trait Grid {
         var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         val newDirection = {
           //指针在圆内，静止
+          if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
+            newSpeed = target.clientX / degX
+          }else{
           if(cell.speed > 15/slowdown){
             newSpeed -= 2
           }else{
-            if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
-              newSpeed = target.clientX / degX
-            }else{
               if(distance < cell.radius){
                 //println("在圆内")
                 if(cell.speed>0){
@@ -319,7 +320,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32 ){
+        if (split == true && cell.mass > splitLimit && player.cells.size<32 && newSplitTime < System.currentTimeMillis() - splitInterval){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
@@ -389,18 +390,32 @@ trait Grid {
 
   def updateAndGetGridData() = {
     update()
-    getGridData
+    getGridData(myId)
   }
 
-  def getGridData = {
+  def getGridData(id:Long) = {
+    myId = id
+//    println(s"玩家id：$myId")
+//    println(s"玩家列表：$playerMap")
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
+    val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
+//    println(s"zoom：$zoom")
+    val scale = getZoomRate(zoom._1,zoom._2)
+    val width = Window.w/scale/2
+    val height = Window.h/scale/2
+
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
     var deadPlayers:List[Player] = Nil
     food.foreach{
-      case (p,mass) => foodDetails ::= Food(mass, p.x, p.y)
+      case (p,mass) =>
+        if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),p,4,width,height))
+        foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
-      case (id,player) => playerDetails ::= player
+      case (id,player) =>
+        if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
+        playerDetails ::= player
     }
     deadPlayerMap.foreach{
       case (id,player) => deadPlayers::=player
@@ -409,8 +424,9 @@ trait Grid {
       frameCount,
       playerDetails,
       foodDetails,
-      massList,
-      virus,
+      massList.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      virus.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      scale,
       deadPlayers
     )
   }
