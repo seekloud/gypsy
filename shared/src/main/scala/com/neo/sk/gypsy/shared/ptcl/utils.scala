@@ -25,7 +25,7 @@ object utils {
     scale
   }
   //检查物体是否在屏幕内
-  def checkScrenRange(center:Point,obj:Point,radius:Double,width:Double,height:Double):Boolean ={
+  def checkScreenRange(center:Point, obj:Point, radius:Double, width:Double, height:Double):Boolean ={
     if(obj.x - radius > center.x + width ||
       obj.x + radius < center.x - width ||
       obj.y - radius > center.y + height ||

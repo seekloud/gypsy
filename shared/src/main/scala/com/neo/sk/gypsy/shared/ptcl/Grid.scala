@@ -409,12 +409,12 @@ trait Grid {
     var deadPlayers:List[Player] = Nil
     food.foreach{
       case (p,mass) =>
-        if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),p,4,width,height))
+        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),p,4,width,height))
         foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
       case (id,player) =>
-        if (checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
+        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
     deadPlayerMap.foreach{
@@ -424,8 +424,8 @@ trait Grid {
       frameCount,
       playerDetails,
       foodDetails,
-      massList.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      virus.filter(m=>checkScrenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       scale,
       deadPlayers
     )
