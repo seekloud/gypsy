@@ -207,7 +207,7 @@ object NetGameHolder extends js.JSApp {
 
 
     ctx.fillStyle = MyColors.otherBody
-    //TODO 拖尾效果
+
     players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,killerName,width,height,cells) =>
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
@@ -225,14 +225,22 @@ object NetGameHolder extends js.JSApp {
           ctx.fill()
         }
           ctx.fillStyle = color.toInt match{
-            case 0 => "red"
-            case 1 => "orange"
-            case 2  => "yellow"
-            case 3  => "green"
-            case 4  => "blue"
-            case 5  => "purple"
-            case 6  => "black"
-            case _  => "blue"
+//            case 0 => "red"
+//            case 1 => "orange"
+//            case 2  => "yellow"
+//            case 3  => "green"
+//            case 4  => "blue"
+//            case 5  => "purple"
+//            case 6  => "black"
+//            case _  => "blue"
+            case 0 => "#f3456d"
+            case 1 => "#f49930"
+            case 2  => "#f4d95b"
+            case 3  => "#4cd964"
+            case 4  => "#9fe0f6"
+            case 5  => "#bead92"
+            case 6  => "#cfe6ff"
+            case _  => "#de9dd6"
           }
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
@@ -247,14 +255,22 @@ object NetGameHolder extends js.JSApp {
 //为不同分值的苹果填充不同颜色
     foods.foreach { case Food(color, x, y) =>
       ctx.fillStyle = color match{
-        case 0 => "red"
-        case 1 => "orange"
-        case 2  => "yellow"
-        case 3  => "green"
-        case 4  => "blue"
-        case 5  => "purple"
-        case 6  => "black"
-        case _  => "blue"
+//        case 0 => "red"
+//        case 1 => "orange"
+//        case 2  => "yellow"
+//        case 3  => "green"
+//        case 4  => "blue"
+//        case 5  => "purple"
+//        case 6  => "black"
+//        case _  => "blue"
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2  => "#f4d95b"
+        case 3  => "#4cd964"
+        case 4  => "#9fe0f6"
+        case 5  => "#bead92"
+        case 6  => "#cfe6ff"
+        case _  => "#de9dd6"
       }
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
