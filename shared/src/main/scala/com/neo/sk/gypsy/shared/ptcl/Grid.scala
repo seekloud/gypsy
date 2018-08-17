@@ -196,12 +196,12 @@ trait Grid {
         var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         val newDirection = {
           //指针在圆内，静止
+          if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
+            newSpeed = target.clientX / degX
+          }else{
           if(cell.speed > 15/slowdown){
             newSpeed -= 2
           }else{
-            if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
-              newSpeed = target.clientX / degX
-            }else{
               if(distance < cell.radius){
                 //println("在圆内")
                 if(cell.speed>0){
