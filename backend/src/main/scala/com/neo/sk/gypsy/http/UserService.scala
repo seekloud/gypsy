@@ -17,13 +17,15 @@ import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{ErrorGameMessage, GameMessage, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
-import com.neo.sk.gypsy.snake.PlayGround
 import com.neo.sk.gypsy.utils.SecureUtil
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import org.slf4j.LoggerFactory
+import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
+import akka.actor.typed.scaladsl.AskPattern._
+import com.neo.sk.gypsy.core.RoomManager
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 trait UserService extends ServiceUtils with SessionBase {
 
@@ -41,55 +43,10 @@ trait UserService extends ServiceUtils with SessionBase {
 
   implicit val timeout: Timeout
 
-  lazy val playGround = Map(
-    "11"->PlayGround.create("11",system),
-    "12"->PlayGround.create("12",system),
-    "21"->PlayGround.create("21",system),
-    "22"->PlayGround.create("22",system))
-
   val idGenerator = new AtomicInteger(1000000)
   val secretKey = "dsacsodaux84fsdcs4wc32xm"
 
   private[this] val log = LoggerFactory.getLogger(getClass)
-
-  def webSocketChatFlow(room:String,sender: String, id: Long): Flow[Message, Message, Any] =
-    Flow[Message]
-      .collect {
-        case BinaryMessage.Strict(msg)=>
-          val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[GameMessage](buffer) match {
-            case Right(req) => req
-            case Left(e) =>
-              log.error(s"decode binaryMessage failed,error:${e.message}")
-              ErrorGameMessage
-          }
-        case TextMessage.Strict(msg) =>
-          log.debug(s"msg from webSocket: $msg")
-          ErrorGameMessage
-        // unpack incoming WS text messages...
-        // This will lose (ignore) messages not received in one chunk (which is
-        // unlikely because chat messages are small) but absolutely possible
-        // FIXME: We need to handle TextMessage.Streamed as well.
-
-      }
-      .via(playGround.getOrElse(room,playGround("11")).joinGame(id, sender)) // ... and route them through the chatFlow ...
-      .map {
-      case msg:GameMessage =>
-        import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-        val sendBuffer = new MiddleBufferInJvm(4096)
-        BinaryMessage.Strict(ByteString(msg.fillMiddleBuffer(sendBuffer).result()))
-      case x=>
-        TextMessage.Strict(x.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
-      //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-    }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
-
-
-  private val decider: Supervision.Decider = {
-    e: Throwable =>
-      e.printStackTrace()
-      println(s"WS stream failed with $e")
-      Supervision.Resume
-  }
 
   private val guestLogin = (path("guestLogin") & get) {
     loggingAction {
@@ -100,9 +57,14 @@ trait UserService extends ServiceUtils with SessionBase {
           (room,name) =>
             val guestId = idGenerator.getAndIncrement()
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, guestId, name, ""), System.currentTimeMillis()).toSessionMap
-            addSession(session) {
-              handleWebSocketMessages(webSocketChatFlow(room,name, guestId))
-            }
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,guestId,_))
+            dealFutureResult(
+              flowFuture.map(r=>
+                addSession(session) {
+                  handleWebSocketMessages(r)
+                }
+              )
+            )
         }
     }
   }
@@ -183,7 +145,12 @@ trait UserService extends ServiceUtils with SessionBase {
     memberAuth{
       user=>
         parameter('room.as[String]){room=>
-          handleWebSocketMessages(webSocketChatFlow(room,user.name, user.userId))
+          val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,user.name,user.userId,_))
+          dealFutureResult(
+            flowFuture.map(r=>
+              handleWebSocketMessages(r)
+            )
+          )
         }
     }
   }
