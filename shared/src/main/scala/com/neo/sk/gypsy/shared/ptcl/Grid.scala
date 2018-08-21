@@ -244,14 +244,13 @@ trait Grid {
               massList = massList.filterNot(l=>l==p)
             }
         }
-        playerMap.filterNot(a => a._1 == player.id || a._2.protect == true).foreach{ p=>
-          p._2.cells.foreach{ otherCell=>
-            if(cell.radius *1.1 < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * 0.8)){
+        playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+          p._2.cells.foreach { otherCell =>
+            if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
               newMass = 0
-              println(p._2.protect+"kadsfjkadjfljakldjfklalsdkfjaklsdjf")
               killer = p._1
-            }else if(cell.radius > otherCell.radius * 1.1 && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * 0.8)){
-              newMass +=  otherCell.mass
+            } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+              newMass += otherCell.mass
               newRadius = 4 + sqrt(newMass) * 6
             }
           }
