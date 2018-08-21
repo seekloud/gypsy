@@ -281,14 +281,22 @@ object NetGameHolder extends js.JSApp {
     }
     masses.foreach { case Mass(x,y,_,_,color,mass,r,_) =>
       ctx.fillStyle = color match{
-        case 0 => "red"
-        case 1 => "orange"
-        case 2  => "yellow"
-        case 3  => "green"
-        case 4  => "blue"
-        case 5  => "purple"
-        case 6  => "black"
-        case _  => "blue"
+//        case 0 => "red"
+//        case 1 => "orange"
+//        case 2  => "yellow"
+//        case 3  => "green"
+//        case 4  => "blue"
+//        case 5  => "purple"
+//        case 6  => "black"
+//        case _  => "blue"
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2  => "#f4d95b"
+        case 3  => "#4cd964"
+        case 4  => "#9fe0f6"
+        case 5  => "#bead92"
+        case 6  => "#cfe6ff"
+        case _  => "#de9dd6"
       }
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
