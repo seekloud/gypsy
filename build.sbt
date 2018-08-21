@@ -4,7 +4,6 @@ name := "gypsy"
 
 val scalaV = "2.12.6"
 //val scalaV = "2.11.8"
-
 val projectName = "gypsy"
 val projectVersion = "1.0.0"
 
