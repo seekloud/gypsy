@@ -8,6 +8,7 @@ val scalaV = "2.12.6"
 val projectName = "gypsy"
 val projectVersion = "1.0.0"
 
+
 val projectMainClass = "com.neo.sk.gypsy.Boot"
 
 def commonSettings = Seq(
