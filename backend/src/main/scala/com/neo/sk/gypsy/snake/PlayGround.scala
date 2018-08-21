@@ -27,7 +27,6 @@ trait PlayGround {
 
   def joinGame(id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, Protocol.GameMessage, Any]
 
-  def syncData()
 
 }
 
@@ -165,7 +164,6 @@ object PlayGround {
         Flow.fromSinkAndSource(in, out)
       }
 
-      override def syncData(): Unit = ground ! Sync
     }
 
   }
