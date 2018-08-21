@@ -247,6 +247,7 @@ trait Grid {
           p._2.cells.foreach{ otherCell=>
             if(cell.radius *1.1 < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * 0.8)){
               newMass = 0
+              println(p._2.protect+"kadsfjkadjfljakldjfklalsdkfjaklsdjf")
               killer = p._1
             }else if(cell.radius > otherCell.radius * 1.1 && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * 0.8)){
               newMass +=  otherCell.mass
