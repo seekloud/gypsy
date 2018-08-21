@@ -380,7 +380,7 @@ object NetGameHolder extends js.JSApp {
         ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
       }
     }
-    players.filter(_.id==uid).headOption match {
+    players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
@@ -466,6 +466,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
           val middleDataInJs = new MiddleBufferInJs(buf)
           bytesDecode[GameMessage](middleDataInJs) match {
             case Right(data) =>
+              println(data)
               data match {
                 case Protocol.Id(id) =>
                   myId = id
@@ -496,7 +497,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
                   grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
                 case data: Protocol.GridDataSync =>
-                  //writeToArea(s"grid data got: $msgData")
+//                  writeToArea(s"grid data got: $data")
                   //TODO here should be better code.
                   grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
                   grid.frameCount = data.frameCount
@@ -537,7 +538,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   //写入消息区
   def writeToArea(text: String): Unit = {
-    //playground.insertBefore(p(text), playground.firstChild)
+//    playground.insertBefore(p(text), playground.firstChild)
   }
 
 

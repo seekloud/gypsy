@@ -1,7 +1,6 @@
 package com.neo.sk.gypsy.utils.byteObject
 
 import com.neo.sk.gypsy.shared.ptcl.MiddleBuffer
-
 import scala.collection.mutable.ArrayBuffer
 
 /**
