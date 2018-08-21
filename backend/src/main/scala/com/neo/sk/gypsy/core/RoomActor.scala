@@ -82,7 +82,7 @@ object RoomActor {
           grid.addSnake(id, name)
           dispatchTo(subscribersMap,id, Protocol.Id(id))
           dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
-          dispatch(subscribersMap,grid.getGridData(id))
+          dispatchTo(subscribersMap,id,grid.getGridData(id))
           Behaviors.same
         case Left(id, name) =>
           log.info(s"got $msg")
