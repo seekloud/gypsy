@@ -518,16 +518,16 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
                 case msg@_ =>
-                  println(s"unkown $msg")
+                  println(s"unknown $msg")
 
               }
-            case unknow =>
-              println(s"recv unknow msg:$unknow")
+            case unknown =>
+              println(s"recv unknown msg:$unknown")
           }
         }
 
-      case unknow =>
-        println(s"recv unknow msg:$unknow")
+      case unknown =>
+        println(s"recv unknown msg:$unknown")
     }
 
   }
