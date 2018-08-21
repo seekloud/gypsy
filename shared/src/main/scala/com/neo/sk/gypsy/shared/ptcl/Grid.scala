@@ -177,6 +177,7 @@ trait Grid {
 
       var newKill = player.kill
       var newSplitTime = player.lastSplit
+      if(newSplitTime > System.currentTimeMillis() - splitInterval) split = false
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
       var newProtected = player.protect
@@ -320,7 +321,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32 && newSplitTime < System.currentTimeMillis() - splitInterval){
+        if (split == true && cell.mass > splitLimit && player.cells.size<32){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
