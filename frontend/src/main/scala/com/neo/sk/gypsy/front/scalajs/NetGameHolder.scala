@@ -470,6 +470,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
               data match {
                 case Protocol.Id(id) =>
                   myId = id
+                  println(s"myID:${myId}")
                   var timer = -1
                   val start = System.currentTimeMillis()
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
