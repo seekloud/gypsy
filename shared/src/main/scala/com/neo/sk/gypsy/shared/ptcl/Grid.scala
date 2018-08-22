@@ -35,7 +35,7 @@ trait Grid {
   val defaultLength = 5
   val historyRankLength = 5
 
-  val slowBase = 6.5
+  val slowBase = 8
   val initMassLog = utils.logSlowDown(10,slowBase)
   val acceleration  = 2
 //质量转半径率
