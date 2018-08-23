@@ -113,10 +113,13 @@ object RoomActor {
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
-            userMap.foreach { user =>
+//              val gridData = grid.getAllGridData
+//              dispatch(subscribersMap,gridData)
+            userMap.foreach{user=>
               val gridData = grid.getGridData(user._1)
               dispatchTo(subscribersMap,user._1,gridData)
             }
+
           } else {
             if (feedApples.nonEmpty) {
               dispatch(subscribersMap,Protocol.FeedApples(feedApples))
