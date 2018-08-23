@@ -208,7 +208,7 @@ object NetGameHolder extends js.JSApp {
 
     ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,killerName,width,height,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
@@ -216,9 +216,9 @@ object NetGameHolder extends js.JSApp {
 
           ctx.save()
           //centerScale(scale,window.x/2,window.y/2)
-        println(s"${pro}")
-        if(pro == true){
-          println("true")
+       // println(s"${pro}")
+        if(protect == true){
+          //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
           ctx.arc(cell.x +offx,cell.y +offy,cell.radius+15,0,2*Math.PI)
@@ -466,10 +466,11 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
           val middleDataInJs = new MiddleBufferInJs(buf)
           bytesDecode[GameMessage](middleDataInJs) match {
             case Right(data) =>
-              println(data)
+             // println(data)
               data match {
                 case Protocol.Id(id) =>
                   myId = id
+                  println(s"myID:${myId}")
                   var timer = -1
                   val start = System.currentTimeMillis()
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
@@ -517,16 +518,16 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
                 case msg@_ =>
-                  println(s"unkown $msg")
+                  println(s"unknown $msg")
 
               }
-            case unknow =>
-              println(s"recv unknow msg:$unknow")
+            case unknown =>
+              println(s"recv unknown msg:$unknown")
           }
         }
 
-      case unknow =>
-        println(s"recv unknow msg:$unknow")
+      case unknown =>
+        println(s"recv unknown msg:$unknown")
     }
 
   }
