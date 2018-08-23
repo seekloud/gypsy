@@ -35,7 +35,7 @@ trait Grid {
   val defaultLength = 5
   val historyRankLength = 5
 
-  val slowBase = 6.5
+  val slowBase = 8
   val initMassLog = utils.logSlowDown(10,slowBase)
   val acceleration  = 2
 //质量转半径率
@@ -177,6 +177,7 @@ trait Grid {
 
       var newKill = player.kill
       var newSplitTime = player.lastSplit
+      if(newSplitTime > System.currentTimeMillis() - splitInterval) split = false
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
       var deleteCells = List[Cell]()//依据距离判断被删去的cell
       var newProtected = player.protect
@@ -243,13 +244,13 @@ trait Grid {
               massList = massList.filterNot(l=>l==p)
             }
         }
-        playerMap.filterNot(a => a._1 == player.id || a._2.protect == true).foreach{ p=>
-          p._2.cells.foreach{ otherCell=>
-            if(cell.radius *1.1 < otherCell.radius && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (otherCell.radius - cell.radius * 0.8)){
+        playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+          p._2.cells.foreach { otherCell =>
+            if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
               newMass = 0
               killer = p._1
-            }else if(cell.radius > otherCell.radius * 1.1 && sqrt(pow((cell.x-otherCell.x),2.0) + pow((cell.y-otherCell.y),2.0)) < (cell.radius - otherCell.radius * 0.8)){
-              newMass +=  otherCell.mass
+            } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+              newMass += otherCell.mass
               newRadius = 4 + sqrt(newMass) * 6
             }
           }
@@ -320,7 +321,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32 && newSplitTime < System.currentTimeMillis() - splitInterval){
+        if (split == true && cell.mass > splitLimit && player.cells.size<32){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
