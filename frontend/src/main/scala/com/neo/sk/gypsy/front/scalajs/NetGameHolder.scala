@@ -84,6 +84,10 @@ object NetGameHolder extends js.JSApp {
     val otherBody = "#696969"
   }
 
+  private var nextFrame = 0
+  private var logicFrameTime = System.currentTimeMillis()
+  var syncGridData: scala.Option[Protocol.GridDataSync] = None
+
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
@@ -101,11 +105,24 @@ object NetGameHolder extends js.JSApp {
       (_: Event) =>
       LoginPage.homePage()
     }
-        //每隔一段间隔就执行gameLoop（同步更新，重画）
-        dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
     }
 
 
+  def startGame(): Unit = {
+    println("start---")
+    drawGameOn()
+    dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
+    dom.window.requestAnimationFrame(gameRender())
+  }
+
+  def gameRender(): Double => Unit = { d =>
+    println("gameRender-gameRender")
+    val curTime = System.currentTimeMillis()
+    val offsetTime = curTime - logicFrameTime
+    if(myId != -1l) draw(offsetTime)
+
+    nextFrame = dom.window.requestAnimationFrame(gameRender())
+  }
 
 
 //绘制背景
@@ -122,6 +139,7 @@ object NetGameHolder extends js.JSApp {
       ctx.font = "36px Helvetica"
       ctx.fillText("Welcome.", 150, 180)
     } else {
+      dom.window.cancelAnimationFrame(nextFrame)
       ctx.font = "36px Helvetica"
       ctx.fillText("Ops, connection lost....", 350, 250)
     }
@@ -129,40 +147,59 @@ object NetGameHolder extends js.JSApp {
 
 //不同步就更新，同步就设置为不同步
   def gameLoop(): Unit = {
+    logicFrameTime = System.currentTimeMillis()
     if (wsSetup) {
       if (!justSynced) {
         update()
       } else {
+        println("back")
+        if (syncGridData.nonEmpty) {
+          setSyncGridData(syncGridData.get)
+          syncGridData = None
+        }
         justSynced = false
       }
     }
-    draw()
   }
 
   def update(): Unit = {
     grid.update()
   }
 
-  def draw(): Unit = {
-   // println("开始绘画")
+  def draw(offsetTime:Long): Unit = {
+    println("开始绘画")
     if (wsSetup) {
     //  println(s"连接建立 ${wsSetup}")
+      println(s"myid$myId")
       val data = grid.getGridData(myId)
-      drawGrid(myId, data)
+      println(s"data$data")
+      drawGrid(myId, data,offsetTime)
     } else {
       drawGameOff()
     }
+
   }
 
-  def drawGrid(uid: Long, data: GridDataSync): Unit = {
+  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long): Unit = {
     //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
     val virus = data.virusDetails
-    val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
+   // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
+    val basePoint = players.find(_.id == uid) match{
+      case Some(p)=>
+        val target = MousePosition(p.targetX -p.x ,p.targetY-p.y)
+        val deg = atan2(target.clientY,target.clientX)
+        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toInt,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toInt)
+      case None=>
+        (bounds.x/2,bounds.y/2)
+    }
+
     //println(s"basePoint${basePoint}")
-    val offx = window.x/2 - basePoint._1
+    val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
     var scale = data.scale
 
@@ -213,7 +250,11 @@ object NetGameHolder extends js.JSApp {
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.map{cell=>
-
+        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
+        val deg = atan2(target.clientY,target.clientX)
+        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
           ctx.save()
           //centerScale(scale,window.x/2,window.y/2)
        // println(s"${pro}")
@@ -221,18 +262,10 @@ object NetGameHolder extends js.JSApp {
           //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
-          ctx.arc(cell.x +offx,cell.y +offy,cell.radius+15,0,2*Math.PI)
+          ctx.arc(cell.x +offx + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y +offy + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
           ctx.fillStyle = color.toInt match{
-//            case 0 => "red"
-//            case 1 => "orange"
-//            case 2  => "yellow"
-//            case 3  => "green"
-//            case 4  => "blue"
-//            case 5  => "purple"
-//            case 6  => "black"
-//            case _  => "blue"
             case 0 => "#f3456d"
             case 1 => "#f49930"
             case 2  => "#f4d95b"
@@ -255,14 +288,6 @@ object NetGameHolder extends js.JSApp {
 //为不同分值的苹果填充不同颜色
     foods.foreach { case Food(color, x, y) =>
       ctx.fillStyle = color match{
-//        case 0 => "red"
-//        case 1 => "orange"
-//        case 2  => "yellow"
-//        case 3  => "green"
-//        case 4  => "blue"
-//        case 5  => "purple"
-//        case 6  => "black"
-//        case _  => "blue"
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -272,6 +297,7 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
+      println("画一个苹果")
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
@@ -279,16 +305,8 @@ object NetGameHolder extends js.JSApp {
       ctx.fill()
         ctx.restore()
     }
-    masses.foreach { case Mass(x,y,_,_,color,mass,r,_) =>
+    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
       ctx.fillStyle = color match{
-//        case 0 => "red"
-//        case 1 => "orange"
-//        case 2  => "yellow"
-//        case 3  => "green"
-//        case 4  => "blue"
-//        case 5  => "purple"
-//        case 6  => "black"
-//        case _  => "blue"
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -298,10 +316,15 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
+      val deg = Math.atan2(ty, tx)
+      val deltaY = speed * Math.sin(deg)
+      val deltaX = speed * Math.cos(deg)
+      val xPlus = if (!deltaX.isNaN) deltaX else 0
+      val yPlus = if (!deltaY.isNaN) deltaY else 0
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.arc(x +offx,y +offy,r,0,2*Math.PI)
+      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
       ctx.fill()
       ctx.restore()
     }
@@ -385,6 +408,7 @@ object NetGameHolder extends js.JSApp {
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
         ctx.fill()
+      case None=>
        // println(s"${basePoint._1},  ${basePoint._2}")
     }
   }
@@ -404,7 +428,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, room, name, userType))
   gameStream.onopen = { (event0: Event) =>
     println("come here")
-    drawGameOn()
+    startGame()
     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
     isDead = false
     wsSetup = true
@@ -477,9 +501,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
                 case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
                 case Protocol.SnakeAction(id, keyCode, frame) =>
-                  if (frame > grid.frameCount) {
-                  } else {
-                  }
+
                   grid.addActionWithFrame(id, keyCode, frame)
 
                 case Protocol.SnakeMouseAction(id, x, y, frame) =>
@@ -500,13 +522,10 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case data: Protocol.GridDataSync =>
 //                  writeToArea(s"grid data got: $data")
                   //TODO here should be better code.
-                  grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
-                  grid.frameCount = data.frameCount
-                  grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-                  grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-                  grid.massList = data.massDetails
-                  grid.virus = data.virusDetails
+                  syncGridData = Some(data)
                   justSynced = true
+
+
                 //drawGrid(msgData.uid, data)
                 case Protocol.NetDelayTest(createTime) =>
                   val receiveTime = System.currentTimeMillis()
@@ -544,7 +563,18 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
 
 }
+  def setSyncGridData(data: Protocol.GridDataSync): Unit = {
 
+    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
+//    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
+    grid.frameCount = data.frameCount
+//    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
+    grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
+    grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    grid.massList = data.massDetails
+    grid.virus = data.virusDetails
+
+  }
 
   def p(msg: String) = {
     val paragraph = dom.document.createElement("p")
@@ -559,6 +589,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
         DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
         dom.window.clearInterval(timer)
         grid.removeDeadPlayer(id)
+      case None =>
     }
 
   }

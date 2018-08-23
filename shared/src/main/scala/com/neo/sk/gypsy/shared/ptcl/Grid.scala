@@ -431,6 +431,36 @@ trait Grid {
       deadPlayers
     )
   }
+  def getAllGridData = {
+    //    println(s"玩家id：$myId")
+    //    println(s"玩家列表：$playerMap")
+
+
+    var foodDetails: List[Food] = Nil
+    var playerDetails: List[Player] = Nil
+    var deadPlayers:List[Player] = Nil
+    food.foreach{
+      case (p,mass) =>
+          foodDetails ::= Food(mass, p.x, p.y)
+    }
+    playerMap.foreach{
+      case (id,player) =>
+
+          playerDetails ::= player
+    }
+    deadPlayerMap.foreach{
+      case (id,player) => deadPlayers::=player
+    }
+    Protocol.GridDataSync(
+      frameCount,
+      playerDetails,
+      foodDetails,
+      massList,
+      virus,
+      1.0,
+      deadPlayers
+    )
+  }
 
   def removeDeadPlayer(id:Long)={
     val r=deadPlayerMap.get(id)
