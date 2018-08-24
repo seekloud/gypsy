@@ -156,8 +156,8 @@ trait Grid {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
 
       val mouseAct = mouseActMap.get(player.id) match{
+        //相对屏幕中央的位置
         case Some(MousePosition(x,y))=>
-          //相对屏幕中央的位置
           //println(s"x${x},y${y}")
           //MousePosition(x-111-600,y-48-300)
           MousePosition(x,y)
@@ -205,7 +205,7 @@ trait Grid {
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
           }else{
-          if(cell.speed > 15/slowdown){
+          if(cell.speed > 30/slowdown){
             newSpeed -= 2
           }else{
               if(distance < cell.radius){
@@ -216,7 +216,7 @@ trait Grid {
                 }else newSpeed=0
                 //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
               }else{
-                newSpeed=if(cell.speed < 15/slowdown){
+                newSpeed=if(cell.speed < 30/slowdown){
                   cell.speed + acceleration
                 }else 15/slowdown
               }

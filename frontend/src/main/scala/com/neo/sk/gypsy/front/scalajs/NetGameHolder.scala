@@ -189,7 +189,7 @@ object NetGameHolder extends js.JSApp {
    // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     val basePoint = players.find(_.id == uid) match{
       case Some(p)=>
-        val target = MousePosition(p.targetX -p.x ,p.targetY-p.y)
+        val target = MousePosition(p.targetX  ,p.targetY)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
@@ -197,26 +197,13 @@ object NetGameHolder extends js.JSApp {
       case None=>
         (bounds.x.toFloat/2,bounds.y.toFloat/2)
     }
-    println(s"basepoint${basePoint._1},${basePoint._2}")
+    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")
     val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
     var scale = data.scale
 
-    //println(s"scale:${scale}")
-    //println(s"zoom${zoom}")
-    //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
-    //println(s"players ${players}")
-//    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-//    if(loop * speed >= 600){
-//      loop = 0
-//    }else{
-//      loop += 1
-//    }
-//    val setoff = loop * speed
-//    ctx.drawImage(img,0,setoff - 1800,3600,1800)
-//    ctx.drawImage(img,0,setoff,3600,1800)
 //绘制背景
     ctx.fillStyle = MyColors.background
     ctx.fillRect(0,0,window.x,window.y)
@@ -255,8 +242,9 @@ object NetGameHolder extends js.JSApp {
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate +offx
-        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate+offy
+        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate + offx
+        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate + offy
+        println(s"cellX$cellx,celly$celly")
         //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
           ctx.save()
           //centerScale(scale,window.x/2,window.y/2)
