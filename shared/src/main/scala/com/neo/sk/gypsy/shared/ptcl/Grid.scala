@@ -187,6 +187,10 @@ trait Grid {
       //此处算法针对只有一个cell的player
       var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
+        val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
+        val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
+        val degY1= if((sin(deg1)).isNaN) 0 else (sin(deg1))
+        val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
@@ -195,6 +199,7 @@ trait Grid {
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
+
         val newDirection = {
           //指针在圆内，静止
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
@@ -221,8 +226,8 @@ trait Grid {
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
         //cell移动+边界检测
-        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
-        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
+        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
+        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
