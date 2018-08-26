@@ -113,7 +113,9 @@ object RoomActor {
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
+            //fixme 此处传输全局数据？
             val gridData = grid.getAllGridData
+//            gridData.playerDetails.foreach{ l=>l.cells.foreach(r=>println((r.mass,r.speed)))}
             dispatch(subscribersMap,gridData)
           } else {
             if (feedApples.nonEmpty) {

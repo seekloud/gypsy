@@ -30,7 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 object RoomManager {
 
-  //todo 增加多房间模式
   private val log=LoggerFactory.getLogger(this.getClass)
   sealed trait Command
   case object TimeKey
