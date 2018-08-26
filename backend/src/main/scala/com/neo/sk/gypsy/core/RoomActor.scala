@@ -76,7 +76,7 @@ object RoomActor {
       msg match {
         case Join(id, name, subscriber) =>
           log.info(s"got $msg")
-          userMap += (id -> name)
+          userMap.put(id,name)
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
           grid.addSnake(id, name)
@@ -113,13 +113,8 @@ object RoomActor {
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
-              val gridData = grid.getAllGridData
-              dispatch(subscribersMap,gridData)
-//            userMap.foreach{user=>
-//              val gridData = grid.getGridData(user._1)
-//              dispatchTo(subscribersMap,user._1,gridData)
-//            }
-
+            val gridData = grid.getAllGridData
+            dispatch(subscribersMap,gridData)
           } else {
             if (feedApples.nonEmpty) {
               dispatch(subscribersMap,Protocol.FeedApples(feedApples))
