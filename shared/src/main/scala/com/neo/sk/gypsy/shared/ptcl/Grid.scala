@@ -167,7 +167,7 @@ trait Grid {
       var killer = 0L
       var shot = false
       var split = false
-      val keyAct = actMap.get(player.id) match{
+      actMap.get(player.id) match{
         case Some(KeyEvent.VK_E)=>
           shot = true
         case Some(KeyEvent.VK_F)=>
@@ -175,7 +175,7 @@ trait Grid {
         case _ =>
       }
 
-      var newKill = player.kill
+      val newKill = player.kill
       var newSplitTime = player.lastSplit
       if(newSplitTime > System.currentTimeMillis() - splitInterval) split = false
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
@@ -185,7 +185,7 @@ trait Grid {
 
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
-      var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
+      val newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
         val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
         val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
@@ -326,7 +326,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32){
+        if (split && cell.mass > splitLimit && player.cells.size<32){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
@@ -346,7 +346,7 @@ trait Grid {
 
       //newCells = newCells.filterNot(c =>mergeCellId.contains(c))
 
-      if(newCells.length == 0){
+      if(newCells.isEmpty){
         //println(s"newCells${newCells}")
         playerMap.get(killer) match {
           case Some(killerPlayer)=>
