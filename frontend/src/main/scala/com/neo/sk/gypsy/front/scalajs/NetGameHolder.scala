@@ -204,8 +204,8 @@ val basePoint = players.find(_.id == uid) match{
     var sumY=0.0
     var length = 0
     p.cells.foreach{cell=>
-      sumX += cell.speedX *offsetTime.toFloat / Protocol.frameRate
-      sumY += cell.speedX *offsetTime.toFloat / Protocol.frameRate
+      sumX += cell.speedX *offsetTime.toDouble / Protocol.frameRate
+      sumY += cell.speedY *offsetTime.toDouble / Protocol.frameRate
       length += 1
     }
     val offx = sumX/length
@@ -216,7 +216,7 @@ val basePoint = players.find(_.id == uid) match{
 
     (newX,newY)
   case None=>
-    (bounds.x.toFloat/2,bounds.y.toFloat/2)
+    (bounds.x.toDouble/2,bounds.y.toDouble/2)
 }
     println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
