@@ -209,17 +209,19 @@ object NetGameHolder extends js.JSApp {
         var length = 0
         zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
         p.cells.foreach { cell =>
-          sumX += cell.speedX * offsetTime.toDouble / Protocol.frameRate
-          sumY += cell.speedY * offsetTime.toDouble / Protocol.frameRate
+          val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
+          val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
+          val newX = if ((p.x + offx) > bounds.x) bounds.x else if ((p.x + offx) <= 0) 0 else p.x + offx
+          val newY = if ((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y + offy
+
+          sumX += newX
+          sumY += newY
           length += 1
         }
         val offx = sumX / length
         val offy = sumY / length
 
-        val newX = if ((p.x + offx) > bounds.x) bounds.x else if ((p.x + offx) <= 0) 0 else p.x + offx
-        val newY = if ((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y + offy
-
-        (newX, newY)
+        (offx, offy)
       case None =>
         (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
