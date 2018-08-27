@@ -43,6 +43,7 @@ object NetGameHolder extends js.JSApp {
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
+  //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
   var myId = -1l
 
@@ -257,7 +258,7 @@ val basePoint = players.find(_.id == uid) match{
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
-      cells.map{cell=>
+      cells.foreach{ cell=>
         val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
@@ -269,7 +270,7 @@ val basePoint = players.find(_.id == uid) match{
           ctx.save()
           //centerScale(scale,window.x/2,window.y/2)
        // println(s"${pro}")
-        if(protect == true){
+        if(protect){
           //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
@@ -576,6 +577,10 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
 
 }
+
+  //fixme 此处存在重复计算问题
+
+  //xxx 有待商榷
   def setSyncGridData(data: Protocol.GridDataSync): Unit = {
 
     grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
