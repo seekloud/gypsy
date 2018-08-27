@@ -187,16 +187,36 @@ object NetGameHolder extends js.JSApp {
     val masses = data.massDetails
     val virus = data.virusDetails
    // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
-    val basePoint = players.find(_.id == uid) match{
-      case Some(p)=>
-        val target = MousePosition(p.targetX  ,p.targetY)
-        val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
-      case None=>
-        (bounds.x.toFloat/2,bounds.y.toFloat/2)
+//    val basePoint = players.find(_.id == uid) match{
+//      case Some(p)=>
+//        val target = MousePosition(p.targetX  ,p.targetY)
+//        val deg = atan2(target.clientY,target.clientX)
+//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+//        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
+//      case None=>
+//        (bounds.x.toFloat/2,bounds.y.toFloat/2)
+//    }
+val basePoint = players.find(_.id == uid) match{
+  case Some(p)=>
+    var sumX=0.0
+    var sumY=0.0
+    var length = 0
+    p.cells.foreach{cell=>
+      sumX += cell.speedX *offsetTime.toFloat / Protocol.frameRate
+      sumY += cell.speedX *offsetTime.toFloat / Protocol.frameRate
+      length += 1
     }
+    val offx = sumX/length
+    val offy = sumY/length
+
+    val newX = if((p.x + offx) > bounds.x) bounds.x else if((p.x + offx) <= 0) 0 else p.x + offx
+    val newY = if((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y +offy
+
+    (newX,newY)
+  case None=>
+    (bounds.x.toFloat/2,bounds.y.toFloat/2)
+}
     println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")

@@ -190,6 +190,8 @@ trait Grid {
         val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
         val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
         val degY1= if((sin(deg1)).isNaN) 0 else (sin(deg1))
+        val speedX = (newSpeed*degX1).toFloat
+        val speedY = (newSpeed*degY1).toFloat
         val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
@@ -226,8 +228,10 @@ trait Grid {
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
         //cell移动+边界检测
-        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
-        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+//        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
+//        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
+        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
@@ -305,7 +309,9 @@ trait Grid {
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
               val startLen = (newRadius + cellRadius)*1.2
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+              val speedx = (cos(baseAngle * i) * cell.speed).toFloat
+              val speedy = (sin(baseAngle * i) * cell.speed).toFloat
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed,speedx,speedy)
             }
           }
         }
@@ -337,7 +343,7 @@ trait Grid {
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
           cellId = cellIdgenerator.getAndIncrement().toLong
         }
-        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
+        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed,(newSpeed*degX).toFloat,(newSpeed*degY).toFloat),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed,(splitSpeed*degX).toFloat,(splitSpeed*degY).toFloat)) ::: vSplitCells
       }.filterNot(_.mass<=0)
 
       //val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)

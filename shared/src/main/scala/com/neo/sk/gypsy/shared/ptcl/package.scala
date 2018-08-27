@@ -68,7 +68,9 @@ package object ptcl {
                  y:Int,
                  mass:Double = 10,
                  radius:Double = 4 + sqrt(10)*6,
-                 speed:Double = 12
+                 speed:Double = 12,
+                 speedX:Float = 0,
+                 speedY:Float = 0
                  )
 
   case class Mass(
