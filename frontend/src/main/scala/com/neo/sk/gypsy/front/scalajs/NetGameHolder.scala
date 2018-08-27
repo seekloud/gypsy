@@ -21,6 +21,7 @@ import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
+import com.neo.sk.gypsy.shared.ptcl.utils.getZoomRate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -199,32 +200,37 @@ object NetGameHolder extends js.JSApp {
 //      case None=>
 //        (bounds.x.toFloat/2,bounds.y.toFloat/2)
 //    }
-val basePoint = players.find(_.id == uid) match{
-  case Some(p)=>
-    var sumX=0.0
-    var sumY=0.0
-    var length = 0
-    p.cells.foreach{cell=>
-      sumX += cell.speedX *offsetTime.toDouble / Protocol.frameRate
-      sumY += cell.speedY *offsetTime.toDouble / Protocol.frameRate
-      length += 1
+    var zoom = (30.0, 30.0)
+
+    val basePoint = players.find(_.id == uid) match {
+      case Some(p) =>
+        var sumX = 0.0
+        var sumY = 0.0
+        var length = 0
+        zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
+        p.cells.foreach { cell =>
+          sumX += cell.speedX * offsetTime.toDouble / Protocol.frameRate
+          sumY += cell.speedY * offsetTime.toDouble / Protocol.frameRate
+          length += 1
+        }
+        val offx = sumX / length
+        val offy = sumY / length
+
+        val newX = if ((p.x + offx) > bounds.x) bounds.x else if ((p.x + offx) <= 0) 0 else p.x + offx
+        val newY = if ((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y + offy
+
+        (newX, newY)
+      case None =>
+        (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
-    val offx = sumX/length
-    val offy = sumY/length
-
-    val newX = if((p.x + offx) > bounds.x) bounds.x else if((p.x + offx) <= 0) 0 else p.x + offx
-    val newY = if((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y +offy
-
-    (newX,newY)
-  case None=>
-    (bounds.x.toDouble/2,bounds.y.toDouble/2)
-}
     println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")
     val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
-    var scale = data.scale
+    //    println(s"zoom：$zoom")
+    val scale = getZoomRate(zoom._1,zoom._2)
+    //var scale = data.scale
 
 //绘制背景
     ctx.fillStyle = MyColors.background
