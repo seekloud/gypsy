@@ -191,25 +191,49 @@ trait Grid {
         val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
         val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
         val degY1= if((sin(deg1)).isNaN) 0 else (sin(deg1))
-        val speedX = (newSpeed*degX1).toFloat
-        val speedY = (newSpeed*degY1).toFloat
+//        val speedX = (newSpeed*degX1).toFloat
+//        val speedY = (newSpeed*degY1).toFloat
         val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
-        //fixme 此处计算？
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
         val degX = if(cos(deg).isNaN) 0 else cos(deg)
         val degY = if(sin(deg).isNaN) 0 else sin(deg)
-        //todo 需增加速度变化
         var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
 
+        val newDirection = {
+          //指针在圆内，静止
+          if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
+            newSpeed = target.clientX / degX
+          }else{
+          if(cell.speed > 30/slowdown){
+            newSpeed -= 2
+          }else{
+              if(distance < cell.radius){
+                //println("在圆内")
+                if(cell.speed>0){
+                  //println("come here")
+                  newSpeed=cell.speed - acceleration
+                }else newSpeed=0
+                //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
+              }else{
+                newSpeed=if(cell.speed < 30/slowdown){
+                  cell.speed + acceleration
+                }else 15/slowdown
+              }
+            }
+          }
+          //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
+          Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
+        }
+
         //cell移动+边界检测
-//        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
-//        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
-        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
-        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
+        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
+        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+//        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
+//        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
@@ -369,7 +393,7 @@ trait Grid {
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
     killerMap.foreach{killer=>
-      val a= playerMap.getOrElse(killer, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0L,0,0))))
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
