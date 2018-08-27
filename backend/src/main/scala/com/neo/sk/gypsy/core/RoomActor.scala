@@ -79,9 +79,10 @@ object RoomActor {
           userMap.put(id,name)
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
+          grid.removeDeadPlayer(id)
           grid.addSnake(id, name)
           dispatchTo(subscribersMap,id, Protocol.Id(id))
-          dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
+          //dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
           dispatchTo(subscribersMap,id,grid.getGridData(id))
           Behaviors.same
         case Left(id, name) =>
@@ -89,13 +90,14 @@ object RoomActor {
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           subscribersMap.remove(id)
           grid.removePlayer(id)
-          dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+         // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
           Behaviors.same
         case Key(id, keyCode) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
+            grid.removeDeadPlayer(id)
             dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
           } else {
             grid.addAction(id, keyCode)
