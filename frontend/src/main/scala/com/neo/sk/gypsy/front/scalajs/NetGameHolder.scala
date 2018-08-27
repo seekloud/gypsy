@@ -44,6 +44,7 @@ object NetGameHolder extends js.JSApp {
   val textLineHeight = 14
 
   var currentRank = List.empty[Score]
+  //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
   var myId = -1l
 
@@ -117,7 +118,7 @@ object NetGameHolder extends js.JSApp {
   }
 
   def gameRender(): Double => Unit = { d =>
-    println("gameRender-gameRender")
+    //println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != -1l) draw(offsetTime)
@@ -168,12 +169,12 @@ object NetGameHolder extends js.JSApp {
   }
 
   def draw(offsetTime:Long): Unit = {
-    println("开始绘画")
+    //println("开始绘画")
     if (wsSetup) {
     //  println(s"连接建立 ${wsSetup}")
-      println(s"myid$myId")
+      //println(s"myid$myId")
       val data = grid.getGridData(myId)
-      println(s"data$data")
+      //println(s"data$data")
       drawGrid(myId, data,offsetTime)
     } else {
       drawGameOff()
@@ -190,33 +191,21 @@ object NetGameHolder extends js.JSApp {
    // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
     val basePoint = players.find(_.id == uid) match{
       case Some(p)=>
-        val target = MousePosition(p.targetX -p.x ,p.targetY-p.y)
+        val target = MousePosition(p.targetX  ,p.targetY)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toInt,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toInt)
+        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
       case None=>
-        (bounds.x/2,bounds.y/2)
+        (bounds.x.toFloat/2,bounds.y.toFloat/2)
     }
+    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")
     val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
     var scale = data.scale
 
-    //println(s"scale:${scale}")
-    //println(s"zoom${zoom}")
-    //ctx.translate(window.x/2 - basePoint._1,window.y/2 - basePoint._2)
-    //println(s"players ${players}")
-//    val img = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-//    if(loop * speed >= 600){
-//      loop = 0
-//    }else{
-//      loop += 1
-//    }
-//    val setoff = loop * speed
-//    ctx.drawImage(img,0,setoff - 1800,3600,1800)
-//    ctx.drawImage(img,0,setoff,3600,1800)
 //绘制背景
     ctx.fillStyle = MyColors.background
     ctx.fillRect(0,0,window.x,window.y)
@@ -250,20 +239,23 @@ object NetGameHolder extends js.JSApp {
 
    // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
-      cells.map{cell=>
+      cells.foreach{ cell=>
         val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate + offx
+        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate + offy
+        println(s"cellX$cellx,celly$celly")
         //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
           ctx.save()
           //centerScale(scale,window.x/2,window.y/2)
        // println(s"${pro}")
-        if(protect == true){
+        if(protect){
           //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
-          ctx.arc(cell.x +offx + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y +offy + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate,cell.radius+15,0,2*Math.PI)
+          ctx.arc(cellx,celly,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
           ctx.fillStyle = color.toInt match{
@@ -276,13 +268,15 @@ object NetGameHolder extends js.JSApp {
             case 6  => "#cfe6ff"
             case _  => "#de9dd6"
           }
+
+        println(s"$cellx,$celly")
           ctx.beginPath()
-          ctx.arc(cell.x +offx,cell.y +offy,cell.radius,0,2*Math.PI)
+          ctx.arc(cellx,celly,cell.radius,0,2*Math.PI)
           ctx.fill()
 
         ctx.font = "24px Helvetica"
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${name}", cell.x +offx-12, cell.y +offy -18)
+        ctx.fillText(s"${name}", cellx-12, celly -18)
         ctx.restore()
       }
     }
@@ -298,7 +292,7 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      println("画一个苹果")
+      //println("画一个苹果")
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
@@ -407,7 +401,7 @@ object NetGameHolder extends js.JSApp {
     players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
-        ctx.arc(mapMargin + (basePoint._1.toDouble/bounds.x) * littleMap,mapMargin + basePoint._2.toDouble/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
         ctx.fill()
       case None=>
        // println(s"${basePoint._1},  ${basePoint._2}")
@@ -565,6 +559,10 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
 
 }
+
+  //fixme 此处存在重复计算问题
+
+  //xxx 有待商榷
   def setSyncGridData(data: Protocol.GridDataSync): Unit = {
 
     grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
