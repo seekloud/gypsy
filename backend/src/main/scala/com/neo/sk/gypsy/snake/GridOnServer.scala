@@ -109,4 +109,13 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def getFeededApple = feededApples
 
+  def randomEmptyPoint(): Point = {
+    val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
+    //    while (grid.contains(p)) {
+    //      p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
+    //      //TODO 随机点的生成位置需要限制
+    //    }
+    p
+  }
+
 }

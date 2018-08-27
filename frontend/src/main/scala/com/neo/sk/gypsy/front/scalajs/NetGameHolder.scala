@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
+import com.neo.sk.gypsy.front.scalajs.NetGameHolder.gameRender
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
@@ -512,8 +513,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                   var timer = -1
                   val start = System.currentTimeMillis()
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
-                case Protocol.NewSnakeJoined(id, user) => writeToArea(s"$user joined!")
-                case Protocol.PlayerLeft(id, user) => writeToArea(s"$user left!")
+               // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
+               // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
                 case Protocol.SnakeAction(id, keyCode, frame) =>
 
                   grid.addActionWithFrame(id, keyCode, frame)
@@ -544,6 +545,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case Protocol.NetDelayTest(createTime) =>
                   val receiveTime = System.currentTimeMillis()
                   val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
+                  println(m)
                 //writeToArea(m)
                 case Protocol.SnakeRestart(id) =>
                   var timer = -1

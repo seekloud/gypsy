@@ -46,7 +46,6 @@ trait Grid {
 //合并时间间隔
   val mergeInterval = 8 * 1000
   //分裂时间间隔
-  //fixme 此处设置时间间隔意义不大，真正游戏中存在迅速分裂的情况，应该设置分裂总个数限制
   val splitInterval = 2 * 1000
 //最小分裂大小
   val splitLimit = 30
@@ -142,23 +141,282 @@ trait Grid {
     addVirus(virusNum - virus.size)
   }
 
-//随机返回一个空点坐标
-  def randomEmptyPoint(): Point = {
-    val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
-//    while (grid.contains(p)) {
-//      p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
-//      //TODO 随机点的生成位置需要限制
-//    }
-    p
+  private def updatePlayer()={
+   def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
+
+    val mouseAct = mouseActMap.get(player.id) match {
+      case Some(MousePosition(x, y)) =>
+        MousePosition(x, y)
+      case _ =>
+        MousePosition(player.targetX, player.targetY)
+    }
+
+    //对每个cell计算新的方向、速度和位置
+    var newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
+      var newSpeed = cell.speed
+      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
+      val deg = atan2(target.clientY, target.clientX)
+      val degX = if ((cos(deg)).isNaN) 0 else (cos(deg))
+      val degY = if ((sin(deg)).isNaN) 0 else (sin(deg))
+      var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
+      val newDirection = {
+        //指针在圆内，静止
+        if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
+          newSpeed = target.clientX / degX
+        } else {
+          if (cell.speed > 15 / slowdown) {
+            newSpeed -= 2
+          } else {
+            if (distance < cell.radius) {
+              //println("在圆内")
+              if (cell.speed > 0) {
+                //println("come here")
+                newSpeed = cell.speed - acceleration
+              } else newSpeed = 0
+              //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
+            } else {
+              newSpeed = if (cell.speed < 15 / slowdown) {
+                cell.speed + acceleration
+              } else 15 / slowdown
+            }
+          }
+        }
+        //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
+        Point((newSpeed * degX).toInt, (newSpeed * degY).toInt)
+      }
+      //cell移动+边界检测
+      var newX = if ((cell.x + newDirection.x) > boundary.x) boundary.x else if ((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
+      var newY = if ((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
+
+      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed))
+    }
+    val length = newCells.length
+    val newX = newCells.map(_.x).sum/length
+    val newY = newCells.map(_.y).sum/length
+    val left = newCells.map(a=>a.x-a.radius).min
+    val right = newCells.map(a=>a.x+a.radius).max
+    val bottom = newCells.map(a=>a.y-a.radius).min
+    val top = newCells.map(a=>a.y+a.radius).max
+    player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width =right-left ,height = top-bottom,cells = newCells)
+
+  }
+    def updatePlayerCrash(player: Player,actMap: Map[Long, Int],mouseActMap:Map[Long,MousePosition]): Either[Long, Player] ={
+
+      var killer = 0L
+      var shot = false
+      var split = false
+      val keyAct = actMap.get(player.id) match{
+        case Some(KeyEvent.VK_E)=>
+          shot = true
+        case Some(KeyEvent.VK_F)=>
+          split = true
+        case _ =>
+      }
+
+      var newKill = player.kill
+      var newSplitTime = player.lastSplit
+      if(newSplitTime > System.currentTimeMillis() - splitInterval) split = false
+      var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
+      var deleteCells = List[Cell]()//依据距离判断被删去的cell
+      var newProtected = player.protect
+      var mergeInFlame = false
+
+      var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
+        var newSpeed = cell.speed
+        var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
+      //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
+        //碰撞检测
+        var newRadius = cell.radius
+        var newMass = cell.mass
+        food.foreach{
+          case (p, color)=>
+            if(checkCollision(Point(cell.x,cell.y),p,cell.radius,4,-1)) {
+              //食物被吃掉
+              newMass += foodMass
+              newRadius = 4 + sqrt(newMass) * mass2rRate
+              food -= p
+              if(newProtected == true)
+              //吃食物后取消保护
+                newProtected = false
+            }
+        }
+        massList.foreach{
+          case p:Mass=>
+            if(checkCollision(Point(cell.x,cell.y),Point(p.x,p.y),cell.radius,p.radius,coverRate)) {
+              newMass += p.mass
+              newRadius = 4 + sqrt(newMass) * mass2rRate
+              massList = massList.filterNot(l=>l==p)
+            }
+        }
+        playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+          p._2.cells.foreach { otherCell =>
+            if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
+              //被吃了
+              newMass = 0
+              killer = p._1
+            } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+              //吃掉别人了
+              newMass += otherCell.mass
+              newRadius = 4 + sqrt(newMass) * 6
+            }
+          }
+        }
+
+        var cellX=cell.x
+        var cellY=cell.y
+        //自身cell合并检测
+        player.cells.filterNot(p=> p == cell).sortBy(_.radius).reverse.foreach{ cell2=>
+          val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
+          val radiusTotal = cell.radius + cell2.radius
+          if (distance < radiusTotal) {
+            if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
+              if (cell.x < cell2.x) cellX -= 1
+              else if (cell.x > cell2.x) cellX += 1
+              if (cell.y < cell2.y) cellY  -= 1
+              else if (cell.y > cell2.y) cellY += 1
+            }
+            else if (distance < radiusTotal / 2) {
+              if(cell.radius > cell2.radius){
+                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)){
+                  mergeInFlame = true
+                  newMass += cell2.mass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  mergeCells = cell2 :: mergeCells
+                }
+              }
+              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)){
+                mergeInFlame = true
+                newMass = 0
+                newRadius = 0
+                deleteCells = cell :: deleteCells
+              }
+            }
+          }
+        }
+
+        //病毒碰撞检测
+        virus.foreach{v=>
+          if((sqrt(pow(v.x - cell.x,2.0) + pow(v.y - cell.y,2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  !mergeInFlame ) {
+            virus = virus.filterNot(_==v)
+            val cellMass= (newMass/(v.splitNumber+1)).toInt
+            val cellRadius =  4 + sqrt(cellMass) * mass2rRate
+            newMass = (newMass/(v.splitNumber+1)).toInt + (v.mass*0.5).toInt
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSplitTime = System.currentTimeMillis()
+            val baseAngle = 2*Pi/v.splitNumber
+            for(i <- 0 until v.splitNumber){
+              val degX = cos(baseAngle * i)
+              val degY = sin(baseAngle * i)
+              val startLen = (newRadius + cellRadius)*1.2
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+            }
+          }
+        }
+
+        //喷射小球
+        val mouseAct = mouseActMap.get(player.id) match{
+          case Some(MousePosition(x,y))=>
+            //相对屏幕中央的位置
+            //println(s"x${x},y${y}")
+            //MousePosition(x-111-600,y-48-300)
+            MousePosition(x,y)
+          case _=>
+            MousePosition(player.targetX,player.targetY)
+        }
+        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
+        val deg = atan2(target.clientY,target.clientX)
+        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+
+        if (shot && newMass > shotMass*3){
+          newMass -= shotMass
+          newRadius = 4 + sqrt(newMass) * 6
+          val massRadius = 4 + sqrt(shotMass) * 6
+          val massX = (cell.x + (newRadius - 15)* degX).toInt
+          val massY = (cell.y + (newRadius - 15) * degY).toInt
+          massList ::= ptcl.Mass(massX,massY,player.targetX,player.targetY,player.color.toInt,shotMass,massRadius,shotSpeed)
+        }
+        //分裂
+        var splitX = 0
+        var splitY = 0
+        var splitMass = 0.0
+        var splitRadius = 0.0
+        var splitSpeed = 0.0
+        var cellId = 0L
+        if (split && cell.mass > splitLimit && player.cells.size<32){
+          newSplitTime = System.currentTimeMillis()
+          splitMass = (newMass/2).toInt
+          newMass = newMass - splitMass
+          splitRadius = 4 + sqrt(splitMass) * 6
+          newRadius = 4 + sqrt(newMass) * 6
+          splitSpeed = splitBaseSpeed + 2*cbrt(cell.radius)
+          splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
+          splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
+          cellId = cellIdgenerator.getAndIncrement().toLong
+        }
+
+
+        List(Cell(cell.id,cellX,cellY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
+      }.filterNot(_.mass<=0)
+
+      if(newCells.length == 0){
+        //println(s"newCells${newCells}")
+        playerMap.get(killer) match {
+          case Some(killerPlayer)=>
+            player.killerName=killerPlayer.name
+          case _=>
+            player.killerName="unknown"
+        }
+        deadPlayerMap+=(player.id->player)
+        Left(killer)
+      }else{
+        //println(s"newCells2${newCells}")
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum/length
+        val newY = newCells.map(_.y).sum/length
+        val left = newCells.map(a=>a.x-a.radius).min
+        val right = newCells.map(a=>a.x+a.radius).max
+        val bottom = newCells.map(a=>a.y-a.radius).min
+        val top = newCells.map(a=>a.y+a.radius).max
+        Right(player.copy( x = newX, y = newY, targetX = player.targetX, targetY = player.targetY, protect = newProtected, kill = newKill, lastSplit = newSplitTime, width =right-left ,height = top-bottom,cells = newCells))
+      }
+
+    }
+
+
+    val mouseAct = mouseActionMap.getOrElse(frameCount,Map.empty[Long, MousePosition])
+    var updatedPlayers = List.empty[Player]
+    var killerMap = List.empty[Long]
+    val acts = actionMap.getOrElse(frameCount, Map.empty[Long, Int])
+    playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap
+    playerMap.values.map(updatePlayerCrash(_, acts,mouseAct)).foreach {
+      case Right(s) => updatedPlayers ::= s
+      case Left(killerId) => killerMap ::= killerId
+      //mapKillCounter += killerId -> (mapKillCounter.getOrElse(killerId, 0) + 1)
+    }
+
+    playerMap = updatedPlayers.map(s => (s.id, s)).toMap
+    killerMap.foreach{killer=>
+      val a= playerMap.getOrElse(killer, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+      val killNumber = a.kill
+      playerMap += (killer -> a.copy(kill = killNumber+1))
+    }
+
   }
 
+
+
+
+
+
 //移动，碰撞检测
-  private[this] def updatePlayer() = {
+  /*private[this] def updatePlayer() = {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
 
       val mouseAct = mouseActMap.get(player.id) match{
-        //相对屏幕中央的位置
         case Some(MousePosition(x,y))=>
+          //相对屏幕中央的位置
           //println(s"x${x},y${y}")
           //MousePosition(x-111-600,y-48-300)
           MousePosition(x,y)
@@ -197,6 +455,7 @@ trait Grid {
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
+        //fixme 此处计算？
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
         val degX = if(cos(deg).isNaN) 0 else cos(deg)
@@ -397,7 +656,7 @@ trait Grid {
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
-  }
+  }*/
 
 
 
