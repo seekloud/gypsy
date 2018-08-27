@@ -253,53 +253,7 @@ val basePoint = players.find(_.id == uid) match{
     }
 
 
-    ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
-
-   // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
-      //println(s"draw body at $p body[$life]")
-      cells.foreach{ cell=>
-        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
-        val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate + offx
-        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate + offy
-        println(s"cellX$cellx,celly$celly")
-        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
-          ctx.save()
-          //centerScale(scale,window.x/2,window.y/2)
-       // println(s"${pro}")
-        if(protect){
-          //println("true")
-          ctx.fillStyle = MyColors.halo
-          ctx.beginPath()
-          ctx.arc(cellx,celly,cell.radius+15,0,2*Math.PI)
-          ctx.fill()
-        }
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#f3456d"
-            case 1 => "#f49930"
-            case 2  => "#f4d95b"
-            case 3  => "#4cd964"
-            case 4  => "#9fe0f6"
-            case 5  => "#bead92"
-            case 6  => "#cfe6ff"
-            case _  => "#de9dd6"
-          }
-
-        println(s"$cellx,$celly")
-          ctx.beginPath()
-          ctx.arc(cellx,celly,cell.radius,0,2*Math.PI)
-          ctx.fill()
-
-        ctx.font = "24px Helvetica"
-        ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${name}", cellx-12, celly -18)
-        ctx.restore()
-      }
-    }
 //为不同分值的苹果填充不同颜色
     foods.foreach { case Food(color, x, y) =>
       ctx.fillStyle = color match{
@@ -342,6 +296,55 @@ val basePoint = players.find(_.id == uid) match{
       ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
       ctx.fill()
       ctx.restore()
+    }
+    ctx.fillStyle = MyColors.otherBody
+
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+
+      // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
+      //println(s"draw body at $p body[$life]")
+      cells.foreach{ cell=>
+        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
+        val deg = atan2(target.clientY,target.clientX)
+        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate
+        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate
+        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
+        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
+        println(s"cellX$cellx,celly$celly")
+        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
+        ctx.save()
+        //centerScale(scale,window.x/2,window.y/2)
+        // println(s"${pro}")
+        if(protect){
+          //println("true")
+          ctx.fillStyle = MyColors.halo
+          ctx.beginPath()
+          ctx.arc(xfix+ offx,yfix+ offy,cell.radius+15,0,2*Math.PI)
+          ctx.fill()
+        }
+        ctx.fillStyle = color.toInt match{
+          case 0 => "#f3456d"
+          case 1 => "#f49930"
+          case 2  => "#f4d95b"
+          case 3  => "#4cd964"
+          case 4  => "#9fe0f6"
+          case 5  => "#bead92"
+          case 6  => "#cfe6ff"
+          case _  => "#de9dd6"
+        }
+
+        println(s"$cellx,$celly")
+        ctx.beginPath()
+        ctx.arc(xfix+ offx,yfix+ offy,cell.radius,0,2*Math.PI)
+        ctx.fill()
+
+        ctx.font = "24px Helvetica"
+        ctx.fillStyle = MyColors.background
+        ctx.fillText(s"${name}", xfix+ offx-12, yfix+ offy -18)
+        ctx.restore()
+      }
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
