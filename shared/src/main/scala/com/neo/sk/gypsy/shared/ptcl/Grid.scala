@@ -141,7 +141,7 @@ trait Grid {
     addVirus(virusNum - virus.size)
   }
 
-  /*private def updatePlayer()={
+  private def updatePlayer()={
    def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
 
     val mouseAct = mouseActMap.get(player.id) match {
@@ -154,7 +154,6 @@ trait Grid {
     //对每个cell计算新的方向、速度和位置
     var newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
-      //小球距目标位置的长度
       val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
@@ -163,7 +162,6 @@ trait Grid {
       var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
       val newDirection = {
         //指针在圆内，静止
-        //长度小于一帧运动的长度
         if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
           newSpeed = target.clientX / degX
         } else {
@@ -405,7 +403,7 @@ trait Grid {
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
 
-  }*/
+  }
 
 
 
@@ -413,7 +411,7 @@ trait Grid {
 
 
 //移动，碰撞检测
- /* private[this] def updatePlayer() = {
+  /*private[this] def updatePlayer() = {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
 
       val mouseAct = mouseActMap.get(player.id) match{
@@ -448,6 +446,12 @@ trait Grid {
       //此处算法针对只有一个cell的player
       var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
+        val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
+        val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
+        val degY1= if((sin(deg1)).isNaN) 0 else (sin(deg1))
+//        val speedX = (newSpeed*degX1).toFloat
+//        val speedY = (newSpeed*degY1).toFloat
+        val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
@@ -482,8 +486,10 @@ trait Grid {
           Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
         }
         //cell移动+边界检测
-        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
-        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
+        var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
+        var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+//        var newX = if((cell.x + newDirection.x) > boundary.x) boundary.x else if((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
+//        var newY = if((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
         //碰撞检测
         var newRadius = cell.radius
         var newMass = cell.mass
@@ -494,8 +500,7 @@ trait Grid {
               newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
-              if(newProtected == true)
-                //吃食物后取消保护
+              if(newProtected)
                 newProtected = false
             }
         }
@@ -534,14 +539,14 @@ trait Grid {
             }
             else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
-                if(mergeCells.filter(_.id==cell2.id).isEmpty && mergeCells.filter(_.id==cell.id).isEmpty && deleteCells.filter(_.id == cell.id).isEmpty){
+                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && deleteCells.filter(_.id == cell.id).isEmpty){
                   mergeInFlame = true
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
               }
-              else if(cell.radius < cell2.radius && deleteCells.filter(_.id == cell.id).isEmpty && deleteCells.filter(_.id == cell2.id).isEmpty){
+              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && deleteCells.filter(_.id == cell2.id).isEmpty){
                 mergeInFlame = true
                 newMass = 0
                 newRadius = 0
@@ -565,7 +570,9 @@ trait Grid {
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
               val startLen = (newRadius + cellRadius)*1.2
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+              val speedx = (cos(baseAngle * i) * cell.speed).toFloat
+              val speedy = (sin(baseAngle * i) * cell.speed).toFloat
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed,speedx,speedy)
             }
           }
         }
@@ -586,7 +593,7 @@ trait Grid {
         var splitRadius = 0.0
         var splitSpeed = 0.0
         var cellId = 0L
-        if (split == true && cell.mass > splitLimit && player.cells.size<32){
+        if (split && cell.mass > splitLimit && player.cells.size<32){
           newSplitTime = System.currentTimeMillis()
           splitMass = (newMass/2).toInt
           newMass = newMass - splitMass
@@ -606,7 +613,7 @@ trait Grid {
 
       //newCells = newCells.filterNot(c =>mergeCellId.contains(c))
 
-      if(newCells.length == 0){
+      if(newCells.isEmpty){
         //println(s"newCells${newCells}")
         playerMap.get(killer) match {
           case Some(killerPlayer)=>
@@ -697,10 +704,6 @@ trait Grid {
     )
   }
   def getAllGridData = {
-    //    println(s"玩家id：$myId")
-    //    println(s"玩家列表：$playerMap")
-
-
     var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
     var deadPlayers:List[Player] = Nil

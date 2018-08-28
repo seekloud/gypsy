@@ -21,6 +21,7 @@ import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
+import com.neo.sk.gypsy.shared.ptcl.utils.getZoomRate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -189,45 +190,51 @@ object NetGameHolder extends js.JSApp {
     val masses = data.massDetails
     val virus = data.virusDetails
    // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
-    val basePoint = players.find(_.id == uid) match{
-      case Some(p)=>
-        val target = MousePosition(p.targetX  ,p.targetY)
-        val deg = atan2(target.clientY,target.clientX)
-        val degX = if(cos(deg).isNaN) 0 else cos(deg)
-        val degY = if(sin(deg).isNaN) 0 else sin(deg)
-        val XAverageSpeed=p.cells.map{
-          cell=>
-            val target = MousePosition(p.targetX + p.x -cell.x ,p.targetY+p.y-cell.y)
-            val deg = atan2(target.clientY,target.clientX)
-            val degX = if(cos(deg).isNaN) 0 else cos(deg)
-            val degY = if(sin(deg).isNaN) 0 else sin(deg)
-            if(cell.x>=bounds.x||cell.x<=0) 0 else cell.speed*degX
+//    val basePoint = players.find(_.id == uid) match{
+//      case Some(p)=>
+//        val target = MousePosition(p.targetX  ,p.targetY)
+//        val deg = atan2(target.clientY,target.clientX)
+//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+//        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
+//      case None=>
+//        (bounds.x.toFloat/2,bounds.y.toFloat/2)
+//    }
+    var zoom = (30.0, 30.0)
+
+    val basePoint = players.find(_.id == uid) match {
+      case Some(p) =>
+        var sumX = 0.0
+        var sumY = 0.0
+        var length = 0
+        zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
+        p.cells.foreach { cell =>
+          val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
+          val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
+          val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
+          val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
+
+          sumX += newX
+          sumY += newY
+          length += 1
+          println(s"编号${length},中心$newX,$newY")
         }
-        val YAverageSpeed=p.cells.map{
-          cell=>
-            val target = MousePosition(p.targetX + p.x -cell.x ,p.targetY+p.y-cell.y)
-            val deg = atan2(target.clientY,target.clientX)
-            val degX = if(cos(deg).isNaN) 0 else cos(deg)
-            val degY = if(sin(deg).isNaN) 0 else sin(deg)
-            if(cell.y>=bounds.y||cell.y<=0) 0 else cell.speed*degY
-        }
-        val speedX=XAverageSpeed.sum/XAverageSpeed.length
-        val speedY=YAverageSpeed.sum/YAverageSpeed.length
-        val speed=sqrt(pow(speedX,2)+pow(speedY,2))
-        val newX=(p.x + speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat
-        val newY=(p.y + speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat
-        (if(newX<bounds.x&&newX>0)newX else if(newX>=bounds.x)bounds.x else 0 ,if(newY<bounds.y&&newY>0)newY else if(newY>=bounds.y)bounds.y else 0 )
-      case None=>
-        (bounds.x.toFloat/2,bounds.y.toFloat/2)
+        val offx = sumX / length
+        val offy = sumY / length
+
+        println(s"offx${offx},中心$offx,$offy")
+        (offx, offy)
+      case None =>
+        (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
-    println(s"offsetTime：$offsetTime,basepoint${basePoint._1},${basePoint._2}")
+    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
-
-    //新窗口的偏移量
     //println(s"basePoint${basePoint}")
-    var offx= window.x/2 - basePoint._1
-    var offy =window.y/2 - basePoint._2
-    var scale = data.scale
+    val offx= window.x/2 - basePoint._1
+    val offy =window.y/2 - basePoint._2
+    //    println(s"zoom：$zoom")
+    val scale = getZoomRate(zoom._1,zoom._2)
+    //var scale = data.scale
 
 
 
@@ -258,57 +265,7 @@ object NetGameHolder extends js.JSApp {
     }
 
 
-    ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
-
-   // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
-      //println(s"draw body at $p body[$life]")
-      cells.foreach{ cell=>
-        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
-        val deg = atan2(target.clientY,target.clientX)
-        var degX = if(cos(deg).isNaN) 0 else cos(deg)
-        var degY = if(sin(deg).isNaN) 0 else sin(deg)
-
-        println(s"X:$x....Y:$y/////cellX:${cell.x}.....cellY:${cell.y}")
-         degX=if(cell.x>=bounds.x) 0 else if(cell.x<=0) 0 else degX
-         degY=if(cell.y>=bounds.y) 0 else if(cell.y<=0) 0 else degY
-        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate + offx
-        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate + offy
-        println(s"cellX$cellx,celly$celly")
-        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
-          ctx.save()
-          //centerScale(scale,window.x/2,window.y/2)
-       // println(s"${pro}")
-        if(protect){
-          //println("true")
-          ctx.fillStyle = MyColors.halo
-          ctx.beginPath()
-          ctx.arc(cellx,celly,cell.radius+15,0,2*Math.PI)
-          ctx.fill()
-        }
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#f3456d"
-            case 1 => "#f49930"
-            case 2  => "#f4d95b"
-            case 3  => "#4cd964"
-            case 4  => "#9fe0f6"
-            case 5  => "#bead92"
-            case 6  => "#cfe6ff"
-            case _  => "#de9dd6"
-          }
-
-        //println(s"$cellx,$celly")
-          ctx.beginPath()
-          ctx.arc(cellx,celly,cell.radius,0,2*Math.PI)
-          ctx.fill()
-
-        ctx.font = "24px Helvetica"
-        ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", cellx-12, celly -18)
-        ctx.restore()
-      }
-    }
 //为不同分值的苹果填充不同颜色
     foods.foreach { case Food(color, x, y) =>
       ctx.fillStyle = color match{
@@ -351,6 +308,55 @@ object NetGameHolder extends js.JSApp {
       ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
       ctx.fill()
       ctx.restore()
+    }
+    ctx.fillStyle = MyColors.otherBody
+
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+
+      // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
+      //println(s"draw body at $p body[$life]")
+      cells.foreach{ cell=>
+//        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
+//        val deg = atan2(target.clientY,target.clientX)
+//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
+//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
+        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
+        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
+        //println(s"cellX$cellx,celly$celly")
+        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
+        ctx.save()
+        //centerScale(scale,window.x/2,window.y/2)
+        // println(s"${pro}")
+        if(protect){
+          //println("true")
+          ctx.fillStyle = MyColors.halo
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
+          ctx.fill()
+        }
+        ctx.fillStyle = color.toInt match{
+          case 0 => "#f3456d"
+          case 1 => "#f49930"
+          case 2  => "#f4d95b"
+          case 3  => "#4cd964"
+          case 4  => "#9fe0f6"
+          case 5  => "#bead92"
+          case 6  => "#cfe6ff"
+          case _  => "#de9dd6"
+        }
+
+        //ln(s"$cellx,$celly")
+        ctx.beginPath()
+        ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
+        ctx.fill()
+
+        ctx.font = "24px Helvetica"
+        ctx.fillStyle = MyColors.background
+        ctx.fillText(s"${name}", xfix+offx-12, yfix+offy -18)
+        ctx.restore()
+      }
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
