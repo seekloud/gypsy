@@ -206,12 +206,23 @@ object NetGameHolder extends js.JSApp {
       case Some(p) =>
         var sumX = 0.0
         var sumY = 0.0
-        zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
+        var length = 0
+        var xMax = 0.0
+        var xMin = 10000.0
+        var yMin = 10000.0
+        var yMax = 0.0
+        //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
           val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
           val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
           val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
+          if (newX>xMax) xMax=newX
+          if (newX<xMin) xMin=newX
+          if (newY>yMax) yMax=newY
+          if (newY<yMin) yMin=newY
+          zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
+
           sumX += newX
           sumY += newY
           //println(s"编号${length},中心$newX,$newY")
@@ -219,12 +230,12 @@ object NetGameHolder extends js.JSApp {
         val offx = sumX /p.cells.length
         val offy = sumY /p.cells.length
 
-        println(s"offx${offx},中心$offx,$offy")
+        //println(s"offx${offx},中心$offx,$offy")
         (offx, offy)
       case None =>
         (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
-    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
+   // println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")
     val offx= window.x/2 - basePoint._1
@@ -232,8 +243,6 @@ object NetGameHolder extends js.JSApp {
     //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2)
     //var scale = data.scale
-
-
 
 //绘制背景
     ctx.fillStyle = MyColors.background
