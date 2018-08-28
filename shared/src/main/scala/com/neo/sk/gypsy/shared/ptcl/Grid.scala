@@ -30,9 +30,7 @@ trait Grid {
   val random = new Random(System.nanoTime())
 
   val cellIdgenerator = new AtomicInteger(1000000)
-  //val step = 8
 
-  //val defaultLength = 5
   val historyRankLength = 5
 
   val slowBase = 8
@@ -152,20 +150,26 @@ trait Grid {
     }
 
     //对每个cell计算新的方向、速度和位置
-    var newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
+    val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
+
+      val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
+      val degX1 = if(cos(deg1).isNaN) 0 else cos(deg1)
+      val degY1= if(sin(deg1).isNaN) 0 else sin(deg1)
+      val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
+
+
       val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
-      val degX = if ((cos(deg)).isNaN) 0 else (cos(deg))
-      val degY = if ((sin(deg)).isNaN) 0 else (sin(deg))
-      var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
-      val newDirection = {
+      val degX = if (cos(deg).isNaN) 0 else cos(deg)
+      val degY = if (sin(deg).isNaN) 0 else sin(deg)
+      val slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         //指针在圆内，静止
         if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
           newSpeed = target.clientX / degX
         } else {
-          if (cell.speed > 15 / slowdown) {
+          if (cell.speed > 30 / slowdown) {
             newSpeed -= 2
           } else {
             if (distance < cell.radius) {
@@ -176,20 +180,18 @@ trait Grid {
               } else newSpeed = 0
               //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
             } else {
-              newSpeed = if (cell.speed < 15 / slowdown) {
+              newSpeed = if (cell.speed < 30 / slowdown) {
                 cell.speed + acceleration
-              } else 15 / slowdown
+              } else 30 / slowdown
             }
           }
         }
-        //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
-        Point((newSpeed * degX).toInt, (newSpeed * degY).toInt)
-      }
-      //cell移动+边界检测
-      var newX = if ((cell.x + newDirection.x) > boundary.x) boundary.x else if ((cell.x + newDirection.x) <= 0) 0 else cell.x + newDirection.x
-      var newY = if ((cell.y + newDirection.y) > boundary.y) boundary.y else if ((cell.y + newDirection.y) <= 0) 0 else cell.y + newDirection.y
 
-      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed))
+      //cell移动+边界检测
+      var newX = if ((cell.x + move.x) > boundary.x) boundary.x else if ((cell.x + move.x) <= 0) 0 else cell.x + move.x
+      var newY = if ((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+
+      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed,(newSpeed*degX).toFloat,(newSpeed*degY).toFloat))
     }
     val length = newCells.length
     val newX = newCells.map(_.x).sum/length
@@ -222,8 +224,7 @@ trait Grid {
       var newProtected = player.protect
       var mergeInFlame = false
 
-      var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
-        var newSpeed = cell.speed
+      val newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
       //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         //碰撞检测
@@ -309,7 +310,10 @@ trait Grid {
               val degX = cos(baseAngle * i)
               val degY = sin(baseAngle * i)
               val startLen = (newRadius + cellRadius)*1.2
-              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+             // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+              val speedx = (cos(baseAngle * i) * cell.speed).toFloat
+              val speedy = (sin(baseAngle * i) * cell.speed).toFloat
+              vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed,speedx,speedy)
             }
           }
         }
@@ -326,8 +330,8 @@ trait Grid {
         }
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
         val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        val degX = if(cos(deg).isNaN) 0 else cos(deg)
+        val degY = if(sin(deg).isNaN) 0 else sin(deg)
 
         if (shot && newMass > shotMass*3){
           newMass -= shotMass
@@ -357,10 +361,10 @@ trait Grid {
         }
 
 
-        List(Cell(cell.id,cellX,cellY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
+        List(Cell(cell.id,cellX,cellY,newMass,newRadius,cell.speed,cell.speedX,cell.speedY),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed,(splitSpeed*degX).toFloat,(splitSpeed*degY).toFloat)) ::: vSplitCells
       }.filterNot(_.mass<=0)
 
-      if(newCells.length == 0){
+      if(newCells.isEmpty){
         //println(s"newCells${newCells}")
         playerMap.get(killer) match {
           case Some(killerPlayer)=>
@@ -393,7 +397,6 @@ trait Grid {
     playerMap.values.map(updatePlayerCrash(_, acts,mouseAct)).foreach {
       case Right(s) => updatedPlayers ::= s
       case Left(killerId) => killerMap ::= killerId
-      //mapKillCounter += killerId -> (mapKillCounter.getOrElse(killerId, 0) + 1)
     }
 
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
@@ -417,8 +420,6 @@ trait Grid {
       val mouseAct = mouseActMap.get(player.id) match{
         case Some(MousePosition(x,y))=>
           //相对屏幕中央的位置
-          //println(s"x${x},y${y}")
-          //MousePosition(x-111-600,y-48-300)
           MousePosition(x,y)
         case _=>
           MousePosition(player.targetX,player.targetY)
@@ -426,7 +427,7 @@ trait Grid {
       var killer = 0L
       var shot = false
       var split = false
-      val keyAct = actMap.get(player.id) match{
+      actMap.get(player.id) match{
         case Some(KeyEvent.VK_E)=>
           shot = true
         case Some(KeyEvent.VK_F)=>
@@ -434,7 +435,7 @@ trait Grid {
         case _ =>
       }
 
-      var newKill = player.kill
+      val newKill = player.kill
       var newSplitTime = player.lastSplit
       if(newSplitTime > System.currentTimeMillis() - splitInterval) split = false
       var mergeCells = List[Cell]()//已经被本体其他cell融合的cell
@@ -444,28 +445,29 @@ trait Grid {
 
       //对每一个cell单独计算速度、方向
       //此处算法针对只有一个cell的player
-      var newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
+      val newCells = player.cells.sortBy(_.radius).reverse.flatMap{cell=>
         var newSpeed = cell.speed
         val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
-        val degX1 = if((cos(deg1)).isNaN) 0 else (cos(deg1))
-        val degY1= if((sin(deg1)).isNaN) 0 else (sin(deg1))
+        val degX1 = if(cos(deg1).isNaN) 0 else cos(deg1)
+        val degY1= if(sin(deg1).isNaN) 0 else sin(deg1)
 //        val speedX = (newSpeed*degX1).toFloat
 //        val speedY = (newSpeed*degY1).toFloat
         val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
+        //fixme 此处计算？
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        val degX = if(cos(deg).isNaN) 0 else cos(deg)
+        val degY = if(sin(deg).isNaN) 0 else sin(deg)
         var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
-        val newDirection = {
+
           //指针在圆内，静止
           if(distance < sqrt(pow((newSpeed*degX).toInt,2) + pow((newSpeed*degY).toInt,2))){
             newSpeed = target.clientX / degX
           }else{
-          if(cell.speed > 15/slowdown){
+          if(cell.speed > 30/slowdown){
             newSpeed -= 2
           }else{
               if(distance < cell.radius){
@@ -476,15 +478,14 @@ trait Grid {
                 }else newSpeed=0
                 //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
               }else{
-                newSpeed=if(cell.speed < 15/slowdown){
+                newSpeed=if(cell.speed < 30/slowdown){
                   cell.speed + acceleration
                 }else 15/slowdown
               }
             }
           }
-          //println(s"x位移${(newSpeed*degX).toInt}，y位移${(newSpeed*degY).toInt}")
-          Point((newSpeed*degX).toInt,(newSpeed*degY).toInt)
-        }
+
+
         //cell移动+边界检测
         var newX = if((cell.x + move.x) > boundary.x) boundary.x else if((cell.x + move.x) <= 0) 0 else cell.x + move.x
         var newY = if((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
@@ -504,12 +505,12 @@ trait Grid {
                 newProtected = false
             }
         }
-        massList.foreach{
-          case p:Mass=>
-            if(checkCollision(Point(cell.x,cell.y),Point(p.x,p.y),cell.radius,p.radius,coverRate)) {
+        massList.foreach {
+          p: Mass =>
+            if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
               newMass += p.mass
               newRadius = 4 + sqrt(newMass) * mass2rRate
-              massList = massList.filterNot(l=>l==p)
+              massList = massList.filterNot(l => l == p)
             }
         }
         playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
@@ -539,14 +540,14 @@ trait Grid {
             }
             else if (distance < radiusTotal / 2) {
               if(cell.radius > cell2.radius){
-                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && deleteCells.filter(_.id == cell.id).isEmpty){
+                if(!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)){
                   mergeInFlame = true
                   newMass += cell2.mass
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   mergeCells = cell2 :: mergeCells
                 }
               }
-              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && deleteCells.filter(_.id == cell2.id).isEmpty){
+              else if(cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)){
                 mergeInFlame = true
                 newMass = 0
                 newRadius = 0
@@ -558,7 +559,7 @@ trait Grid {
 
         //病毒碰撞检测
         virus.foreach{v=>
-          if((sqrt(pow((v.x-cell.x),2.0) + pow((v.y-cell.y),2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  mergeInFlame == false ) {
+          if((sqrt(pow(v.x - cell.x,2.0) + pow(v.y - cell.y,2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius *1.2) &&  !mergeInFlame ) {
             virus = virus.filterNot(_==v)
             val cellMass= (newMass/(v.splitNumber+1)).toInt
             val cellRadius =  4 + sqrt(cellMass) * mass2rRate
@@ -578,7 +579,7 @@ trait Grid {
         }
 
 //喷射小球
-        if (shot == true && newMass > shotMass*3){
+        if (shot && newMass > shotMass*3){
           newMass -= shotMass
           newRadius = 4 + sqrt(newMass) * 6
           val massRadius = 4 + sqrt(shotMass) * 6
@@ -604,7 +605,7 @@ trait Grid {
           splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
           cellId = cellIdgenerator.getAndIncrement().toLong
         }
-        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed)) ::: vSplitCells
+        List(Cell(cell.id,newX,newY,newMass,newRadius,newSpeed,(newSpeed*degX).toFloat,(newSpeed*degY).toFloat),Cell(cellId,splitX,splitY,splitMass,splitRadius,splitSpeed,(splitSpeed*degX).toFloat,(splitSpeed*degY).toFloat)) ::: vSplitCells
       }.filterNot(_.mass<=0)
 
       //val recoverCells = (deleteCells.distinct).diff(mergeCells.distinct)
@@ -636,7 +637,6 @@ trait Grid {
       }
 
     }
-
 
     //var mapKillCounter = Map.empty[Long, Int]
     var updatedPlayers = List.empty[Player]

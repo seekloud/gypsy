@@ -206,21 +206,18 @@ object NetGameHolder extends js.JSApp {
       case Some(p) =>
         var sumX = 0.0
         var sumY = 0.0
-        var length = 0
         zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
         p.cells.foreach { cell =>
           val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
           val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
           val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
-
           sumX += newX
           sumY += newY
-          length += 1
-          println(s"编号${length},中心$newX,$newY")
+          //println(s"编号${length},中心$newX,$newY")
         }
-        val offx = sumX / length
-        val offy = sumY / length
+        val offx = sumX /p.cells.length
+        val offy = sumY /p.cells.length
 
         println(s"offx${offx},中心$offx,$offy")
         (offx, offy)
@@ -263,7 +260,6 @@ object NetGameHolder extends js.JSApp {
       ctx.stroke()
       ctx.restore()
     }
-
 
 
 //为不同分值的苹果填充不同颜色
@@ -316,10 +312,6 @@ object NetGameHolder extends js.JSApp {
       // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.foreach{ cell=>
-//        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
-//        val deg = atan2(target.clientY,target.clientX)
-//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
@@ -330,7 +322,6 @@ object NetGameHolder extends js.JSApp {
         //centerScale(scale,window.x/2,window.y/2)
         // println(s"${pro}")
         if(protect){
-          //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
@@ -346,8 +337,6 @@ object NetGameHolder extends js.JSApp {
           case 6  => "#cfe6ff"
           case _  => "#de9dd6"
         }
-
-        //ln(s"$cellx,$celly")
         ctx.beginPath()
         ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
         ctx.fill()
@@ -360,12 +349,7 @@ object NetGameHolder extends js.JSApp {
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
-//      ctx.fillStyle = "green"
-//      ctx.beginPath()
-//      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
-//      ctx.fill()
       ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
