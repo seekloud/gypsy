@@ -193,18 +193,43 @@ object NetGameHolder extends js.JSApp {
       case Some(p)=>
         val target = MousePosition(p.targetX  ,p.targetY)
         val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
+        val degX = if(cos(deg).isNaN) 0 else cos(deg)
+        val degY = if(sin(deg).isNaN) 0 else sin(deg)
+        val XAverageSpeed=p.cells.map{
+          cell=>
+            val target = MousePosition(p.targetX + p.x -cell.x ,p.targetY+p.y-cell.y)
+            val deg = atan2(target.clientY,target.clientX)
+            val degX = if(cos(deg).isNaN) 0 else cos(deg)
+            val degY = if(sin(deg).isNaN) 0 else sin(deg)
+            if(cell.x>=bounds.x||cell.x<=0) 0 else cell.speed*degX
+        }
+        val YAverageSpeed=p.cells.map{
+          cell=>
+            val target = MousePosition(p.targetX + p.x -cell.x ,p.targetY+p.y-cell.y)
+            val deg = atan2(target.clientY,target.clientX)
+            val degX = if(cos(deg).isNaN) 0 else cos(deg)
+            val degY = if(sin(deg).isNaN) 0 else sin(deg)
+            if(cell.y>=bounds.y||cell.y<=0) 0 else cell.speed*degY
+        }
+        val speedX=XAverageSpeed.sum/XAverageSpeed.length
+        val speedY=YAverageSpeed.sum/YAverageSpeed.length
+        val speed=sqrt(pow(speedX,2)+pow(speedY,2))
+        val newX=(p.x + speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat
+        val newY=(p.y + speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat
+        (if(newX<bounds.x&&newX>0)newX else if(newX>=bounds.x)bounds.x else 0 ,if(newY<bounds.y&&newY>0)newY else if(newY>=bounds.y)bounds.y else 0 )
       case None=>
         (bounds.x.toFloat/2,bounds.y.toFloat/2)
     }
-    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
+    println(s"offsetTime：$offsetTime,basepoint${basePoint._1},${basePoint._2}")
 
+
+    //新窗口的偏移量
     //println(s"basePoint${basePoint}")
-    val offx= window.x/2 - basePoint._1
-    val offy =window.y/2 - basePoint._2
+    var offx= window.x/2 - basePoint._1
+    var offy =window.y/2 - basePoint._2
     var scale = data.scale
+
+
 
 //绘制背景
     ctx.fillStyle = MyColors.background
@@ -213,22 +238,22 @@ object NetGameHolder extends js.JSApp {
     centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
-    stripeX.map{l=>
+    stripeX.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(0,l +offy);
-      ctx.lineTo(bounds.x,l +offy);
-      ctx.stroke();
+      ctx.moveTo(0,l +offy)
+      ctx.lineTo(bounds.x,l +offy)
+      ctx.stroke()
       ctx.restore()
     }
-    stripeY.map{l=>
+    stripeY.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(l +offx,0);
-      ctx.lineTo(l +offx,bounds.y);
-      ctx.stroke();
+      ctx.moveTo(l +offx,0)
+      ctx.lineTo(l +offx,bounds.y)
+      ctx.stroke()
       ctx.restore()
     }
 
@@ -242,8 +267,12 @@ object NetGameHolder extends js.JSApp {
       cells.foreach{ cell=>
         val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
         val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
+        var degX = if(cos(deg).isNaN) 0 else cos(deg)
+        var degY = if(sin(deg).isNaN) 0 else sin(deg)
+
+        println(s"X:$x....Y:$y/////cellX:${cell.x}.....cellY:${cell.y}")
+         degX=if(cell.x>=bounds.x) 0 else if(cell.x<=0) 0 else degX
+         degY=if(cell.y>=bounds.y) 0 else if(cell.y<=0) 0 else degY
         val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate + offx
         val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate + offy
         println(s"cellX$cellx,celly$celly")
@@ -269,14 +298,14 @@ object NetGameHolder extends js.JSApp {
             case _  => "#de9dd6"
           }
 
-        println(s"$cellx,$celly")
+        //println(s"$cellx,$celly")
           ctx.beginPath()
           ctx.arc(cellx,celly,cell.radius,0,2*Math.PI)
           ctx.fill()
 
         ctx.font = "24px Helvetica"
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${name}", cellx-12, celly -18)
+        ctx.fillText(s"$name", cellx-12, celly -18)
         ctx.restore()
       }
     }
