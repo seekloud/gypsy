@@ -141,7 +141,7 @@ trait Grid {
     addVirus(virusNum - virus.size)
   }
 
-  private def updatePlayer()={
+  /*private def updatePlayer()={
    def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
 
     val mouseAct = mouseActMap.get(player.id) match {
@@ -154,6 +154,7 @@ trait Grid {
     //对每个cell计算新的方向、速度和位置
     var newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
+      //小球距目标位置的长度
       val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
@@ -162,6 +163,7 @@ trait Grid {
       var slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
       val newDirection = {
         //指针在圆内，静止
+        //长度小于一帧运动的长度
         if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
           newSpeed = target.clientX / degX
         } else {
@@ -403,7 +405,7 @@ trait Grid {
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
 
-  }
+  }*/
 
 
 
@@ -411,7 +413,7 @@ trait Grid {
 
 
 //移动，碰撞检测
-  /*private[this] def updatePlayer() = {
+ /* private[this] def updatePlayer() = {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
 
       val mouseAct = mouseActMap.get(player.id) match{
