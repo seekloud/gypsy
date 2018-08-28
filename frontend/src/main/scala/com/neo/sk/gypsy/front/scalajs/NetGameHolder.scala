@@ -217,12 +217,12 @@ object NetGameHolder extends js.JSApp {
           sumX += newX
           sumY += newY
           length += 1
-          println(s"编号${length},中心$newX,$newY")
+          //println(s"编号${length},中心$newX,$newY")
         }
         val offx = sumX / length
         val offy = sumY / length
 
-        println(s"offx${offx},中心$offx,$offy")
+        //println(s"offx${offx},中心$offx,$offy")
         (offx, offy)
       case None =>
         (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
