@@ -83,6 +83,18 @@
           color: #000;
           text-align: center;
       }
+      #MiddleView{
+        z-index:2;
+        position:absolute;
+      }
+      #GameView{
+        position: absolute;
+        z-index:1;
+      }
+      #TopView{
+        z-index: 3;
+        position: absolute;
+      }
 
     /*  .room-select{
           height: 38px;
@@ -105,7 +117,9 @@
 
 
   <br>
-  <center><canvas id="GameView" tabindex="1"></canvas></center>>
+         <canvas id="GameView" tabindex="1"></canvas>
+         <canvas id="MiddleView" tabindex="2"></canvas>
+         <canvas id="TopView" tabindex="3"></canvas>
 
 
   <div id="playground"></div>
@@ -123,34 +137,6 @@
               ,router=layui.router()
               ,seach=layui.search;
           form.render();
-
-         /* layer.ready(
-              function () {
-                  layer.open({
-                      type: 1
-                      ,title: false //不显示标题栏
-                      ,closeBtn: false
-                      ,area: ['500px','500px']
-                      ,shade: 0.8
-                      ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
-                      ,resize: false
-                      ,btn: ['登陆', '注册']
-                      ,btnAlign: 'c'//按钮居中对齐
-                      ,scrollbar:false
-                      ,moveType: 1 //拖拽模式，0或者1
-                      ,content: ' <form action="#">\n' +
-                      '    <label for="name">Name: </label><input id="name" class="name" type="text" />\n' +
-                      '    <input id="join" class="join" type="button" value="Join!"/>\n' +
-                      '  </form>'
-                      ,success: function(layero){
-                          var btn = layero.find('.layui-layer-btn');
-                          btn.find('.layui-layer-btn0').attr({
-                              href: 'http://www.layui.com/'
-                              ,target: '_blank'
-                          });
-                      }})
-              }
-          )*/
       });
 
   </script>
