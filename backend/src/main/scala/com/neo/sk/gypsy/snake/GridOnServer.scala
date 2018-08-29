@@ -103,8 +103,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   override def update(): Unit = {
     super.update()
-    genWaitingStar()
-    updateRanks()
+    genWaitingStar()  //新增
+    updateRanks()  //排名
   }
 
   def getFeededApple = feededApples

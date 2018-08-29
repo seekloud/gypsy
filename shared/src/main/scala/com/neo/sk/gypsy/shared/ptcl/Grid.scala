@@ -99,9 +99,10 @@ trait Grid {
   }
   def addMouseActionWithFrame(id: Long, x:Double, y:Double,  frame: Long) = {
     val map = mouseActionMap.getOrElse(frame, Map.empty)
-    val tmp = map + (id -> MousePosition(x,y))
+    val tmp = map + (id -> MousePosition(x,y,frame))
     mouseActionMap += (frame -> tmp)
   }
+
 //
   def update() = {
     updatePlayer()
@@ -427,13 +428,13 @@ trait Grid {
     def updateAStar(player: Player, actMap: Map[Long, Int], mouseActMap:Map[Long,MousePosition]): Either[Long, Player] = {
 
       val mouseAct = mouseActMap.get(player.id) match{
-        case Some(MousePosition(x,y))=>
+        case Some(MousePosition(x,y,f))=>
           //相对屏幕中央的位置
           //println(s"x${x},y${y}")
           //MousePosition(x-111-600,y-48-300)
-          MousePosition(x,y)
+          MousePosition(x,y,f)
         case _=>
-          MousePosition(player.targetX,player.targetY)
+          MousePosition(player.targetX,player.targetY,0l)
       }
       var killer = 0L
       var shot = false
@@ -466,7 +467,7 @@ trait Grid {
         val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
-        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
+        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y,0l)
         //fixme 此处计算？
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
@@ -664,7 +665,7 @@ trait Grid {
     }
     playerMap = updatedPlayers.map(s => (s.id, s)).toMap
     killerMap.foreach{killer=>
-      val a= playerMap.get(killer).getOrElse(Player(0,"","",0,0,cells = List(Cell(0L,0,0))))
+      val a= playerMap.getOrElse(killer, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
       val killNumber = a.kill
       playerMap += (killer -> a.copy(kill = killNumber+1))
     }
