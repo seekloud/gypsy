@@ -1,12 +1,12 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{joinGame,isDead}
+import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{grid, isDead, joinGame}
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserRegisterInfo}
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
 import org.scalajs.dom.raw._
@@ -177,15 +177,28 @@ object LoginPage {
         if (nameField.value.trim.isEmpty) {
           LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
         } else {
-          //修改参数一为房间编号（简单版中为：11,12,21,22）
-          if(roomId.value !=""){
-            joinGame(roomId.value,nameField.value)
-            LayuiJs.layer.close(guestIndex)
+          if (roomId.value != "") {
+            Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value)).map{
+              case Right(rsp) =>
+                if (rsp.errCode != 0) {
+                  println(s"name${nameField.value} has existed ")
+                  LayuiJs.msg(rsp.msg, 5, 2000)
+                } else {
+                  joinGame(roomId.value, nameField.value)
+                  LayuiJs.layer.close(guestIndex)
+                }
+              case Left(e) =>
+                println(s"parse error in login $e ")
+                LayuiJs.msg(e.toString, 5, 2000)
+            }
           }
-          else{
+          else {
             LayuiJs.msg("请选择房间", 5, 2000)
           }
         }
+
+      //修改参数一为房间编号（简单版中为：11,12,21,22）
+
     }
 
     nameField.onkeypress = {

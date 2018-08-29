@@ -13,6 +13,7 @@ object Routes {
     val  userLogin: String =baseUrl+"/userLogin"
     val userRegister: String =baseUrl+"/userRegister"
     val updateUserScore:String=baseUrl+"/updateMaxScore"
+    def checkName(name:String ,room:String)=baseUrl+s"/checkName?name=$name&room=$room"
 
     def getWebSocketUri(document: Document,room:String, nameOfChatParticipant: String,userType:Int): String = {
       val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
