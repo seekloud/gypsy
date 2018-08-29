@@ -28,6 +28,9 @@ object UserProtocol {
                          id:Long,
                          score:Int
                          )
-
+  case class CheckNameRsp(
+                           errCode:Int=0,
+                           msg:String="ok"
+                         )
 
 }

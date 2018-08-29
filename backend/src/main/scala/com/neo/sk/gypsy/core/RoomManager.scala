@@ -14,6 +14,7 @@ import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol.ErrorGameMessage
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
 import com.neo.sk.gypsy.utils.CirceSupport
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
@@ -36,6 +37,7 @@ object RoomManager {
   case object TimeOut extends Command
   val idGenerator = new AtomicInteger(1000000)
   case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
 
   val behaviors:Behavior[Command] ={
     log.debug(s"UserManager start...")
@@ -55,6 +57,10 @@ object RoomManager {
           case msg:JoinGame=>
             msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
             Behaviors.same
+
+          case msg:CheckName=>
+            getRoomActor(ctx,msg.room) ! RoomActor.CheckName(msg.name,msg.replyTo)
+            Behavior.same
           case x=>
             log.debug("")
             Behaviors.unhandled
