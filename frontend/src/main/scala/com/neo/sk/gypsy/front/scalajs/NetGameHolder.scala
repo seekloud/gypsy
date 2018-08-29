@@ -254,11 +254,10 @@ object NetGameHolder extends js.JSApp {
 
           sumX += newX
           sumY += newY
-          length += 1
           //println(s"编号${length},中心$newX,$newY")
         }
-        val offx = sumX / length
-        val offy = sumY / length
+        val offx = sumX /p.cells.length
+        val offy = sumY /p.cells.length
 
         //println(s"offx${offx},中心$offx,$offy")
         (offx, offy)
@@ -272,7 +271,6 @@ object NetGameHolder extends js.JSApp {
     val offy =window.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2)
-    println(s"scale${scale},zoom${zoom._1},${zoom._2}")
     //var scale = data.scale
 
 //绘制背景
@@ -282,25 +280,24 @@ object NetGameHolder extends js.JSApp {
     centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
-    stripeX.map{l=>
+    stripeX.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(0,l +offy);
-      ctx.lineTo(bounds.x,l +offy);
-      ctx.stroke();
+      ctx.moveTo(0,l +offy)
+      ctx.lineTo(bounds.x,l +offy)
+      ctx.stroke()
       ctx.restore()
     }
-    stripeY.map{l=>
+    stripeY.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(l +offx,0);
-      ctx.lineTo(l +offx,bounds.y);
-      ctx.stroke();
+      ctx.moveTo(l +offx,0)
+      ctx.lineTo(l +offx,bounds.y)
+      ctx.stroke()
       ctx.restore()
     }
-
 
 
 //为不同分值的苹果填充不同颜色
@@ -353,10 +350,6 @@ object NetGameHolder extends js.JSApp {
       // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.foreach{ cell=>
-//        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
-//        val deg = atan2(target.clientY,target.clientX)
-//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
@@ -367,7 +360,6 @@ object NetGameHolder extends js.JSApp {
         //centerScale(scale,window.x/2,window.y/2)
         // println(s"${pro}")
         if(protect){
-          //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
@@ -383,8 +375,6 @@ object NetGameHolder extends js.JSApp {
           case 6  => "#cfe6ff"
           case _  => "#de9dd6"
         }
-
-        //ln(s"$cellx,$celly")
         ctx.beginPath()
         ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
         ctx.fill()
