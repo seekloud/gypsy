@@ -298,11 +298,10 @@ object NetGameHolder extends js.JSApp {
       ctx.stroke()
       ctx.restore()
     }
-
-
 //为不同分值的苹果填充不同颜色
-    foods.foreach { case Food(color, x, y) =>
-      ctx.fillStyle = color match{
+    //按颜色分类绘制，减少canvas状态改变
+    foods.groupBy(_.color).foreach{a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -312,16 +311,33 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      //println("画一个苹果")
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
-      ctx.fill()
-        ctx.restore()
+      a._2.foreach{ case Food(color, x, y)=>
+        ctx.beginPath()
+        ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
+        ctx.fill()
+      }
     }
-    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
-      ctx.fillStyle = color match{
+//    foods.foreach { case Food(color, x, y) =>
+//      ctx.fillStyle = color match{
+//        case 0 => "#f3456d"
+//        case 1 => "#f49930"
+//        case 2  => "#f4d95b"
+//        case 3  => "#4cd964"
+//        case 4  => "#9fe0f6"
+//        case 5  => "#bead92"
+//        case 6  => "#cfe6ff"
+//        case _  => "#de9dd6"
+//      }
+//      //println("画一个苹果")
+//      ctx.save()
+//      //centerScale(scale,window.x/2,window.y/2)
+//      ctx.beginPath()
+//      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
+//      ctx.fill()
+//        ctx.restore()
+//    }
+    masses.groupBy(_.color).foreach{ a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -331,18 +347,42 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      val deg = Math.atan2(ty, tx)
-      val deltaY = speed * Math.sin(deg)
-      val deltaX = speed * Math.cos(deg)
-      val xPlus = if (!deltaX.isNaN) deltaX else 0
-      val yPlus = if (!deltaY.isNaN) deltaY else 0
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
-      ctx.fill()
-      ctx.restore()
+      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+        val deg = Math.atan2(ty, tx)
+        val deltaY = speed * Math.sin(deg)
+        val deltaX = speed * Math.cos(deg)
+        val xPlus = if (!deltaX.isNaN) deltaX else 0
+        val yPlus = if (!deltaY.isNaN) deltaY else 0
+        //centerScale(scale,window.x/2,window.y/2)
+        ctx.beginPath()
+        ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
+        ctx.fill()
+      }
     }
+
+//    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
+//      ctx.fillStyle = color match{
+//        case 0 => "#f3456d"
+//        case 1 => "#f49930"
+//        case 2  => "#f4d95b"
+//        case 3  => "#4cd964"
+//        case 4  => "#9fe0f6"
+//        case 5  => "#bead92"
+//        case 6  => "#cfe6ff"
+//        case _  => "#de9dd6"
+//      }
+//      val deg = Math.atan2(ty, tx)
+//      val deltaY = speed * Math.sin(deg)
+//      val deltaX = speed * Math.cos(deg)
+//      val xPlus = if (!deltaX.isNaN) deltaX else 0
+//      val yPlus = if (!deltaY.isNaN) deltaY else 0
+//      ctx.save()
+//      //centerScale(scale,window.x/2,window.y/2)
+//      ctx.beginPath()
+//      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
+//      ctx.fill()
+//      ctx.restore()
+//    }
     ctx.fillStyle = MyColors.otherBody
 
     players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
@@ -405,7 +445,7 @@ object NetGameHolder extends js.JSApp {
       case Some(myStar) =>
         firstCome = false
         val baseLine = 1
-        ctx.font = "12px Helvetica"
+        //ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
