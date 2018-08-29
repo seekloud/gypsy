@@ -317,25 +317,7 @@ object NetGameHolder extends js.JSApp {
         ctx.fill()
       }
     }
-//    foods.foreach { case Food(color, x, y) =>
-//      ctx.fillStyle = color match{
-//        case 0 => "#f3456d"
-//        case 1 => "#f49930"
-//        case 2  => "#f4d95b"
-//        case 3  => "#4cd964"
-//        case 4  => "#9fe0f6"
-//        case 5  => "#bead92"
-//        case 6  => "#cfe6ff"
-//        case _  => "#de9dd6"
-//      }
-//      //println("画一个苹果")
-//      ctx.save()
-//      //centerScale(scale,window.x/2,window.y/2)
-//      ctx.beginPath()
-//      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
-//      ctx.fill()
-//        ctx.restore()
-//    }
+
     masses.groupBy(_.color).foreach{ a=>
       ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
@@ -360,29 +342,6 @@ object NetGameHolder extends js.JSApp {
       }
     }
 
-//    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
-//      ctx.fillStyle = color match{
-//        case 0 => "#f3456d"
-//        case 1 => "#f49930"
-//        case 2  => "#f4d95b"
-//        case 3  => "#4cd964"
-//        case 4  => "#9fe0f6"
-//        case 5  => "#bead92"
-//        case 6  => "#cfe6ff"
-//        case _  => "#de9dd6"
-//      }
-//      val deg = Math.atan2(ty, tx)
-//      val deltaY = speed * Math.sin(deg)
-//      val deltaX = speed * Math.cos(deg)
-//      val xPlus = if (!deltaX.isNaN) deltaX else 0
-//      val yPlus = if (!deltaY.isNaN) deltaY else 0
-//      ctx.save()
-//      //centerScale(scale,window.x/2,window.y/2)
-//      ctx.beginPath()
-//      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
-//      ctx.fill()
-//      ctx.restore()
-//    }
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
       ctx.fillStyle = color.toInt match{
         case 0 => "#f3456d"
@@ -468,28 +427,7 @@ object NetGameHolder extends js.JSApp {
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
     //绘制小地图
-//    ctx.font = "12px Helvetica"
-//    ctx.fillStyle = MyColors.rankList
-//    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
-//    ctx.strokeStyle = "black"
-//    for (i<- 0 to 3){
-//      ctx.beginPath()
-//      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
-//      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
-//      ctx.stroke()
-//
-//      ctx.beginPath()
-//      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
-//      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
-//      ctx.stroke()
-//    }
-//    val margin = littleMap/3
-//    ctx.fillStyle = MyColors.background
-//    for(i <- 0 to 2){
-//      for (j <- 1 to 3){
-//        ctx2.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
-//      }
-//    }
+
     ctx3.fillStyle = MyColors.background
     players.find(_.id == uid) match {
       case Some(player)=>
