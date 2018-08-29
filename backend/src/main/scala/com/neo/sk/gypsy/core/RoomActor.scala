@@ -38,9 +38,9 @@ object RoomActor {
 
   private case class Left(id: Long, name: String) extends Command
 
-  private case class Key(id: Long, keyCode: Int) extends Command
+  private case class Key(id: Long, keyCode: Int,frame:Long) extends Command
 
-  private case class Mouse(id: Long, clientX:Double,clientY:Double) extends Command
+  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long) extends Command
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
@@ -92,7 +92,7 @@ object RoomActor {
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
           Behaviors.same
-        case Key(id, keyCode) =>
+        case Key(id, keyCode,frame) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
@@ -100,25 +100,27 @@ object RoomActor {
             grid.removeDeadPlayer(id)
             dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
           } else {
-            grid.addAction(id, keyCode)
-            dispatch(subscribersMap,Protocol.SnakeAction(id, keyCode, grid.frameCount))
+            grid.addActionWithFrame(id, keyCode,frame)
+            dispatch(subscribersMap,Protocol.SnakeAction(id, keyCode, frame))
           }
           Behaviors.same
-        case Mouse(id,x,y) =>
+        case Mouse(id,x,y,frame) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
-          grid.addMouseAction(id,x,y)
-          dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,grid.frameCount))
+          grid.addMouseActionWithFrame(id,x,y,frame)
+          dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,frame))
           Behaviors.same
 
         case Sync =>
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
-            //fixme 此处传输全局数据？
+            //remind 此处传输全局数据-同步数据
             val gridData = grid.getAllGridData
-//            gridData.playerDetails.foreach{ l=>l.cells.foreach(r=>println((r.mass,r.speed)))}
             dispatch(subscribersMap,gridData)
+        /*    userMap.foreach{u=>
+              dispatchTo(subscribersMap,u._1,grid.getGridData(u._1))
+            }*/
           } else {
             if (feedApples.nonEmpty) {
               dispatch(subscribersMap,Protocol.FeedApples(feedApples))
@@ -156,11 +158,11 @@ object RoomActor {
   def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
     val in = Flow[Protocol.GameMessage]
       .map {
-        case KeyCode(keyCode)=>
+        case KeyCode(keyCode,f)=>
           log.debug(s"键盘事件$keyCode")
-          Key(id,keyCode)
-        case MousePosition(clientX,clientY)=>
-          Mouse(id,clientX,clientY)
+          Key(id,keyCode,f)
+        case MousePosition(clientX,clientY,f)=>
+          Mouse(id,clientX,clientY,f)
         case UserLeft=>
           Left(id,name)
         case _=>

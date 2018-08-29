@@ -312,7 +312,7 @@ object NetGameHolder extends js.JSApp {
       // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
       cells.foreach{ cell=>
-        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y)
+        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y,0l)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
         val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
@@ -475,7 +475,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            sendMsg(Protocol.KeyCode(e.keyCode), gameStream)
+            sendMsg(Protocol.KeyCode(e.keyCode,grid.frameCount+2), gameStream)
           }
           e.preventDefault()
         }
@@ -484,7 +484,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     //在画布上监听鼠标事件
     canvas.onmousemove = { (e: dom.MouseEvent) => {
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      sendMsg(MousePosition(e.pageX - windWidth / 2, e.pageY - 48 - window.y.toDouble / 2), gameStream)
+      sendMsg(MousePosition(e.pageX - windWidth / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+2), gameStream)
 
     }
 

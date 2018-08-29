@@ -46,9 +46,9 @@ object Protocol {
 
   case class SnakeRestart(id:Long) extends GameMessage
 
-  case class MousePosition(clientX:Double,clientY:Double)extends GameMessage
+  case class MousePosition(clientX:Double,clientY:Double,frame:Long)extends GameMessage
 
-  case class KeyCode(keyCode: Int)extends GameMessage
+  case class KeyCode(keyCode: Int,frame:Long)extends GameMessage
 
   case object UserLeft extends GameMessage
 
