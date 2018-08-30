@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.shared.ptcl.Grid
+import com.neo.sk.gypsy.shared.Grid
 import com.neo.sk.gypsy.shared.ptcl.Point
 /**
   * User: Taoz

@@ -1,13 +1,15 @@
-package com.neo.sk.gypsy.shared.ptcl
+package com.neo.sk.gypsy.shared
 
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.Point
-import Protocol.MousePosition
-import com.neo.sk.gypsy.shared.ptcl
-import com.neo.sk.gypsy.shared.ptcl.utils._
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.utils
+
 import scala.math._
 import scala.util.Random
 
