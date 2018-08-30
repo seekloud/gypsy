@@ -97,7 +97,7 @@ trait Grid {
   }
   def addMouseActionWithFrame(id: Long, x:Double, y:Double,  frame: Long) = {
     val map = mouseActionMap.getOrElse(frame, Map.empty)
-    val tmp = map + (id -> MousePosition(x,y))
+    val tmp = map + (id -> MousePosition(x,y,frame))
     mouseActionMap += (frame -> tmp)
   }
 //
@@ -143,10 +143,10 @@ trait Grid {
    def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
 
     val mouseAct = mouseActMap.get(player.id) match {
-      case Some(MousePosition(x, y)) =>
-        MousePosition(x, y)
+      case Some(MousePosition(x, y,f)) =>
+        MousePosition(x, y,f)
       case _ =>
-        MousePosition(player.targetX, player.targetY)
+        MousePosition(player.targetX, player.targetY,0l)
     }
 
     //对每个cell计算新的方向、速度和位置
@@ -159,7 +159,7 @@ trait Grid {
       val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
 
 
-      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
@@ -237,7 +237,7 @@ trait Grid {
               newMass += foodMass
               newRadius = 4 + sqrt(newMass) * mass2rRate
               food -= p
-              if(newProtected == true)
+              if(newProtected)
               //吃食物后取消保护
                 newProtected = false
             }
@@ -320,15 +320,15 @@ trait Grid {
 
         //喷射小球
         val mouseAct = mouseActMap.get(player.id) match{
-          case Some(MousePosition(x,y))=>
+          case Some(MousePosition(x,y,f))=>
             //相对屏幕中央的位置
             //println(s"x${x},y${y}")
             //MousePosition(x-111-600,y-48-300)
-            MousePosition(x,y)
+            MousePosition(x,y,f)
           case _=>
-            MousePosition(player.targetX,player.targetY)
+            MousePosition(player.targetX,player.targetY,0l)
         }
-        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
+        val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y,0l)
         val deg = atan2(target.clientY,target.clientX)
         val degX = if(cos(deg).isNaN) 0 else cos(deg)
         val degY = if(sin(deg).isNaN) 0 else sin(deg)

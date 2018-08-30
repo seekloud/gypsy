@@ -475,7 +475,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            sendMsg(Protocol.KeyCode(e.keyCode), gameStream)
+            sendMsg(Protocol.KeyCode(e.keyCode,grid.frameCount+2), gameStream)
           }
           e.preventDefault()
         }
@@ -484,7 +484,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      sendMsg(MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2), gameStream)
+      sendMsg(MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+2), gameStream)
       //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
 
     }
