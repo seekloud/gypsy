@@ -7,15 +7,18 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
+import com.neo.sk.gypsy.Boot._
+import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 import scala.concurrent.duration._
 /**
@@ -46,6 +49,8 @@ object RoomActor {
 
   private case object UnkownAction extends Command
 
+  case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
+
 
 
   val bounds = Point(Boundary.w, Boundary.h)
@@ -74,6 +79,20 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
+
+        case CheckName(name,replyTo)=>
+          log.info(s"$name check name")
+          if(grid.playerMap.exists(_._2.name.trim==name)){
+           replyTo ! CheckNameRsp(10000,"UserName has existed!")
+          }else{
+            UserDao.getUserByName(name).map{
+              case Some(_)=>
+                replyTo ! CheckNameRsp(10000,"UserName has existed!")
+              case None=>
+                replyTo ! CheckNameRsp()
+            }
+          }
+          Behavior.same
         case Join(id, name, subscriber) =>
           log.info(s"got $msg")
           userMap.put(id,name)

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
 import akka.actor.typed.scaladsl.AskPattern._
 import com.neo.sk.gypsy.core.RoomManager
+import com.neo.sk.gypsy.http.ServiceUtils.CommonRsp
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -192,10 +193,25 @@ trait UserService extends ServiceUtils with SessionBase {
     }
   }
 
+  private val checkName = (path("checkName") & pathEndOrSingleSlash & get) {
+    loggingAction {
+      _ =>
+        parameter('name.as[String],'room.as[String]){
+          (name,room)=>
+            val flowFuture:Future[CheckNameRsp]=roomManager ? (RoomManager.CheckName(name,room,_))
+            dealFutureResult(
+              flowFuture.map(r=>
+                  complete(r)
+              )
+            )
+        }
+    }
+  }
+
 
   val userRoutes: Route =
     pathPrefix("user") {
-      guestLogin ~ userRegister ~ userLogin~userLoginWs~updateMaxScore
+      guestLogin ~ userRegister ~ userLogin~userLoginWs~updateMaxScore~checkName
 
     }
 
