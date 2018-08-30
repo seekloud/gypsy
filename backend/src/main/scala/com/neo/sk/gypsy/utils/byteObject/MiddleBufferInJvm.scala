@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.utils.byteObject
 
 import java.nio.ByteBuffer
 
-import com.neo.sk.gypsy.shared.ptcl.MiddleBuffer
+import com.neo.sk.gypsy.shared.util.MiddleBuffer
 
 /**
   * User: Taoz

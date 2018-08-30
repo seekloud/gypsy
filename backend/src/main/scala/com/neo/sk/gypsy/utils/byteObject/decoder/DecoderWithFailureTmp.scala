@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.utils.byteObject.decoder
 
-import com.neo.sk.gypsy.shared.ptcl.MiddleBuffer
+import com.neo.sk.gypsy.shared.util.MiddleBuffer
 import shapeless.labelled.{FieldType, field}
 import shapeless.{:+:, ::, CNil, Coproduct, HList, HNil, Inl, Inr, LabelledGeneric, Lazy, Witness}
 

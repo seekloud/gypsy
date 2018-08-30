@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.front.utils.byteObject
 
-import com.neo.sk.gypsy.shared.ptcl.MiddleBuffer
+import com.neo.sk.gypsy.shared.util.MiddleBuffer
 
 import scala.scalajs.js
 

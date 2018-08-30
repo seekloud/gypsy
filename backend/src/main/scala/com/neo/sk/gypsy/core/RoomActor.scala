@@ -9,6 +9,7 @@ import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.models.Dao.UserDao
+import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp

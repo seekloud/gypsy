@@ -1,4 +1,6 @@
-package com.neo.sk.gypsy.shared.ptcl
+package com.neo.sk.gypsy.shared.util
+
+import com.neo.sk.gypsy.shared.ptcl.Point
 
 import scala.math._
 object utils {

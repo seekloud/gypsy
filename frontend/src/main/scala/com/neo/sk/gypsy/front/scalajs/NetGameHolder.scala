@@ -21,7 +21,7 @@ import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
-import com.neo.sk.gypsy.shared.ptcl.utils.getZoomRate
+import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js

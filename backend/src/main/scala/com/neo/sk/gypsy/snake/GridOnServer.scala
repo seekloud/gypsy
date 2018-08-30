@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.snake
 
+import com.neo.sk.gypsy.shared.Grid
 import com.neo.sk.gypsy.shared.ptcl._
 import org.slf4j.LoggerFactory
 

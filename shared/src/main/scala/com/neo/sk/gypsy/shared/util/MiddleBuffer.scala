@@ -1,5 +1,5 @@
 
-package com.neo.sk.gypsy.shared.ptcl
+package com.neo.sk.gypsy.shared.util
 
 /**
   * User: Taoz

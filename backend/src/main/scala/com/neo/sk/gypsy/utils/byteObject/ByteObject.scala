@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.utils.byteObject
 
-import com.neo.sk.gypsy.shared.ptcl.MiddleBuffer
+import com.neo.sk.gypsy.shared.util.MiddleBuffer
 import com.neo.sk.gypsy.utils.byteObject.decoder.{BytesDecoder, DecoderFailure}
 import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
 
