@@ -93,6 +93,10 @@ object NetGameHolder extends js.JSApp {
 
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+  private[this] val canvas2 = dom.document.getElementById("MiddleView").asInstanceOf[Canvas]
+  private[this] val ctx2 = canvas2.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+  private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
+  private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val windWidth = dom.window.innerWidth
 
@@ -102,6 +106,10 @@ object NetGameHolder extends js.JSApp {
     drawGameOff()
     canvas.width = window.x
     canvas.height = window.y
+    canvas2.width = window.x
+    canvas2.height = window.y
+    canvas3.width = window.x
+    canvas3.height = window.y
 
 
     dom.window.onload= {
@@ -114,6 +122,7 @@ object NetGameHolder extends js.JSApp {
   def startGame(): Unit = {
     println("start---")
     drawGameOn()
+    draw2()
     dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
@@ -122,7 +131,9 @@ object NetGameHolder extends js.JSApp {
     //println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != -1l) draw(offsetTime)
+    if(myId != -1l) {
+      draw(offsetTime)
+    }
 
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
@@ -169,6 +180,35 @@ object NetGameHolder extends js.JSApp {
     grid.update()
   }
 
+  def draw2():Unit = {
+    //绘制当前排行
+    ctx2.fillStyle = MyColors.rankList
+    ctx2.fillRect(window.x-200,20,150,250)
+
+    //绘制小地图
+    ctx2.font = "12px Helvetica"
+    ctx2.fillStyle = MyColors.rankList
+    ctx2.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx2.strokeStyle = "black"
+    for (i<- 0 to 3){
+      ctx2.beginPath()
+      ctx2.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx2.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx2.stroke()
+
+      ctx2.beginPath()
+      ctx2.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx2.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx2.stroke()
+    }
+    val margin = littleMap/3
+    ctx2.fillStyle = MyColors.background
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx2.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+  }
   def draw(offsetTime:Long): Unit = {
     //println("开始绘画")
     if (wsSetup) {
@@ -189,17 +229,6 @@ object NetGameHolder extends js.JSApp {
     val foods = data.foodDetails
     val masses = data.massDetails
     val virus = data.virusDetails
-   // val basePoint = players.filter(_.id==uid).map(a=>(a.x,a.y)).headOption.getOrElse((bounds.x/2,bounds.y/2))
-//    val basePoint = players.find(_.id == uid) match{
-//      case Some(p)=>
-//        val target = MousePosition(p.targetX  ,p.targetY)
-//        val deg = atan2(target.clientY,target.clientX)
-//        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-//        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-//        ((p.x + p.cells.head.speed *degX *offsetTime.toFloat / Protocol.frameRate).toFloat,(p.y + p.cells.head.speed *degY *offsetTime.toFloat / Protocol.frameRate).toFloat)
-//      case None=>
-//        (bounds.x.toFloat/2,bounds.y.toFloat/2)
-//    }
     var zoom = (30.0, 30.0)
 
     val basePoint = players.find(_.id == uid) match {
@@ -207,25 +236,35 @@ object NetGameHolder extends js.JSApp {
         var sumX = 0.0
         var sumY = 0.0
         var length = 0
-        zoom = (p.cells.map(a => a.x).max - p.cells.map(a => a.x).min, p.cells.map(a => a.y).max - p.cells.map(a => a.y).min)
+        var xMax = 0.0
+        var xMin = 10000.0
+        var yMin = 10000.0
+        var yMax = 0.0
+        //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
           val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
           val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
-          val newX = if ((p.x + offx) > bounds.x) bounds.x else if ((p.x + offx) <= 0) 0 else p.x + offx
-          val newY = if ((p.y + offy) > bounds.y) bounds.y else if ((p.y + offy) <= 0) 0 else p.y + offy
+          val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
+          val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
+          if (newX>xMax) xMax=newX
+          if (newX<xMin) xMin=newX
+          if (newY>yMax) yMax=newY
+          if (newY<yMin) yMin=newY
+          zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
 
           sumX += newX
           sumY += newY
-          length += 1
+          //println(s"编号${length},中心$newX,$newY")
         }
-        val offx = sumX / length
-        val offy = sumY / length
+        val offx = sumX /p.cells.length
+        val offy = sumY /p.cells.length
 
+        //println(s"offx${offx},中心$offx,$offy")
         (offx, offy)
       case None =>
         (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
-    println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
+   // println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
     //println(s"basePoint${basePoint}")
     val offx= window.x/2 - basePoint._1
@@ -241,30 +280,28 @@ object NetGameHolder extends js.JSApp {
     centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
-    stripeX.map{l=>
+    stripeX.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(0,l +offy);
-      ctx.lineTo(bounds.x,l +offy);
-      ctx.stroke();
+      ctx.moveTo(0,l +offy)
+      ctx.lineTo(bounds.x,l +offy)
+      ctx.stroke()
       ctx.restore()
     }
-    stripeY.map{l=>
+    stripeY.foreach{ l=>
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(l +offx,0);
-      ctx.lineTo(l +offx,bounds.y);
-      ctx.stroke();
+      ctx.moveTo(l +offx,0)
+      ctx.lineTo(l +offx,bounds.y)
+      ctx.stroke()
       ctx.restore()
     }
-
-
-
 //为不同分值的苹果填充不同颜色
-    foods.foreach { case Food(color, x, y) =>
-      ctx.fillStyle = color match{
+    //按颜色分类绘制，减少canvas状态改变
+    foods.groupBy(_.color).foreach{a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -274,16 +311,15 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      //println("画一个苹果")
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
-      ctx.fill()
-        ctx.restore()
+      a._2.foreach{ case Food(color, x, y)=>
+        ctx.beginPath()
+        ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
+        ctx.fill()
+      }
     }
-    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
-      ctx.fillStyle = color match{
+
+    masses.groupBy(_.color).foreach{ a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -293,75 +329,58 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      val deg = Math.atan2(ty, tx)
-      val deltaY = speed * Math.sin(deg)
-      val deltaX = speed * Math.cos(deg)
-      val xPlus = if (!deltaX.isNaN) deltaX else 0
-      val yPlus = if (!deltaY.isNaN) deltaY else 0
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
-      ctx.fill()
-      ctx.restore()
+      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+        val deg = Math.atan2(ty, tx)
+        val deltaY = speed * Math.sin(deg)
+        val deltaX = speed * Math.cos(deg)
+        val xPlus = if (!deltaX.isNaN) deltaX else 0
+        val yPlus = if (!deltaY.isNaN) deltaY else 0
+        //centerScale(scale,window.x/2,window.y/2)
+        ctx.beginPath()
+        ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
+        ctx.fill()
+      }
     }
-    ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
-
-      // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
-      //println(s"draw body at $p body[$life]")
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+      ctx.fillStyle = color.toInt match{
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2  => "#f4d95b"
+        case 3  => "#4cd964"
+        case 4  => "#9fe0f6"
+        case 5  => "#bead92"
+        case 6  => "#cfe6ff"
+        case _  => "#de9dd6"
+      }
       cells.foreach{ cell=>
-        val target = MousePosition(tx +x-cell.x ,ty+y-cell.y,0l)
-        val deg = atan2(target.clientY,target.clientX)
-        val degX = if((cos(deg)).isNaN) 0 else (cos(deg))
-        val degY = if((sin(deg)).isNaN) 0 else (sin(deg))
-        val cellx = cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate
-        val celly = cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
-        println(s"cellX$cellx,celly$celly")
+        //println(s"cellX$cellx,celly$celly")
         //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
         ctx.save()
         //centerScale(scale,window.x/2,window.y/2)
         // println(s"${pro}")
+        ctx.beginPath()
+        ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
+        ctx.fill()
         if(protect){
-          //println("true")
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
-          ctx.arc(xfix+ offx,yfix+ offy,cell.radius+15,0,2*Math.PI)
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
-        ctx.fillStyle = color.toInt match{
-          case 0 => "#f3456d"
-          case 1 => "#f49930"
-          case 2  => "#f4d95b"
-          case 3  => "#4cd964"
-          case 4  => "#9fe0f6"
-          case 5  => "#bead92"
-          case 6  => "#cfe6ff"
-          case _  => "#de9dd6"
-        }
-
-        println(s"$cellx,$celly")
-        ctx.beginPath()
-        ctx.arc(xfix+ offx,yfix+ offy,cell.radius,0,2*Math.PI)
-        ctx.fill()
-
         ctx.font = "24px Helvetica"
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${name}", xfix+ offx-12, yfix+ offy -18)
+        ctx.fillText(s"${name}", xfix+offx-12, yfix+offy -18)
         ctx.restore()
       }
     }
 
     virus.foreach { case Virus(x,y,mass,radius,_) =>
-//      ctx.fillStyle = "green"
-//      ctx.beginPath()
-//      ctx.arc(x +offx,y +offy,radius,0,2*Math.PI)
-//      ctx.fill()
       ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
@@ -379,7 +398,7 @@ object NetGameHolder extends js.JSApp {
       case Some(myStar) =>
         firstCome = false
         val baseLine = 1
-        ctx.font = "12px Helvetica"
+        //ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
@@ -395,45 +414,26 @@ object NetGameHolder extends js.JSApp {
         }
     }
 //绘制当前排行
-    ctx.font = "12px Helvetica"
-    ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(window.x-200,20,150,250)
+    ctx3.clearRect(0,0,window.x,window.y)
+    ctx3.font = "12px Helvetica"
+//    ctx.fillStyle = MyColors.rankList
+//    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 3
     var index = 0
-    ctx.fillStyle = MyColors.background
+    ctx3.fillStyle = MyColors.background
     drawTextLine(s"—————排行榜—————", rightBegin, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
     //绘制小地图
-    ctx.font = "12px Helvetica"
-    ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
-    ctx.strokeStyle = "black"
-    for (i<- 0 to 3){
-      ctx.beginPath()
-      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
-      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
-      ctx.stroke()
 
-      ctx.beginPath()
-      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
-      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
-      ctx.stroke()
-    }
-    val margin = littleMap/3
-    ctx.fillStyle = MyColors.background
-    for(i <- 0 to 2){
-      for (j <- 1 to 3){
-        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
-      }
-    }
+    ctx3.fillStyle = MyColors.background
     players.find(_.id == uid) match {
       case Some(player)=>
-        ctx.beginPath()
-        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
-        ctx.fill()
+        ctx3.beginPath()
+        ctx3.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx3.fill()
       case None=>
        // println(s"${basePoint._1},  ${basePoint._2}")
     }
@@ -445,7 +445,7 @@ object NetGameHolder extends js.JSApp {
   }
 //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
-    ctx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
+    ctx3.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
   }
 
 //新用户加入游戏
@@ -458,9 +458,9 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
     isDead = false
     wsSetup = true
-    canvas.focus()
+    canvas3.focus()
     //在画布上监听键盘事件
-    canvas.onkeydown = {
+    canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
         println(s"keydown: ${e.keyCode}")
         if (watchKeys.contains(e.keyCode)) {
@@ -475,16 +475,17 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            sendMsg(Protocol.KeyCode(e.keyCode,grid.frameCount+2), gameStream)
+            sendMsg(Protocol.KeyCode(e.keyCode), gameStream)
           }
           e.preventDefault()
         }
       }
     }
     //在画布上监听鼠标事件
-    canvas.onmousemove = { (e: dom.MouseEvent) => {
+    canvas3.onmousemove = { (e: dom.MouseEvent) => {
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      sendMsg(MousePosition(e.pageX - windWidth / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+2), gameStream)
+      sendMsg(MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2), gameStream)
+      //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
 
     }
 

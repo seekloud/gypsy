@@ -54,6 +54,6 @@ object Protocol {
 
   case object ErrorGameMessage extends GameMessage
 
-  val frameRate = 100
+  val frameRate = 150
 
 }
