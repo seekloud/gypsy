@@ -475,6 +475,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
+            grid.addActionWithFrame(myId, e.keyCode, grid.frameCount)
             sendMsg(Protocol.KeyCode(e.keyCode,grid.frameCount+2), gameStream)
           }
           e.preventDefault()
@@ -483,6 +484,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     }
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
+      grid.addMouseActionWithFrame(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount)
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
       sendMsg(MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+2), gameStream)
       //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
@@ -528,17 +530,18 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
                // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
                 case Protocol.SnakeAction(id, keyCode, frame) =>
-
-                  grid.addActionWithFrame(id, keyCode, frame)
-
+                  if(id!=myId){
+                    grid.addActionWithFrame(id, keyCode, frame)
+                  }
                 case Protocol.SnakeMouseAction(id, x, y, frame) =>
                   if (frame > grid.frameCount) {
                     //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
                   } else {
                     //writeToArea(s"got snake mouse action=$a")
                   }
-                  grid.addMouseActionWithFrame(id, x, y, frame)
-
+                  if(id!=myId){
+                    grid.addMouseActionWithFrame(id, x, y, frame)
+                  }
                 case Protocol.Ranks(current, history) =>
 
                   currentRank = current
@@ -597,7 +600,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   //xxx 有待商榷
   def setSyncGridData(data: Protocol.GridDataSync): Unit = {
 
-    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount)
+    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- 3)
 //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
     grid.frameCount = data.frameCount
 //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
