@@ -5,7 +5,7 @@ package com.neo.sk.gypsy.shared.ptcl
   * Date: 8/29/2016
   * Time: 9:40 PM
   */
-object Protocol {
+object WsFrontProtocol {
 
   sealed trait GameMessage extends WsServerSourceProtocol.WsMsgSource
 
@@ -56,4 +56,7 @@ object Protocol {
 
   val frameRate = 150
 
+  val advanceFrame = 2 //客户端提前的帧数
+
+  val maxDelayFrame = 3
 }

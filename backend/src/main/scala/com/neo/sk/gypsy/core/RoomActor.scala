@@ -10,8 +10,8 @@ import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsFrontProtocol, WsServerSourceProtocol}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{KeyCode, MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
@@ -38,7 +38,7 @@ object RoomActor {
 
   private case object Sync extends Command
 
-  private case class Join(id: Long, name: String, subscriber: ActorRef[Protocol.GameMessage]) extends Command
+  private case class Join(id: Long, name: String, subscriber: ActorRef[WsFrontProtocol.GameMessage]) extends Command
 
   private case class Left(id: Long, name: String) extends Command
 
@@ -61,10 +61,10 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]()
+            val subscribersMap = mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]]()
             val userMap = mutable.HashMap[Long, String]()
             val grid = new GridOnServer(bounds)
-            timer.startPeriodicTimer(SyncTimeKey,Sync,Protocol.frameRate millis)
+            timer.startPeriodicTimer(SyncTimeKey,Sync,WsFrontProtocol.frameRate millis)
             idle(userMap,subscribersMap,grid,0l)
         }
     }
@@ -72,7 +72,7 @@ object RoomActor {
 
   def idle(
             userMap:mutable.HashMap[Long,String],
-            subscribersMap:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],
+            subscribersMap:mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]],
             grid:GridOnServer,
             tickCount:Long
           )(
@@ -101,7 +101,7 @@ object RoomActor {
           subscribersMap.put(id,subscriber)
           grid.removeDeadPlayer(id)
           grid.addSnake(id, name)
-          dispatchTo(subscribersMap,id, Protocol.Id(id))
+          dispatchTo(subscribersMap,id, WsFrontProtocol.Id(id))
           //dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
           dispatchTo(subscribersMap,id,grid.getGridData(id))
           Behaviors.same
@@ -118,17 +118,17 @@ object RoomActor {
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
             grid.removeDeadPlayer(id)
-            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
+            dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
           } else {
-            grid.addActionWithFrame(id, keyCode,frame)
-            dispatch(subscribersMap,Protocol.SnakeAction(id, keyCode, frame))
+            grid.addActionWithFrame(id, keyCode,math.max(grid.frameCount,frame))
+            dispatch(subscribersMap,WsFrontProtocol.SnakeAction(id, keyCode, frame))
           }
           Behaviors.same
         case Mouse(id,x,y,frame) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
-          grid.addMouseActionWithFrame(id,x,y,frame)
-          dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,frame))
+          grid.addMouseActionWithFrame(id,x,y,math.max(grid.frameCount,frame))
+          dispatch(subscribersMap,WsFrontProtocol.SnakeMouseAction(id,x,y,frame))
           Behaviors.same
 
         case Sync =>
@@ -143,16 +143,19 @@ object RoomActor {
             }*/
           } else {
             if (feedApples.nonEmpty) {
-              dispatch(subscribersMap,Protocol.FeedApples(feedApples))
+              dispatch(subscribersMap,WsFrontProtocol.FeedApples(feedApples))
             }
           }
           if (tickCount % 20 == 1) {
-            dispatch(subscribersMap,Protocol.Ranks(grid.currentRank, grid.historyRankList))
+            dispatch(subscribersMap,WsFrontProtocol.Ranks(grid.currentRank, grid.historyRankList))
+          }
+          if(tickCount==0){
+            dispatch(subscribersMap,grid.getAllGridData)
           }
           idle(userMap,subscribersMap,grid,tickCount+1)
         case NetTest(id, createTime) =>
           log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(subscribersMap,id, Protocol.NetDelayTest(createTime))
+          dispatchTo(subscribersMap,id, WsFrontProtocol.NetDelayTest(createTime))
           Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -161,11 +164,11 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],msg: Protocol.GameMessage) = {
+  def dispatch(subscribers:mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]], msg: WsFrontProtocol.GameMessage) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],id:Long,msg:Protocol.GameMessage) = {
+  def dispatchTo(subscribers:mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]], id:Long, msg:WsFrontProtocol.GameMessage) = {
     subscribers.get(id).foreach( _ ! msg)
   }
 
@@ -175,8 +178,8 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
-    val in = Flow[Protocol.GameMessage]
+  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[WsFrontProtocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
+    val in = Flow[WsFrontProtocol.GameMessage]
       .map {
         case KeyCode(keyCode,f)=>
           log.debug(s"键盘事件$keyCode")
