@@ -4,8 +4,8 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.{Point, WsFrontProtocol}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{MousePosition,advanceFrame,maxDelayFrame}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -107,6 +107,7 @@ trait Grid {
     updatePlayer()
     updateSpots()
     actionMap -= frameCount
+    mouseActionMap -= frameCount
     frameCount += 1
   }
 
@@ -142,31 +143,31 @@ trait Grid {
   }
 
   private def updatePlayer()={
-   def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
+    def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
 
-    val mouseAct = mouseActMap.get(player.id) match {
-      case Some(MousePosition(x, y,f)) =>
-        MousePosition(x, y,f)
-      case _ =>
-        MousePosition(player.targetX, player.targetY,0l)
-    }
+      val mouseAct = mouseActMap.get(player.id) match {
+        case Some(MousePosition(x, y,f)) =>
+          MousePosition(x, y,f)
+        case _ =>
+          MousePosition(player.targetX, player.targetY,0l)
+      }
 
-    //对每个cell计算新的方向、速度和位置
-    val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
-      var newSpeed = cell.speed
+      //对每个cell计算新的方向、速度和位置
+      val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
+        var newSpeed = cell.speed
 
-      val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
-      val degX1 = if(cos(deg1).isNaN) 0 else cos(deg1)
-      val degY1= if(sin(deg1).isNaN) 0 else sin(deg1)
-      val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
+        val deg1 = atan2(player.targetY+ player.y - cell.y,player.targetX+ player.x-cell.x)
+        val degX1 = if(cos(deg1).isNaN) 0 else cos(deg1)
+        val degY1= if(sin(deg1).isNaN) 0 else sin(deg1)
+        val move =Point((newSpeed*degX1).toInt,(newSpeed*degY1).toInt)
 
 
-      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
-      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
-      val deg = atan2(target.clientY, target.clientX)
-      val degX = if (cos(deg).isNaN) 0 else cos(deg)
-      val degY = if (sin(deg).isNaN) 0 else sin(deg)
-      val slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
+        val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+        val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
+        val deg = atan2(target.clientY, target.clientX)
+        val degX = if (cos(deg).isNaN) 0 else cos(deg)
+        val degY = if (sin(deg).isNaN) 0 else sin(deg)
+        val slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
         //指针在圆内，静止
         if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
           newSpeed = target.clientX / degX
@@ -189,22 +190,22 @@ trait Grid {
           }
         }
 
-      //cell移动+边界检测
-      var newX = if ((cell.x + move.x) > boundary.x) boundary.x else if ((cell.x + move.x) <= 0) 0 else cell.x + move.x
-      var newY = if ((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
+        //cell移动+边界检测
+        var newX = if ((cell.x + move.x) > boundary.x) boundary.x else if ((cell.x + move.x) <= 0) 0 else cell.x + move.x
+        var newY = if ((cell.y + move.y) > boundary.y) boundary.y else if ((cell.y + move.y) <= 0) 0 else cell.y + move.y
 
-      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed,(newSpeed*degX).toFloat,(newSpeed*degY).toFloat))
+        List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed,(newSpeed*degX).toFloat,(newSpeed*degY).toFloat))
+      }
+      val length = newCells.length
+      val newX = newCells.map(_.x).sum/length
+      val newY = newCells.map(_.y).sum/length
+      val left = newCells.map(a=>a.x-a.radius).min
+      val right = newCells.map(a=>a.x+a.radius).max
+      val bottom = newCells.map(a=>a.y-a.radius).min
+      val top = newCells.map(a=>a.y+a.radius).max
+      player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width =right-left ,height = top-bottom,cells = newCells)
+
     }
-    val length = newCells.length
-    val newX = newCells.map(_.x).sum/length
-    val newY = newCells.map(_.y).sum/length
-    val left = newCells.map(a=>a.x-a.radius).min
-    val right = newCells.map(a=>a.x+a.radius).max
-    val bottom = newCells.map(a=>a.y-a.radius).min
-    val top = newCells.map(a=>a.y+a.radius).max
-    player.copy( x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width =right-left ,height = top-bottom,cells = newCells)
-
-  }
     def updatePlayerCrash(player: Player,actMap: Map[Long, Int],mouseActMap:Map[Long,MousePosition]): Either[Long, Player] ={
 
       var killer = 0L
@@ -389,7 +390,6 @@ trait Grid {
       }
 
     }
-
 
     val mouseAct = mouseActionMap.getOrElse(frameCount,Map.empty[Long, MousePosition])
     var updatedPlayers = List.empty[Player]
@@ -695,7 +695,7 @@ trait Grid {
     deadPlayerMap.foreach{
       case (id,player) => deadPlayers::=player
     }
-    Protocol.GridDataSync(
+    WsFrontProtocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
@@ -721,7 +721,7 @@ trait Grid {
     deadPlayerMap.foreach{
       case (id,player) => deadPlayers::=player
     }
-    Protocol.GridDataSync(
+    WsFrontProtocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,

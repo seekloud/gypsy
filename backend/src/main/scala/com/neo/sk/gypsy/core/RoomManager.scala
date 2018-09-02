@@ -12,8 +12,8 @@ import akka.util.ByteString
 
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
-import com.neo.sk.gypsy.shared.ptcl.Protocol
-import com.neo.sk.gypsy.shared.ptcl.Protocol.ErrorGameMessage
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.ErrorGameMessage
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
 import com.neo.sk.gypsy.utils.CirceSupport
@@ -73,7 +73,7 @@ object RoomManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[Protocol.GameMessage](buffer) match {
+          bytesDecode[WsFrontProtocol.GameMessage](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -92,7 +92,7 @@ object RoomManager {
       .map {
 //      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-      case t:Protocol.GameMessage =>
+      case t:WsFrontProtocol.GameMessage =>
         import com.neo.sk.gypsy.utils.byteObject.ByteObject._
         val sendBuffer = new MiddleBufferInJvm(4096)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))

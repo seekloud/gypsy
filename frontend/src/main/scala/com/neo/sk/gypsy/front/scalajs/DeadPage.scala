@@ -4,8 +4,8 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{MousePosition, UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, Protocol, SuccessRsp}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, WsFrontProtocol, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -41,7 +41,7 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         isDead=false
-        sendMsg(Protocol.KeyCode(KeyCode.Space,grid.frameCount),gameStream)
+        sendMsg(WsFrontProtocol.KeyCode(KeyCode.Space,grid.frameCount),gameStream)
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 
