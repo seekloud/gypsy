@@ -6,11 +6,10 @@ import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
 
-import scalatags.JsDom.all._
-import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Element, Document => _, _}
@@ -217,6 +216,7 @@ object NetGameHolder extends js.JSApp {
       val data = grid.getGridData(myId)
       //println(s"data$data")
       drawGrid(myId, data,offsetTime)
+      renderFps(ctx3)
     } else {
       drawGameOff()
     }
