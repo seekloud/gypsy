@@ -220,7 +220,7 @@ object NetGameHolder extends js.JSApp {
       val data = grid.getGridData(myId)
       //println(s"data$data")
       drawGrid(myId, data,offsetTime)
-      renderFps(ctx3)
+      renderFps(ctx3,NetDelay.latency)
     } else {
       drawGameOff()
     }
@@ -413,7 +413,7 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
         ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
-        ctx.fillText(s"PING: ${NetDelay.latency}ms", 650, 10)
+        //ctx.fillText(s"PING: ${NetDelay.latency}ms", 650, 10)
         ctx.restore()
       case None =>
         if(firstCome) {

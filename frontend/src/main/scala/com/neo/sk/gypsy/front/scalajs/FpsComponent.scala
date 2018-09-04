@@ -25,13 +25,13 @@ object FpsComponent{
     }
   }
 
-   def renderFps(ctx:dom.CanvasRenderingContext2D) = {
+   def renderFps(ctx:dom.CanvasRenderingContext2D,ping:Long) = {
     addFps()
     if(isRenderFps){
       ctx.font = "20px Helvetica"
       //ctx.textAlign = "start"
       ctx.fillStyle = Color.Black.toString()
-      val fpsString = s"fps : $lastRenderTimes"
+      val fpsString = s"fps : $lastRenderTimes   ping: ${ping}ms"
       ctx.fillText(fpsString,750,30)
       //      ctx.fillText(s"ping: ${networkLatency}ms",canvasBoundary.x * canvasUnit - ctx.measureText(),(canvasBoundary.y - LittleMap.h - 2) * canvasUnit,10 * canvasUnit)
     }
