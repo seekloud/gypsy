@@ -1,17 +1,20 @@
 package com.neo.sk.gypsy.models.Dao
 
+import com.neo.sk.gypsy.models.SlickTables
 import com.neo.sk.gypsy.utils.DBUtil.db
 import slick.jdbc.PostgresProfile.api._
 import com.neo.sk.gypsy.models.SlickTables._
 
+import scala.concurrent.Future
 object UserDao {
 
   def getUserById(id:Long)={
     db.run(tUser.filter(_.id===id).result.headOption)
   }
-  def getUserByName(name:String) ={
+  def getUserByName(name:String):Future[Option[SlickTables.rUser]] ={
 
-    db.run(tUser.filter(_.name===name).result.headOption)
+//    db.run(tUser.filter(_.name===name).result.headOption)
+    Future.successful(None)
   }
 
   def addUser(name:String,password:String,headImg:String,registerTime:Long)={

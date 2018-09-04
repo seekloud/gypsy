@@ -136,9 +136,6 @@ object RoomActor {
             //remind 此处传输全局数据-同步数据
             val gridData = grid.getAllGridData
             dispatch(subscribersMap,gridData)
-        /*    userMap.foreach{u=>
-              dispatchTo(subscribersMap,u._1,grid.getGridData(u._1))
-            }*/
           } else {
             if (feedApples.nonEmpty) {
               dispatch(subscribersMap,Protocol.FeedApples(feedApples))
