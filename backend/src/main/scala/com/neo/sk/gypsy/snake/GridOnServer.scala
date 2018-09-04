@@ -1,9 +1,13 @@
 package com.neo.sk.gypsy.snake
 
+import akka.actor.typed.ActorRef
+import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
+import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl._
 import org.slf4j.LoggerFactory
 
-import scala.math.sqrt
+import scala.collection.mutable
+import scala.math.{pow, sqrt}
 import scala.util.Random
 
 /**
@@ -24,6 +28,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var waitingJoin = Map.empty[Long, String]
   private[this] var feededApples: List[Food] = Nil
   private[this] var addedVirus:List[Virus] = Nil
+  private [this] var subscriber=mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]()
 
 
   var currentRank = List.empty[Score]
@@ -39,7 +44,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(7)
-      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)))
+      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
     }
     waitingJoin = Map.empty[Long, String]
   }
@@ -101,6 +106,64 @@ class GridOnServer(override val boundary: Point) extends Grid {
     }
   }
 
+  override def checkPlayer2PlayerCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var killer = 0l
+        val score=player.cells.map(_.mass).sum
+        val newCells = player.cells.sortBy(_.radius).reverse.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+              p._2.cells.foreach { otherCell =>
+                if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
+                  //被吃了
+                  newMass = 0
+                  killer = p._1
+                } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+                  //吃掉别人了
+                  newMass += otherCell.mass
+                  newRadius = 4 + sqrt(newMass) * 6
+                }
+              }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }.filterNot(_.mass <= 0)
+        if (newCells.isEmpty) {
+          playerMap.get(killer) match {
+            case Some(killerPlayer) =>
+              player.killerName = killerPlayer.name
+            case _ =>
+              player.killerName = "unknown"
+          }
+          dispatchTo(subscriber,player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber,Protocol.KillMessage(killer,player.id))
+
+          Left(killer)
+        } else {
+          val length = newCells.length
+          val newX = newCells.map(_.x).sum / length
+          val newY = newCells.map(_.y).sum / length
+          val left = newCells.map(a => a.x - a.radius).min
+          val right = newCells.map(a => a.x + a.radius).max
+          val bottom = newCells.map(a => a.y - a.radius).min
+          val top = newCells.map(a => a.y + a.radius).max
+          Right(player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells))
+        }
+    }
+    playerMap = newPlayerMap.map {
+      case Right(s) => (s.id, s)
+      case Left(_) => (-2l, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+    }.filterNot(_._1 == -2l).toMap
+    newPlayerMap.foreach {
+      case Left(killId) =>
+        val a = playerMap.getOrElse(killId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        playerMap += (killId -> a.copy(kill = a.kill + 1))
+      case Right(_) =>
+    }
+  }
+
   override def update(): Unit = {
     super.update()
     genWaitingStar()
@@ -116,6 +179,10 @@ class GridOnServer(override val boundary: Point) extends Grid {
     //      //TODO 随机点的生成位置需要限制
     //    }
     p
+  }
+
+  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]) ={
+    subscriber=subscribersMap
   }
 
 }

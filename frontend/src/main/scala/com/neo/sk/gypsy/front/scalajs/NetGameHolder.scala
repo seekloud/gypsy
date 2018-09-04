@@ -5,9 +5,8 @@ import com.neo.sk.gypsy.front.scalajs.NetGameHolder.gameRender
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
-import com.neo.sk.gypsy.shared.ptcl._
 
 import scalatags.JsDom.all._
 import scala.scalajs.js.JSApp
@@ -119,11 +118,11 @@ object NetGameHolder extends js.JSApp {
     }
 
 
-  def startGame(): Unit = {
+  def startGame(gameStream: WebSocket): Unit = {
     println("start---")
     drawGameOn()
     draw2()
-    dom.window.setInterval(() => gameLoop(), Protocol.frameRate)
+    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), Protocol.frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -160,7 +159,8 @@ object NetGameHolder extends js.JSApp {
   }
 
 //不同步就更新，同步就设置为不同步
-  def gameLoop(): Unit = {
+  def gameLoop(gameStream: WebSocket): Unit = {
+    NetDelay.ping(gameStream)
     logicFrameTime = System.currentTimeMillis()
     if (wsSetup) {
       if (!justSynced) {
@@ -316,7 +316,7 @@ object NetGameHolder extends js.JSApp {
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.arc(x +offx,y +offy,4,0,2*Math.PI)
+      ctx.arc(x +offx,y +offy,10,0,2*Math.PI)
       ctx.fill()
         ctx.restore()
     }
@@ -345,7 +345,7 @@ object NetGameHolder extends js.JSApp {
     }
     ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,_) =>
 
       // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
       //println(s"draw body at $p body[$life]")
@@ -378,10 +378,17 @@ object NetGameHolder extends js.JSApp {
         ctx.beginPath()
         ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
         ctx.fill()
-
-        ctx.font = "24px Helvetica"
+        var nameFont: Double =cell.radius*2/sqrt(4+pow(name.length,2))
+        nameFont=if(nameFont<15) 15 else if(nameFont/2>cell.radius) cell.radius else nameFont
+       // println(nameFont)
+        ctx.font = s"${nameFont.toInt}px Helvetica"
+        val nameWidth= ctx.measureText(name).width
+        if (nameFont*name.length>cell.radius*2){
+          ctx.strokeStyle ="grey"
+          ctx.strokeText(s"$name", xfix+offx-nameWidth/2, yfix+offy -(nameFont.toInt/2+2))
+        }
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${name}", xfix+offx-12, yfix+offy -18)
+        ctx.fillText(s"$name", xfix+offx-nameWidth/2, yfix+offy -(nameFont.toInt/2+2))
         ctx.restore()
       }
     }
@@ -410,6 +417,7 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
         ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
+        ctx.fillText(s"PING: ${NetDelay.latency}ms", 650, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -482,7 +490,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   val gameStream = new WebSocket(UserRoute.getWebSocketUri(dom.document, room, name, userType))
   gameStream.onopen = { (event0: Event) =>
     println("come here")
-    startGame()
+    startGame(gameStream)
     // playground.insertBefore(p("Game connection was successful!"), playground.firstChild)
     isDead = false
     wsSetup = true
@@ -535,7 +543,6 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   gameStream.onmessage = { (event: MessageEvent) =>
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
-    //val wsMsg = read[Protocol.GameMessage](event.data.toString)
     event.data match {
       case blobMsg: Blob =>
         val fr = new FileReader()
@@ -550,9 +557,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case Protocol.Id(id) =>
                   myId = id
                   println(s"myID:${myId}")
-                  var timer = -1
-                  val start = System.currentTimeMillis()
-                  timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
+                  //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
                // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
                // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
                 case Protocol.SnakeAction(id, keyCode, frame) =>
@@ -574,24 +579,32 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case Protocol.FeedApples(foods) =>
 
                   grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+
                 case data: Protocol.GridDataSync =>
-//                  writeToArea(s"grid data got: $data")
                   //TODO here should be better code.
                   syncGridData = Some(data)
                   justSynced = true
 
 
                 //drawGrid(msgData.uid, data)
-                case Protocol.NetDelayTest(createTime) =>
-                  val receiveTime = System.currentTimeMillis()
-                  val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
-                  println(m)
-                //writeToArea(m)
-                case Protocol.SnakeRestart(id) =>
-                  var timer = -1
-                  val start = System.currentTimeMillis()
-                  timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
+                  //网络延迟检测
+                case Protocol.Pong(createTime) =>
+                  NetDelay.receivePong(createTime ,gameStream)
 
+                case Protocol.SnakeRestart(id) =>
+
+                  //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
+
+                case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+                  if(id==myId){
+                    DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,gameStream)
+                    grid.removePlayer(id)
+                  }
+
+                case Protocol.KillMessage(killerId,deadId)=>
+                  grid.removePlayer(deadId)
+                  val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+                  grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
                 case msg@_ =>
                   println(s"unknown $msg")
 
@@ -642,19 +655,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     paragraph
   }
 
-  def deadCheck(id:Long,timer:Int,start:Long,maxScore:Int,gameStream:WebSocket)={
-    grid.getGridData(id).deadPlayer.find(_.id==id) match {
-      case Some(player)=>
-        val score=player.cells.map(_.mass).sum
-        DeadPage.deadModel(player.id,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-start,maxScore,gameStream)
-        dom.window.clearInterval(timer)
-        grid.removeDeadPlayer(id)
-      case None =>
-    }
 
-  }
-
-  private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(2048)
+  private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
   def sendMsg(msg: GameMessage, gameStream: WebSocket) = {
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
