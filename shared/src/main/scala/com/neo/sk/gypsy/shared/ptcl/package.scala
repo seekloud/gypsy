@@ -60,7 +60,8 @@ package object ptcl {
                    var killerName:String= "",
                    width:Double =  8 + sqrt(10)*12,
                    height:Double =  8 + sqrt(10)*12,
-                   cells:List[Cell]
+                   cells:List[Cell],
+                   startTime:Long=System.currentTimeMillis()
                    )
   case class Cell(
                  id:Long,

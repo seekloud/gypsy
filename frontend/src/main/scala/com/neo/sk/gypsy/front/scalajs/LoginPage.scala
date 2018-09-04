@@ -176,6 +176,8 @@ object LoginPage {
       (_: MouseEvent) =>
         if (nameField.value.trim.isEmpty) {
           LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
+        } else if(nameField.value.length>15){
+          LayuiJs.msg("大兄弟,名字不能起的太长!", 0, 2000, 6)
         } else {
           if (roomId.value != "") {
             Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value)).map{
@@ -341,7 +343,9 @@ object LoginPage {
           (_: MouseEvent) =>
             if(userName.value.trim.isEmpty){
               LayuiJs.msg("用户名不能为空!", 0, 2000, 6)
-            }else if(password.value.trim.isEmpty || passwordCheck.value.trim.isEmpty){
+            }else if(userName.value.length>15){
+              LayuiJs.msg("大兄弟,名字不能起的太长!", 0, 2000, 6)
+            } else if(password.value.trim.isEmpty || passwordCheck.value.trim.isEmpty){
               LayuiJs.msg("密码不能为空!", 0, 2000, 6)
             }else if(password.value!=passwordCheck.value){
               LayuiJs.msg("两次密码不一致!", 0, 2000, 6)
