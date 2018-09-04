@@ -570,7 +570,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case data: WsFrontProtocol.GridDataSync =>
 //                  writeToArea(s"grid data got: $data")
 
-                case data: Protocol.GridDataSync =>
+                case data: WsFrontProtocol.GridDataSync =>
                   //TODO here should be better code.
                   if(data.frameCount<grid.frameCount){
                     println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
@@ -582,13 +582,13 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
                 //drawGrid(msgData.uid, data)
                   //网络延迟检测
-                case Protocol.Pong(createTime) =>
+                case WsFrontProtocol.Pong(createTime) =>
                   NetDelay.receivePong(createTime ,gameStream)
 
-                case Protocol.SnakeRestart(id) =>
+                case WsFrontProtocol.SnakeRestart(id) =>
 
                   //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
-                case WsFrontProtocol.NetDelayTest(createTime) =>
+                case WsFrontProtocol.Ping(createTime) =>
                   val receiveTime = System.currentTimeMillis()
                   val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
                   println(m)
@@ -598,13 +598,13 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                   val start = System.currentTimeMillis()
                   timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), WsFrontProtocol.frameRate)
 
-                case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+                case WsFrontProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
                   if(id==myId){
                     DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,gameStream)
                     grid.removePlayer(id)
                   }
 
-                case Protocol.KillMessage(killerId,deadId)=>
+                case WsFrontProtocol.KillMessage(killerId,deadId)=>
                   grid.removePlayer(deadId)
                   val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
                   grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
