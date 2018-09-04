@@ -117,8 +117,6 @@ object RoomActor {
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
             dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
-            grid.removeDeadPlayer(id)
-            dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
           } else {
             grid.addActionWithFrame(id, keyCode,math.max(grid.frameCount,frame))
             dispatch(subscribersMap,WsFrontProtocol.SnakeAction(id, keyCode, frame))
@@ -156,9 +154,8 @@ object RoomActor {
           idle(userMap,subscribersMap,grid,tickCount+1)
         case NetTest(id, createTime) =>
           log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(subscribersMap,id, WsFrontProtocol.NetDelayTest(createTime))
           //log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(subscribersMap,id, Protocol.Pong(createTime))
+          dispatchTo(subscribersMap,id, WsFrontProtocol.Pong(createTime))
           Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -191,7 +188,7 @@ object RoomActor {
           Mouse(id,clientX,clientY,f)
         case UserLeft=>
           Left(id,name)
-        case Ping(timestamp)=>
+        case WsFrontProtocol.Ping(timestamp)=>
           NetTest(id,timestamp)
         case _=>
           UnkownAction
