@@ -1,15 +1,17 @@
 package com.neo.sk.gypsy.front.scalajs
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.scalajs.NetGameHolder.gameRender
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameMessage, GridDataSync, MousePosition, UserLeft,advanceFrame,maxDelayFrame}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameMessage, GridDataSync, MousePosition, UserLeft, advanceFrame, maxDelayFrame}
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
-
 import scalatags.JsDom.all._
+
 import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
@@ -23,10 +25,11 @@ import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.GameMessage
 
 /**
   * User: Taoz
@@ -99,6 +102,12 @@ object NetGameHolder extends js.JSApp {
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val windWidth = dom.window.innerWidth
+
+  private[this] final val maxRollBackFrames = 5
+  private[this] val actionSerialNumGenerator = new AtomicInteger(0)
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Int,GameMessage)]()
+  private[this] val gameEventMap = new mutable.HashMap[Long,List[WsServerSourceProtocol.WsMsgSource]]()
+  private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
 
   @scala.scalajs.js.annotation.JSExport
