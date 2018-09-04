@@ -588,15 +588,6 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case WsFrontProtocol.SnakeRestart(id) =>
 
                   //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
-                case WsFrontProtocol.Ping(createTime) =>
-                  val receiveTime = System.currentTimeMillis()
-                  val m = s"Net Delay Test: createTime=$createTime, receiveTime=$receiveTime, twoWayDelay=${receiveTime - createTime}"
-                  println(m)
-                //writeToArea(m)
-                case WsFrontProtocol.SnakeRestart(id) =>
-                  var timer = -1
-                  val start = System.currentTimeMillis()
-                  timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), WsFrontProtocol.frameRate)
 
                 case WsFrontProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
                   if(id==myId){
