@@ -343,7 +343,7 @@ object NetGameHolder extends js.JSApp {
       }
     }
 
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
       ctx.fillStyle = color.toInt match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
@@ -373,8 +373,6 @@ object NetGameHolder extends js.JSApp {
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
-
-
         var nameFont: Double =cell.radius*2/sqrt(4+pow(name.length,2))
         nameFont=if(nameFont<15) 15 else if(nameFont/2>cell.radius) cell.radius else nameFont
        // println(nameFont)
@@ -409,7 +407,6 @@ object NetGameHolder extends js.JSApp {
       case Some(myStar) =>
         firstCome = false
         val baseLine = 1
-        //ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
@@ -532,7 +529,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
               data match {
                 case Protocol.Id(id) =>
                   myId = id
-                  println(s"myID:${myId}")
+                  println(s"myID:$myId")
                   //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
                // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
                // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
