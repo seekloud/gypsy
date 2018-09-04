@@ -567,8 +567,6 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case WsFrontProtocol.FeedApples(foods) =>
 
                   grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
-                case data: WsFrontProtocol.GridDataSync =>
-//                  writeToArea(s"grid data got: $data")
 
                 case data: WsFrontProtocol.GridDataSync =>
                   //TODO here should be better code.
