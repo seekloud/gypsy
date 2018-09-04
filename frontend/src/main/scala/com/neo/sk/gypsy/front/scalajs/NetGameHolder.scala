@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
+import com.neo.sk.gypsy.shared.ptcl._
 
 import scalatags.JsDom.all._
 import scala.scalajs.js.JSApp
@@ -298,11 +299,10 @@ object NetGameHolder extends js.JSApp {
       ctx.stroke()
       ctx.restore()
     }
-
-
 //为不同分值的苹果填充不同颜色
-    foods.foreach { case Food(color, x, y) =>
-      ctx.fillStyle = color match{
+    //按颜色分类绘制，减少canvas状态改变
+    foods.groupBy(_.color).foreach{a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -312,16 +312,15 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      //println("画一个苹果")
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx,y +offy,10,0,2*Math.PI)
-      ctx.fill()
-        ctx.restore()
+      a._2.foreach{ case Food(color, x, y)=>
+        ctx.beginPath()
+        ctx.arc(x +offx,y +offy,10,0,2*Math.PI)
+        ctx.fill()
+      }
     }
-    masses.foreach { case Mass(x,y,tx,ty,color,mass,r,speed) =>
-      ctx.fillStyle = color match{
+
+    masses.groupBy(_.color).foreach{ a=>
+      ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
         case 2  => "#f4d95b"
@@ -331,24 +330,30 @@ object NetGameHolder extends js.JSApp {
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      val deg = Math.atan2(ty, tx)
-      val deltaY = speed * Math.sin(deg)
-      val deltaX = speed * Math.cos(deg)
-      val xPlus = if (!deltaX.isNaN) deltaX else 0
-      val yPlus = if (!deltaY.isNaN) deltaY else 0
-      ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
-      ctx.fill()
-      ctx.restore()
+      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+        val deg = Math.atan2(ty, tx)
+        val deltaY = speed * Math.sin(deg)
+        val deltaX = speed * Math.cos(deg)
+        val xPlus = if (!deltaX.isNaN) deltaX else 0
+        val yPlus = if (!deltaY.isNaN) deltaY else 0
+        //centerScale(scale,window.x/2,window.y/2)
+        ctx.beginPath()
+        ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
+        ctx.fill()
+      }
     }
-    ctx.fillStyle = MyColors.otherBody
 
-    players.foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,_) =>
-
-      // players.foreach { case Player(id, name,color,x,y,tx,ty,kill,pro,_,cells) =>
-      //println(s"draw body at $p body[$life]")
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells) =>
+      ctx.fillStyle = color.toInt match{
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2  => "#f4d95b"
+        case 3  => "#4cd964"
+        case 4  => "#9fe0f6"
+        case 5  => "#bead92"
+        case 6  => "#cfe6ff"
+        case _  => "#de9dd6"
+      }
       cells.foreach{ cell=>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
@@ -359,25 +364,17 @@ object NetGameHolder extends js.JSApp {
         ctx.save()
         //centerScale(scale,window.x/2,window.y/2)
         // println(s"${pro}")
+        ctx.beginPath()
+        ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
+        ctx.fill()
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
-        ctx.fillStyle = color.toInt match{
-          case 0 => "#f3456d"
-          case 1 => "#f49930"
-          case 2  => "#f4d95b"
-          case 3  => "#4cd964"
-          case 4  => "#9fe0f6"
-          case 5  => "#bead92"
-          case 6  => "#cfe6ff"
-          case _  => "#de9dd6"
-        }
-        ctx.beginPath()
-        ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
-        ctx.fill()
+
+
         var nameFont: Double =cell.radius*2/sqrt(4+pow(name.length,2))
         nameFont=if(nameFont<15) 15 else if(nameFont/2>cell.radius) cell.radius else nameFont
        // println(nameFont)
@@ -412,7 +409,7 @@ object NetGameHolder extends js.JSApp {
       case Some(myStar) =>
         firstCome = false
         val baseLine = 1
-        ctx.font = "12px Helvetica"
+        //ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
@@ -442,28 +439,7 @@ object NetGameHolder extends js.JSApp {
       drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
     }
     //绘制小地图
-//    ctx.font = "12px Helvetica"
-//    ctx.fillStyle = MyColors.rankList
-//    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
-//    ctx.strokeStyle = "black"
-//    for (i<- 0 to 3){
-//      ctx.beginPath()
-//      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
-//      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
-//      ctx.stroke()
-//
-//      ctx.beginPath()
-//      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
-//      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
-//      ctx.stroke()
-//    }
-//    val margin = littleMap/3
-//    ctx.fillStyle = MyColors.background
-//    for(i <- 0 to 2){
-//      for (j <- 1 to 3){
-//        ctx2.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
-//      }
-//    }
+
     ctx3.fillStyle = MyColors.background
     players.find(_.id == uid) match {
       case Some(player)=>
