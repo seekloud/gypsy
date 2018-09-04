@@ -12,8 +12,7 @@ import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsFrontProtocol, WsServerSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{KeyCode, MousePosition, UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, Ping, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsFrontProtocol, WsServerSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
@@ -117,7 +116,7 @@ object RoomActor {
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
-            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
+            dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
             grid.removeDeadPlayer(id)
             dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
           } else {

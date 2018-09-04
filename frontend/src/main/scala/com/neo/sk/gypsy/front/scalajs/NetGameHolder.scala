@@ -8,10 +8,7 @@ import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameMessage, GridDataSync, MousePosition, UserLeft, advanceFrame, maxDelayFrame}
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameMessage, GridDataSync, MousePosition, UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
-import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
 import scalatags.JsDom.all._
@@ -136,8 +133,7 @@ object NetGameHolder extends js.JSApp {
     println("start---")
     drawGameOn()
     draw2()
-    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), Protocol.frameRate)
-    dom.window.setInterval(() => gameLoop(), WsFrontProtocol.frameRate)
+    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), WsFrontProtocol.frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 

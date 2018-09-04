@@ -29,7 +29,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var waitingJoin = Map.empty[Long, String]
   private[this] var feededApples: List[Food] = Nil
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]()
+  private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]]()
 
 
   var currentRank = List.empty[Score]
@@ -138,8 +138,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
-          dispatch(subscriber,Protocol.KillMessage(killer,player.id))
+          dispatchTo(subscriber,player.id,WsFrontProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber,WsFrontProtocol.KillMessage(killer,player.id))
 
           Left(killer)
         } else {
@@ -182,7 +182,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]]) ={
     subscriber=subscribersMap
   }
 
