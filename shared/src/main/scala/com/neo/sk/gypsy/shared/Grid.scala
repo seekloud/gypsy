@@ -99,7 +99,7 @@ trait Grid {
   }
   def addMouseActionWithFrame(id: Long, x:Double, y:Double,  frame: Long) = {
     val map = mouseActionMap.getOrElse(frame, Map.empty)
-    val tmp = map + (id -> MousePosition(x,y))
+    val tmp = map + (id -> MousePosition(x,y,frame))
     mouseActionMap += (frame -> tmp)
   }
 //
