@@ -4,8 +4,8 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.{Point, WsFrontProtocol}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -982,7 +982,7 @@ trait Grid {
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
-    Protocol.GridDataSync(
+    WsFrontProtocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
@@ -1003,7 +1003,7 @@ trait Grid {
 
           playerDetails ::= player
     }
-    Protocol.GridDataSync(
+    WsFrontProtocol.GridDataSync(
       frameCount,
       playerDetails,
       foodDetails,
