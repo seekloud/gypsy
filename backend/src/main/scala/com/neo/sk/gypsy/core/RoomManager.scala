@@ -94,7 +94,7 @@ object RoomManager {
       //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
       case t:WsFrontProtocol.GameMessage =>
         import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-        val sendBuffer = new MiddleBufferInJvm(4096)
+        val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>
         TextMessage.apply("")

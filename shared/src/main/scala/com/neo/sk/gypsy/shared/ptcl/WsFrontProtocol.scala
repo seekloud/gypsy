@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import java.sql.Timestamp
+
 /**
   * User: Taoz
   * Date: 8/29/2016
@@ -16,7 +18,6 @@ object WsFrontProtocol {
     massDetails: List[Mass],
     virusDetails: List[Virus],
     scale:Double, //缩放比例
-    deadPlayer:List[Player]
   ) extends GameMessage
 
 
@@ -42,8 +43,6 @@ object WsFrontProtocol {
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
 
-  case class NetDelayTest(createTime: Long) extends GameMessage
-
   case class SnakeRestart(id:Long) extends GameMessage
 
   case class MousePosition(clientX:Double,clientY:Double,frame:Long)extends GameMessage
@@ -53,6 +52,13 @@ object WsFrontProtocol {
   case object UserLeft extends GameMessage
 
   case object ErrorGameMessage extends GameMessage
+
+  case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long)extends GameMessage
+
+  case class KillMessage(killerId:Long,deadId:Long)extends GameMessage
+
+  case class Ping(timestamp: Long)extends GameMessage
+  case class Pong(timestamp: Long)extends GameMessage
 
   val frameRate = 150
 

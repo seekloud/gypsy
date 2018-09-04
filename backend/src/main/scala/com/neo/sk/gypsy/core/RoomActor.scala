@@ -12,6 +12,8 @@ import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsFrontProtocol, WsServerSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{KeyCode, MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, Ping, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
@@ -99,7 +101,6 @@ object RoomActor {
           userMap.put(id,name)
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
-          grid.removeDeadPlayer(id)
           grid.addSnake(id, name)
           dispatchTo(subscribersMap,id, WsFrontProtocol.Id(id))
           //dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
@@ -108,7 +109,6 @@ object RoomActor {
         case Left(id, name) =>
           log.info(s"got $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
-          subscribersMap.remove(id)
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
           Behaviors.same
@@ -117,6 +117,7 @@ object RoomActor {
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
+            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
             grid.removeDeadPlayer(id)
             dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
           } else {
@@ -132,6 +133,7 @@ object RoomActor {
           Behaviors.same
 
         case Sync =>
+          grid.getSubscribersMap(subscribersMap)
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
@@ -156,6 +158,8 @@ object RoomActor {
         case NetTest(id, createTime) =>
           log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap,id, WsFrontProtocol.NetDelayTest(createTime))
+          //log.info(s"Net Test: createTime=$createTime")
+          dispatchTo(subscribersMap,id, Protocol.Pong(createTime))
           Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -188,6 +192,8 @@ object RoomActor {
           Mouse(id,clientX,clientY,f)
         case UserLeft=>
           Left(id,name)
+        case Ping(timestamp)=>
+          NetTest(id,timestamp)
         case _=>
           UnkownAction
       }
