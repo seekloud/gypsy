@@ -413,7 +413,6 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
         ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
-        //ctx.fillText(s"PING: ${NetDelay.latency}ms", 650, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
