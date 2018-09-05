@@ -339,9 +339,14 @@ object NetGameHolder extends js.JSApp {
         val deltaX = speed * Math.cos(deg)
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
+
+        val cellx = x +xPlus*offsetTime.toFloat / Protocol.frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / Protocol.frameRate
+        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
+        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc(x +offx + xPlus*offsetTime.toFloat / Protocol.frameRate,y +offy + yPlus*offsetTime.toFloat / Protocol.frameRate,r,0,2*Math.PI)
+        ctx.arc( xfix+offx ,yfix+offy ,r,0,2*Math.PI)
         ctx.fill()
       }
     }
