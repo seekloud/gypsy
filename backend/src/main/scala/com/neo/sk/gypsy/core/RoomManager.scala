@@ -59,6 +59,7 @@ object RoomManager {
           case msg:CheckName=>
             getRoomActor(ctx,msg.room) ! RoomActor.CheckName(msg.name,msg.replyTo)
             Behavior.same
+
           case x=>
             log.debug("")
             Behaviors.unhandled
