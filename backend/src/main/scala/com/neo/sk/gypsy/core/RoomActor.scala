@@ -43,9 +43,9 @@ object RoomActor {
 
   private case class Left(id: Long, name: String) extends Command
 
-  private case class Key(id: Long, keyCode: Int,frame:Long) extends Command
+  private case class Key(id: Long, keyCode: Int,frame:Long,n:Int) extends Command
 
-  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long) extends Command
+  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
@@ -111,22 +111,22 @@ object RoomActor {
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
           Behaviors.same
-        case Key(id, keyCode,frame) =>
+        case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
             dispatchTo(subscribersMap,id,WsFrontProtocol.SnakeRestart(id))
           } else {
-            grid.addActionWithFrame(id, keyCode,math.max(grid.frameCount,frame))
-            dispatch(subscribersMap,WsFrontProtocol.SnakeAction(id, keyCode, frame))
+            grid.addActionWithFrame(id, KeyCode(keyCode,frame,n),math.max(grid.frameCount,frame))
+            dispatch(subscribersMap,WsFrontProtocol.SnakeAction(id, KeyCode(keyCode,frame,n), frame))
           }
           Behaviors.same
-        case Mouse(id,x,y,frame) =>
+        case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
-          grid.addMouseActionWithFrame(id,x,y,math.max(grid.frameCount,frame))
-          dispatch(subscribersMap,WsFrontProtocol.SnakeMouseAction(id,x,y,frame))
+          grid.addMouseActionWithFrame(id,MousePosition(x,y,frame,n),math.max(grid.frameCount,frame))
+          dispatch(subscribersMap,WsFrontProtocol.SnakeMouseAction(id,MousePosition(x,y,frame,n),frame))
           Behaviors.same
 
         case Sync =>
@@ -178,11 +178,11 @@ object RoomActor {
   def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[WsFrontProtocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
     val in = Flow[WsFrontProtocol.GameMessage]
       .map {
-        case KeyCode(keyCode,f)=>
+        case KeyCode(keyCode,f,n)=>
           log.debug(s"键盘事件$keyCode")
-          Key(id,keyCode,f)
-        case MousePosition(clientX,clientY,f)=>
-          Mouse(id,clientX,clientY,f)
+          Key(id,keyCode,f,n)
+        case MousePosition(clientX,clientY,f,n)=>
+          Mouse(id,clientX,clientY,f,n)
         case UserLeft=>
           Left(id,name)
         case WsFrontProtocol.Ping(timestamp)=>

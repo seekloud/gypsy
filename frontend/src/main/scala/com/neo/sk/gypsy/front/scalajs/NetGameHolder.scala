@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.scalajs.NetGameHolder.gameRender
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameMessage, GridDataSync, MousePosition, UserLeft, advanceFrame, maxDelayFrame}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
@@ -30,7 +30,6 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.GameMessage
 
 /**
   * User: Taoz
@@ -106,8 +105,7 @@ object NetGameHolder extends js.JSApp {
 
   private[this] final val maxRollBackFrames = 5
   private[this] val actionSerialNumGenerator = new AtomicInteger(0)
-  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Int,GameMessage)]()
-  private[this] val gameEventMap = new mutable.HashMap[Long,List[WsServerSourceProtocol.WsMsgSource]]()
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
 
@@ -127,6 +125,8 @@ object NetGameHolder extends js.JSApp {
       LoginPage.homePage()
     }
     }
+
+  def getActionSerialNum=actionSerialNumGenerator.getAndIncrement()
 
 
   def startGame(gameStream: WebSocket): Unit = {
@@ -493,8 +493,10 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            grid.addActionWithFrame(myId, e.keyCode, grid.frameCount+advanceFrame)
-            sendMsg(WsFrontProtocol.KeyCode(e.keyCode,grid.frameCount+advanceFrame), gameStream)
+            val keyCode=WsFrontProtocol.KeyCode(e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
+            grid.addActionWithFrame(myId, keyCode, grid.frameCount+advanceFrame)
+            addUncheckActionWithFrame(myId,keyCode,grid.frameCount+advanceFrame)
+            sendMsg(keyCode, gameStream)
           }
           e.preventDefault()
         }
@@ -502,9 +504,11 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     }
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      grid.addMouseActionWithFrame(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame)
+      val mp=MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame,getActionSerialNum)
+      grid.addMouseActionWithFrame(myId,mp,mp.frame)
+      addUncheckActionWithFrame(myId,mp,mp.frame)
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      sendMsg(MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame), gameStream)
+      sendMsg(mp, gameStream)
       //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
 
     }
@@ -545,18 +549,9 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
                // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
                 case WsFrontProtocol.SnakeAction(id, keyCode, frame) =>
-                  if(id!=myId){
-                    grid.addActionWithFrame(id, keyCode, frame)
-                  }
-                case WsFrontProtocol.SnakeMouseAction(id, x, y, frame) =>
-                  if (frame > grid.frameCount) {
-                    //writeToArea(s"!!! got snake mouse action=$a when i am in frame=${grid.frameCount}")
-                  } else {
-                    //writeToArea(s"got snake mouse action=$a")
-                  }
-                  if(id!=myId){
-                    grid.addMouseActionWithFrame(id, x, y, frame)
-                  }
+                  addActionWithFrameFromServer(id,keyCode,frame)
+                case WsFrontProtocol.SnakeMouseAction(id, mp, frame) =>
+                  addActionWithFrameFromServer(id,mp,frame)
                 case WsFrontProtocol.Ranks(current, history) =>
 
                   currentRank = current
@@ -619,8 +614,84 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 //    playground.insertBefore(p(text), playground.firstChild)
   }
 
-
 }
+
+
+  def addUncheckActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
+    uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
+  }
+
+  def addActionWithFrameFromServer(id: Long, gameAction:GameAction, frame: Long) = {
+    if(myId == id){
+      uncheckActionWithFrame.get(gameAction.serialNum) match {
+        case Some((f,tankId,a)) =>
+          if(f == frame){ //与预执行的操作数据一致
+            uncheckActionWithFrame.remove(gameAction.serialNum)
+          }else{ //与预执下的操作数据不一致，进行回滚
+            uncheckActionWithFrame.remove(gameAction.serialNum)
+            if(frame < grid.frameCount){
+              rollback(frame)
+            }else{
+              grid.removeActionWithFrame(tankId,a,f)
+              gameAction match {
+                case a:KeyCode=>
+                  grid.addActionWithFrame(id,a,frame)
+                case b:MousePosition=>
+                  grid.addMouseActionWithFrame(id,b,frame)
+              }
+            }
+          }
+        case None =>
+          gameAction match {
+            case a:KeyCode=>
+              grid.addActionWithFrame(id,a,frame)
+            case b:MousePosition=>
+              grid.addMouseActionWithFrame(id,b,frame)
+          }
+      }
+    }else{
+      if(frame < grid.frameCount && grid.frameCount - maxRollBackFrames >= frame){
+        //回滚
+        rollback(frame)
+      }else{
+        gameAction match {
+          case a:KeyCode=>
+            grid.addActionWithFrame(id,a,frame)
+          case b:MousePosition=>
+            grid.addMouseActionWithFrame(id,b,frame)
+        }
+      }
+    }
+  }
+
+  def rollback2State(d:GridDataSync) = {
+    grid.actionMap=grid.actionMap.filterKeys(_>=grid.frameCount)
+    grid.mouseActionMap=grid.mouseActionMap.filterKeys(_>=grid.frameCount)
+    setSyncGridData(d)
+  }
+
+
+  //从第frame开始回滚到现在
+  def rollback(frame:Long) = {
+    gameSnapshotMap.get(frame) match {
+      case Some(state) =>
+        val curFrame = grid.frameCount
+        rollback2State(state)
+        uncheckActionWithFrame.filter(_._2._1 > frame).foreach{t=>
+          t._2._3 match {
+            case a:KeyCode=>
+              grid.addActionWithFrame(t._2._2,a,frame)
+            case b:MousePosition=>
+              grid.addMouseActionWithFrame(t._2._2,b,frame)
+          }
+        }
+        (frame until curFrame).foreach{ f =>
+          grid.frameCount = f
+          update()
+        }
+      case None =>
+    }
+  }
 
   //fixme 此处存在重复计算问题
 

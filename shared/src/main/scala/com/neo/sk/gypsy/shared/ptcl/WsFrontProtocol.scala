@@ -11,6 +11,12 @@ object WsFrontProtocol {
 
   sealed trait GameMessage extends WsServerSourceProtocol.WsMsgSource
 
+  trait GameAction{
+    val serialNum:Int
+    val frame:Long
+  }
+
+
   case class GridDataSync(
     frameCount: Long,
     playerDetails: List[Player],
@@ -35,9 +41,9 @@ object WsFrontProtocol {
 
   case class NewSnakeJoined(id: Long, name: String) extends GameMessage
 
-  case class SnakeAction(id: Long, keyCode: Int, frame: Long) extends GameMessage
+  case class SnakeAction(id: Long, keyCode: KeyCode, frame: Long) extends GameMessage
 
-  case class SnakeMouseAction(id: Long, x:Double, y:Double,  frame: Long) extends GameMessage
+  case class SnakeMouseAction(id: Long, mp:MousePosition, frame: Long) extends GameMessage
 
   case class PlayerLeft(id: Long, name: String) extends GameMessage
 
@@ -45,9 +51,9 @@ object WsFrontProtocol {
 
   case class SnakeRestart(id:Long) extends GameMessage
 
-  case class MousePosition(clientX:Double,clientY:Double,frame:Long)extends GameMessage
+  case class MousePosition(clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with GameMessage
 
-  case class KeyCode(keyCode: Int,frame:Long)extends GameMessage
+  case class KeyCode(keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with GameMessage
 
   case object UserLeft extends GameMessage
 
