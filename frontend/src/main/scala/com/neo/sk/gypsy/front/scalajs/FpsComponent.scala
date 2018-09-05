@@ -29,10 +29,19 @@ object FpsComponent{
     addFps()
     if(isRenderFps){
       ctx.font = "20px Helvetica"
-      //ctx.textAlign = "start"
       ctx.fillStyle = Color.Black.toString()
-      val fpsString = s"fps : $lastRenderTimes   ping: ${ping}ms"
-      ctx.fillText(fpsString,750,30)
+      val fpsString = "fps : "
+      val pingString = "ping: "
+      ctx.fillText(fpsString, 750, 30)
+      ctx.fillText(pingString, 750 + ctx.measureText(fpsString).width + 50, 30)
+      ctx.strokeStyle = "black"
+      ctx.strokeText(lastRenderTimes.toString, 750 + ctx.measureText(fpsString).width, 30)
+      ctx.fillStyle = if (lastRenderTime < 50) Color.Red.toString() else Color.Green.toString()
+      ctx.fillText(lastRenderTimes.toString, 750 + ctx.measureText(fpsString).width, 30)
+      ctx.strokeStyle = "black"
+      ctx.strokeText(s"${ping}ms", 750 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 30)
+      ctx.fillStyle = if (ping <= 100) Color.Green.toString() else if (ping > 100 && ping <= 200) Color.Yellow.toString() else Color.Red.toString()
+      ctx.fillText(s"${ping}ms", 750 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 30)
       //      ctx.fillText(s"ping: ${networkLatency}ms",canvasBoundary.x * canvasUnit - ctx.measureText(),(canvasBoundary.y - LittleMap.h - 2) * canvasUnit,10 * canvasUnit)
     }
   }

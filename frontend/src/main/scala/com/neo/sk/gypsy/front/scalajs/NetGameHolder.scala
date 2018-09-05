@@ -376,17 +376,15 @@ object NetGameHolder extends js.JSApp {
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
-        var nameFont: Double =cell.radius*2/sqrt(4+pow(name.length,2))
-        nameFont=if(nameFont<15) 15 else if(nameFont/2>cell.radius) cell.radius else nameFont
-       // println(nameFont)
+        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        // println(nameFont)
         ctx.font = s"${nameFont.toInt}px Helvetica"
-        val nameWidth= ctx.measureText(name).width
-        if (nameFont*name.length>cell.radius*2){
-          ctx.strokeStyle ="grey"
-          ctx.strokeText(s"$name", xfix+offx-nameWidth/2, yfix+offy -(nameFont.toInt/2+2))
-        }
+        val nameWidth = ctx.measureText(name).width
+        ctx.strokeStyle = "grey"
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", xfix+offx-nameWidth/2, yfix+offy -(nameFont.toInt/2+2))
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
     }
@@ -415,7 +413,6 @@ object NetGameHolder extends js.JSApp {
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
         ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
-        //ctx.fillText(s"PING: ${NetDelay.latency}ms", 650, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
