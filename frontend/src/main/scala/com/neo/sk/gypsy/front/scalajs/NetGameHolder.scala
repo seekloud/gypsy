@@ -293,22 +293,22 @@ object NetGameHolder extends js.JSApp {
 //绘制条纹
     ctx.strokeStyle = MyColors.stripe
     stripeX.foreach{ l=>
-      ctx.save()
+      //ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(0,l +offy)
-      ctx.lineTo(bounds.x,l +offy)
+      ctx.moveTo(0 +offx,l +offy)
+      ctx.lineTo(bounds.x +offx,l +offy)
       ctx.stroke()
-      ctx.restore()
+      //ctx.restore()
     }
     stripeY.foreach{ l=>
-      ctx.save()
+      //ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(l +offx,0)
-      ctx.lineTo(l +offx,bounds.y)
+      ctx.moveTo(l +offx,0+offy)
+      ctx.lineTo(l +offx,bounds.y+offy)
       ctx.stroke()
-      ctx.restore()
+     // ctx.restore()
     }
 //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
