@@ -23,6 +23,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GridDataSync, WsMsgFront}
+
+import scala.collection.mutable
 /**
   * User: Taoz
   * Date: 9/1/2016
@@ -339,8 +341,8 @@ object NetGameHolder extends js.JSApp {
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / Protocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / Protocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat / WsServerProtocol.frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / WsServerProtocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -712,7 +714,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
-  def sendMsg(msg: WsMsgServer, gameStream: WebSocket) = {
+  def sendMsg(msg:WsMsgServer, gameStream: WebSocket) = {
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
     gameStream.send(msg.fillMiddleBuffer(sendBuffer).result())
 
