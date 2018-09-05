@@ -17,8 +17,6 @@ import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.ErrorWsMsgServer
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.WsMsgFront
 import com.neo.sk.gypsy.utils.CirceSupport
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
@@ -67,9 +65,12 @@ object RoomManager {
         }
     }
 
-  import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-  import scala.language.implicitConversions
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] =
+
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
+//    import scala.language.implicitConversions
+    import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+    import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+
     Flow[Message]
       .collect {
         case BinaryMessage.Strict(msg)=>
@@ -97,7 +98,7 @@ object RoomManager {
       case x =>
         TextMessage.apply("")
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
-
+  }
 
   private val decider: Supervision.Decider = {
     e: Throwable =>
