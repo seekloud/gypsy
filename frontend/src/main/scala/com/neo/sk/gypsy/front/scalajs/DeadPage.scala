@@ -41,7 +41,7 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         isDead=false
-        sendMsg(WsFrontProtocol.KeyCode(KeyCode.Space,grid.frameCount),gameStream)
+        sendMsg(WsFrontProtocol.KeyCode(KeyCode.Space,grid.frameCount,getActionSerialNum),gameStream)
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 

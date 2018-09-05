@@ -5,7 +5,7 @@ import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsFrontProtocol}
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameAction, GridDataSync, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -68,7 +68,7 @@ trait Grid {
   val shotMass = 10
   val shotSpeed = 40
   //操作列表  帧数->(用户ID->操作)
-  var actionMap = Map.empty[Long, Map[Long, Int]]
+  var actionMap = Map.empty[Long, Map[Long, KeyCode]]
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
@@ -85,22 +85,34 @@ trait Grid {
     r
   }
 
-  def addAction(id: Long, keyCode: Int) = {
+  def addAction(id: Long, keyCode: KeyCode) = {
     addActionWithFrame(id, keyCode, frameCount)
   }
 //键盘事件后，按键动作加入action列表
-  def addActionWithFrame(id: Long, keyCode: Int, frame: Long) = {
+  def addActionWithFrame(id: Long, keyCode: KeyCode, frame: Long) = {
     val map = actionMap.getOrElse(frame, Map.empty)
     val tmp = map + (id -> keyCode)
     actionMap += (frame -> tmp)
   }
-  def addMouseAction(id: Long, x:Double, y:Double) = {
-    addMouseActionWithFrame(id, x, y,  frameCount)
+  def addMouseAction(id: Long, mp:MousePosition) = {
+    addMouseActionWithFrame(id, mp,frameCount)
   }
-  def addMouseActionWithFrame(id: Long, x:Double, y:Double,  frame: Long) = {
+  def addMouseActionWithFrame(id: Long, mp:MousePosition,  frame: Long) = {
     val map = mouseActionMap.getOrElse(frame, Map.empty)
-    val tmp = map + (id -> MousePosition(x,y,frame))
+    val tmp = map + (id -> mp)
     mouseActionMap += (frame -> tmp)
+  }
+  def removeActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
+    gameAction match {
+      case k:KeyCode=>
+        val map = actionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        actionMap += (frame->actionQueue)
+      case m:MousePosition=>
+        val map = mouseActionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        mouseActionMap += (frame->actionQueue)
+    }
   }
 //
   def update() = {
@@ -142,12 +154,7 @@ trait Grid {
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
-    val mouseAct = mouseActMap.get(player.id) match {
-      case Some(MousePosition(x, y,f)) =>
-        MousePosition(x, y,f)
-      case _ =>
-        MousePosition(player.targetX, player.targetY,0l)
-    }
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -157,7 +164,7 @@ trait Grid {
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+      val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
@@ -384,24 +391,19 @@ trait Grid {
   }
 
   //发射小球
-  def checkPlayerShotMass(actMap: Map[Long, Int], mouseActMap: Map[Long, MousePosition]): Unit = {
+  def checkPlayerShotMass(actMap: Map[Long, KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.get(player.id) match {
-          case Some(MousePosition(x, y,f)) =>
-            MousePosition(x, y,f)
-          case _ =>
-            MousePosition(player.targetX, player.targetY,0l)
-        }
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.targetX, player.targetY,0l,0))
         val shot = actMap.get(player.id) match {
-          case Some(KeyEvent.VK_E) => true
+          case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
         }
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
             var newMass = cell.mass
             var newRadius = cell.radius
-            val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+            val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -430,25 +432,20 @@ trait Grid {
   }
 
   //分裂检测
-  def checkPlayerSplit(actMap: Map[Long, Int], mouseActMap: Map[Long, MousePosition]): Unit = {
+  def checkPlayerSplit(actMap: Map[Long,KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.get(player.id) match {
-          case Some(MousePosition(x, y,f)) =>
-            MousePosition(x, y,f)
-          case _ =>
-            MousePosition(player.targetX, player.targetY,0l)
-        }
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
         val split = actMap.get(player.id) match {
-          case Some(KeyEvent.VK_F) => true
+          case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
         }
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var newMass = cell.mass
             var newRadius = cell.radius
-            val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+            val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -606,13 +603,8 @@ trait Grid {
       }
 
       //喷射小球
-      val mouseAct = mouseActMap.get(player.id) match {
-        case Some(MousePosition(x, y,f)) =>
-          MousePosition(x, y,f)
-        case _ =>
-          MousePosition(player.targetX, player.targetY,0l)
-      }
-      val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+      val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
+      val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -675,7 +667,7 @@ trait Grid {
    def updatePlayer()={
 
      val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
-     val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, Int])
+     val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
 
      //先移动到指定位置
      playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap

@@ -114,4 +114,8 @@ package object ptcl {
                           text:String
                         )
 
+  case class Position(
+                       clientX:Double,
+                       clientY:Double
+                     )
 }
