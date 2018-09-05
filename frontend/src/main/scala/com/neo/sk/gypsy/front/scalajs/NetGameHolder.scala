@@ -11,12 +11,14 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _, _}
 import org.scalajs.dom.raw._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
@@ -336,9 +338,14 @@ object NetGameHolder extends js.JSApp {
         val deltaX = speed * Math.cos(deg)
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
+
+        val cellx = x +xPlus*offsetTime.toFloat / Protocol.frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / Protocol.frameRate
+        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
+        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc(x +offx + xPlus*offsetTime.toFloat / WsServerProtocol.frameRate,y +offy + yPlus*offsetTime.toFloat / WsServerProtocol.frameRate,r,0,2*Math.PI)
+        ctx.arc( xfix+offx ,yfix+offy ,r,0,2*Math.PI)
         ctx.fill()
       }
     }
