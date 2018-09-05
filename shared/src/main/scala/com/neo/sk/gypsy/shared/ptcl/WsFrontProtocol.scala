@@ -1,74 +1,40 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import java.sql.Timestamp
+import com.neo.sk.gypsy.shared.ptcl.WsSourceProtocol.WsMsgSource
 
 /**
-  * User: Taoz
-  * Date: 8/29/2016
-  * Time: 9:40 PM
+  * User: sky
+  * Date: 2018/9/5
+  * Time: 16:18
+  * 在前端解析
   */
 object WsFrontProtocol {
 
-  sealed trait GameMessage extends WsServerSourceProtocol.WsMsgSource
-
-  trait GameAction{
-    val serialNum:Int
-    val frame:Long
-  }
-
+  trait WsMsgFront extends WsMsgSource
 
   case class GridDataSync(
-    frameCount: Long,
-    playerDetails: List[Player],
-    foodDetails: List[Food],
-    massDetails: List[Mass],
-    virusDetails: List[Virus],
-    scale:Double, //缩放比例
-  ) extends GameMessage
-
+                           frameCount: Long,
+                           playerDetails: List[Player],
+                           foodDetails: List[Food],
+                           massDetails: List[Mass],
+                           virusDetails: List[Virus],
+                           scale:Double //缩放比例
+                         ) extends WsMsgFront
 
   case class FeedApples(
-    aLs: List[Food]
-  ) extends GameMessage
+                         aLs: List[Food]
+                       ) extends WsMsgFront
 
+  case class Id(id: Long) extends WsMsgFront
 
+  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
 
-  case class TextMsg(
-    msg: String
-  ) extends GameMessage
+  case class SnakeRestart(id:Long) extends WsMsgFront
 
-  case class Id(id: Long) extends GameMessage
+  case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
-  case class NewSnakeJoined(id: Long, name: String) extends GameMessage
+  case class KillMessage(killerId:Long,deadId:Long) extends WsMsgFront
 
-  case class SnakeAction(id: Long, keyCode: KeyCode, frame: Long) extends GameMessage
+  case class Pong(timestamp: Long)extends WsMsgFront
 
-  case class SnakeMouseAction(id: Long, mp:MousePosition, frame: Long) extends GameMessage
-
-  case class PlayerLeft(id: Long, name: String) extends GameMessage
-
-  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
-
-  case class SnakeRestart(id:Long) extends GameMessage
-
-  case class MousePosition(clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with GameMessage
-
-  case class KeyCode(keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with GameMessage
-
-  case object UserLeft extends GameMessage
-
-  case object ErrorGameMessage extends GameMessage
-
-  case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long)extends GameMessage
-
-  case class KillMessage(killerId:Long,deadId:Long)extends GameMessage
-
-  case class Ping(timestamp: Long)extends GameMessage
-  case class Pong(timestamp: Long)extends GameMessage
-
-  val frameRate = 150
-
-  val advanceFrame = 2 //客户端提前的帧数
-
-  val maxDelayFrame = 3
 }

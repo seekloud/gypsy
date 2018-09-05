@@ -14,7 +14,7 @@ import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{ErrorGameMessage, GameMessage, KeyCode}
+import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.{ErrorWsMsgServer, WsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
