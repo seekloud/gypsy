@@ -12,10 +12,10 @@ import akka.util.ByteString
 
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.ErrorGameMessage
+import com.neo.sk.gypsy.shared.ptcl.{WsFrontProtocol, WsServerProtocol}
+import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.ErrorWsMsgServer
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
-import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.WsMsgFront
 import com.neo.sk.gypsy.utils.CirceSupport
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.utils.byteObject.ByteObject._
@@ -67,21 +67,22 @@ object RoomManager {
         }
     }
 
-//  import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+  import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+  import scala.language.implicitConversions
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] =
     Flow[Message]
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[WsFrontProtocol.GameMessage](buffer) match {
+          bytesDecode[WsServerProtocol.WsMsgServer](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              ErrorGameMessage
+              ErrorWsMsgServer
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          ErrorGameMessage
+          ErrorWsMsgServer
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
@@ -90,10 +91,7 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
       .map {
-//      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
-      //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-      case t:WsFrontProtocol.GameMessage =>
-        import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+      case t:WsFrontProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>

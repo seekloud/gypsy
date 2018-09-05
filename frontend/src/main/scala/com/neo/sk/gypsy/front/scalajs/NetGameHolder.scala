@@ -3,24 +3,14 @@ package com.neo.sk.gypsy.front.scalajs
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.scalajs.NetGameHolder.gameRender
-import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
-import com.neo.sk.gypsy.front.utils.LayuiJs.{layer, ready}
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol._
+import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq}
 import com.neo.sk.gypsy.shared.ptcl._
-import scalatags.JsDom.all._
-
-import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.{Element, Document => _, _}
+import org.scalajs.dom.html.{Document => _, _}
 import org.scalajs.dom.raw._
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
@@ -30,7 +20,7 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GridDataSync, WsMsgFront}
 /**
   * User: Taoz
   * Date: 9/1/2016
@@ -75,7 +65,6 @@ object NetGameHolder extends js.JSApp {
     KeyCode.Up,
     KeyCode.Right,
     KeyCode.Down,
-   // KeyCode.F2,
     KeyCode.Escape
   )
 
@@ -92,7 +81,7 @@ object NetGameHolder extends js.JSApp {
 
   private var nextFrame = 0
   private var logicFrameTime = System.currentTimeMillis()
-  var syncGridData: scala.Option[WsFrontProtocol.GridDataSync] = None
+  var syncGridData: scala.Option[GridDataSync] = None
 
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -133,7 +122,7 @@ object NetGameHolder extends js.JSApp {
     println("start---")
     drawGameOn()
     draw2()
-    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), WsFrontProtocol.frameRate)
+    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), WsServerProtocol.frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -254,8 +243,8 @@ object NetGameHolder extends js.JSApp {
         var yMax = 0.0
         //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsFrontProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsFrontProtocol.frameRate
+          val offx = cell.speedX * offsetTime.toDouble / WsServerProtocol.frameRate
+          val offy = cell.speedY * offsetTime.toDouble / WsServerProtocol.frameRate
           val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
           if (newX>xMax) xMax=newX
@@ -349,7 +338,7 @@ object NetGameHolder extends js.JSApp {
         val yPlus = if (!deltaY.isNaN) deltaY else 0
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc(x +offx + xPlus*offsetTime.toFloat / WsFrontProtocol.frameRate,y +offy + yPlus*offsetTime.toFloat / WsFrontProtocol.frameRate,r,0,2*Math.PI)
+        ctx.arc(x +offx + xPlus*offsetTime.toFloat / WsServerProtocol.frameRate,y +offy + yPlus*offsetTime.toFloat / WsServerProtocol.frameRate,r,0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -366,8 +355,8 @@ object NetGameHolder extends js.JSApp {
         case _  => "#de9dd6"
       }
       cells.foreach{ cell=>
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsFrontProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsFrontProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsServerProtocol.frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsServerProtocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //println(s"cellX$cellx,celly$celly")
@@ -493,7 +482,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            val keyCode=WsFrontProtocol.KeyCode(e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
+            val keyCode=WsServerProtocol.KeyCode(myId,e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
             grid.addActionWithFrame(myId, keyCode, grid.frameCount+advanceFrame)
             addUncheckActionWithFrame(myId,keyCode,grid.frameCount+advanceFrame)
             sendMsg(keyCode, gameStream)
@@ -504,7 +493,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     }
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp=MousePosition(e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame,getActionSerialNum)
+      val mp=MousePosition(myId,e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame,getActionSerialNum)
       grid.addMouseActionWithFrame(myId,mp,mp.frame)
       addUncheckActionWithFrame(myId,mp,mp.frame)
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
@@ -538,20 +527,16 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
         fr.onloadend = { _: Event =>
           val buf = fr.result.asInstanceOf[ArrayBuffer]
           val middleDataInJs = new MiddleBufferInJs(buf)
-          bytesDecode[GameMessage](middleDataInJs) match {
+          bytesDecode[WsMsgFront](middleDataInJs) match {
             case Right(data) =>
-             // println(data)
               data match {
                 case WsFrontProtocol.Id(id) =>
                   myId = id
                   println(s"myID:$myId")
-                  //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
-               // case Protocol.NewSnakeJoined(id, user) => println(s"$user joined!")
-               // case Protocol.PlayerLeft(id, user) => println(s"$user left!")
-                case WsFrontProtocol.SnakeAction(id, keyCode, frame) =>
-                  addActionWithFrameFromServer(id,keyCode,frame)
-                case WsFrontProtocol.SnakeMouseAction(id, mp, frame) =>
-                  addActionWithFrameFromServer(id,mp,frame)
+                case m:WsServerProtocol.KeyCode =>
+                  addActionWithFrameFromServer(m.id,m)
+                case m:WsServerProtocol.MousePosition =>
+                  addActionWithFrameFromServer(m.id,m)
                 case WsFrontProtocol.Ranks(current, history) =>
 
                   currentRank = current
@@ -621,7 +606,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
   }
 
-  def addActionWithFrameFromServer(id: Long, gameAction:GameAction, frame: Long) = {
+  def addActionWithFrameFromServer(id:Long,gameAction:GameAction) = {
+    val frame=gameAction.frame
     if(myId == id){
       uncheckActionWithFrame.get(gameAction.serialNum) match {
         case Some((f,tankId,a)) =>
@@ -696,7 +682,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   //fixme 此处存在重复计算问题
 
   //xxx 有待商榷
-  def setSyncGridData(data: WsFrontProtocol.GridDataSync): Unit = {
+  def setSyncGridData(data:GridDataSync): Unit = {
 
     grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     grid.mouseActionMap = grid.mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
@@ -719,7 +705,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
-  def sendMsg(msg: GameMessage, gameStream: WebSocket) = {
+  def sendMsg(msg: WsMsgServer, gameStream: WebSocket) = {
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
     gameStream.send(msg.fillMiddleBuffer(sendBuffer).result())
 

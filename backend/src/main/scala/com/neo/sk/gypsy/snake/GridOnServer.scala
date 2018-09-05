@@ -29,7 +29,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var waitingJoin = Map.empty[Long, String]
   private[this] var feededApples: List[Food] = Nil
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]]()
+  private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsFrontProtocol.WsMsgFront]]()
 
 
   var currentRank = List.empty[Score]
@@ -182,7 +182,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsFrontProtocol.GameMessage]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsFrontProtocol.WsMsgFront]]) ={
     subscriber=subscribersMap
   }
 

@@ -4,8 +4,9 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.{Point, WsFrontProtocol}
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GameAction, GridDataSync, KeyCode, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.{Point, WsServerProtocol}
+import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.{GameAction, KeyCode, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -154,7 +155,7 @@ trait Grid {
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -394,7 +395,7 @@ trait Grid {
   def checkPlayerShotMass(actMap: Map[Long, KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
@@ -436,7 +437,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
@@ -603,7 +604,7 @@ trait Grid {
       }
 
       //喷射小球
-      val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.targetX, player.targetY,0l,0))
+      val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
       val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
@@ -980,7 +981,7 @@ trait Grid {
       foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      scale,
+      scale
     )
   }
   def getAllGridData = {
@@ -1001,7 +1002,7 @@ trait Grid {
       foodDetails,
       massList,
       virus,
-      1.0,
+      1.0
     )
   }
 
