@@ -141,8 +141,9 @@ trait Grid {
     if (!(deltaY).isNaN) newY += deltaY.toInt
     if (!(deltaX).isNaN) newX += deltaX.toInt
 
-    val borderCalc = mass.radius.ceil.toInt
+   // val borderCalc = mass.radius.ceil.toInt
 
+    val borderCalc = 0
     if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
     if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
     if (newX < borderCalc) newX = borderCalc
