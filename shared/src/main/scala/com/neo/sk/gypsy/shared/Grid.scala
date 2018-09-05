@@ -745,7 +745,6 @@ trait Grid {
         var vSplitCells = List[Cell]()//碰到病毒分裂出的cell列表
         //println(s"鼠标x${mouseAct.clientX} 鼠标y${mouseAct.clientY} 小球x${star.center.x} 小球y${star.center.y}")
         val target = MousePosition(mouseAct.clientX + player.x-cell.x ,mouseAct.clientY + player.y - cell.y)
-        //fixme 此处计算？
         val distance = sqrt(pow(target.clientX,2) + pow(target.clientY, 2))
         val deg = atan2(target.clientY,target.clientX)
         val degX = if(cos(deg).isNaN) 0 else cos(deg)

@@ -542,10 +542,13 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                 case WsFrontProtocol.Id(id) =>
                   myId = id
                   println(s"myID:$myId")
+
                 case m:WsServerProtocol.KeyCode =>
                   addActionWithFrameFromServer(m.id,m)
+
                 case m:WsServerProtocol.MousePosition =>
                   addActionWithFrameFromServer(m.id,m)
+
                 case WsFrontProtocol.Ranks(current, history) =>
 
                   currentRank = current
@@ -690,7 +693,6 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   //fixme 此处存在重复计算问题
 
-  //xxx 有待商榷
   def setSyncGridData(data:GridDataSync): Unit = {
 
     grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
