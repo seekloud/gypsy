@@ -4,7 +4,7 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.scalajs.NetGameHolder.{grid, isDead, joinGame}
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom

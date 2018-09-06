@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 
 import com.neo.sk.gypsy.front.utils.Shortcut
-import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.Ping
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.Ping
 import org.scalajs.dom.raw.WebSocket
 
 
