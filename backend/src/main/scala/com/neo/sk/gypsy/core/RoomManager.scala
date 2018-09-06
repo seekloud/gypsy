@@ -7,20 +7,21 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.Flow
-import org.slf4j.LoggerFactory
 import akka.util.ByteString
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
-import com.neo.sk.gypsy.shared.ptcl.{WsFrontProtocol, WsServerProtocol}
-import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol.ErrorWsMsgServer
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.WsMsgFront
-import com.neo.sk.gypsy.utils.CirceSupport
+import io.circe.{Decoder, Encoder}
+import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+import io.circe._
+import io.circe.generic.semiauto._
 import io.circe.generic.auto._
-import io.circe.parser.decode
 import io.circe.syntax._
-
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * User: sky
@@ -68,15 +69,17 @@ object RoomManager {
 
 
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
-//    import scala.language.implicitConversions
+    import scala.language.implicitConversions
     import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
     import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+    import io.circe.generic.auto._
+    import io.circe.parser._
 
     Flow[Message]
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[WsServerProtocol.WsMsgServer](buffer) match {
+          bytesDecode[WsMsgServer](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -93,7 +96,7 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
       .map {
-      case t:WsFrontProtocol.WsMsgFront =>
+      case t:WsMsgProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>

@@ -3,8 +3,8 @@ package com.neo.sk.gypsy.front.scalajs
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsServerProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom
@@ -22,7 +22,6 @@ import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-import com.neo.sk.gypsy.shared.ptcl.WsFrontProtocol.{GridDataSync, WsMsgFront}
 
 import scala.collection.mutable
 /**
@@ -126,7 +125,7 @@ object NetGameHolder extends js.JSApp {
     println("start---")
     drawGameOn()
     draw2()
-    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), WsServerProtocol.frameRate)
+    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), WsMsgProtocol.frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -247,8 +246,8 @@ object NetGameHolder extends js.JSApp {
         var yMax = 0.0
         //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsServerProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsServerProtocol.frameRate
+          val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
+          val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
           val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
           if (newX>xMax) xMax=newX
@@ -341,8 +340,8 @@ object NetGameHolder extends js.JSApp {
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsServerProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsServerProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -364,8 +363,8 @@ object NetGameHolder extends js.JSApp {
         case _  => "#de9dd6"
       }
       cells.foreach{ cell=>
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsServerProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsServerProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //println(s"cellX$cellx,celly$celly")
@@ -491,7 +490,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            val keyCode=WsServerProtocol.KeyCode(myId,e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
+            val keyCode=WsMsgProtocol.KeyCode(myId,e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
             grid.addActionWithFrame(myId, keyCode, grid.frameCount+advanceFrame)
             addUncheckActionWithFrame(myId,keyCode,grid.frameCount+advanceFrame)
             sendMsg(keyCode, gameStream)
@@ -539,25 +538,25 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
           bytesDecode[WsMsgFront](middleDataInJs) match {
             case Right(data) =>
               data match {
-                case WsFrontProtocol.Id(id) =>
+                case WsMsgProtocol.Id(id) =>
                   myId = id
                   println(s"myID:$myId")
 
-                case m:WsServerProtocol.KeyCode =>
+                case m:WsMsgProtocol.KeyCode =>
                   addActionWithFrameFromServer(m.id,m)
 
-                case m:WsServerProtocol.MousePosition =>
+                case m:WsMsgProtocol.MousePosition =>
                   addActionWithFrameFromServer(m.id,m)
 
-                case WsFrontProtocol.Ranks(current, history) =>
+                case WsMsgProtocol.Ranks(current, history) =>
 
                   currentRank = current
                   historyRank = history
-                case WsFrontProtocol.FeedApples(foods) =>
+                case WsMsgProtocol.FeedApples(foods) =>
 
                   grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
-                case data: WsFrontProtocol.GridDataSync =>
+                case data: WsMsgProtocol.GridDataSync =>
                   //TODO here should be better code.
                   if(data.frameCount<grid.frameCount){
                     println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
@@ -569,20 +568,20 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
                 //drawGrid(msgData.uid, data)
                   //网络延迟检测
-                case WsFrontProtocol.Pong(createTime) =>
+                case WsMsgProtocol.Pong(createTime) =>
                   NetDelay.receivePong(createTime ,gameStream)
 
-                case WsFrontProtocol.SnakeRestart(id) =>
+                case WsMsgProtocol.SnakeRestart(id) =>
 
                   //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
-                case WsFrontProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+                case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
                   if(id==myId){
                     DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,gameStream)
                     grid.removePlayer(id)
                   }
 
-                case WsFrontProtocol.KillMessage(killerId,deadId)=>
+                case WsMsgProtocol.KillMessage(killerId,deadId)=>
                   grid.removePlayer(deadId)
                   val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
                   grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
