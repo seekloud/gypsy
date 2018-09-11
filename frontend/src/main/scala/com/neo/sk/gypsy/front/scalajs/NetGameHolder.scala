@@ -40,7 +40,7 @@ object NetGameHolder extends js.JSApp {
 
 
   val bounds = Point(Boundary.w, Boundary.h)
-  val window = Point(Window.w, Window.h)
+  val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
 
   val littleMap = 200
   val mapMargin = 20
@@ -433,13 +433,13 @@ object NetGameHolder extends js.JSApp {
     ctx3.font = "12px Helvetica"
 //    ctx.fillStyle = MyColors.rankList
 //    ctx.fillRect(window.x-200,20,150,250)
-    val currentRankBaseLine = 3
+    val currentRankBaseLine = 4
     var index = 0
     ctx3.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", rightBegin, index, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", window.x-200, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(5)} score=${score.score}", rightBegin, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} score=${score.score}", window.x-195, index, currentRankBaseLine)
     }
     //绘制小地图
 
