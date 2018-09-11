@@ -19,6 +19,8 @@ object WsMsgProtocol {
     val frame:Long
   }
 
+  /**
+    * 后端解析*/
   case class MousePosition(id: Long,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
 
   case class KeyCode(id: Long,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
@@ -29,6 +31,8 @@ object WsMsgProtocol {
 
   case class Ping(timestamp: Long) extends WsMsgServer
 
+  /**
+    * 前端解析*/
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
