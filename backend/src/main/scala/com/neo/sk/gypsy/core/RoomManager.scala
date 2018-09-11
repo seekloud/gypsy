@@ -7,22 +7,21 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.Flow
-import org.slf4j.LoggerFactory
 import akka.util.ByteString
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
-import com.neo.sk.gypsy.shared.ptcl.Protocol
-import com.neo.sk.gypsy.shared.ptcl.Protocol.ErrorGameMessage
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
-import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol.WsMsgSource
-import com.neo.sk.gypsy.utils.CirceSupport
+import io.circe.{Decoder, Encoder}
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+import io.circe._
+import io.circe.generic.semiauto._
 import io.circe.generic.auto._
-import io.circe.parser.decode
 import io.circe.syntax._
-
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * User: sky
@@ -61,27 +60,34 @@ object RoomManager {
           case msg:CheckName=>
             getRoomActor(ctx,msg.room) ! RoomActor.CheckName(msg.name,msg.replyTo)
             Behavior.same
+
           case x=>
             log.debug("")
             Behaviors.unhandled
         }
     }
 
-//  import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] =
+
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
+    import scala.language.implicitConversions
+    import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+    import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+    import io.circe.generic.auto._
+    import io.circe.parser._
+
     Flow[Message]
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[Protocol.GameMessage](buffer) match {
+          bytesDecode[WsMsgServer](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              ErrorGameMessage
+              ErrorWsMsgServer
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          ErrorGameMessage
+          ErrorWsMsgServer
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
@@ -90,16 +96,13 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
       .map {
-//      msg => TextMessage.Strict(msg.asJson.noSpaces) // ... pack outgoing messages into WS JSON messages ...
-      //.map { msg => TextMessage.Strict(write(msg)) // ... pack outgoing messages into WS JSON messages ...
-      case t:Protocol.GameMessage =>
-        import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+      case t:WsMsgProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>
         TextMessage.apply("")
     }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
-
+  }
 
   private val decider: Supervision.Decider = {
     e: Throwable =>
