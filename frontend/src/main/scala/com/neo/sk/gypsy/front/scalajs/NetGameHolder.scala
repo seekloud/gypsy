@@ -350,7 +350,6 @@ object NetGameHolder extends js.JSApp {
         ctx.fill()
       }
     }
-
     masses.groupBy(_.color).foreach{ a=>
       ctx.fillStyle = a._1 match{
         case 0 => "#f3456d"
