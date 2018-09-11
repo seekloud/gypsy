@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 
 import com.neo.sk.gypsy.front.utils.Shortcut
-import com.neo.sk.gypsy.shared.ptcl.Protocol.Ping
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.Ping
 import org.scalajs.dom.raw.WebSocket
 
 
@@ -26,7 +26,6 @@ object NetDelay {
 
   private def startPing(gameStream: WebSocket): Unit ={
     NetGameHolder.sendMsg(Ping(System.currentTimeMillis()),gameStream)
-
   }
 
    def receivePong(createTime: Long,gameStream: WebSocket): Unit ={
