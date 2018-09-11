@@ -161,11 +161,14 @@ trait Grid {
       var newSpeed = cell.speed
 
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
+     // val deg1 = atan2(player.targetY , player.targetX )
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
       val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+      //val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
+      //val target = MousePosition(mouseAct.clientX , mouseAct.clientY ,0l)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
