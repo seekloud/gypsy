@@ -102,6 +102,9 @@ object NetGameHolder extends js.JSApp {
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val windWidth = dom.window.innerWidth
 
+  private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
+  private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -112,7 +115,9 @@ object NetGameHolder extends js.JSApp {
     canvas2.height = window.y
     canvas3.width = window.x
     canvas3.height = window.y
-
+    offScreenCanvas.width = bounds.x
+    offScreenCanvas.height = bounds.y
+    drawBackground()
 
     dom.window.onload= {
       (_: Event) =>
@@ -158,6 +163,32 @@ object NetGameHolder extends js.JSApp {
       dom.window.cancelAnimationFrame(nextFrame)
       ctx.font = "36px Helvetica"
       ctx.fillText("Ops, connection lost....", 350, 250)
+    }
+  }
+  def drawBackground():Unit = {
+    //绘制背景
+    offCtx.fillStyle = MyColors.background
+    offCtx.fillRect(0,0,bounds.x,bounds.y)
+    offCtx.save()
+    //绘制条纹
+    offCtx.strokeStyle = MyColors.stripe
+    stripeX.foreach{ l=>
+      //ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
+      offCtx.beginPath()
+      offCtx.moveTo(0 ,l )
+      offCtx.lineTo(bounds.x ,l )
+      offCtx.stroke()
+      //ctx.restore()
+    }
+    stripeY.foreach{ l=>
+      //ctx.save()
+      //centerScale(scale,window.x/2,window.y/2)
+      offCtx.beginPath()
+      offCtx.moveTo(l ,0)
+      offCtx.lineTo(l ,bounds.y)
+      offCtx.stroke()
+      // ctx.restore()
     }
   }
 
@@ -283,25 +314,20 @@ object NetGameHolder extends js.JSApp {
     ctx.save()
     centerScale(scale,window.x/2,window.y/2)
 //绘制条纹
-    ctx.strokeStyle = MyColors.stripe
-    stripeX.foreach{ l=>
-      //ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.moveTo(0 +offx,l +offy)
-      ctx.lineTo(bounds.x +offx,l +offy)
-      ctx.stroke()
-      //ctx.restore()
-    }
-    stripeY.foreach{ l=>
-      //ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
-      ctx.beginPath()
-      ctx.moveTo(l +offx,0+offy)
-      ctx.lineTo(l +offx,bounds.y+offy)
-      ctx.stroke()
-     // ctx.restore()
-    }
+//    ctx.strokeStyle = MyColors.stripe
+    //    stripeX.foreach{ l=>
+    //      ctx.beginPath()
+    //      ctx.moveTo(0 +offx,l +offy)
+    //      ctx.lineTo(bounds.x +offx,l +offy)
+    //      ctx.stroke()
+    //    }
+    //    stripeY.foreach{ l=>
+    //      ctx.beginPath()
+    //      ctx.moveTo(l +offx,0+offy)
+    //      ctx.lineTo(l +offx,bounds.y+offy)
+    //      ctx.stroke()
+    //    }
+    ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
 //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
