@@ -248,8 +248,8 @@ object NetGameHolder extends js.JSApp {
         p.cells.foreach { cell =>
           val offx = cell.speedX * offsetTime.toDouble / Protocol.frameRate
           val offy = cell.speedY * offsetTime.toDouble / Protocol.frameRate
-          val newX = if ((cell.x + offx) > bounds.x) bounds.x else if ((cell.x + offx) <= 0) 0 else cell.x + offx
-          val newY = if ((cell.y + offy) > bounds.y) bounds.y else if ((cell.y + offy) <= 0) 0 else cell.y + offy
+          val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
+          val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
           if (newX>xMax) xMax=newX
           if (newX<xMin) xMin=newX
           if (newY>yMax) yMax=newY
@@ -288,8 +288,8 @@ object NetGameHolder extends js.JSApp {
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(0,l +offy)
-      ctx.lineTo(bounds.x,l +offy)
+      ctx.moveTo(0+offx,l +offy)
+      ctx.lineTo(bounds.x+offx,l +offy)
       ctx.stroke()
       ctx.restore()
     }
@@ -297,8 +297,8 @@ object NetGameHolder extends js.JSApp {
       ctx.save()
       //centerScale(scale,window.x/2,window.y/2)
       ctx.beginPath()
-      ctx.moveTo(l +offx,0)
-      ctx.lineTo(l +offx,bounds.y)
+      ctx.moveTo(l +offx,0+offy)
+      ctx.lineTo(l +offx,bounds.y+offy)
       ctx.stroke()
       ctx.restore()
     }
@@ -348,34 +348,234 @@ object NetGameHolder extends js.JSApp {
 
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
       ctx.fillStyle = color.toInt match{
-        case 0 => "#f3456d"
-        case 1 => "#f49930"
-        case 2  => "#f4d95b"
-        case 3  => "#4cd964"
-        case 4  => "#9fe0f6"
-        case 5  => "#bead92"
-        case 6  => "#cfe6ff"
-        case _  => "#de9dd6"
+        case 0 => "#f3456d"  //(243,69,109)   b30e35
+        case 1 => "#f49930"  //(244, 153, 48)  a65d0a
+        case 2  => "#f4d95b"  //244, 217, 91   917600
+        case 3  => "#4cd964"   //76, 217, 100  05851b
+        case 4  => "#9fe0f6"   //159, 224, 246  037da6
+        case 5  => "#bead92"   //190, 173, 146   875a16
+        case 6  => "#cfe6ff"  //207, 230, 255   4174ab
+        case _  => "#de9dd6"   //222, 157, 214   8f3284
       }
       cells.foreach{ cell=>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / Protocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / Protocol.frameRate
-        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
-        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
-        //println(s"cellX$cellx,celly$celly")
-        //(cell.x + cell.speed *degX *offsetTime.toFloat / Protocol.frameRate,cell.y + cell.speed *degY *offsetTime.toFloat / Protocol.frameRate)
+        val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
+        val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-        //centerScale(scale,window.x/2,window.y/2)
-        // println(s"${pro}")
-        ctx.beginPath()
-        ctx.arc(xfix +offx,yfix+offy,cell.radius,0,2*Math.PI)
-        ctx.fill()
-        if(protect){
-          ctx.fillStyle = MyColors.halo
+
+        //if(xfix>=cell.radius+5&&xfix<=bounds.x-cell.radius-5&&yfix>=cell.radius+5&&yfix<=bounds.y-cell.radius-5){
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#bf3558" //粉
+            case 1 => "#cc8a43"  //棕
+            case 2  => "#bd9e2f"  //棕绿
+            case 3  => "#22a834"   //绿
+            case 4  => "#3da2c4"   //天蓝
+            case 5  => "#b88237"   //深棕
+            case 6  => "#558cc2"   //深蓝
+            case _  => "#ad43a2"   //紫
+          }
           ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,0,2*Math.PI)
+         // DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+5)
           ctx.fill()
-        }
+          ctx.restore()
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#cc4a6c"
+            case 1 => "#d69753"
+            case 2  => "#ccae43"
+            case 3  => "#3dbf4f"
+            case 4  => "#50b1d1"
+            case 5  => "#cf9748"
+            case 6  => "#74a7de"
+            case _  => "#cc64c2"
+          }
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,0,2*Math.PI)
+          //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+2)
+          ctx.fill()
+          ctx.restore()
+
+          ctx.beginPath()
+          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
+          //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
+          ctx.fill()
+          if(protect){
+            ctx.fillStyle = MyColors.halo
+            ctx.beginPath()
+            ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
+            ctx.fill()
+          }
+        //Todo chubi jiya
+        /*}else if(xfix<cell.radius+5){
+          val deg=acos(xfix/(cell.radius+5))
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#bf3558" //粉
+            case 1 => "#cc8a43"  //棕
+            case 2  => "#bd9e2f"  //棕绿
+            case 3  => "#22a834"   //绿
+            case 4  => "#3da2c4"   //天蓝
+            case 5  => "#b88237"   //深棕
+            case 6  => "#558cc2"   //深蓝
+            case _  => "#ad43a2"   //紫
+          }
+          ctx.beginPath()
+          ctx.lineWidth=10
+          ctx.moveTo(offx,yfix+offy+sqrt(pow(cell.radius+5,2)-pow(xfix,2)))
+          ctx.lineTo(offx,yfix+offy-sqrt(pow(cell.radius+5,2)-pow(xfix,2)))
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,deg-Math.PI,Math.PI-deg)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#cc4a6c"
+            case 1 => "#d69753"
+            case 2  => "#ccae43"
+            case 3  => "#3dbf4f"
+            case 4  => "#50b1d1"
+            case 5  => "#cf9748"
+            case 6  => "#74a7de"
+            case _  => "#cc64c2"
+          }
+          ctx.beginPath()
+          ctx.lineWidth=5
+          ctx.moveTo(offx+5*cos(deg),yfix+offy+sqrt(pow(cell.radius+5,2)-pow(xfix,2))-3*sin(deg))
+          ctx.lineTo(offx+5*cos(deg),yfix+offy-sqrt(pow(cell.radius+5,2)-pow(xfix,2))+3*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,deg-Math.PI,Math.PI-deg)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.beginPath()
+          ctx.moveTo(offx+10*cos(deg),yfix+offy+sqrt(pow(cell.radius,2)-pow(xfix,2))-5*sin(deg))
+          ctx.lineTo(offx+10*cos(deg),yfix+offy-sqrt(pow(cell.radius,2)-pow(xfix,2))+5*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,deg-Math.PI,Math.PI-deg)
+          ctx.closePath()
+          ctx.fill()
+        }else if(yfix<cell.radius+5){
+
+          val deg=asin(yfix/(cell.radius+5))
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#bf3558" //粉
+            case 1 => "#cc8a43"  //棕
+            case 2  => "#bd9e2f"  //棕绿
+            case 3  => "#22a834"   //绿
+            case 4  => "#3da2c4"   //天蓝
+            case 5  => "#b88237"   //深棕
+            case 6  => "#558cc2"   //深蓝
+            case _  => "#ad43a2"   //紫
+          }
+          ctx.beginPath()
+          ctx.lineWidth=10
+          ctx.moveTo(xfix+sqrt(pow(cell.radius+5,2)-pow(yfix,2)),0)
+          ctx.lineTo(xfix-sqrt(pow(cell.radius+5,2)-pow(yfix,2)),0)
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,-deg,deg-Math.PI)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#cc4a6c"
+            case 1 => "#d69753"
+            case 2  => "#ccae43"
+            case 3  => "#3dbf4f"
+            case 4  => "#50b1d1"
+            case 5  => "#cf9748"
+            case 6  => "#74a7de"
+            case _  => "#cc64c2"
+          }
+          ctx.beginPath()
+          ctx.lineWidth=5
+          ctx.moveTo(xfix+sqrt(pow(cell.radius+2,2)-pow(yfix,2))-5*cos(deg),0+5*sin(deg))
+          ctx.lineTo(xfix-sqrt(pow(cell.radius+2,2)-pow(yfix,2))+5*cos(deg),0+5*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,-deg,deg-Math.PI)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.beginPath()
+          ctx.moveTo(xfix+sqrt(pow(cell.radius,2)-pow(yfix,2))-5*cos(deg),0+10*sin(deg))
+          ctx.lineTo(xfix-sqrt(pow(cell.radius,2)-pow(yfix,2))+5*cos(deg),0+10*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,-deg,deg-Math.PI)
+          ctx.closePath()
+          ctx.fill()
+
+        }else if(xfix>bounds.x-cell.radius-5){
+
+          val deg=asin((bounds.x-xfix)/(cell.radius+5))
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#bf3558" //粉
+            case 1 => "#cc8a43"  //棕
+            case 2  => "#bd9e2f"  //棕绿
+            case 3  => "#22a834"   //绿
+            case 4  => "#3da2c4"   //天蓝
+            case 5  => "#b88237"   //深棕
+            case 6  => "#558cc2"   //深蓝
+            case _  => "#ad43a2"   //紫
+          }
+          ctx.beginPath()
+          ctx.lineWidth=10
+          ctx.moveTo(bounds.x+offx-20,yfix+sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2)))
+          ctx.lineTo(bounds.x+offx-20,yfix-sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2)))
+          println(bounds.x+offx-20)
+          println(xfix+offx)
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,deg,-deg,false)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.save()
+          ctx.fillStyle = color.toInt match{
+            case 0 => "#cc4a6c"
+            case 1 => "#d69753"
+            case 2  => "#ccae43"
+            case 3  => "#3dbf4f"
+            case 4  => "#50b1d1"
+            case 5  => "#cf9748"
+            case 6  => "#74a7de"
+            case _  => "#cc64c2"
+          }
+          ctx.beginPath()
+          ctx.lineWidth=5
+          ctx.moveTo(bounds.x-5*cos(deg)+offx-20,yfix+sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2))-3*sin(deg))
+          ctx.lineTo(bounds.x-5*cos(deg)+offx-20,yfix-sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2))+3*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,deg,-deg,false)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+
+          ctx.beginPath()
+          ctx.moveTo(bounds.x-10*cos(deg)+offx-20,yfix+sqrt(pow(cell.radius,2)-pow(bounds.x-xfix,2))-5*sin(deg))
+          ctx.lineTo(bounds.x+10*cos(deg)+offx-20,yfix-sqrt(pow(cell.radius,2)-pow(bounds.x-xfix,2))+5*sin(deg))
+          ctx.beginPath()
+          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,deg,-deg,false)
+          ctx.closePath()
+          ctx.fill()
+
+        }else if(yfix>bounds.y-cell.radius-5){
+
+        }*/
+
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         // println(nameFont)
