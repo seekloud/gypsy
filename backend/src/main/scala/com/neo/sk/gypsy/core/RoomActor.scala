@@ -9,10 +9,10 @@ import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.models.Dao.UserDao
-import com.neo.sk.gypsy.shared.ptcl.WsServerSourceProtocol
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, Protocol, WsServerSourceProtocol}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, Ping, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{KeyCode, MousePosition, UserLeft}
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
 import io.circe.parser._
@@ -38,17 +38,17 @@ object RoomActor {
 
   private case object Sync extends Command
 
-  private case class Join(id: Long, name: String, subscriber: ActorRef[Protocol.GameMessage]) extends Command
+  private case class Join(id: Long, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront]) extends Command
 
   private case class Left(id: Long, name: String) extends Command
 
-  private case class Key(id: Long, keyCode: Int,frame:Long) extends Command
+  private case class Key(id: Long, keyCode: Int,frame:Long,n:Int) extends Command
 
-  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long) extends Command
+  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
-  private case object UnkownAction extends Command
+  private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
 
@@ -61,10 +61,10 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[Long,ActorRef[Protocol.GameMessage]]()
+            val subscribersMap = mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
             val userMap = mutable.HashMap[Long, String]()
             val grid = new GridOnServer(bounds)
-            timer.startPeriodicTimer(SyncTimeKey,Sync,Protocol.frameRate millis)
+            timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
             idle(userMap,subscribersMap,grid,0l)
         }
     }
@@ -72,7 +72,7 @@ object RoomActor {
 
   def idle(
             userMap:mutable.HashMap[Long,String],
-            subscribersMap:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],
+            subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
             grid:GridOnServer,
             tickCount:Long
           )(
@@ -101,8 +101,7 @@ object RoomActor {
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
           grid.addSnake(id, name)
-          dispatchTo(subscribersMap,id, Protocol.Id(id))
-          //dispatch(subscribersMap,Protocol.NewSnakeJoined(id, name))
+          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id))
           dispatchTo(subscribersMap,id,grid.getGridData(id))
           Behaviors.same
         case Left(id, name) =>
@@ -111,22 +110,22 @@ object RoomActor {
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
           Behaviors.same
-        case Key(id, keyCode,frame) =>
+        case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
-            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id))
+            dispatchTo(subscribersMap,id,WsMsgProtocol.SnakeRestart(id))
           } else {
-            grid.addActionWithFrame(id, keyCode,frame)
-            dispatch(subscribersMap,Protocol.SnakeAction(id, keyCode, frame))
+            grid.addActionWithFrame(id, KeyCode(id,keyCode,frame,n),math.max(grid.frameCount,frame))
+            dispatch(subscribersMap,KeyCode(id,keyCode,frame,n))
           }
           Behaviors.same
-        case Mouse(id,x,y,frame) =>
+        case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
-          grid.addMouseActionWithFrame(id,x,y,frame)
-          dispatch(subscribersMap,Protocol.SnakeMouseAction(id,x,y,frame))
+          grid.addMouseActionWithFrame(id,MousePosition(id,x,y,frame,n),math.max(grid.frameCount,frame))
+          dispatch(subscribersMap,MousePosition(id,x,y,frame,n))
           Behaviors.same
 
         case Sync =>
@@ -137,21 +136,22 @@ object RoomActor {
             //remind 此处传输全局数据-同步数据
             val gridData = grid.getAllGridData
             dispatch(subscribersMap,gridData)
-        /*    userMap.foreach{u=>
-              dispatchTo(subscribersMap,u._1,grid.getGridData(u._1))
-            }*/
           } else {
             if (feedApples.nonEmpty) {
-              dispatch(subscribersMap,Protocol.FeedApples(feedApples))
+              dispatch(subscribersMap,WsMsgProtocol.FeedApples(feedApples))
             }
           }
           if (tickCount % 20 == 1) {
-            dispatch(subscribersMap,Protocol.Ranks(grid.currentRank, grid.historyRankList))
+            dispatch(subscribersMap,WsMsgProtocol.Ranks(grid.currentRank, grid.historyRankList))
+          }
+          if(tickCount==0){
+            dispatch(subscribersMap,grid.getAllGridData)
           }
           idle(userMap,subscribersMap,grid,tickCount+1)
         case NetTest(id, createTime) =>
+          log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(subscribersMap,id, Protocol.Pong(createTime))
+          dispatchTo(subscribersMap,id, WsMsgProtocol.Pong(createTime))
           Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -160,11 +160,11 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],msg: Protocol.GameMessage) = {
+  def dispatch(subscribers:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]], msg: WsMsgProtocol.WsMsgFront) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[Long,ActorRef[Protocol.GameMessage]],id:Long,msg:Protocol.GameMessage) = {
+  def dispatchTo(subscribers:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]], id:Long, msg:WsMsgProtocol.WsMsgFront) = {
     subscribers.get(id).foreach( _ ! msg)
   }
 
@@ -174,30 +174,30 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[Protocol.GameMessage, WsServerSourceProtocol.WsMsgSource, Any] = {
-    val in = Flow[Protocol.GameMessage]
+  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer, WsSourceProtocol.WsMsgSource, Any] = {
+    val in = Flow[WsMsgProtocol.WsMsgServer]
       .map {
-        case KeyCode(keyCode,f)=>
+        case KeyCode(i,keyCode,f,n)=>
           log.debug(s"键盘事件$keyCode")
-          Key(id,keyCode,f)
-        case MousePosition(clientX,clientY,f)=>
-          Mouse(id,clientX,clientY,f)
+          Key(id,keyCode,f,n)
+        case MousePosition(i,clientX,clientY,f,n)=>
+          Mouse(id,clientX,clientY,f,n)
         case UserLeft=>
           Left(id,name)
-        case Ping(timestamp)=>
+        case WsMsgProtocol.Ping(timestamp)=>
           NetTest(id,timestamp)
         case _=>
-          UnkownAction
+          UnKnowAction
       }
       .to(sink(actor))
 
     val out =
-      ActorSource.actorRef[WsServerSourceProtocol.WsMsgSource](
+      ActorSource.actorRef[WsSourceProtocol.WsMsgSource](
         completionMatcher = {
-          case WsServerSourceProtocol.CompleteMsgServer ⇒
+          case WsSourceProtocol.CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case WsServerSourceProtocol.FailMsgServer(e)  ⇒ e
+          case WsSourceProtocol.FailMsgServer(e)  ⇒ e
         },
         bufferSize = 64,
         overflowStrategy = OverflowStrategy.dropHead
