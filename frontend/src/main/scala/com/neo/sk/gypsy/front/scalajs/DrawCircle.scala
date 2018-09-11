@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import org.scalajs
 import org.scalajs.dom
 
@@ -9,7 +9,7 @@ object DrawCircle {
   case class Point(x: Double, y: Double)
   var pointList: List[Point] =setLinePoints(9)
   var  phase =Math.random()* Math.PI * 2
-  dom.window.setInterval(() => phase= Math.random()* Math.PI * 2, Protocol.frameRate)
+  dom.window.setInterval(() => phase= Math.random()* Math.PI * 2, frameRate)
 
   def drawCircle(ctx: dom.CanvasRenderingContext2D, centerX:Double, centerY:Double, radius:Double): Unit ={
     //val  phase =Math.random()* Math.PI * 2

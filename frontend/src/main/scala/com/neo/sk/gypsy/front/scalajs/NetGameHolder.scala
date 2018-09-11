@@ -133,7 +133,7 @@ object NetGameHolder extends js.JSApp {
     println("start---")
     drawGameOn()
     draw2()
-    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), Protocol.frameRate)
+    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
