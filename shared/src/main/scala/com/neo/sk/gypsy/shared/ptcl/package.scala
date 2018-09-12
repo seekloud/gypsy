@@ -92,8 +92,8 @@ package object ptcl {
                   splitNumber:Int = 13
                   )
   object Boundary{
-    val w = 3600
-    val h = 1800
+    val w = 4800
+    val h = 2400
   }
 
   object Window{
