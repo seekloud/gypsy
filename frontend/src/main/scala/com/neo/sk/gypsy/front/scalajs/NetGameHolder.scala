@@ -25,7 +25,6 @@ import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-
 import scala.collection.mutable
 /**
   * User: Taoz
@@ -106,6 +105,8 @@ object NetGameHolder extends js.JSApp {
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
+  private [this] var killList = List.empty[(Int,Long,Player)]
+  private [this] var isKill =false
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
@@ -144,7 +145,6 @@ object NetGameHolder extends js.JSApp {
     if(myId != -1l) {
       draw(offsetTime)
     }
-
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -211,6 +211,7 @@ object NetGameHolder extends js.JSApp {
         justSynced = false
       }
     }
+
   }
 
   def update(): Unit = {
@@ -255,6 +256,34 @@ object NetGameHolder extends js.JSApp {
       //println(s"data$data")
       drawGrid(myId, data,offsetTime)
       renderFps(ctx3,NetDelay.latency)
+      if(isKill){
+        val showTime = killList.head._1
+        val killerId = killList.head._2
+        val deadPlayer = killList.head._3
+        println("kk"+killerId)
+        println("dd"+deadPlayer)
+        println("gg"+grid.playerMap)
+        val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
+        val deadName = deadPlayer.name
+        val showText = if (killerId == myId) "You Killed"
+        else if (deadPlayer.kill >3)"Shut Down"
+        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) "Killing Spree"
+        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) "Dominating"
+        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) "Unstoppable"
+        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) "Godlike"
+        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) "Legendary"
+        if (showTime > 0) {
+          ctx.save()
+          ctx.font = "25px Helvetica"
+          ctx.strokeStyle = "#f32705"
+          ctx.strokeText(s"$killerName $showText $deadName", 10, 400)
+          ctx.fillStyle = "#f27c02"
+          ctx.fillText(s"$killerName $showText $deadName", 10, 400)
+          ctx.restore()
+          killList = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
+          if (killList.isEmpty) isKill = false
+        }
+      }
     } else {
       drawGameOff()
     }
@@ -292,19 +321,19 @@ object NetGameHolder extends js.JSApp {
 
           sumX += newX
           sumY += newY
-          //println(s"编号${length},中心$newX,$newY")
+
         }
         val offx = sumX /p.cells.length
         val offy = sumY /p.cells.length
 
-        //println(s"offx${offx},中心$offx,$offy")
+
         (offx, offy)
       case None =>
         (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
     }
-   // println(s"offsetTime：${offsetTime},basepoint${basePoint._1},${basePoint._2}")
 
-    //println(s"basePoint${basePoint}")
+
+
     val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
@@ -316,20 +345,6 @@ object NetGameHolder extends js.JSApp {
     ctx.fillRect(0,0,window.x,window.y)
     ctx.save()
     centerScale(scale,window.x/2,window.y/2)
-//绘制条纹
-//    ctx.strokeStyle = MyColors.stripe
-    //    stripeX.foreach{ l=>
-    //      ctx.beginPath()
-    //      ctx.moveTo(0 +offx,l +offy)
-    //      ctx.lineTo(bounds.x +offx,l +offy)
-    //      ctx.stroke()
-    //    }
-    //    stripeY.foreach{ l=>
-    //      ctx.beginPath()
-    //      ctx.moveTo(l +offx,0+offy)
-    //      ctx.lineTo(l +offx,bounds.y+offy)
-    //      ctx.stroke()
-    //    }
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
 //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
@@ -789,7 +804,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                   if(data.frameCount<grid.frameCount){
                     println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
                   }else if(data.frameCount>grid.frameCount){
-                    println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
+                   // println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
                     syncGridData = Some(data)
                     justSynced = true
                   }
@@ -809,10 +824,19 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
                     grid.removePlayer(id)
                   }
 
-                case WsMsgProtocol.KillMessage(killerId,deadId)=>
-                  grid.removePlayer(deadId)
+                case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
+                  grid.removePlayer(deadPlayer.id)
                   val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
                   grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+                  if(deadPlayer.id!=myId){
+                    if(!isKill){
+                      isKill=true
+                      killList :+=(200,killerId,deadPlayer)
+                    }else{
+                      killList :+=(200,killerId,deadPlayer)
+                    }
+                  }
+
                 case msg@_ =>
                   println(s"unknown $msg")
 

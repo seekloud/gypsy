@@ -149,7 +149,7 @@ object RoomActor {
           }
           idle(userMap,subscribersMap,grid,tickCount+1)
         case NetTest(id, createTime) =>
-          log.info(s"Net Test: createTime=$createTime")
+         // log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap,id, WsMsgProtocol.Pong(createTime))
           Behaviors.same

@@ -54,7 +54,7 @@ object WsMsgProtocol {
 
   case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
-  case class KillMessage(killerId:Long,deadId:Long) extends WsMsgFront
+  case class KillMessage(killerId:Long,deadPlayer:Player) extends WsMsgFront
 
   case class Pong(timestamp: Long)extends WsMsgFront
 

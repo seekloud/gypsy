@@ -139,7 +139,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
               player.killerName = "unknown"
           }
           dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
-          dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player.id))
+          dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player))
 
           Left(killer)
         } else {
