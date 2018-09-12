@@ -67,7 +67,7 @@ package object ptcl {
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 60,  //小球体重
+                 mass:Double = 10,  //小球体重
                  radius:Double = 4 + sqrt(10)*6,
                  speed:Double = 12,
                  speedX:Float = 0,
@@ -92,8 +92,8 @@ package object ptcl {
                   splitNumber:Int = 13
                   )
   object Boundary{
-    val w = 3600
-    val h = 1800
+    val w = 4800
+    val h = 2400
   }
 
   object Window{

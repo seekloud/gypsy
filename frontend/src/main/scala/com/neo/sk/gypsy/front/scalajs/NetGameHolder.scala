@@ -21,6 +21,7 @@ import io.circe.parser._
 import scala.math._
 import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
+import org.scalajs.dom.html
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -95,6 +96,13 @@ object NetGameHolder extends js.JSApp {
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val skyimg = dom.document.getElementById("sky").asInstanceOf[HTMLElement]
+  private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
+  private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  silverImg.setAttribute("src", "/gypsy/static/img/silver.png")
+  private val bronzeImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
   private[this] val windWidth = dom.window.innerWidth
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
@@ -176,22 +184,16 @@ object NetGameHolder extends js.JSApp {
     //绘制条纹
     offCtx.strokeStyle = MyColors.stripe
     stripeX.foreach{ l=>
-      //ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
       offCtx.beginPath()
       offCtx.moveTo(0 ,l )
       offCtx.lineTo(bounds.x ,l )
       offCtx.stroke()
-      //ctx.restore()
     }
     stripeY.foreach{ l=>
-      //ctx.save()
-      //centerScale(scale,window.x/2,window.y/2)
       offCtx.beginPath()
       offCtx.moveTo(l ,0)
       offCtx.lineTo(l ,bounds.y)
       offCtx.stroke()
-      // ctx.restore()
     }
   }
 
@@ -341,10 +343,12 @@ object NetGameHolder extends js.JSApp {
     //var scale = data.scale
 
 //绘制背景
-    ctx.fillStyle = MyColors.background
+//    ctx.fillStyle = MyColors.background
+    ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,window.x,window.y)
     ctx.save()
     centerScale(scale,window.x/2,window.y/2)
+
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
 //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
@@ -629,8 +633,8 @@ object NetGameHolder extends js.JSApp {
         // println(nameFont)
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
-        ctx.strokeStyle = "grey"
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+//        ctx.strokeStyle = "grey"
+//        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.fillStyle = MyColors.background
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
@@ -682,7 +686,24 @@ object NetGameHolder extends js.JSApp {
     drawTextLine(s"—————排行榜—————", window.x-200, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} score=${score.score}", window.x-195, index, currentRankBaseLine)
+      val drawColor = index match {
+        case 1 => "#FFD700"
+        case 2 => "#D1D1D1"
+        case 3 => "#8B5A00"
+        case _ => "#CAE1FF"
+      }
+      val imgOpt = index match {
+        case 1 => Some(goldImg)
+        case 2 => Some(silverImg)
+        case 3 => Some(bronzeImg)
+        case _ => None
+      }
+      imgOpt.foreach{ img =>
+        ctx3.drawImage(img, window.x-200, (index) * textLineHeight+32, 13, 13)
+      }
+//      ctx3.strokeStyle = drawColor
+//      ctx3.lineWidth = 18
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", window.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
