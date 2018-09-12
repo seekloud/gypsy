@@ -35,7 +35,7 @@ trait Grid {
 
   val historyRankLength = 5
 
-  val slowBase = 8
+  val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
   val acceleration  = 2
 //质量转半径率
@@ -60,7 +60,7 @@ trait Grid {
   //病毒列表
   var virus = List[Virus]()
   //病毒数量
-  var virusNum:Int = 4
+  var virusNum:Int = 8
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表

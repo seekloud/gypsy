@@ -86,13 +86,12 @@ object RoomActor {
           if(grid.playerMap.exists(_._2.name.trim==name)){
            replyTo ! CheckNameRsp(10000,"UserName has existed!")
           }else{
-//            UserDao.getUserByName(name).map{
-//              case Some(_)=>
-//                replyTo ! CheckNameRsp(10000,"UserName has existed!")
-//              case None=>
-//                replyTo ! CheckNameRsp()
-//            }
-            replyTo ! CheckNameRsp()
+            UserDao.getUserByName(name).map{
+              case Some(_)=>
+                replyTo ! CheckNameRsp(10000,"UserName has existed!")
+              case None=>
+                replyTo ! CheckNameRsp()
+            }
           }
           Behavior.same
         case Join(id, name, subscriber) =>
