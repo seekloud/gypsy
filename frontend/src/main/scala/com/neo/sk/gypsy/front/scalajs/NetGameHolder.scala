@@ -314,7 +314,7 @@ object NetGameHolder extends js.JSApp {
 
 //绘制背景
 //    ctx.fillStyle = MyColors.background
-    ctx.fillStyle = MyColors.stripe
+    ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,window.x,window.y)
     ctx.save()
     centerScale(scale,window.x/2,window.y/2)
