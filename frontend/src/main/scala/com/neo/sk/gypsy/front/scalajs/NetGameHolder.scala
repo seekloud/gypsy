@@ -317,6 +317,7 @@ object NetGameHolder extends js.JSApp {
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,window.x,window.y)
     ctx.save()
+    centerScale(window.x/1200.0,window.x/2,window.y/2)
     centerScale(scale,window.x/2,window.y/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
