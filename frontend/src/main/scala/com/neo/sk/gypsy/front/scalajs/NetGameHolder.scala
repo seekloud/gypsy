@@ -755,8 +755,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
           } else {
             println(s"down+${e.keyCode.toString}")
             val keyCode=WsMsgProtocol.KeyCode(myId,e.keyCode,grid.frameCount+advanceFrame,getActionSerialNum)
-            grid.addActionWithFrame(myId, keyCode, grid.frameCount+advanceFrame)
-            addUncheckActionWithFrame(myId,keyCode,grid.frameCount+advanceFrame)
+            grid.addActionWithFrame(myId, keyCode, grid.frameCount)
+            addUncheckActionWithFrame(myId,keyCode,grid.frameCount)
             sendMsg(keyCode, gameStream)
           }
           e.preventDefault()
@@ -766,8 +766,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
       val mp=MousePosition(myId,e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2,grid.frameCount+advanceFrame,getActionSerialNum)
-      grid.addMouseActionWithFrame(myId,mp,mp.frame)
-      addUncheckActionWithFrame(myId,mp,mp.frame)
+      grid.addMouseActionWithFrame(myId,mp,grid.frameCount)
+      addUncheckActionWithFrame(myId,mp,grid.frameCount)
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
       sendMsg(mp, gameStream)
       //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
@@ -896,6 +896,7 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
       uncheckActionWithFrame.get(gameAction.serialNum) match {
         case Some((f,tankId,a)) =>
           if(f == frame){ //与预执行的操作数据一致
+            println("---------11")
             uncheckActionWithFrame.remove(gameAction.serialNum)
           }else{ //与预执下的操作数据不一致，进行回滚
             uncheckActionWithFrame.remove(gameAction.serialNum)
@@ -922,8 +923,10 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     }else{
       if(frame < grid.frameCount && grid.frameCount - maxRollBackFrames >= frame){
         //回滚
+        println("--------2")
         rollback(frame)
       }else{
+        println("-------1")
         gameAction match {
           case a:KeyCode=>
             grid.addActionWithFrame(id,a,frame)
