@@ -97,6 +97,14 @@ object NetGameHolder extends js.JSApp {
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val skyimg = dom.document.getElementById("sky").asInstanceOf[HTMLElement]
+  private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
+  private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
+  private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
+  private[this] val  killingspree = dom.document.getElementById("killingspree").asInstanceOf[HTMLElement]
+  private[this] val  dominating = dom.document.getElementById("dominating").asInstanceOf[HTMLElement]
+  private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
+  private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
+  private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
   private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
@@ -262,25 +270,29 @@ object NetGameHolder extends js.JSApp {
         val showTime = killList.head._1
         val killerId = killList.head._2
         val deadPlayer = killList.head._3
-        println("kk"+killerId)
-        println("dd"+deadPlayer)
-        println("gg"+grid.playerMap)
         val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
         val deadName = deadPlayer.name
-        val showText = if (killerId == myId) "You Killed"
-        else if (deadPlayer.kill >3)"Shut Down"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) "Killing Spree"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) "Dominating"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) "Unstoppable"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) "Godlike"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) "Legendary"
+        val killImg = if (deadPlayer.kill > 3) shutdown
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) killingspree
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) dominating
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) unstoppable
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) godlike
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) legendary
+         else if (killerId == myId) youkill
+         else kill
         if (showTime > 0) {
           ctx.save()
           ctx.font = "25px Helvetica"
           ctx.strokeStyle = "#f32705"
-          ctx.strokeText(s"$killerName $showText $deadName", 10, 400)
+          ctx.strokeText(killerName, 25, 400)
           ctx.fillStyle = "#f27c02"
-          ctx.fillText(s"$killerName $showText $deadName", 10, 400)
+          ctx.fillText(killerName, 25, 400)
+          ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
+          ctx.strokeStyle = "#f32705"
+          ctx.strokeText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+          ctx.fillStyle = "#f27c02"
+          ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+          ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
           ctx.restore()
           killList = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
           if (killList.isEmpty) isKill = false
