@@ -67,6 +67,12 @@ trait Grid {
   var massList = List[Mass]()
   val shotMass = 10
   val shotSpeed = 40
+  //质量衰减下限
+  val decreaseLimit = 200
+  //衰减率
+  val decreaseRate = 0.995
+  //衰减周期计数
+  var tick = 0
   //操作列表  帧数->(用户ID->操作)
   var actionMap = Map.empty[Long, Map[Long, KeyCode]]
 
@@ -359,7 +365,7 @@ trait Grid {
             var newRadius = cell.radius
             //病毒碰撞检测
             virus.foreach { v =>
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 virus = virus.filterNot(_ == v)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
@@ -668,7 +674,20 @@ trait Grid {
 
   }
 
-   def updatePlayer()={
+  def massDerease():Unit={
+    val newPlayerMap = playerMap.values.map{player=>
+      val newCells=player.cells.map{cell=>
+        var newMass = cell.mass
+        if(cell.mass > decreaseLimit)
+          newMass = cell.mass*decreaseRate
+        cell.copy(mass = newMass)
+      }
+      player.copy(cells = newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+
+  }
+  def updatePlayer()={
 
      val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
      val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
@@ -682,6 +701,11 @@ trait Grid {
      checkPlayerVirusCrash(mergeInFlame)
      checkPlayerShotMass(keyAct,mouseAct)
      checkPlayerSplit(keyAct,mouseAct)
+     tick = tick+1
+    if(tick%10==1){
+      tick =1
+      massDerease()
+    }
 
 
   }
