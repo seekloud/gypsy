@@ -991,7 +991,6 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
   def sendMsg(msg:WsMsgServer, gameStream: WebSocket) = {
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
     gameStream.send(msg.fillMiddleBuffer(sendBuffer).result())
-
   }
 
 

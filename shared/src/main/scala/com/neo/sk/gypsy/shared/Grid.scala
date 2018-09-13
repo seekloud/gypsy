@@ -523,7 +523,7 @@ trait Grid {
             newMass += foodMass
             newRadius = 4 + sqrt(newMass) * mass2rRate
             food -= p
-            if (newProtected == true)
+            if (newProtected)
             //吃食物后取消保护
               newProtected = false
           }

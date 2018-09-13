@@ -10,7 +10,7 @@ object Routes {
 
     private def guestLogin(room:String,name:String)=baseUrl+s"/guestLogin?room=$room&name=$name"
     private def userLoginWs(room:String)=baseUrl+s"/userLoginWs?room=$room"
-    val  userLogin: String =baseUrl+"/userLogin"
+    val userLogin: String =baseUrl+"/userLogin"
     val userRegister: String =baseUrl+"/userRegister"
     val updateUserScore:String=baseUrl+"/updateMaxScore"
     def checkName(name:String ,room:String)=baseUrl+s"/checkName?name=$name&room=$room"
