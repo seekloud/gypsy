@@ -359,7 +359,7 @@ trait Grid {
             var newRadius = cell.radius
             //病毒碰撞检测
             virus.foreach { v =>
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 virus = virus.filterNot(_ == v)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
