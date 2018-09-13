@@ -637,7 +637,7 @@ object NetGameHolder extends js.JSApp {
 //        ctx.strokeStyle = "grey"
 //        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${name}", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
     }
@@ -665,7 +665,7 @@ object NetGameHolder extends js.JSApp {
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
+        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum.toInt}", 400, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -704,7 +704,7 @@ object NetGameHolder extends js.JSApp {
       }
 //      ctx3.strokeStyle = drawColor
 //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", window.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", window.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
