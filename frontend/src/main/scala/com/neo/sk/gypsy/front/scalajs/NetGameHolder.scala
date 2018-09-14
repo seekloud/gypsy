@@ -970,8 +970,8 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
 
   def setSyncGridData(data:GridDataSync): Unit = {
 
-    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
-    grid.mouseActionMap = grid.mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
+    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- advanceFrame)
+    grid.mouseActionMap = grid.mouseActionMap.filterKeys(_ > data.frameCount-advanceFrame)
 //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
     grid.frameCount = data.frameCount
 //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
@@ -980,6 +980,12 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     grid.massList = data.massDetails
     grid.virus = data.virusDetails
 
+    val myCell=grid.playerMap.find(_._1==myId)
+    if(myCell.isDefined){
+      for(i<- advanceFrame to 1 by -1){
+        update()
+      }
+    }
   }
 
   def p(msg: String) = {
