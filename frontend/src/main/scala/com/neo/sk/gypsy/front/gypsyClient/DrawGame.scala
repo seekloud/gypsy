@@ -6,14 +6,16 @@ import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
 import org.scalajs.dom.html.{Canvas, Image}
-
+import com.neo.sk.gypsy.shared.util.utils._
+import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.html
 import scala.math._
 /**
   * User: sky
   * Date: 2018/9/14
   * Time: 10:04
   */
-class DrawGame(
+case class DrawGame(
               ctx:CanvasRenderingContext2D,
               canvas:Canvas,
               size:Point
@@ -48,7 +50,7 @@ class DrawGame(
     ctx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
   }
 
-  //绘制背景
+  //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -73,7 +75,7 @@ class DrawGame(
     ctx.fillText("Ops, connection lost....", 350, 250)
   }
 
-  //背景绘制
+  //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
     ctx.fillStyle = MyColors.background
@@ -95,6 +97,7 @@ class DrawGame(
     }
   }
 
+  //ctx2
   def drawRankMap():Unit = {
     //绘制当前排行
     ctx.fillStyle = MyColors.rankList
@@ -125,10 +128,7 @@ class DrawGame(
     }
   }
 
-  def draw(myId:Long,grid:GameClient,isKill:Boolean,killList:List[(Int,Long,Player)],offsetTime:Long)= {
-    val data = grid.getGridData(myId)
-    //println(s"data$data")
-    drawGrid(myId, data,offsetTime)
+  def drawKill(myId:Long,grid:GameClient,isKill:Boolean,killList:List[(Int,Long,Player)])={
     if(isKill){
       val showTime = killList.head._1
       val killerId = killList.head._2
@@ -161,55 +161,18 @@ class DrawGame(
     }else{
       (killList,isKill)
     }
-
   }
 
-  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long): Unit = {
+
+  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,img:HTMLElement,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
     val virus = data.virusDetails
-    var zoom = (30.0, 30.0)
 
-    val basePoint = players.find(_.id == uid) match {
-      case Some(p) =>
-        var sumX = 0.0
-        var sumY = 0.0
-        var length = 0
-        var xMax = 0.0
-        var xMin = 10000.0
-        var yMin = 10000.0
-        var yMax = 0.0
-        //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
-        p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
-          val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
-          if (newX>xMax) xMax=newX
-          if (newX<xMin) xMin=newX
-          if (newY>yMax) yMax=newY
-          if (newY<yMin) yMin=newY
-          zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
-
-          sumX += newX
-          sumY += newY
-
-        }
-        val offx = sumX /p.cells.length
-        val offy = sumY /p.cells.length
-
-
-        (offx, offy)
-      case None =>
-        (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
-    }
-
-
-
-    val offx= window.x/2 - basePoint._1
-    val offy =window.y/2 - basePoint._2
+    val offx= size.x/2 - basePoint._1
+    val offy =size.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2)
     //var scale = data.scale
@@ -217,9 +180,9 @@ class DrawGame(
     //绘制背景
     //    ctx.fillStyle = MyColors.background
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
-    ctx.fillRect(0,0,window.x,window.y)
+    ctx.fillRect(0,0,size.x,size.y)
     ctx.save()
-    centerScale(scale,window.x/2,window.y/2)
+    centerScale(scale,size.x/2,size.y/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
@@ -524,20 +487,15 @@ class DrawGame(
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
 
-    val leftBegin = 10
-    //val rightBegin = bounds.x - 150
-    val rightBegin = 1000
     //根据uid获取用户信息，绘制左上角个人信息；绘制等待提示和死亡提示
     players.find(_.id == uid) match {
       case Some(myStar) =>
-        firstCome = false
-        val baseLine = 1
-        //ctx.font = "12px Helvetica"
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
         ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
         ctx.restore()
+        false
       case None =>
         if(firstCome) {
           ctx.font = "36px Helvetica"
@@ -546,16 +504,21 @@ class DrawGame(
           ctx.font = "36px Helvetica"
           ctx.fillText("Ops, Loading....", 350, 250)
         }
+        firstCome
     }
+  }
+
+  //ctx3
+  def drawRankMap(uid:Long,currentRank:List[Score],players:List[Player],goldImg:html.Image,silverImg:html.Image,bronzeImg:html.Image,basePoint:(Double,Double))={
     //绘制当前排行
-    ctx3.clearRect(0,0,window.x,window.y)
-    ctx3.font = "12px Helvetica"
+    ctx.clearRect(0,0,size.x,size.y)
+    ctx.font = "12px Helvetica"
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
     var index = 0
-    ctx3.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", window.x-200, index, currentRankBaseLine)
+    ctx.fillStyle = MyColors.background
+    drawTextLine(s"—————排行榜—————", size.x-200, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
       val drawColor = index match {
@@ -571,24 +534,25 @@ class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx3.drawImage(img, window.x-200, (index) * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, size.x-200, index * textLineHeight+32, 13, 13)
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", window.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", size.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
-    ctx3.fillStyle = MyColors.background
+    ctx.fillStyle = MyColors.background
     players.find(_.id == uid) match {
       case Some(player)=>
-        ctx3.beginPath()
-        ctx3.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
-        ctx3.fill()
+        ctx.beginPath()
+        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
+        ctx.fill()
       case None=>
       // println(s"${basePoint._1},  ${basePoint._2}")
     }
   }
+
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
     ctx.scale(rate,rate)

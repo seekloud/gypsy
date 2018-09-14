@@ -32,7 +32,13 @@ import scala.collection.mutable
   * Time: 11:23
   *
   */
-case class WebSocketClient() {
+case class WebSocketClient(
+                            websocketStream:WebSocket,
+                            connectSuccessCallback: Event => Unit,
+                            connectErrorCallback:Event => Unit,
+                            messageHandler:WsMsgFront => Unit,
+                            closeCallback:Event => Unit
+                          ) {
   private var wsSetup=false
 
   private var webSocketOpt: Option[WebSocket] =None
@@ -49,7 +55,45 @@ case class WebSocketClient() {
     if(wsSetup){
       println()
     }else{
+      webSocketOpt = Some(websocketStream)
+      websocketStream.onopen = { event: Event =>
+        wsSetup = true
+        connectSuccessCallback(event)
+      }
+      websocketStream.onerror = { event: Event =>
+        wsSetup = false
+        webSocketOpt = None
+        connectErrorCallback(event)
+      }
 
+      websocketStream.onmessage = { event: MessageEvent =>
+        //        println(s"recv msg:${event.data.toString}")
+        event.data match {
+          case blobMsg:Blob =>
+            import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
+            val fr = new FileReader()
+            fr.readAsArrayBuffer(blobMsg)
+            fr.onloadend = { _: Event =>
+              val buf = fr.result.asInstanceOf[ArrayBuffer]
+              val middleDataInJs = new MiddleBufferInJs(buf)
+              val data = bytesDecode[WsMsgFront](middleDataInJs).right.get
+              messageHandler(data)
+            }
+          case jsonStringMsg:String =>
+            import io.circe.generic.auto._
+            import io.circe.parser._
+            val data = decode[WsMsgFront](jsonStringMsg).right.get
+            messageHandler(data)
+          case unknow =>  println(s"recv unknow msg:${unknow}")
+        }
+
+      }
+
+      websocketStream.onclose = { event: Event =>
+        wsSetup = false
+        webSocketOpt = None
+        closeCallback(event)
+      }
     }
 
   def closeWs={
