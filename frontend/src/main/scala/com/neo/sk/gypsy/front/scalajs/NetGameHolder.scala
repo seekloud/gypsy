@@ -654,7 +654,7 @@ object NetGameHolder extends js.JSApp {
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_) =>
+    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
       ctx.restore()

@@ -89,7 +89,10 @@ package object ptcl {
                   y:Int,
                   mass:Double,
                   radius:Double,
-                  splitNumber:Int = 13
+                  splitNumber:Int = 13,
+                  targetX:Double = 0.0,
+                  targetY:Double = 0.0,
+                  speed:Double = 0
                   )
   object Boundary{
     val w = 4800
