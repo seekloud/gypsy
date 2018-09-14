@@ -287,7 +287,60 @@ trait Grid {
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
-
+  //mass检测
+  def checkVirusMassCrash(): Unit = {
+    virus = virus.map{v=>
+      var newMass = v.mass
+      var newRadius = v.radius
+      var newSpeed = v.speed
+      var newTargetX = v.targetX
+      var newTargetY = v.targetY
+      var newX = v.x
+      var newY = v.y
+      var hasMoved = false
+      val (nx,ny)= normalization(newTargetX,newTargetY)
+      massList.foreach {
+        case p: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
+            val (mx,my)=normalization(p.targetX,p.targetY)
+           // println(s"mx$mx,my$my")
+            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)*1.5
+            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)*1.5
+//            val vx = nx*newMass*newSpeed + mx*p.mass*p.speed
+//            val vy = ny*newMass*newSpeed + my*p.mass*p.speed
+//            println(s"aaa${nx*newMass*newSpeed},aaa${mx*p.mass*p.speed}")
+//            println(s"bbb${ny*newMass*newSpeed},bbb${my*p.mass*p.speed}")
+           // println(s"vx$vx,vy$vy")
+            newX += vx.toInt
+            newY += vy.toInt
+            hasMoved =true
+            val borderCalc = 0
+            if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+            if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+            if (newX < borderCalc) newX = borderCalc
+            if (newY < borderCalc) newY = borderCalc
+            newMass += p.mass
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+            newTargetX = vx
+            newTargetY = vy
+            massList = massList.filterNot(l => l == p)
+          }
+      }
+      newSpeed -= 0.5
+      if(newSpeed<0) newSpeed=0
+      if(hasMoved==false && newSpeed!=0){
+        newX += (nx*newSpeed).toInt
+        newY += (ny*newSpeed).toInt
+        val borderCalc = 0
+        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+        if (newX < borderCalc) newX = borderCalc
+        if (newY < borderCalc) newY = borderCalc
+      }
+      v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+    }
+  }
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit = {}
 
@@ -700,6 +753,7 @@ trait Grid {
      val mergeInFlame=checkCellMerge()
      checkPlayerVirusCrash(mergeInFlame)
      checkPlayerShotMass(keyAct,mouseAct)
+     checkVirusMassCrash()
      checkPlayerSplit(keyAct,mouseAct)
      tick = tick+1
     if(tick%10==1){
