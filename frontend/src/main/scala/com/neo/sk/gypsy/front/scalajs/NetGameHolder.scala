@@ -176,6 +176,7 @@ object NetGameHolder extends js.JSApp {
       ctx.fillText("Ops, connection lost....", 350, 250)
     }
   }
+
   def drawBackground():Unit = {
     //绘制背景
     offCtx.fillStyle = MyColors.background
@@ -292,49 +293,12 @@ object NetGameHolder extends js.JSApp {
 
   }
 
-  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long): Unit = {
+  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double)): Unit = {
     //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
     val masses = data.massDetails
     val virus = data.virusDetails
-    var zoom = (30.0, 30.0)
-
-    val basePoint = players.find(_.id == uid) match {
-      case Some(p) =>
-        var sumX = 0.0
-        var sumY = 0.0
-        var length = 0
-        var xMax = 0.0
-        var xMin = 10000.0
-        var yMin = 10000.0
-        var yMax = 0.0
-        //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
-        p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
-          val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
-          if (newX>xMax) xMax=newX
-          if (newX<xMin) xMin=newX
-          if (newY>yMax) yMax=newY
-          if (newY<yMin) yMin=newY
-          zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
-
-          sumX += newX
-          sumY += newY
-
-        }
-        val offx = sumX /p.cells.length
-        val offy = sumY /p.cells.length
-
-
-        (offx, offy)
-      case None =>
-        (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
-    }
-
-
 
     val offx= window.x/2 - basePoint._1
     val offy =window.y/2 - basePoint._2

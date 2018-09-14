@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GameAction
 import com.neo.sk.gypsy.shared.ptcl.{Cell, Point}
 
 import scala.math.{pow, sqrt}
@@ -54,5 +55,81 @@ class GameClient (override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map { s=>(s.id,s)}.toMap
 
+  }
+
+  def addActionWithFrameFromServer(id:Long,gameAction:GameAction) = {
+    val frame=gameAction.frame
+    if(myId == id){
+      uncheckActionWithFrame.get(gameAction.serialNum) match {
+        case Some((f,tankId,a)) =>
+          if(f == frame){ //与预执行的操作数据一致
+            println("---------11")
+            uncheckActionWithFrame.remove(gameAction.serialNum)
+          }else{ //与预执下的操作数据不一致，进行回滚
+            uncheckActionWithFrame.remove(gameAction.serialNum)
+            if(frame < grid.frameCount){
+              rollback(frame)
+            }else{
+              grid.removeActionWithFrame(tankId,a,f)
+              gameAction match {
+                case a:KeyCode=>
+                  grid.addActionWithFrame(id,a,frame)
+                case b:MousePosition=>
+                  grid.addMouseActionWithFrame(id,b,frame)
+              }
+            }
+          }
+        case None =>
+          gameAction match {
+            case a:KeyCode=>
+              grid.addActionWithFrame(id,a,frame)
+            case b:MousePosition=>
+              grid.addMouseActionWithFrame(id,b,frame)
+          }
+      }
+    }else{
+      if(frame < grid.frameCount && grid.frameCount - maxRollBackFrames >= frame){
+        //回滚
+        println("--------2")
+        rollback(frame)
+      }else{
+        println("-------1")
+        gameAction match {
+          case a:KeyCode=>
+            grid.addActionWithFrame(id,a,frame)
+          case b:MousePosition=>
+            grid.addMouseActionWithFrame(id,b,frame)
+        }
+      }
+    }
+  }
+
+  def rollback2State(d:GridDataSync) = {
+    grid.actionMap=grid.actionMap.filterKeys(_>=grid.frameCount)
+    grid.mouseActionMap=grid.mouseActionMap.filterKeys(_>=grid.frameCount)
+    setSyncGridData(d)
+  }
+
+
+  //从第frame开始回滚到现在
+  def rollback(frame:Long) = {
+    gameSnapshotMap.get(frame) match {
+      case Some(state) =>
+        val curFrame = grid.frameCount
+        rollback2State(state)
+        uncheckActionWithFrame.filter(_._2._1 > frame).foreach{t=>
+          t._2._3 match {
+            case a:KeyCode=>
+              grid.addActionWithFrame(t._2._2,a,frame)
+            case b:MousePosition=>
+              grid.addMouseActionWithFrame(t._2._2,b,frame)
+          }
+        }
+        (frame until curFrame).foreach{ f =>
+          grid.frameCount = f
+          update()
+        }
+      case None =>
+    }
   }
 }
