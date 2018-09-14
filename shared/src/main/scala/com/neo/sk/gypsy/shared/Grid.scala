@@ -306,11 +306,7 @@ trait Grid {
            // println(s"mx$mx,my$my")
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)*1.5
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)*1.5
-//            val vx = nx*newMass*newSpeed + mx*p.mass*p.speed
-//            val vy = ny*newMass*newSpeed + my*p.mass*p.speed
-//            println(s"aaa${nx*newMass*newSpeed},aaa${mx*p.mass*p.speed}")
-//            println(s"bbb${ny*newMass*newSpeed},bbb${my*p.mass*p.speed}")
-           // println(s"vx$vx,vy$vy")
+
             newX += vx.toInt
             newY += vy.toInt
             hasMoved =true
