@@ -33,7 +33,10 @@ import scala.collection.mutable
   * Date: 2018/9/13
   * Time: 13:26
   */
-class GameHolder {
+class GameHolder extends js.JSApp {
+
+  val bounds = Point(Boundary.w, Boundary.h)
+  val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
   private[this] val canvas = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas2 = dom.document.getElementById("MiddleView").asInstanceOf[Canvas]
@@ -41,6 +44,9 @@ class GameHolder {
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+
+  private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
+  private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
   var isDead=true
 
@@ -56,6 +62,25 @@ class GameHolder {
   )
 
   private[this] val webSocketClient =WebSocketClient()
+
+  @scala.scalajs.js.annotation.JSExport
+  override def main(): Unit = {
+    drawGameOff()
+    canvas.width = window.x
+    canvas.height = window.y
+    canvas2.width = window.x
+    canvas2.height = window.y
+    canvas3.width = window.x
+    canvas3.height = window.y
+    offScreenCanvas.width = bounds.x
+    offScreenCanvas.height = bounds.y
+    drawBackground()
+
+    dom.window.onload= {
+      (_: Event) =>
+        LoginPage.homePage()
+    }
+  }
 
   def addActionListenEvent={
     canvas3.focus()
