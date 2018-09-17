@@ -116,15 +116,15 @@ object RoomActor {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
             dispatchTo(subscribersMap,id,WsMsgProtocol.SnakeRestart(id))
           } else {
-            grid.addActionWithFrame(id, KeyCode(id,keyCode,frame,n),math.max(grid.frameCount,frame))
-            dispatch(subscribersMap,KeyCode(id,keyCode,frame,n))
+            grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap,KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
           }
           Behaviors.same
         case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
-          grid.addMouseActionWithFrame(id,MousePosition(id,x,y,frame,n),math.max(grid.frameCount,frame))
-          dispatch(subscribersMap,MousePosition(id,x,y,frame,n))
+          grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+          dispatch(subscribersMap,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
 
         case Sync =>

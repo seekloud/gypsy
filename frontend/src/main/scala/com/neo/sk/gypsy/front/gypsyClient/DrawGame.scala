@@ -42,8 +42,8 @@ case class DrawGame(
   //文本高度
   val textLineHeight = 14
 
-  private[this] val stripeX = scala.collection.immutable.Range(0,size.y+50,50)
-  private[this] val stripeY = scala.collection.immutable.Range(0,size.x+100,100)
+  private[this] val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
+  private[this] val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -66,11 +66,10 @@ case class DrawGame(
   }
 
   //离线提示文字
-  def drawGameLost(nextFrame:Int): Unit = {
+  def drawGameLost: Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
-    dom.window.cancelAnimationFrame(nextFrame)
     ctx.font = "36px Helvetica"
     ctx.fillText("Ops, connection lost....", 350, 250)
   }
@@ -153,6 +152,7 @@ case class DrawGame(
         ctx.fillStyle = "#f27c02"
         ctx.fillText(s"$killerName $showText $deadName", 10, 400)
         ctx.restore()
+        println("-------?????")
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
       }else{
@@ -295,173 +295,6 @@ case class DrawGame(
           ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
           ctx.fill()
         }
-        //Todo chubi jiya
-        /*}else if(xfix<cell.radius+5){
-          val deg=acos(xfix/(cell.radius+5))
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#bf3558" //粉
-            case 1 => "#cc8a43"  //棕
-            case 2  => "#bd9e2f"  //棕绿
-            case 3  => "#22a834"   //绿
-            case 4  => "#3da2c4"   //天蓝
-            case 5  => "#b88237"   //深棕
-            case 6  => "#558cc2"   //深蓝
-            case _  => "#ad43a2"   //紫
-          }
-          ctx.beginPath()
-          ctx.lineWidth=10
-          ctx.moveTo(offx,yfix+offy+sqrt(pow(cell.radius+5,2)-pow(xfix,2)))
-          ctx.lineTo(offx,yfix+offy-sqrt(pow(cell.radius+5,2)-pow(xfix,2)))
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,deg-Math.PI,Math.PI-deg)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#cc4a6c"
-            case 1 => "#d69753"
-            case 2  => "#ccae43"
-            case 3  => "#3dbf4f"
-            case 4  => "#50b1d1"
-            case 5  => "#cf9748"
-            case 6  => "#74a7de"
-            case _  => "#cc64c2"
-          }
-          ctx.beginPath()
-          ctx.lineWidth=5
-          ctx.moveTo(offx+5*cos(deg),yfix+offy+sqrt(pow(cell.radius+5,2)-pow(xfix,2))-3*sin(deg))
-          ctx.lineTo(offx+5*cos(deg),yfix+offy-sqrt(pow(cell.radius+5,2)-pow(xfix,2))+3*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,deg-Math.PI,Math.PI-deg)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.beginPath()
-          ctx.moveTo(offx+10*cos(deg),yfix+offy+sqrt(pow(cell.radius,2)-pow(xfix,2))-5*sin(deg))
-          ctx.lineTo(offx+10*cos(deg),yfix+offy-sqrt(pow(cell.radius,2)-pow(xfix,2))+5*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,deg-Math.PI,Math.PI-deg)
-          ctx.closePath()
-          ctx.fill()
-        }else if(yfix<cell.radius+5){
-
-          val deg=asin(yfix/(cell.radius+5))
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#bf3558" //粉
-            case 1 => "#cc8a43"  //棕
-            case 2  => "#bd9e2f"  //棕绿
-            case 3  => "#22a834"   //绿
-            case 4  => "#3da2c4"   //天蓝
-            case 5  => "#b88237"   //深棕
-            case 6  => "#558cc2"   //深蓝
-            case _  => "#ad43a2"   //紫
-          }
-          ctx.beginPath()
-          ctx.lineWidth=10
-          ctx.moveTo(xfix+sqrt(pow(cell.radius+5,2)-pow(yfix,2)),0)
-          ctx.lineTo(xfix-sqrt(pow(cell.radius+5,2)-pow(yfix,2)),0)
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,-deg,deg-Math.PI)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#cc4a6c"
-            case 1 => "#d69753"
-            case 2  => "#ccae43"
-            case 3  => "#3dbf4f"
-            case 4  => "#50b1d1"
-            case 5  => "#cf9748"
-            case 6  => "#74a7de"
-            case _  => "#cc64c2"
-          }
-          ctx.beginPath()
-          ctx.lineWidth=5
-          ctx.moveTo(xfix+sqrt(pow(cell.radius+2,2)-pow(yfix,2))-5*cos(deg),0+5*sin(deg))
-          ctx.lineTo(xfix-sqrt(pow(cell.radius+2,2)-pow(yfix,2))+5*cos(deg),0+5*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,-deg,deg-Math.PI)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.beginPath()
-          ctx.moveTo(xfix+sqrt(pow(cell.radius,2)-pow(yfix,2))-5*cos(deg),0+10*sin(deg))
-          ctx.lineTo(xfix-sqrt(pow(cell.radius,2)-pow(yfix,2))+5*cos(deg),0+10*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,-deg,deg-Math.PI)
-          ctx.closePath()
-          ctx.fill()
-
-        }else if(xfix>bounds.x-cell.radius-5){
-
-          val deg=asin((bounds.x-xfix)/(cell.radius+5))
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#bf3558" //粉
-            case 1 => "#cc8a43"  //棕
-            case 2  => "#bd9e2f"  //棕绿
-            case 3  => "#22a834"   //绿
-            case 4  => "#3da2c4"   //天蓝
-            case 5  => "#b88237"   //深棕
-            case 6  => "#558cc2"   //深蓝
-            case _  => "#ad43a2"   //紫
-          }
-          ctx.beginPath()
-          ctx.lineWidth=10
-          ctx.moveTo(bounds.x+offx-20,yfix+sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2)))
-          ctx.lineTo(bounds.x+offx-20,yfix-sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2)))
-          println(bounds.x+offx-20)
-          println(xfix+offx)
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+5,deg,-deg,false)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.save()
-          ctx.fillStyle = color.toInt match{
-            case 0 => "#cc4a6c"
-            case 1 => "#d69753"
-            case 2  => "#ccae43"
-            case 3  => "#3dbf4f"
-            case 4  => "#50b1d1"
-            case 5  => "#cf9748"
-            case 6  => "#74a7de"
-            case _  => "#cc64c2"
-          }
-          ctx.beginPath()
-          ctx.lineWidth=5
-          ctx.moveTo(bounds.x-5*cos(deg)+offx-20,yfix+sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2))-3*sin(deg))
-          ctx.lineTo(bounds.x-5*cos(deg)+offx-20,yfix-sqrt(pow(cell.radius+5,2)-pow(bounds.x-xfix,2))+3*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+2,deg,-deg,false)
-          ctx.closePath()
-          ctx.fill()
-          ctx.restore()
-
-          ctx.beginPath()
-          ctx.moveTo(bounds.x-10*cos(deg)+offx-20,yfix+sqrt(pow(cell.radius,2)-pow(bounds.x-xfix,2))-5*sin(deg))
-          ctx.lineTo(bounds.x+10*cos(deg)+offx-20,yfix-sqrt(pow(cell.radius,2)-pow(bounds.x-xfix,2))+5*sin(deg))
-          ctx.beginPath()
-          ctx.arc(xfix +offx,yfix+offy,cell.radius-1,deg,-deg,false)
-          ctx.closePath()
-          ctx.fill()
-
-        }else if(yfix>bounds.y-cell.radius-5){
-
-        }*/
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
@@ -486,26 +319,6 @@ case class DrawGame(
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
-
-    //根据uid获取用户信息，绘制左上角个人信息；绘制等待提示和死亡提示
-    players.find(_.id == uid) match {
-      case Some(myStar) =>
-        ctx.save()
-        ctx.font = "34px Helvetica"
-        ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
-        ctx.restore()
-        false
-      case None =>
-        if(firstCome) {
-          ctx.font = "36px Helvetica"
-          ctx.fillText("Please wait.", 150, 180)
-        } else {
-          ctx.font = "36px Helvetica"
-          ctx.fillText("Ops, Loading....", 350, 250)
-        }
-        firstCome
-    }
   }
 
   //ctx3

@@ -85,23 +85,19 @@ trait Grid {
     r
   }
 
-  def addAction(id: Long, keyCode: KeyCode) = {
-    addActionWithFrame(id, keyCode, frameCount)
-  }
 //键盘事件后，按键动作加入action列表
-  def addActionWithFrame(id: Long, keyCode: KeyCode, frame: Long) = {
-    val map = actionMap.getOrElse(frame, Map.empty)
+  def addActionWithFrame(id: Long, keyCode: KeyCode) = {
+    val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)
-    actionMap += (frame -> tmp)
+    actionMap += (keyCode.frame -> tmp)
   }
-  def addMouseAction(id: Long, mp:MousePosition) = {
-    addMouseActionWithFrame(id, mp,frameCount)
-  }
-  def addMouseActionWithFrame(id: Long, mp:MousePosition,  frame: Long) = {
-    val map = mouseActionMap.getOrElse(frame, Map.empty)
+
+  def addMouseActionWithFrame(id: Long, mp:MousePosition) = {
+    val map = mouseActionMap.getOrElse(mp.frame, Map.empty)
     val tmp = map + (id -> mp)
-    mouseActionMap += (frame -> tmp)
+    mouseActionMap += (mp.frame -> tmp)
   }
+
   def removeActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
     gameAction match {
       case k:KeyCode=>

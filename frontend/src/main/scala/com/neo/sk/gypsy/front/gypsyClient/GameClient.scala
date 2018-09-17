@@ -1,9 +1,10 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GameAction
-import com.neo.sk.gypsy.shared.ptcl.{Cell, Point}
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, GridDataSync, KeyCode, MousePosition,maxDelayFrame}
+import com.neo.sk.gypsy.shared.ptcl.{Cell, Point, Score}
 
+import scala.collection.mutable
 import scala.math.{pow, sqrt}
 
 /**
@@ -19,6 +20,13 @@ class GameClient (override val boundary: Point) extends Grid {
 
   override def feedApple(appleCount: Int): Unit = {} //do nothing.
   override def addVirus(v: Int): Unit = {}
+
+  var currentRank = List.empty[Score]
+  //fixme 此处变量未有实际用途
+  var historyRank = List.empty[Score]
+
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
+  private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def checkPlayer2PlayerCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -57,57 +65,72 @@ class GameClient (override val boundary: Point) extends Grid {
 
   }
 
+  def addUncheckActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
+    uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
+  }
+
   def addActionWithFrameFromServer(id:Long,gameAction:GameAction) = {
     val frame=gameAction.frame
     if(myId == id){
       uncheckActionWithFrame.get(gameAction.serialNum) match {
         case Some((f,tankId,a)) =>
-          if(f == frame){ //与预执行的操作数据一致
-            println("---------11")
+          if(f == frame){ //fixme 此处存在advanceFrame差异
             uncheckActionWithFrame.remove(gameAction.serialNum)
           }else{ //与预执下的操作数据不一致，进行回滚
             uncheckActionWithFrame.remove(gameAction.serialNum)
-            if(frame < grid.frameCount){
+            if(frame < frameCount){
               rollback(frame)
             }else{
-              grid.removeActionWithFrame(tankId,a,f)
+              removeActionWithFrame(tankId,a,f)
               gameAction match {
                 case a:KeyCode=>
-                  grid.addActionWithFrame(id,a,frame)
+                  addActionWithFrame(id,a)
                 case b:MousePosition=>
-                  grid.addMouseActionWithFrame(id,b,frame)
+                  addMouseActionWithFrame(id,b)
               }
             }
           }
         case None =>
           gameAction match {
             case a:KeyCode=>
-              grid.addActionWithFrame(id,a,frame)
+              addActionWithFrame(id,a)
             case b:MousePosition=>
-              grid.addMouseActionWithFrame(id,b,frame)
+              addMouseActionWithFrame(id,b)
           }
       }
     }else{
-      if(frame < grid.frameCount && grid.frameCount - maxRollBackFrames >= frame){
+      if(frame < frameCount && frameCount - maxDelayFrame >= frame){
         //回滚
-        println("--------2")
         rollback(frame)
       }else{
-        println("-------1")
         gameAction match {
           case a:KeyCode=>
-            grid.addActionWithFrame(id,a,frame)
+            addActionWithFrame(id,a)
           case b:MousePosition=>
-            grid.addMouseActionWithFrame(id,b,frame)
+            addMouseActionWithFrame(id,b)
         }
       }
     }
   }
 
   def rollback2State(d:GridDataSync) = {
-    grid.actionMap=grid.actionMap.filterKeys(_>=grid.frameCount)
-    grid.mouseActionMap=grid.mouseActionMap.filterKeys(_>=grid.frameCount)
+    actionMap=actionMap.filterKeys(_>=frameCount)
+    mouseActionMap=mouseActionMap.filterKeys(_>=frameCount)
     setSyncGridData(d)
+  }
+
+  def setSyncGridData(data:GridDataSync): Unit = {
+
+    actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
+    mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
+    //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
+    frameCount = data.frameCount
+    //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
+    playerMap = data.playerDetails.map(s => s.id -> s).toMap
+    food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    massList = data.massDetails
+    virus = data.virusDetails
+
   }
 
 
@@ -115,18 +138,18 @@ class GameClient (override val boundary: Point) extends Grid {
   def rollback(frame:Long) = {
     gameSnapshotMap.get(frame) match {
       case Some(state) =>
-        val curFrame = grid.frameCount
+        val curFrame = frameCount
         rollback2State(state)
         uncheckActionWithFrame.filter(_._2._1 > frame).foreach{t=>
           t._2._3 match {
             case a:KeyCode=>
-              grid.addActionWithFrame(t._2._2,a,frame)
+              addActionWithFrame(t._2._2,a)
             case b:MousePosition=>
-              grid.addMouseActionWithFrame(t._2._2,b,frame)
+              addMouseActionWithFrame(t._2._2,b)
           }
         }
         (frame until curFrame).foreach{ f =>
-          grid.frameCount = f
+          frameCount = f
           update()
         }
       case None =>
