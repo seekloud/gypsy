@@ -95,22 +95,6 @@ object NetGameHolder extends js.JSApp {
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-  private[this] val skyimg = dom.document.getElementById("sky").asInstanceOf[HTMLElement]
-  private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
-  private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
-  private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
-  private[this] val  killingspree = dom.document.getElementById("killingspree").asInstanceOf[HTMLElement]
-  private[this] val  dominating = dom.document.getElementById("dominating").asInstanceOf[HTMLElement]
-  private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
-  private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
-  private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-  private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
-  goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
-  private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
-  silverImg.setAttribute("src", "/gypsy/static/img/silver.png")
-  private val bronzeImg = dom.document.createElement("img").asInstanceOf[html.Image]
-  bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
-  private[this] val windWidth = dom.window.innerWidth
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
   private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]

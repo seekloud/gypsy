@@ -20,6 +20,23 @@ case class DrawGame(
               canvas:Canvas,
               size:Point
               ) {
+
+  private[this] val  img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
+  private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
+  private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
+  private[this] val  killingspree = dom.document.getElementById("killingspree").asInstanceOf[HTMLElement]
+  private[this] val  dominating = dom.document.getElementById("dominating").asInstanceOf[HTMLElement]
+  private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
+  private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
+  private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
+  private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
+  private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  silverImg.setAttribute("src", "/gypsy/static/img/silver.png")
+  private val bronzeImg = dom.document.createElement("img").asInstanceOf[html.Image]
+  bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
+
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
   this.canvas.width=this.size.x
@@ -137,22 +154,28 @@ case class DrawGame(
       println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
-      val showText = if (killerId == myId) "You Killed"
-      else if (deadPlayer.kill >3)"Shut Down"
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) "Killing Spree"
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) "Dominating"
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) "Unstoppable"
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) "Godlike"
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) "Legendary"
+      val killImg = if (deadPlayer.kill > 3) shutdown
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) killingspree
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) dominating
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) unstoppable
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) godlike
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) legendary
+      else if (killerId == myId) youkill
+      else kill
       if (showTime > 0) {
         ctx.save()
         ctx.font = "25px Helvetica"
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(s"$killerName $showText $deadName", 10, 400)
+        ctx.strokeText(killerName, 25, 400)
         ctx.fillStyle = "#f27c02"
-        ctx.fillText(s"$killerName $showText $deadName", 10, 400)
+        ctx.fillText(killerName, 25, 400)
+        ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
+        ctx.strokeStyle = "#f32705"
+        ctx.strokeText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.fillStyle = "#f27c02"
+        ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
         ctx.restore()
-        println("-------?????")
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
       }else{
@@ -164,7 +187,7 @@ case class DrawGame(
   }
 
 
-  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,img:HTMLElement,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
     val foods = data.foodDetails
@@ -309,12 +332,21 @@ case class DrawGame(
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_) =>
+    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
-      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+      var xfix:Double=x
+      var yfix:Double=y
+      if(speed>0){
+        val(nx,ny)= normalization(tx,ty)
+        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
+        yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+      }
+
+      ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
-
     ctx.restore()
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
