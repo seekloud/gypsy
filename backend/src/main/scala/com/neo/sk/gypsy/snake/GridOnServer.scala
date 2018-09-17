@@ -5,6 +5,7 @@ import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils.checkCollision
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -28,6 +29,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   private[this] var waitingJoin = Map.empty[Long, String]
   private[this] var feededApples: List[Food] = Nil
+  private[this] var newFoods = Map[Point, Int]()
+  private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
 
@@ -90,6 +93,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
       val p = randomEmptyPoint()
       val color = random.nextInt(7)
       feededApples ::= Food(color,p.x,p.y)
+      newFoods+=(p->color)
       food += (p->color)
       appleNeeded -= 1
     }
@@ -163,6 +167,74 @@ class GridOnServer(override val boundary: Point) extends Grid {
         playerMap += (killId -> a.copy(kill = a.kill + 1))
       case Right(_) =>
     }
+  }
+
+  override def checkPlayerFoodCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newProtected = player.protect
+        val newCells = player.cells.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            food.foreach {
+              case (p, color) =>
+                if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
+                  //食物被吃掉
+                  newMass += foodMass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  food -= p
+                  eatenFoods+=(p->color)
+                  if (newProtected)
+                  //吃食物后取消保护
+                    newProtected = false
+                }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+  }
+
+  override def getAllGridData: WsMsgProtocol.GridDataSync = {
+    val foodDetails: List[Food] = Nil
+    var playerDetails: List[Player] = Nil
+    var newFoodDetails: List[Food] = Nil
+    var eatenFoodDetails:List[Food] = Nil
+
+    newFoods.foreach{
+        case (p,mass) =>
+          newFoodDetails ::= Food(mass, p.x, p.y)
+      }
+    playerMap.foreach{
+      case (id,player) =>
+        playerDetails ::= player
+    }
+    eatenFoods.foreach{
+      case (p,mass) =>
+        eatenFoodDetails ::= Food(mass, p.x, p.y)
+    }
+    newFoods=Map[Point, Int]().empty
+    eatenFoods = Map[Point, Int]().empty
+    WsMsgProtocol.GridDataSync(
+      frameCount,
+      playerDetails,
+      foodDetails,
+      massList,
+      virus,
+      1.0,
+      newFoodDetails,
+      eatenFoodDetails
+    )
   }
 
   override def update(): Unit = {
