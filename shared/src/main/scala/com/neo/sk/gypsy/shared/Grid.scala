@@ -291,7 +291,7 @@ trait Grid {
   }
   //mass检测
   def checkVirusMassCrash(): Unit = {
-    virus = virus.map{v=>
+    val virus1 = virus.flatMap{v=>
       var newMass = v.mass
       var newRadius = v.radius
       var newSpeed = v.speed
@@ -337,19 +337,16 @@ trait Grid {
         if (newY < borderCalc) newY = borderCalc
       }
       if(newMass>virusMassLimit){
-//        newMass = newMass/2
-        //        newRadius = 4 + sqrt(newMass) * mass2rRate
-        //        val newX2 = newX + (nx*newRadius*2).toInt
-        //        val newY2 = newY + (ny*newRadius*2).toInt
-        //        virus=v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)::virus
-        newMass = virusMassLimit
-        newRadius = 4 + sqrt(newMass) * mass2rRate
-        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+        newMass = newMass/2
+                newRadius = 4 + sqrt(newMass) * mass2rRate
+                val newX2 = newX + (nx*newRadius*2).toInt
+                val newY2 = newY + (ny*newRadius*2).toInt
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed),v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
       }else{
-        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
       }
-
     }
+    virus = virus1
   }
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit = {}
