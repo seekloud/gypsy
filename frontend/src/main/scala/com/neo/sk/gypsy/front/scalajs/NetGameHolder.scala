@@ -7,9 +7,8 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils._
 
-import scalatags.JsDom.all._
-import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _, _}
@@ -654,9 +653,19 @@ object NetGameHolder extends js.JSApp {
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_) =>
+    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
-      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+      var xfix:Double=x
+      var yfix:Double=y
+      if(speed>0){
+        val(nx,ny)= normalization(tx,ty)
+        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
+         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+      }
+
+      ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
 
