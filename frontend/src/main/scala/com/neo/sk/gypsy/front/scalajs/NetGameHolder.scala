@@ -662,7 +662,8 @@ object NetGameHolder extends js.JSApp {
         val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
          xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
-         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly}
+         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+      }
 
       ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()

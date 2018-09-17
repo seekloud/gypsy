@@ -61,6 +61,8 @@ trait Grid {
   var virus = List[Virus]()
   //病毒数量
   var virusNum:Int = 8
+  //病毒质量上限
+  var virusMassLimit:Int = 200
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
@@ -304,8 +306,8 @@ trait Grid {
           if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
             val (mx,my)=normalization(p.targetX,p.targetY)
            // println(s"mx$mx,my$my")
-            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)*1.5
-            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)*1.5
+            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
+            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
 
             newX += vx.toInt
             newY += vy.toInt
@@ -323,7 +325,7 @@ trait Grid {
             massList = massList.filterNot(l => l == p)
           }
       }
-      newSpeed -= 0.5
+      newSpeed -= 0.3
       if(newSpeed<0) newSpeed=0
       if(hasMoved==false && newSpeed!=0){
         newX += (nx*newSpeed).toInt
@@ -334,7 +336,19 @@ trait Grid {
         if (newX < borderCalc) newX = borderCalc
         if (newY < borderCalc) newY = borderCalc
       }
-      v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+      if(newMass>virusMassLimit){
+//        newMass = newMass/2
+        //        newRadius = 4 + sqrt(newMass) * mass2rRate
+        //        val newX2 = newX + (nx*newRadius*2).toInt
+        //        val newY2 = newY + (ny*newRadius*2).toInt
+        //        virus=v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)::virus
+        newMass = virusMassLimit
+        newRadius = 4 + sqrt(newMass) * mass2rRate
+        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+      }else{
+        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+      }
+
     }
   }
   //与用户检测
