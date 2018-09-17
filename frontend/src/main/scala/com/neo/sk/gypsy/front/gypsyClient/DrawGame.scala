@@ -354,7 +354,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMap(uid:Long,currentRank:List[Score],players:List[Player],goldImg:html.Image,silverImg:html.Image,bronzeImg:html.Image,basePoint:(Double,Double))={
+  def drawRankMapData(uid:Long,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,size.x,size.y)
     ctx.font = "12px Helvetica"

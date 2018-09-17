@@ -1,8 +1,9 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, GridDataSync, KeyCode, MousePosition,maxDelayFrame}
-import com.neo.sk.gypsy.shared.ptcl.{Cell, Point, Score}
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, GridDataSync, KeyCode, MousePosition,advanceFrame,maxDelayFrame}
+import com.neo.sk.gypsy.shared.ptcl.{Cell, Point, Score, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.util.utils.checkCollision
 
 import scala.collection.mutable
 import scala.math.{pow, sqrt}
@@ -27,6 +28,10 @@ class GameClient (override val boundary: Point) extends Grid {
 
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
+
+  override def getAllGridData: WsMsgProtocol.GridDataSync={
+    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
+  }
 
   override def checkPlayer2PlayerCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -63,6 +68,41 @@ class GameClient (override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map { s=>(s.id,s)}.toMap
 
+  }
+
+  override def checkPlayerFoodCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newProtected = player.protect
+        val newCells = player.cells.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            food.foreach {
+              case (p, color) =>
+                if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
+                  //食物被吃掉
+                  newMass += foodMass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  food -= p
+                  if (newProtected)
+                  //吃食物后取消保护
+                    newProtected = false
+                }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
   def addUncheckActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
@@ -120,17 +160,31 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
   def setSyncGridData(data:GridDataSync): Unit = {
-
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
     //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
-    frameCount = data.frameCount
+    frameCount = frameCount
     //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    if(data.foodDetails.nonEmpty){
+      food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    }
+    if(food.nonEmpty&&data.eatenFoodDetails.nonEmpty){
+      data.eatenFoodDetails.foreach{
+        f=>
+          food-=Point(f.x,f.y)
+      }
+    }
+    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     massList = data.massDetails
     virus = data.virusDetails
 
+    val myCell=playerMap.find(_._1==myId)
+    if(myCell.isDefined){
+      for(i<- advanceFrame to 1 by -1){
+        update()
+      }
+    }
   }
 
 

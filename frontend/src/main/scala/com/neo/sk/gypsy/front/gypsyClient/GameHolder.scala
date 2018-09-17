@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.Canvas
+import org.scalajs.dom.html.{Document => _,Canvas}
 import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -70,7 +70,7 @@ object GameHolder extends js.JSApp {
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
 
-  private[this] var webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
+  private[this] val webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
 
   val grid = new GameClient(bounds)
 
@@ -219,6 +219,7 @@ object GameHolder extends js.JSApp {
           val basePoint = (offx, offy)
 
           draw1.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
+          draw3.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", 250, 10)
