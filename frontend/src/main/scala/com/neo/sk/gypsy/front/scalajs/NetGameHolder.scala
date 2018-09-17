@@ -7,9 +7,8 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils._
 
-import scalatags.JsDom.all._
-import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _, _}
@@ -97,6 +96,14 @@ object NetGameHolder extends js.JSApp {
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val skyimg = dom.document.getElementById("sky").asInstanceOf[HTMLElement]
+  private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
+  private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
+  private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
+  private[this] val  killingspree = dom.document.getElementById("killingspree").asInstanceOf[HTMLElement]
+  private[this] val  dominating = dom.document.getElementById("dominating").asInstanceOf[HTMLElement]
+  private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
+  private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
+  private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
   private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
@@ -262,25 +269,29 @@ object NetGameHolder extends js.JSApp {
         val showTime = killList.head._1
         val killerId = killList.head._2
         val deadPlayer = killList.head._3
-        println("kk"+killerId)
-        println("dd"+deadPlayer)
-        println("gg"+grid.playerMap)
         val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
         val deadName = deadPlayer.name
-        val showText = if (killerId == myId) "You Killed"
-        else if (deadPlayer.kill >3)"Shut Down"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) "Killing Spree"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) "Dominating"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) "Unstoppable"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) "Godlike"
-        else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) "Legendary"
+        val killImg = if (deadPlayer.kill > 3) shutdown
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) killingspree
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) dominating
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) unstoppable
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) godlike
+         else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) legendary
+         else if (killerId == myId) youkill
+         else kill
         if (showTime > 0) {
           ctx.save()
           ctx.font = "25px Helvetica"
           ctx.strokeStyle = "#f32705"
-          ctx.strokeText(s"$killerName $showText $deadName", 10, 400)
+          ctx.strokeText(killerName, 25, 400)
           ctx.fillStyle = "#f27c02"
-          ctx.fillText(s"$killerName $showText $deadName", 10, 400)
+          ctx.fillText(killerName, 25, 400)
+          ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
+          ctx.strokeStyle = "#f32705"
+          ctx.strokeText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+          ctx.fillStyle = "#f27c02"
+          ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+          ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
           ctx.restore()
           killList = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
           if (killList.isEmpty) isKill = false
@@ -347,6 +358,7 @@ object NetGameHolder extends js.JSApp {
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,window.x,window.y)
     ctx.save()
+    centerScale(window.x/1200.0,window.x/2,window.y/2)
     centerScale(scale,window.x/2,window.y/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
@@ -636,14 +648,24 @@ object NetGameHolder extends js.JSApp {
 //        ctx.strokeStyle = "grey"
 //        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${name}", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_) =>
+    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
-      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+      var xfix:Double=x
+      var yfix:Double=y
+      if(speed>0){
+        val(nx,ny)= normalization(tx,ty)
+        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
+         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+      }
+
+      ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
 
@@ -664,7 +686,7 @@ object NetGameHolder extends js.JSApp {
         ctx.save()
         ctx.font = "34px Helvetica"
         ctx.fillText(s"KILL: ${myStar.kill}", 250, 10)
-        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum}", 400, 10)
+        ctx.fillText(s"SCORE: ${myStar.cells.map(_.mass).sum.toInt}", 400, 10)
         ctx.restore()
       case None =>
         if(firstCome) {
@@ -703,7 +725,7 @@ object NetGameHolder extends js.JSApp {
       }
 //      ctx3.strokeStyle = drawColor
 //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", window.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", window.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
