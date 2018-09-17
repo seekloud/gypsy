@@ -998,7 +998,16 @@ def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): 
     grid.frameCount = data.frameCount
 //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    if(data.foodDetails.nonEmpty){
+      grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    }
+    if(grid.food.nonEmpty&&data.eatenFoodDetails.nonEmpty){
+      data.eatenFoodDetails.foreach{
+        food=>
+          grid.food-=Point(food.x,food.y)
+      }
+    }
+    grid.food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     grid.massList = data.massDetails
     grid.virus = data.virusDetails
 

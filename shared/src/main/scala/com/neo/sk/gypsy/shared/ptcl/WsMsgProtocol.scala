@@ -39,7 +39,9 @@ object WsMsgProtocol {
                            foodDetails: List[Food],
                            massDetails: List[Mass],
                            virusDetails: List[Virus],
-                           scale:Double //缩放比例
+                           scale:Double, //缩放比例
+                           var newFoodDetails:List[Food]=Nil,
+                           var eatenFoodDetails:List[Food]=Nil
                          ) extends WsMsgFront
 
   case class FeedApples(

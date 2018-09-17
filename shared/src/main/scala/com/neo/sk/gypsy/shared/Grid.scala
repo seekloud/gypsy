@@ -68,7 +68,7 @@ trait Grid {
   //喷出小球列表
   var massList = List[Mass]()
   val shotMass = 10
-  val shotSpeed = 40
+  val shotSpeed = 100
   //质量衰减下限
   val decreaseLimit = 200
   //衰减率
@@ -143,7 +143,7 @@ trait Grid {
     var newSpeed = mass.speed
     var newX = mass.x
     var newY = mass.y
-    newSpeed -= 2
+    newSpeed -= 25
     if (newSpeed < 0) newSpeed = 0
     if (!(deltaY).isNaN) newY += deltaY.toInt
     if (!(deltaX).isNaN) newX += deltaX.toInt
@@ -223,41 +223,7 @@ trait Grid {
   }
 
   //食物检测
-  def checkPlayerFoodCrash(): Unit = {
-    val newPlayerMap = playerMap.values.map {
-      player =>
-        var newProtected = player.protect
-        val newCells = player.cells.map {
-          cell =>
-            var newMass = cell.mass
-            var newRadius = cell.radius
-            food.foreach {
-              case (p, color) =>
-                if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
-                  //食物被吃掉
-                  newMass += foodMass
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
-                  food -= p
-                  if (newProtected)
-                  //吃食物后取消保护
-                    newProtected = false
-                }
-            }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
-        }
-        val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
-        val left = newCells.map(a => a.x - a.radius).min
-        val right = newCells.map(a => a.x + a.radius).max
-        val bottom = newCells.map(a => a.y - a.radius).min
-        val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
-    }
-    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-  }
-
+  def checkPlayerFoodCrash(): Unit
   //mass检测
   def checkPlayerMassCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -291,7 +257,7 @@ trait Grid {
   }
   //mass检测
   def checkVirusMassCrash(): Unit = {
-    virus = virus.map{v=>
+    val virus1 = virus.flatMap{v=>
       var newMass = v.mass
       var newRadius = v.radius
       var newSpeed = v.speed
@@ -337,19 +303,16 @@ trait Grid {
         if (newY < borderCalc) newY = borderCalc
       }
       if(newMass>virusMassLimit){
-//        newMass = newMass/2
-        //        newRadius = 4 + sqrt(newMass) * mass2rRate
-        //        val newX2 = newX + (nx*newRadius*2).toInt
-        //        val newY2 = newY + (ny*newRadius*2).toInt
-        //        virus=v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)::virus
-        newMass = virusMassLimit
-        newRadius = 4 + sqrt(newMass) * mass2rRate
-        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+        newMass = newMass/2
+                newRadius = 4 + sqrt(newMass) * mass2rRate
+                val newX2 = newX + (nx*newRadius*2).toInt
+                val newY2 = newY + (ny*newRadius*2).toInt
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed),v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
       }else{
-        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
       }
-
     }
+    virus = virus1
   }
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit = {}
@@ -484,8 +447,8 @@ trait Grid {
               newMass -= shotMass
               newRadius = 4 + sqrt(newMass) * 6
               val massRadius = 4 + sqrt(shotMass) * 6
-              val massX = (cell.x + (newRadius - 15) * degX).toInt
-              val massY = (cell.y + (newRadius - 15) * degY).toInt
+              val massX = (cell.x + (newRadius - 50) * degX).toInt
+              val massY = (cell.y + (newRadius - 50) * degY).toInt
               massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
@@ -797,7 +760,6 @@ trait Grid {
     var playerDetails: List[Player] = Nil
     food.foreach{
       case (p,mass) =>
-        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),p,4,width,height))
         foodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
@@ -814,26 +776,6 @@ trait Grid {
       scale
     )
   }
-  def getAllGridData = {
-    var foodDetails: List[Food] = Nil
-    var playerDetails: List[Player] = Nil
-    food.foreach{
-      case (p,mass) =>
-          foodDetails ::= Food(mass, p.x, p.y)
-    }
-    playerMap.foreach{
-      case (id,player) =>
-
-          playerDetails ::= player
-    }
-    WsMsgProtocol.GridDataSync(
-      frameCount,
-      playerDetails,
-      foodDetails,
-      massList,
-      virus,
-      1.0
-    )
-  }
+  def getAllGridData: WsMsgProtocol.GridDataSync
 
 }
