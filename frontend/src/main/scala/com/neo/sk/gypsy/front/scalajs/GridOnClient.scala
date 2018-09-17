@@ -1,8 +1,8 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.Point
-import com.neo.sk.gypsy.shared.ptcl.{Cell,Player, Point}
+import com.neo.sk.gypsy.shared.ptcl.{Cell, Player, Point, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.util.utils.checkCollision
 
 import scala.math.{pow, sqrt}
 /**
@@ -18,6 +18,9 @@ class GridOnClient(override val boundary: Point) extends Grid {
 
   override def feedApple(appleCount: Int): Unit = {} //do nothing.
   override def addVirus(v: Int): Unit = {}
+  override def getAllGridData: WsMsgProtocol.GridDataSync={
+    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
+  }
 
   override def checkPlayer2PlayerCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -54,5 +57,40 @@ class GridOnClient(override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map { s=>(s.id,s)}.toMap
 
+  }
+
+  override def checkPlayerFoodCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newProtected = player.protect
+        val newCells = player.cells.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            food.foreach {
+              case (p, color) =>
+                if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
+                  //食物被吃掉
+                  newMass += foodMass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  food -= p
+                  if (newProtected)
+                  //吃食物后取消保护
+                    newProtected = false
+                }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 }
