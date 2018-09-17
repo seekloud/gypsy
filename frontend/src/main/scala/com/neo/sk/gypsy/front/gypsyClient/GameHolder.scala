@@ -44,7 +44,7 @@ object GameHolder extends js.JSApp {
   private[this] val ctx2 = canvas2.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  private[this] val img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
   private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -218,7 +218,7 @@ object GameHolder extends js.JSApp {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          draw1.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,img,basePoint,zoom)
+          draw1.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", 250, 10)
