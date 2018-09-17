@@ -17,6 +17,13 @@ object utils {
       false
     }
   }
+  //归一化
+  def normalization(x:Double,y:Double):(Double,Double)={
+    val base = sqrt(pow(x,2)+pow(y,2))
+    if(base!=0)
+    (x/base,y/base)
+    else(0,0)
+  }
 //计算缩放比例
   def getZoomRate(width:Double,height:Double):Double = {
     var scale = 1.0
