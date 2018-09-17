@@ -1,11 +1,11 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.scalajs.NetGameHolder._
+import com.neo.sk.gypsy.front.gypsyClient.WebSocketClient
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{MousePosition, UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, WsMsgProtocol, SuccessRsp}
+import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -21,10 +21,10 @@ import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 import scalatags.JsDom.all._
 import scalatags.JsDom.short.*
-
+import com.neo.sk.gypsy.front.gypsyClient.GameHolder._
 object DeadPage {
 
-  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,gameStream:WebSocket)={
+  def deadModel(id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,webSocketClient:WebSocketClient)={
     isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
@@ -41,14 +41,12 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         isDead=false
-        sendMsg(WsMsgProtocol.KeyCode(myId,KeyCode.Space,grid.frameCount,getActionSerialNum),gameStream)
+        webSocketClient.sendMsg(WsMsgProtocol.KeyCode(myId,KeyCode.Space,grid.frameCount,getActionSerialNum))
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 
       override def btn2(): UndefOr[js.Function0[Any]] = {
-        sendMsg(UserLeft,gameStream)
-        gameStream.close()
-        wsSetup=false
+        webSocketClient.closeWs
         layer.closeAll()
         LoginPage.homePage()
       }.asInstanceOf[js.Function0[ Any]]

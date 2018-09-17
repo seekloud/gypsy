@@ -33,40 +33,40 @@ import scala.collection.mutable
   *
   */
 case class WebSocketClient(
-                            websocketStream:WebSocket,
                             connectSuccessCallback: Event => Unit,
-                            connectErrorCallback:Event => Unit,
-                            messageHandler:WsMsgFront => Unit,
+                            connectErrorCallback:ErrorEvent => Unit,
+                            messageHandler:(WsMsgFront,Int) => Unit,
                             closeCallback:Event => Unit
                           ) {
   private var wsSetup=false
 
-  private var webSocketOpt: Option[WebSocket] =None
+  private var webSocketOpt:Option[WebSocket]=None
 
   def getWsState=wsSetup
 
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
+
   def sendMsg(msg:WsMsgServer) = {
     import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
-    webSocketOpt.foreach(_.send(msg.fillMiddleBuffer(sendBuffer).result()))
+    webSocketOpt.get.send(msg.fillMiddleBuffer(sendBuffer).result())
   }
 
-  def setUp(gameStream:WebSocket)=
+  def setUp(url:String,maxScore:Int)=
     if(wsSetup){
       println()
     }else{
-      webSocketOpt = Some(websocketStream)
-      websocketStream.onopen = { event: Event =>
+      val gameStream = new WebSocket(url)
+      webSocketOpt = Some(gameStream)
+      webSocketOpt.get.onopen = { event: Event =>
         wsSetup = true
         connectSuccessCallback(event)
       }
-      websocketStream.onerror = { event: Event =>
+      webSocketOpt.get.onerror = { event: ErrorEvent =>
         wsSetup = false
-        webSocketOpt = None
         connectErrorCallback(event)
       }
 
-      websocketStream.onmessage = { event: MessageEvent =>
+      webSocketOpt.get.onmessage = { event: MessageEvent =>
         //        println(s"recv msg:${event.data.toString}")
         event.data match {
           case blobMsg:Blob =>
@@ -77,29 +77,27 @@ case class WebSocketClient(
               val buf = fr.result.asInstanceOf[ArrayBuffer]
               val middleDataInJs = new MiddleBufferInJs(buf)
               val data = bytesDecode[WsMsgFront](middleDataInJs).right.get
-              messageHandler(data)
+              messageHandler(data,maxScore)
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
             import io.circe.parser._
             val data = decode[WsMsgFront](jsonStringMsg).right.get
-            messageHandler(data)
+            messageHandler(data,maxScore)
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }
 
       }
 
-      websocketStream.onclose = { event: Event =>
+      webSocketOpt.get.onclose = { event: Event =>
         wsSetup = false
-        webSocketOpt = None
         closeCallback(event)
       }
     }
 
   def closeWs={
     sendMsg(UserLeft)
-    webSocketOpt.foreach(_.close())
-    webSocketOpt=None
+    webSocketOpt.get.close()
     wsSetup=false
   }
 

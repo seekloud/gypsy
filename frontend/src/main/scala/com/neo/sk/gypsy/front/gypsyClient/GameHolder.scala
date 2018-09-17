@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.{Document => _, _}
+import org.scalajs.dom.html.Canvas
 import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -34,7 +34,7 @@ import scala.collection.mutable
   * Date: 2018/9/13
   * Time: 13:26
   */
-class GameHolder extends js.JSApp {
+object GameHolder extends js.JSApp {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
@@ -58,19 +58,19 @@ class GameHolder extends js.JSApp {
 
   /**
     * 状态值*/
-  private[this] var wsSetup = false
+
   private[this] var justSynced = false
-  private[this] var isDead = true
+  var isDead = false
   private[this] var firstCome=true
 
   /**可变参数*/
-  private[this] var myId = -1l
+  var myId = -1l
   private[this] var nextFrame = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
 
-  private[this] val webSocketClient = WebSocketClient()
+  private[this] var webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
 
   val grid = new GameClient(bounds)
 
@@ -90,7 +90,7 @@ class GameHolder extends js.JSApp {
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
     draw1.drawGameWait()
-    draw3.drawBackground()
+    drawOff.drawBackground()
     dom.window.onload = {
       (_: Event) =>
         LoginPage.homePage()
@@ -100,16 +100,16 @@ class GameHolder extends js.JSApp {
   def getActionSerialNum=actionSerialNumGenerator.getAndIncrement()
 
   //不同步就更新，同步就设置为不同步
-  def gameLoop(gameStream: WebSocket): Unit = {
-    NetDelay.ping(gameStream)
+  def gameLoop: Unit = {
+    NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
-    if (wsSetup) {
+    if (webSocketClient.getWsState) {
       if (!justSynced) {
         update()
       } else {
-        println("back")
+//        println("back")
         if (syncGridData.nonEmpty) {
-          setSyncGridData(syncGridData.get)
+          grid.setSyncGridData(syncGridData.get)
           syncGridData = None
         }
         justSynced = false
@@ -122,25 +122,11 @@ class GameHolder extends js.JSApp {
     grid.update()
   }
 
-  def setSyncGridData(data:GridDataSync): Unit = {
-
-    grid.actionMap = grid.actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
-    grid.mouseActionMap = grid.mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
-    //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
-    grid.frameCount = data.frameCount
-    //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
-    grid.playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    grid.food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-    grid.massList = data.massDetails
-    grid.virus = data.virusDetails
-
-  }
-
-  def startGame(gameStream: WebSocket): Unit = {
+  def startGame: Unit = {
     println("start---")
     draw1.drawGameOn()
     draw2.drawRankMap()
-    dom.window.setInterval(() => gameLoop(gameStream: WebSocket), frameRate)
+    dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -154,6 +140,12 @@ class GameHolder extends js.JSApp {
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
+  def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+    val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
+    webSocketClient.setUp(url,maxScore)
+    startGame
+    addActionListenEvent
+  }
 
   def addActionListenEvent = {
     canvas3.focus()
@@ -164,6 +156,7 @@ class GameHolder extends js.JSApp {
         if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Escape && !isDead) {
+
             LoginPage.homePage()
             webSocketClient.closeWs
             isDead = true
@@ -171,9 +164,9 @@ class GameHolder extends js.JSApp {
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            val keyCode = WsMsgProtocol.KeyCode(myId, e.keyCode, grid.frameCount + advanceFrame, getActionSerialNum)
-            grid.addActionWithFrame(myId, keyCode, grid.frameCount + advanceFrame)
-            addUncheckActionWithFrame(myId, keyCode, grid.frameCount + advanceFrame)
+            val keyCode = WsMsgProtocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
             webSocketClient.sendMsg(keyCode)
           }
           e.preventDefault()
@@ -182,9 +175,10 @@ class GameHolder extends js.JSApp {
     }
     //在画布上监听鼠标事件
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount + advanceFrame, getActionSerialNum)
-      grid.addMouseActionWithFrame(myId, mp, mp.frame)
-      addUncheckActionWithFrame(myId, mp, mp.frame)
+      println("--------4")
+      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+      grid.addUncheckActionWithFrame(myId, mp, mp.frame)
       //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
       webSocketClient.sendMsg(mp)
       //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
@@ -194,11 +188,12 @@ class GameHolder extends js.JSApp {
   }
 
   def draw(offsetTime:Long)={
-    if (wsSetup) {
+    if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId)
-      val basePoint = data.playerDetails.find(_.id == myId) match {
+      data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
+          firstCome=false
           var sumX = 0.0
           var sumY = 0.0
           var xMax = 0.0
@@ -221,16 +216,32 @@ class GameHolder extends js.JSApp {
           }
           val offx = sumX /p.cells.length
           val offy = sumY /p.cells.length
-          (offx, offy)
+          val basePoint = (offx, offy)
+
+          draw1.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,img,basePoint,zoom)
+          ctx.save()
+          ctx.font = "34px Helvetica"
+          ctx.fillText(s"KILL: ${p.kill}", 250, 10)
+          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum}", 400, 10)
+          ctx.restore()
+          renderFps(ctx3,NetDelay.latency)
+          //todo 解决返回值问题
+          val paraBack = draw1.drawKill(myId,grid,isDead,killList)
+          killList=paraBack._1
+          isDead=paraBack._2
         case None =>
-          (bounds.x.toDouble / 2, bounds.y.toDouble / 2)
+          if(firstCome) {
+            ctx.font = "36px Helvetica"
+            ctx.fillText("Please wait.", 150, 180)
+          } else {
+            ctx.font = "36px Helvetica"
+            ctx.fillText("Ops, Loading....", 350, 250)
+          }
       }
 
-      draw1.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,img,basePoint,zoom)
-      renderFps(ctx3,NetDelay.latency)
-      (killList,isDead)=draw1.drawKill(myId,grid,isDead,killList)
     }else{
-      draw1.drawGameLost(nextFrame)
+      draw1.drawGameLost
+      dom.window.cancelAnimationFrame(nextFrame)
     }
   }
 
@@ -239,33 +250,47 @@ class GameHolder extends js.JSApp {
     e
   }
 
-  private def wsConnectError(e:Event) = {
-    JsFunc.alert("网络连接失败，请重新刷新")
+  private def wsConnectError(e:ErrorEvent) = {
+    val playground = dom.document.getElementById("playground")
+    draw1.drawGameLost
+    dom.window.cancelAnimationFrame(nextFrame)
+    playground.insertBefore(paraGraph(s"Failed: code: ${e.colno}"), playground.firstChild)
     e
   }
 
+  def paraGraph(msg: String) = {
+    val paragraph = dom.document.createElement("p")
+    paragraph.innerHTML = msg
+    paragraph
+  }
 
   private def wsConnectClose(e:Event) = {
     JsFunc.alert("网络连接失败，请重新刷新")
+    dom.window.cancelAnimationFrame(nextFrame)
     e
   }
 
-  private def wsMessageHandler(data:WsMsgFront):Unit = {
+  private def wsMessageHandler(data:WsMsgFront,maxScore:Int):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
-        addActionWithFrameFromServer(m.id,m)
-
+//        grid.addActionWithFrameFromServer(m.id,m)
+        if(myId!=m.id){
+          grid.addActionWithFrame(m.id,m)
+        }
       case m:WsMsgProtocol.MousePosition =>
-        addActionWithFrameFromServer(m.id,m)
+//        grid.addActionWithFrameFromServer(m.id,m)
+        if(myId!=m.id){
+          grid.addMouseActionWithFrame(m.id,m)
+        }
 
       case WsMsgProtocol.Ranks(current, history) =>
 
-        currentRank = current
-        historyRank = history
+        grid.currentRank = current
+        grid.historyRank = history
       case WsMsgProtocol.FeedApples(foods) =>
 
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
@@ -283,7 +308,7 @@ class GameHolder extends js.JSApp {
       //drawGrid(msgData.uid, data)
       //网络延迟检测
       case WsMsgProtocol.Pong(createTime) =>
-        NetDelay.receivePong(createTime ,gameStream)
+        NetDelay.receivePong(createTime ,webSocketClient)
 
       case WsMsgProtocol.SnakeRestart(id) =>
 
@@ -291,7 +316,7 @@ class GameHolder extends js.JSApp {
 
       case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-          DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,gameStream)
+          DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
           grid.removePlayer(id)
         }
 
@@ -300,8 +325,8 @@ class GameHolder extends js.JSApp {
         val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
         if(deadPlayer.id!=myId){
-          if(!isKill){
-            isKill=true
+          if(!isDead){
+            isDead=true
             killList :+=(200,killerId,deadPlayer)
           }else{
             killList :+=(200,killerId,deadPlayer)
