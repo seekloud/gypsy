@@ -14,8 +14,8 @@ object UserDao {
   }
   def getUserByName(name:String):Future[Option[SlickTables.rUser]] ={
 
-//    db.run(tUser.filter(_.name===name).result.headOption)
-    Future.successful(None)
+    db.run(tUser.filter(_.name===name).result.headOption)
+    //Future.successful(None)
   }
 
   def addUser(name:String,password:String,headImg:String,registerTime:Long)={
