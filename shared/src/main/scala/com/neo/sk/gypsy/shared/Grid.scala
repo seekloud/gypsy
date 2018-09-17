@@ -61,12 +61,20 @@ trait Grid {
   var virus = List[Virus]()
   //病毒数量
   var virusNum:Int = 8
+  //病毒质量上限
+  var virusMassLimit:Int = 200
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
   var massList = List[Mass]()
   val shotMass = 10
   val shotSpeed = 40
+  //质量衰减下限
+  val decreaseLimit = 200
+  //衰减率
+  val decreaseRate = 0.995
+  //衰减周期计数
+  var tick = 0
   //操作列表  帧数->(用户ID->操作)
   var actionMap = Map.empty[Long, Map[Long, KeyCode]]
 
@@ -277,7 +285,68 @@ trait Grid {
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
+  //mass检测
+  def checkVirusMassCrash(): Unit = {
+    virus = virus.map{v=>
+      var newMass = v.mass
+      var newRadius = v.radius
+      var newSpeed = v.speed
+      var newTargetX = v.targetX
+      var newTargetY = v.targetY
+      var newX = v.x
+      var newY = v.y
+      var hasMoved = false
+      val (nx,ny)= normalization(newTargetX,newTargetY)
+      massList.foreach {
+        case p: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
+            val (mx,my)=normalization(p.targetX,p.targetY)
+           // println(s"mx$mx,my$my")
+            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
+            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
 
+            newX += vx.toInt
+            newY += vy.toInt
+            hasMoved =true
+            val borderCalc = 0
+            if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+            if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+            if (newX < borderCalc) newX = borderCalc
+            if (newY < borderCalc) newY = borderCalc
+            newMass += p.mass
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+            newTargetX = vx
+            newTargetY = vy
+            massList = massList.filterNot(l => l == p)
+          }
+      }
+      newSpeed -= 0.3
+      if(newSpeed<0) newSpeed=0
+      if(hasMoved==false && newSpeed!=0){
+        newX += (nx*newSpeed).toInt
+        newY += (ny*newSpeed).toInt
+        val borderCalc = 0
+        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+        if (newX < borderCalc) newX = borderCalc
+        if (newY < borderCalc) newY = borderCalc
+      }
+      if(newMass>virusMassLimit){
+//        newMass = newMass/2
+        //        newRadius = 4 + sqrt(newMass) * mass2rRate
+        //        val newX2 = newX + (nx*newRadius*2).toInt
+        //        val newY2 = newY + (ny*newRadius*2).toInt
+        //        virus=v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)::virus
+        newMass = virusMassLimit
+        newRadius = 4 + sqrt(newMass) * mass2rRate
+        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+      }else{
+        v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
+      }
+
+    }
+  }
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit = {}
 
@@ -355,7 +424,7 @@ trait Grid {
             var newRadius = cell.radius
             //病毒碰撞检测
             virus.foreach { v =>
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 virus = virus.filterNot(_ == v)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
@@ -664,7 +733,20 @@ trait Grid {
 
   }
 
-   def updatePlayer()={
+  def massDerease():Unit={
+    val newPlayerMap = playerMap.values.map{player=>
+      val newCells=player.cells.map{cell=>
+        var newMass = cell.mass
+        if(cell.mass > decreaseLimit)
+          newMass = cell.mass*decreaseRate
+        cell.copy(mass = newMass)
+      }
+      player.copy(cells = newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+
+  }
+  def updatePlayer()={
 
      val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
      val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
@@ -677,7 +759,13 @@ trait Grid {
      val mergeInFlame=checkCellMerge()
      checkPlayerVirusCrash(mergeInFlame)
      checkPlayerShotMass(keyAct,mouseAct)
+     checkVirusMassCrash()
      checkPlayerSplit(keyAct,mouseAct)
+     tick = tick+1
+    if(tick%10==1){
+      tick =1
+      massDerease()
+    }
 
 
   }
