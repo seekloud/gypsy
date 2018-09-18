@@ -32,3 +32,7 @@ CREATE TABLE public.room
 );
 COMMENT ON COLUMN public.room.room_type IS '0为无尽房，正整数为限时房';
 COMMENT ON COLUMN public.room.is_close IS '0为开启，1为关闭';
+
+
+drop table room;
+
