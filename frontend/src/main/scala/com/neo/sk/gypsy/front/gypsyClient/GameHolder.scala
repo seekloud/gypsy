@@ -321,6 +321,9 @@ object GameHolder extends js.JSApp {
           grid.removePlayer(id)
         }
 
+      case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
+        DeadPage.deadModel(id,"GameOver!",killNum,score,lifeTime,maxScore,webSocketClient)
+
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
