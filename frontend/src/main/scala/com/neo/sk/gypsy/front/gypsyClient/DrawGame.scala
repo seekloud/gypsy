@@ -383,7 +383,7 @@ case class DrawGame(
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", size.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", size.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
