@@ -58,6 +58,8 @@ object WsMsgProtocol {
 
   case class KillMessage(killerId:Long,deadPlayer:Player) extends WsMsgFront
 
+  case class UserMerge(id:Long,player: Player)extends WsMsgFront
+
   case class Pong(timestamp: Long)extends WsMsgFront
 
   val frameRate = 150
