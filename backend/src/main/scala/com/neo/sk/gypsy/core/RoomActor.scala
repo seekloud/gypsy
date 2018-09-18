@@ -167,7 +167,12 @@ object RoomActor {
           Behaviors.same
 
         case TimeOut=>
-
+          println("------1")
+          val overTime=System.currentTimeMillis()
+          grid.playerMap.foreach{p=>
+            dispatchTo(subscribersMap,p._1,WsMsgProtocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
+          }
+          timer.cancel(SyncTimeKey)
           Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -205,7 +210,7 @@ object RoomActor {
           grid.addSnake(id, name)
           if(userMap.size>1){
             timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-            timer.startSingleTimer(TimeOutKey,TimeOut,10.minutes)
+            timer.startSingleTimer(TimeOutKey,TimeOut,1.minutes)
             userMap.keys.foreach{r=>
               dispatchTo(subscribersMap,r, WsMsgProtocol.Id(r))
               dispatchTo(subscribersMap,r,grid.getGridData(r))
