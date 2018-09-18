@@ -127,7 +127,6 @@ object GameHolder extends js.JSApp {
     draw1.drawGameOn()
 //    draw1.drawGameWait()
     draw2.drawRankMap()
-    dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -278,6 +277,7 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
+        dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
@@ -323,6 +323,9 @@ object GameHolder extends js.JSApp {
           DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
           grid.removePlayer(id)
         }
+
+      case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
+        DeadPage.deadModel(id,"GameOver!",killNum,score,lifeTime,maxScore,webSocketClient)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)

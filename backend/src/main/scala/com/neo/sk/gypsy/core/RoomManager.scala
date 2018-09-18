@@ -45,26 +45,45 @@ object RoomManager {
       ctx =>
         Behaviors.withTimers[Command]{
           implicit timer =>
-            idle()
+            idle(mutable.HashMap())
         }
     }
   }
 
-  def idle()(implicit timer:TimerScheduler[Command])=
+  /**
+    * @param roomMap (roomId,(房间创建时间，房内人数))
+    * */
+  def idle(roomMap:mutable.HashMap[Int,(Long,Int)])(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
           case msg:JoinGame=>
-            if(msg.room!="2"){
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
+            if(msg.room.contains("match-")){
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,true),msg.sender,msg.id)
             }else{
-              //todo 限时模式
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id)
             }
             Behaviors.same
 
           case msg:CheckName=>
-            getRoomActor(ctx,msg.room) ! RoomActor.CheckName(msg.name,msg.replyTo)
+            val curTime=System.currentTimeMillis()
+            if(msg.room!="2"){
+              getRoomActor(ctx,msg.room,false) ! RoomActor.CheckName(msg.name,msg.replyTo)
+            }else{
+              val freeRoom=roomMap.filter(r=>(curTime-r._2._1<2000*60)&&r._2._2<10)
+              if(freeRoom.isEmpty){
+                val roomId=roomIdGenerator.getAndIncrement()
+                getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
+                roomMap.put(roomId,(curTime,1))
+              }else{
+                import scala.util.Random
+                val roomId=Random.shuffle(freeRoom.keys.toList).head
+                getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
+                roomMap.get(roomId).foreach{ r=>
+                  roomMap.update(roomId,(r._1,r._2+1))
+                }
+              }
+            }
             Behavior.same
 
           case x=>
@@ -117,10 +136,10 @@ object RoomManager {
       Supervision.Resume
   }
 
-  private def getRoomActor(ctx: ActorContext[Command],name:String):ActorRef[RoomActor.Command] = {
+  private def getRoomActor(ctx: ActorContext[Command],name:String,matchRoom:Boolean):ActorRef[RoomActor.Command] = {
     val childName = s"RoomActor-$name"
     ctx.child(childName).getOrElse{
-      ctx.spawn(RoomActor.create(name),childName)
+      ctx.spawn(RoomActor.create(name,matchRoom),childName)
     }.upcast[RoomActor.Command]
   }
 }
