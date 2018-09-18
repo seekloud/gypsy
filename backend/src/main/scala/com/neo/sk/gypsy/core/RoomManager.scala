@@ -23,6 +23,7 @@ import io.circe.generic.semiauto._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.mutable
 /**
   * User: sky
   * Date: 2018/7/23
@@ -34,7 +35,7 @@ object RoomManager {
   sealed trait Command
   case object TimeKey
   case object TimeOut extends Command
-  val idGenerator = new AtomicInteger(1000000)
+  val roomIdGenerator = new AtomicInteger(100)
   case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
 
@@ -44,17 +45,22 @@ object RoomManager {
       ctx =>
         Behaviors.withTimers[Command]{
           implicit timer =>
-            idle
+            idle()
         }
     }
   }
 
-  def idle(implicit timer:TimerScheduler[Command])=
+  def idle()(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
           case msg:JoinGame=>
-            msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
+            if(msg.room!="2"){
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
+            }else{
+              //todo 限时模式
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room),msg.sender,msg.id)
+            }
             Behaviors.same
 
           case msg:CheckName=>
@@ -62,7 +68,7 @@ object RoomManager {
             Behavior.same
 
           case x=>
-            log.debug("")
+            log.debug(s"msg can't handle with ${x}")
             Behaviors.unhandled
         }
     }
