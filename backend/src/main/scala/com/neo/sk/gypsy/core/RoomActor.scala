@@ -167,7 +167,6 @@ object RoomActor {
           Behaviors.same
 
         case TimeOut=>
-          println("------1")
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
             dispatchTo(subscribersMap,p._1,WsMsgProtocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
