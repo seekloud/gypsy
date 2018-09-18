@@ -70,7 +70,8 @@ case class DrawGame(
   //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, size.x , size.y )
+
   }
 
   //等待提示文字

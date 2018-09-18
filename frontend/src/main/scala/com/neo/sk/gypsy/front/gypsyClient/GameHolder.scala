@@ -125,6 +125,7 @@ object GameHolder extends js.JSApp {
   def startGame: Unit = {
     println("start---")
     draw1.drawGameOn()
+//    draw1.drawGameWait()
     draw2.drawRankMap()
     dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
@@ -232,9 +233,11 @@ object GameHolder extends js.JSApp {
           isDead=paraBack._2
         case None =>
           if(firstCome) {
+            ctx.fillStyle = "rgba(99, 99, 99, 1)"
             ctx.font = "36px Helvetica"
-            ctx.fillText("Please wait.", 150, 180)
+            ctx.fillText("Please wait.", 350, 180)
           } else {
+            ctx.fillStyle = "rgba(99, 99, 99, 1)"
             ctx.font = "36px Helvetica"
             ctx.fillText("Ops, Loading....", 350, 250)
           }
