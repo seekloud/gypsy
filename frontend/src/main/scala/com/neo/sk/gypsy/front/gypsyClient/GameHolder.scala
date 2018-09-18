@@ -126,7 +126,6 @@ object GameHolder extends js.JSApp {
     println("start---")
     draw1.drawGameOn()
     draw2.drawRankMap()
-    dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -275,6 +274,7 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
+        dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
