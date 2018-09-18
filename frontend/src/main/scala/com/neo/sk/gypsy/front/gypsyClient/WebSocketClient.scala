@@ -91,14 +91,13 @@ case class WebSocketClient(
 
       webSocketOpt.get.onclose = { event: Event =>
         wsSetup = false
+        sendMsg(UserLeft)
         closeCallback(event)
       }
     }
 
   def closeWs={
-    sendMsg(UserLeft)
     webSocketOpt.get.close()
-    wsSetup=false
   }
 
 

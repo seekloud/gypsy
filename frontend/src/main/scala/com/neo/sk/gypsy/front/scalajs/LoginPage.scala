@@ -50,7 +50,7 @@ object LoginPage {
                 option(value := "11",selected := "selected", "房间1"),
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "2", selected := "selected", "匹配")),
+                option(value := "2", selected := "selected", "限时匹配")),
             )
           )
         ),
@@ -183,7 +183,7 @@ object LoginPage {
                   println(s"name${nameField.value} has existed ")
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
-                  joinGame(roomId.value, nameField.value)
+                  joinGame(rsp.roomId, nameField.value)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
