@@ -171,8 +171,11 @@ trait Grid {
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
+      var target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+      if(cell.parallel==true){
+         target = Position(mouseAct.clientX, mouseAct.clientY)
+      }
 
-      val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
       //val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
       //val target = MousePosition(mouseAct.clientX , mouseAct.clientY ,0l)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
@@ -331,16 +334,18 @@ trait Grid {
             var newMass = cell.mass
             var cellX = cell.x
             var cellY = cell.y
+            var parallel = false
             //自身cell合并检测
             player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
               val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
               val radiusTotal = cell.radius + cell2.radius
-              if (distance < radiusTotal) {
+              if (distance <= radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
                   if (cell.x < cell2.x) cellX -= 1
                   else if (cell.x > cell2.x) cellX += 1
                   if (cell.y < cell2.y) cellY -= 1
                   else if (cell.y > cell2.y) cellY += 1
+                  parallel = true
                 }
                 else if (distance < radiusTotal / 2) {
                   if (cell.radius > cell2.radius) {
@@ -361,7 +366,7 @@ trait Grid {
                 }
               }
             }
-            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY))
+            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,parallel))
         }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
