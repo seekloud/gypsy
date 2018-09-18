@@ -70,7 +70,8 @@ case class DrawGame(
   //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, size.x , size.y )
+
   }
 
   //等待提示文字
@@ -384,7 +385,7 @@ case class DrawGame(
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score}", size.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", size.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 

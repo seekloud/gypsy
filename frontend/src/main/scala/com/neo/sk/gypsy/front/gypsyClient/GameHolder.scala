@@ -125,8 +125,8 @@ object GameHolder extends js.JSApp {
   def startGame: Unit = {
     println("start---")
     draw1.drawGameOn()
+//    draw1.drawGameWait()
     draw2.drawRankMap()
-    dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -223,7 +223,7 @@ object GameHolder extends js.JSApp {
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", 250, 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum}", 400, 10)
+          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
           ctx.restore()
           renderFps(ctx3,NetDelay.latency)
           //todo 解决返回值问题
@@ -232,9 +232,11 @@ object GameHolder extends js.JSApp {
           isDead=paraBack._2
         case None =>
           if(firstCome) {
+            ctx.fillStyle = "rgba(99, 99, 99, 1)"
             ctx.font = "36px Helvetica"
-            ctx.fillText("Please wait.", 150, 180)
+            ctx.fillText("Please wait.", 350, 180)
           } else {
+            ctx.fillStyle = "rgba(99, 99, 99, 1)"
             ctx.font = "36px Helvetica"
             ctx.fillText("Ops, Loading....", 350, 250)
           }
@@ -275,6 +277,7 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
+        dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
@@ -320,6 +323,9 @@ object GameHolder extends js.JSApp {
           DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
           grid.removePlayer(id)
         }
+
+      case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
+        DeadPage.deadModel(id,"GameOver!",killNum,score,lifeTime,maxScore,webSocketClient)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)

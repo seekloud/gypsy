@@ -69,6 +69,8 @@ trait Grid {
   var massList = List[Mass]()
   val shotMass = 10
   val shotSpeed = 100
+  //最大分裂个数
+  val maxCellNum = 16
   //质量衰减下限
   val decreaseLimit = 200
   //衰减率
@@ -402,7 +404,7 @@ trait Grid {
             var splitRadius = 0.0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.mass > splitLimit && player.cells.size < 32) {
+            if (split && cell.mass > splitLimit && player.cells.size < 16) {
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toInt
               newMass = newMass - splitMass
