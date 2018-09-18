@@ -267,7 +267,8 @@ case class DrawGame(
         case 6  => "#cfe6ff"  //207, 230, 255   4174ab
         case _  => "#de9dd6"   //222, 157, 214   8f3284
       }
-      cells.foreach{ cell=>
+      cells.sortBy(_.id).foreach{ cell=>
+
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
