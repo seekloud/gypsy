@@ -29,6 +29,7 @@ object UserProtocol {
                          score:Int
                          )
   case class CheckNameRsp(
+                           roomId:String,
                            errCode:Int=0,
                            msg:String="ok"
                          )

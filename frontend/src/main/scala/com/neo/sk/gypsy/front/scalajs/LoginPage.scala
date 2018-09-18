@@ -46,14 +46,11 @@ object LoginPage {
           div(*.id := "room",
             select(*.id := "roomId",name := "home",
               option(value := "", "房间"),
-              optgroup(attr("label") := "普通模式",
+              optgroup(attr("label") := "无尽模式",
                 option(value := "11",selected := "selected", "房间1"),
-                option(value := "12", "房间2"),
-                option(value := "21", "房间3"),
-                option(value := "22", "房间4")),
+                option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "1", attr("disabled") := "", "房间1"),
-                option(value := "2", attr("disabled") := "", "房间2")),
+                option(value := "2", selected := "selected", "限时匹配")),
             )
           )
         ),
@@ -186,15 +183,14 @@ object LoginPage {
                   println(s"name${nameField.value} has existed ")
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
-                  joinGame(roomId.value, nameField.value)
+                  joinGame(rsp.roomId, nameField.value)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
                 println(s"parse error in login $e ")
                 LayuiJs.msg(e.toString, 5, 2000)
             }
-          }
-          else {
+          } else {
             LayuiJs.msg("请选择房间", 5, 2000)
           }
         }
