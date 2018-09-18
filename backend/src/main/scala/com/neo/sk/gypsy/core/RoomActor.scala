@@ -38,6 +38,10 @@ object RoomActor {
 
   private case object Sync extends Command
 
+  private case object TimeOutKey
+
+  private case object TimeOut extends Command
+
   private case class Join(id: Long, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront]) extends Command
 
   private case class Left(id: Long, name: String) extends Command
@@ -52,11 +56,9 @@ object RoomActor {
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
 
-
-
   val bounds = Point(Boundary.w, Boundary.h)
 
-  def create(room:String):Behavior[Command] = {
+  def create(room:String,matchRoom:Boolean):Behavior[Command] = {
     log.debug(s"RoomActor-$room start...")
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
@@ -64,13 +66,18 @@ object RoomActor {
             val subscribersMap = mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
             val userMap = mutable.HashMap[Long, String]()
             val grid = new GridOnServer(bounds)
-            timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-            idle(userMap,subscribersMap,grid,0l)
+            if(matchRoom){
+              wait(room,userMap,subscribersMap,grid)
+            }else{
+              timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
+              idle(room,userMap,subscribersMap,grid,0l)
+            }
         }
     }
   }
 
   def idle(
+            room:String,
             userMap:mutable.HashMap[Long,String],
             subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
             grid:GridOnServer,
@@ -80,20 +87,20 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-
         case CheckName(name,replyTo)=>
           log.info(s"$name check name")
           if(grid.playerMap.exists(_._2.name.trim==name)){
-           replyTo ! CheckNameRsp(10000,"UserName has existed!")
+           replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
           }else{
             UserDao.getUserByName(name).map{
               case Some(_)=>
-                replyTo ! CheckNameRsp(10000,"UserName has existed!")
+                replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
               case None=>
-                replyTo ! CheckNameRsp()
+                replyTo ! CheckNameRsp(room)
             }
           }
           Behavior.same
+
         case Join(id, name, subscriber) =>
           log.info(s"got $msg")
           userMap.put(id,name)
@@ -103,12 +110,16 @@ object RoomActor {
           dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id))
           dispatchTo(subscribersMap,id,grid.getGridData(id))
           Behaviors.same
+
         case Left(id, name) =>
           log.info(s"got $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+          userMap.remove(id)
+          subscribersMap.remove(id)
           Behaviors.same
+
         case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
@@ -120,6 +131,7 @@ object RoomActor {
             dispatch(subscribersMap,KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
           }
           Behaviors.same
+
         case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
@@ -146,14 +158,76 @@ object RoomActor {
           if(tickCount==0){
             dispatch(subscribersMap,grid.getAllGridData)
           }
-          idle(userMap,subscribersMap,grid,tickCount+1)
+          idle(room,userMap,subscribersMap,grid,tickCount+1)
+
         case NetTest(id, createTime) =>
           //log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap,id, WsMsgProtocol.Pong(createTime))
           Behaviors.same
+
+        case TimeOut=>
+
+          Behaviors.same
         case x =>
           log.warn(s"got unknown msg: $x")
+          Behaviors.unhandled
+      }
+    }
+  }
+
+  def wait(
+            room:String,
+            userMap:mutable.HashMap[Long,String],
+            subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
+            grid:GridOnServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
+    Behaviors.receive { (ctx, msg) =>
+      msg match {
+        case CheckName(name,replyTo)=>
+          log.info(s"$name check name")
+          if(userMap.exists(_._2 == name)){
+            replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+          }else{
+            UserDao.getUserByName(name).map{
+              case Some(_)=>
+                replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+              case None=>
+                replyTo ! CheckNameRsp(room)
+            }
+          }
+          Behavior.same
+
+        case Join(id, name, subscriber) =>
+          log.info(s"got $msg")
+          userMap.put(id,name)
+          ctx.watchWith(subscriber,Left(id,name))
+          subscribersMap.put(id,subscriber)
+          grid.addSnake(id, name)
+          if(userMap.size>1){
+            timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
+            timer.startSingleTimer(TimeOutKey,TimeOut,10.minutes)
+            userMap.keys.foreach{r=>
+              dispatchTo(subscribersMap,r, WsMsgProtocol.Id(r))
+              dispatchTo(subscribersMap,r,grid.getGridData(r))
+            }
+            idle(room,userMap,subscribersMap,grid,0l)
+          }else{
+            Behaviors.same
+          }
+
+        case Left(id, name) =>
+          log.info(s"got $msg")
+          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
+          grid.removePlayer(id)
+          userMap.remove(id)
+          subscribersMap.remove(id)
+          if (userMap.isEmpty){
+            Behaviors.stopped
+          }else{
+            Behaviors.same
+          }
+
+        case x=>
           Behaviors.unhandled
       }
     }
