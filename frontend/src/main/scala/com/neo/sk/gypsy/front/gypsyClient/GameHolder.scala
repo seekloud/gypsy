@@ -223,7 +223,7 @@ object GameHolder extends js.JSApp {
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", 250, 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum}", 400, 10)
+          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
           ctx.restore()
           renderFps(ctx3,NetDelay.latency)
           //todo 解决返回值问题
