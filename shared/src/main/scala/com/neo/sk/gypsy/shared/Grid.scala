@@ -69,6 +69,8 @@ trait Grid {
   var massList = List[Mass]()
   val shotMass = 10
   val shotSpeed = 100
+  //最大分裂个数
+  val maxCellNum = 16
   //质量衰减下限
   val decreaseLimit = 200
   //衰减率
@@ -387,15 +389,16 @@ trait Grid {
             var newRadius = cell.radius
             //病毒碰撞检测
             virus.foreach { v =>
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame && (player.cells.size<maxCellNum)) {
                 virus = virus.filterNot(_ == v)
-                val cellMass = (newMass / (v.splitNumber + 1)).toInt
+                val split = List(v.splitNumber,maxCellNum-player.cells.size+1).min
+                val cellMass = (newMass / (split)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-                newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
+                newMass = (newMass / (split)).toInt + (v.mass * 0.5).toInt
                 newRadius = 4 + sqrt(newMass) * mass2rRate
                 newSplitTime = System.currentTimeMillis()
-                val baseAngle = 2 * Pi / v.splitNumber
-                for (i <- 0 until v.splitNumber) {
+                val baseAngle = 2 * Pi / (split-1)
+                for (i <- 0 until split) {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
                   val startLen = (newRadius + cellRadius) * 1.2
@@ -487,7 +490,7 @@ trait Grid {
             var splitRadius = 0.0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.mass > splitLimit && player.cells.size < 32) {
+            if (split && cell.mass > splitLimit && player.cells.size < 16) {
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toInt
               newMass = newMass - splitMass
