@@ -45,12 +45,12 @@ object LoginPage {
           input(*.id := "guestName", *.`type` := "text", placeholder := "请输入用户名", maxlength := "25"),
           div(*.id := "room",
             select(*.id := "roomId",name := "home",
-              option(value := "", "房间"),
+              option(value := "",attr("disabled"):="", "房间"),
               optgroup(attr("label") := "无尽模式",
                 option(value := "11",selected := "selected", "房间1"),
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "2", selected := "selected", "限时匹配")),
+                option(value := "2", "限时匹配")),
             )
           )
         ),
