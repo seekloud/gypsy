@@ -416,10 +416,17 @@ class GridOnServer(override val boundary: Point) extends Grid {
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
 
-    newFoods.foreach{
+    if(frameCount<100){
+      food.foreach{
         case (p,mass) =>
           newFoodDetails ::= Food(mass, p.x, p.y)
       }
+    }else{
+      newFoods.foreach{
+        case (p,mass) =>
+          newFoodDetails ::= Food(mass, p.x, p.y)
+      }
+    }
     playerMap.foreach{
       case (id,player) =>
         playerDetails ::= player
