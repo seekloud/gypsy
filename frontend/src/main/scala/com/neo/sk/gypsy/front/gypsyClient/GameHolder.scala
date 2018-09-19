@@ -174,15 +174,22 @@ object GameHolder extends js.JSApp {
       }
     }
     //在画布上监听鼠标事件
+    def getDegree(x:Double,y:Double)={
+      atan2(y - 48 -window.y/2,x  -window.x/2 )
+    }
+    var FormerDegree = 0D
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      println("--------4")
+//      println("--------4")
       val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-      grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-      //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
-      webSocketClient.sendMsg(mp)
-      //println(s"pageX${e.pageX},pageY${e.pageY},X${e.pageX - windWidth / 2},Y${e.pageY - 48 - window.y.toDouble / 2}")
 
+      if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+        FormerDegree = getDegree(e.pageX,e.pageY)
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+        //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
+        webSocketClient.sendMsg(mp)
+        println(11)
+      }
     }
     }
   }
