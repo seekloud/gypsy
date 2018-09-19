@@ -260,10 +260,10 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 for (i <- 0 until v.splitNumber) {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
-                  val startLen = (newRadius + cellRadius) * 1.2
+                  val startLen = (newRadius + cellRadius) * 1.2*3
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
-                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat
-                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat
+                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
+                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
                   vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
