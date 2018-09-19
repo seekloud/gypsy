@@ -190,7 +190,6 @@ object GameHolder extends js.JSApp {
         webSocketClient.sendMsg(mp)
         println(11)
       }
-
     }
     }
   }
