@@ -342,7 +342,6 @@ object GameHolder extends js.JSApp {
 
       case WsMsgProtocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
-          println(player)
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 

@@ -2,8 +2,8 @@ package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.{Cell, Point, Score, WsMsgProtocol}
-import com.neo.sk.gypsy.shared.util.utils.checkCollision
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 
 import scala.collection.mutable
 import scala.math._
@@ -35,14 +35,14 @@ class GameClient (override val boundary: Point) extends Grid {
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
-     playerMap.values.foreach {
+    val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
         var mergeCells = List[Cell]()
         //已经被本体其他cell融合的cell
         var deleteCells = List[Cell]()
         //依据距离判断被删去的cell
-        val newCells = player.cells.sortBy(_.radius).reverse.foreach {
+        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             //自身cell合并检测
             var cellX = cell.x
@@ -52,6 +52,10 @@ class GameClient (override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
+                  if (cell.x < cell2.x) cellX -= 1
+                  else if (cell.x > cell2.x) cellX += 1
+                  if (cell.y < cell2.y) cellY -= 1
+                  else if (cell.y > cell2.y) cellY += 1
 
                 }
                  else if (distance < radiusTotal / 2) {
@@ -68,68 +72,9 @@ class GameClient (override val boundary: Point) extends Grid {
                   }
                 }
               }
-
             }
-
+            List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY))
         }
-        /*val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
-        player.copy(x = newX, y = newY)*/
-    }
-    //playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    mergeInFlame
-  }
-  /*override def checkCellMerge: Boolean = {
-    var mergeInFlame = false
-    val newPlayerMap = playerMap.values.map {
-      player =>
-        val newSplitTime = player.lastSplit
-        var mergeCells = List[Cell]()
-        //已经被本体其他cell融合的cell
-        var deleteCells = List[Cell]()
-        var playerIsMerge=false
-        //依据距离判断被删去的cell
-        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-          cell =>
-            var newRadius = cell.radius
-            var newMass = cell.mass
-            var cellX = cell.x
-            var cellY = cell.y
-            //自身cell合并检测
-            player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
-              val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
-              val radiusTotal = cell.radius + cell2.radius
-              if (distance < radiusTotal) {
-                if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  if (cell.x < cell2.x) cellX -= 1
-                  else if (cell.x > cell2.x) cellX += 1
-                  if (cell.y < cell2.y) cellY -= 1
-                  else if (cell.y > cell2.y) cellY += 1
-                }
-                else if (distance < radiusTotal / 2) {
-                  if (cell.radius > cell2.radius) {
-                    //被融合的细胞不能再被其他细胞融合
-                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
-                      mergeInFlame = true
-                      playerIsMerge=true
-                      newMass += cell2.mass
-                      newRadius = 4 + sqrt(newMass) * mass2rRate
-                      mergeCells = cell2 :: mergeCells
-                    }
-                  }
-                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
-                    mergeInFlame = true
-                    playerIsMerge=true
-                    newMass = 0
-                    newRadius = 0
-                    deleteCells = cell :: deleteCells
-                  }
-                }
-              }
-            }
-            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY))
-        }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -137,13 +82,12 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, player.lastSplit, player.killerName, player.width, player.height, newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     mergeInFlame
-  }*/
+  }
+
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
@@ -155,7 +99,7 @@ class GameClient (override val boundary: Point) extends Grid {
             var newRadius = cell.radius
             //病毒碰撞检测
             virus.foreach { v =>
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < (cell.radius - v.radius *0.8)) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 virus = virus.filterNot(_ == v)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
@@ -260,6 +204,96 @@ class GameClient (override val boundary: Point) extends Grid {
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+  }
+
+  override def checkPlayerMassCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newProtected = player.protect
+        val newCells = player.cells.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            massList.foreach {
+              case p: Mass =>
+                if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
+                  newMass += p.mass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  massList = massList.filterNot(l => l == p)
+                }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+  }
+
+  override def checkVirusMassCrash(): Unit = {
+    val virus1 = virus.flatMap{v=>
+      var newMass = v.mass
+      var newRadius = v.radius
+      var newSpeed = v.speed
+      var newTargetX = v.targetX
+      var newTargetY = v.targetY
+      var newX = v.x
+      var newY = v.y
+      var hasMoved = false
+      val (nx,ny)= normalization(newTargetX,newTargetY)
+      massList.foreach {
+        case p: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
+            val (mx,my)=normalization(p.targetX,p.targetY)
+            // println(s"mx$mx,my$my")
+            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
+            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+
+            newX += vx.toInt
+            newY += vy.toInt
+            hasMoved =true
+            val borderCalc = 0
+            if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+            if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+            if (newX < borderCalc) newX = borderCalc
+            if (newY < borderCalc) newY = borderCalc
+            newMass += p.mass
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+            newTargetX = vx
+            newTargetY = vy
+            massList = massList.filterNot(l => l == p)
+          }
+      }
+      newSpeed -= 0.3
+      if(newSpeed<0) newSpeed=0
+      if(hasMoved==false && newSpeed!=0){
+        newX += (nx*newSpeed).toInt
+        newY += (ny*newSpeed).toInt
+        val borderCalc = 0
+        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+        if (newX < borderCalc) newX = borderCalc
+        if (newY < borderCalc) newY = borderCalc
+      }
+      if(newMass>virusMassLimit){
+        newMass = newMass/2
+        newRadius = 4 + sqrt(newMass) * mass2rRate
+        val newX2 = newX + (nx*newRadius*2).toInt
+        val newY2 = newY + (ny*newRadius*2).toInt
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed),v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
+      }else{
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
+      }
+    }
+    virus = virus1
   }
 
   def addUncheckActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
