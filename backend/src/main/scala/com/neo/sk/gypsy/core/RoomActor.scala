@@ -180,6 +180,8 @@ object RoomActor {
     }
   }
 
+  /**
+    * */
   def wait(
             room:String,
             userMap:mutable.HashMap[Long,String],
