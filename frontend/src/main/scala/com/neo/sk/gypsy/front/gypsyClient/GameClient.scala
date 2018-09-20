@@ -310,7 +310,7 @@ class GameClient (override val boundary: Point) extends Grid {
           }else{ //与预执下的操作数据不一致，进行回滚
             uncheckActionWithFrame.remove(gameAction.serialNum)
             if(frame < frameCount){
-              rollback(frame)
+//              rollback(frame)
             }else{
               removeActionWithFrame(tankId,a,f)
               gameAction match {
@@ -332,7 +332,7 @@ class GameClient (override val boundary: Point) extends Grid {
     }else{
       if(frame < frameCount && frameCount - maxDelayFrame >= frame){
         //回滚
-        rollback(frame)
+//        rollback(frame)
       }else{
         gameAction match {
           case a:KeyCode=>
