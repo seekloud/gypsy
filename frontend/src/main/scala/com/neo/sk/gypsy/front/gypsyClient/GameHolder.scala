@@ -92,6 +92,8 @@ object GameHolder extends js.JSApp {
   override def main(): Unit = {
     draw1.drawGameWelcome()
     drawOff.drawBackground()
+    draw1.drawGameOn()
+    draw2.drawRankMap()
     dom.window.onload = {
       (_: Event) =>
         LoginPage.homePage()
@@ -124,10 +126,9 @@ object GameHolder extends js.JSApp {
   }
 
   def startGame: Unit = {
+    grid.reStart
     println("start---")
-    draw1.drawGameOn()
 //    draw1.drawGameWait()
-    draw2.drawRankMap()
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -159,7 +160,6 @@ object GameHolder extends js.JSApp {
           if (e.keyCode == KeyCode.Escape && !isDead) {
             LoginPage.homePage()
             webSocketClient.closeWs
-            webSocketClient
             isDead = true
           } else if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString}")
@@ -189,7 +189,6 @@ object GameHolder extends js.JSApp {
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
         webSocketClient.sendMsg(mp)
-        println(11)
       }
     }
     }
@@ -283,7 +282,7 @@ object GameHolder extends js.JSApp {
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
-//        grid.addActionWithFrameFromServer(m.id,m)
+        //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id){
           grid.addActionWithFrame(m.id,m)
         }

@@ -85,6 +85,8 @@ case class DrawGame(
 
   //等待文字
   def drawGameWait(firstCome:Boolean): Unit = {
+    ctx.fillStyle = Color.White.toString()
+    ctx.fillRect(0, 0, size.x , size.y )
     if(firstCome) {
       ctx.fillStyle = "rgba(99, 99, 99, 1)"
       ctx.font = "36px Helvetica"
