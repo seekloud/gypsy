@@ -156,7 +156,6 @@ object GameHolder extends js.JSApp {
         if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Escape && !isDead) {
-
             LoginPage.homePage()
             webSocketClient.closeWs
             isDead = true
@@ -332,7 +331,8 @@ object GameHolder extends js.JSApp {
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.deadModel(id,"GameOver!",killNum,score,lifeTime,maxScore,webSocketClient)
+        DeadPage.gameOverModel(id,killNum,score,lifeTime,maxScore,webSocketClient)
+        grid.reStart
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)

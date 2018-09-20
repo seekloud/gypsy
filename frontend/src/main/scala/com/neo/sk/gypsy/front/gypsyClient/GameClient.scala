@@ -400,4 +400,18 @@ class GameClient (override val boundary: Point) extends Grid {
       case None =>
     }
   }
+
+  def reStart={
+    myId = 0L
+    frameCount = 0l
+    food = Map[Point, Int]()
+    foodPool = 300
+    virus = List[Virus]()
+    playerMap = Map.empty[Long,Player]
+    massList = List[Mass]()
+    tick = 0
+    actionMap = Map.empty[Long, Map[Long, KeyCode]]
+    mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
+    deadPlayerMap=Map.empty[Long,Player]
+  }
 }
