@@ -66,6 +66,7 @@ object GameHolder extends js.JSApp {
   /**可变参数*/
   var myId = -1l
   private[this] var nextFrame = 0
+  private[this] var nextInt = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
@@ -89,7 +90,7 @@ object GameHolder extends js.JSApp {
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
-    draw1.drawGameWait()
+    draw1.drawGameWelcome()
     drawOff.drawBackground()
     dom.window.onload = {
       (_: Event) =>
@@ -158,6 +159,7 @@ object GameHolder extends js.JSApp {
           if (e.keyCode == KeyCode.Escape && !isDead) {
             LoginPage.homePage()
             webSocketClient.closeWs
+            webSocketClient
             isDead = true
           } else if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString}")
@@ -237,20 +239,13 @@ object GameHolder extends js.JSApp {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
-          if(firstCome) {
-            ctx.fillStyle = "rgba(99, 99, 99, 1)"
-            ctx.font = "36px Helvetica"
-            ctx.fillText("Please wait.", 350, 180)
-          } else {
-            ctx.fillStyle = "rgba(99, 99, 99, 1)"
-            ctx.font = "36px Helvetica"
-            ctx.fillText("Ops, Loading....", 350, 250)
-          }
+          draw1.drawGameWait(firstCome)
       }
 
     }else{
       draw1.drawGameLost
       dom.window.cancelAnimationFrame(nextFrame)
+      dom.window.clearInterval(nextInt)
     }
   }
 
@@ -263,6 +258,7 @@ object GameHolder extends js.JSApp {
     val playground = dom.document.getElementById("playground")
     draw1.drawGameLost
     dom.window.cancelAnimationFrame(nextFrame)
+    dom.window.clearInterval(nextInt)
     playground.insertBefore(paraGraph(s"Failed: code: ${e.colno}"), playground.firstChild)
     e
   }
@@ -274,8 +270,8 @@ object GameHolder extends js.JSApp {
   }
 
   private def wsConnectClose(e:Event) = {
-    JsFunc.alert("网络连接失败，请重新刷新")
     dom.window.cancelAnimationFrame(nextFrame)
+    dom.window.clearInterval(nextInt)
     e
   }
 
@@ -283,7 +279,7 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
-        dom.window.setInterval(() => gameLoop, frameRate)
+        nextInt=dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>

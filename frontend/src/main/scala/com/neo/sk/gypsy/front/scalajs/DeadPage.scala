@@ -125,19 +125,19 @@ object DeadPage {
           h2(style := "margin-bottom:10px;font-weight:300;font-size:30px;color:#fff", "GameOver!!")),
         div(`class` := "user-login-box user-login-body layui-form",
           div( *.id:="user-score",
-            span(*.id:="statsText",`class`:="user-food-score",s"分数:$score"),
+            span(*.id:="statsText",`class`:="user-food-score",s"分数:$score")
             // span(*.id:="statsSubtext","分数")
           ),
           div(*.id:="user-max-score",
-            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore"),
+            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore")
             // span(*.id:="statsSubtext","历史最高分")
           ),
           div(*.id:="user-kill-num",
-            span(*.id:="statsText",`class`:="user-kill",s"干掉小球数:$killNum"),
+            span(*.id:="statsText",`class`:="user-kill",s"干掉小球数:$killNum")
             //span(*.id:="statsSubtext","干掉小球数")
           ),
           div(*.id:="user-survival-time",
-            span(*.id:="statsText",`class`:="user-live-time",s"存活时间:${survivalTime/1000/60}min${survivalTime/1000%60}sec"),
+            span(*.id:="statsText",`class`:="user-live-time",s"存活时间:${survivalTime/1000/60}min${survivalTime/1000%60}sec")
             //span(*.id:="statsSubtext","存活时间")
           ))
       ).toString().asInstanceOf[HTMLElement]

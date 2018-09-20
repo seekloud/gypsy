@@ -74,14 +74,28 @@ case class DrawGame(
 
   }
 
-  //等待提示文字
-  def drawGameWait(): Unit = {
+  //欢迎文字
+  def drawGameWelcome(): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Welcome.", 150, 180)
   }
+
+  //等待文字
+  def drawGameWait(firstCome:Boolean): Unit = {
+    if(firstCome) {
+      ctx.fillStyle = "rgba(99, 99, 99, 1)"
+      ctx.font = "36px Helvetica"
+      ctx.fillText("Please wait.", 350, 180)
+    } else {
+      ctx.fillStyle = "rgba(99, 99, 99, 1)"
+      ctx.font = "36px Helvetica"
+      ctx.fillText("Ops, Loading....", 350, 250)
+    }
+  }
+
 
   //离线提示文字
   def drawGameLost: Unit = {
