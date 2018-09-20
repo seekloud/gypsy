@@ -172,7 +172,7 @@ object RoomActor {
             dispatchTo(subscribersMap,p._1,WsMsgProtocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
           }
           timer.cancel(SyncTimeKey)
-          Behaviors.same
+          Behaviors.stopped
         case x =>
           log.warn(s"got unknown msg: $x")
           Behaviors.unhandled
