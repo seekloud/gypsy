@@ -8,11 +8,12 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.Boot._
+import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{KeyCode, MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{KeyCode, MatchRoomError, MousePosition, UserLeft}
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
 import io.circe.parser._
@@ -67,6 +68,7 @@ object RoomActor {
             val userMap = mutable.HashMap[Long, String]()
             val grid = new GridOnServer(bounds)
             if(matchRoom){
+              timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.waitTime.minutes)
               wait(room,userMap,subscribersMap,grid)
             }else{
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
@@ -210,8 +212,9 @@ object RoomActor {
           subscribersMap.put(id,subscriber)
           grid.addSnake(id, name)
           if(userMap.size>1){
+            timer.cancel(TimeOutKey)
             timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-            timer.startSingleTimer(TimeOutKey,TimeOut,1.minutes)
+            timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.gameTime.minutes)
             userMap.keys.foreach{r=>
               dispatchTo(subscribersMap,r, WsMsgProtocol.Id(r))
               dispatchTo(subscribersMap,r,grid.getGridData(r))
@@ -220,6 +223,11 @@ object RoomActor {
           }else{
             Behaviors.same
           }
+
+        case TimeOut=>
+          log.info("matchRoom timeOut!!")
+          dispatch(subscribersMap,MatchRoomError)
+          Behaviors.stopped
 
         case Left(id, name) =>
           log.info(s"got $msg")

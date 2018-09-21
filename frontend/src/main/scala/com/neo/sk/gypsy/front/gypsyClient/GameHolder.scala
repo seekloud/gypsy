@@ -70,7 +70,7 @@ class GameHolder {
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
 
-  private[this] val webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
+  val webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
 
   val grid = new GameClient(bounds)
 
@@ -122,7 +122,7 @@ class GameHolder {
 
   def startGame: Unit = {
     println("start---")
-//    draw1.drawGameWait()
+    draw1.drawGameWait(firstCome)
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
@@ -152,10 +152,7 @@ class GameHolder {
       (e: dom.KeyboardEvent) => {
         println(s"keydown: ${e.keyCode}")
         if (e.keyCode == KeyCode.Escape && !isDead) {
-          webSocketClient.closeWs
-          dom.window.cancelAnimationFrame(nextFrame)
-          dom.window.clearInterval(nextInt)
-          LoginPage.homePage()
+          gameClose
         } else if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Space) {
@@ -177,14 +174,11 @@ class GameHolder {
     }
     var FormerDegree = 0D
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-//      println("--------4")
       val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-        //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
         webSocketClient.sendMsg(mp)
       }
     }
@@ -316,12 +310,13 @@ class GameHolder {
 
       case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
+          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime,maxScore)
           grid.removePlayer(id)
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.gameOverModel(this,id,killNum,score,lifeTime,maxScore,webSocketClient)
+
+        DeadPage.gameOverModel(this,id,killNum,score,lifeTime,maxScore)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
@@ -341,10 +336,20 @@ class GameHolder {
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
+      case WsMsgProtocol.MatchRoomError=>
+        JsFunc.alert("超过等待时间请重新选择")
+        LoginPage.homePage()
 
       case msg@_ =>
         println(s"unknown $msg")
 
     }
+  }
+
+  def gameClose={
+    webSocketClient.closeWs
+    dom.window.cancelAnimationFrame(nextFrame)
+    dom.window.clearInterval(nextInt)
+    LoginPage.homePage()
   }
 }

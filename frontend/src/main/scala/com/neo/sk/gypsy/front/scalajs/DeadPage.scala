@@ -23,7 +23,7 @@ import scalatags.JsDom.all._
 import scalatags.JsDom.short.*
 object DeadPage {
 
-  def deadModel(game:GameHolder,id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,webSocketClient:WebSocketClient)={
+  def deadModel(game:GameHolder,id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
     game.isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
@@ -40,16 +40,13 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         game.isDead=false
-        webSocketClient.sendMsg(WsMsgProtocol.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
+        game.webSocketClient.sendMsg(WsMsgProtocol.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 
       override def btn2(): UndefOr[js.Function0[Any]] = {
-        webSocketClient.closeWs
         layer.closeAll()
-        dom.window.cancelAnimationFrame(game.nextFrame)
-        dom.window.clearInterval(game.nextInt)
-        LoginPage.homePage()
+        game.gameClose
       }.asInstanceOf[js.Function0[ Any]]
 
       override val content: UndefOr[HTMLElement] = div(
@@ -96,8 +93,7 @@ object DeadPage {
 
   }
 
-  def gameOverModel(game:GameHolder,id:Long,killNum:Int,score:Int,survivalTime:Long,maxScore:Int,webSocketClient:WebSocketClient)={
-    game.isDead=true
+  def gameOverModel(game:GameHolder,id:Long,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
       override val title: UndefOr[Boolean] = false
@@ -111,11 +107,8 @@ object DeadPage {
       override val resize: UndefOr[Boolean] = false
       override val scrollbar: UndefOr[Boolean] = false
       override def yes() = {
-        webSocketClient.closeWs
         layer.closeAll()
-        dom.window.cancelAnimationFrame(game.nextFrame)
-        dom.window.clearInterval(game.nextInt)
-        LoginPage.homePage()
+        game.gameClose
       } .asInstanceOf[js.Function0[Any]]
 
       override val content: UndefOr[HTMLElement] = div(
