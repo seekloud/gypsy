@@ -112,6 +112,7 @@ object GameHolder extends js.JSApp {
       } else {
 //        println("back")
         if (syncGridData.nonEmpty) {
+          println("-------synGridData")
           grid.setSyncGridData(syncGridData.get)
           syncGridData = None
         }
@@ -129,14 +130,14 @@ object GameHolder extends js.JSApp {
     grid.reStart
     println("start---")
 //    draw1.drawGameWait()
-    dom.window.requestAnimationFrame(gameRender())
   }
 
   def gameRender(): Double => Unit = { d =>
-    //println("gameRender-gameRender")
+//    println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != -1l) {
+      println("gameRender-gameRender")
       draw(offsetTime)
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
@@ -159,6 +160,8 @@ object GameHolder extends js.JSApp {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Escape && !isDead) {
             LoginPage.homePage()
+            dom.window.cancelAnimationFrame(nextFrame)
+            dom.window.clearInterval(nextInt)
             webSocketClient.closeWs
             isDead = true
           } else if (e.keyCode == KeyCode.Space) {
@@ -185,6 +188,7 @@ object GameHolder extends js.JSApp {
 
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
+        println(mp)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
@@ -255,9 +259,10 @@ object GameHolder extends js.JSApp {
 
   private def wsConnectError(e:ErrorEvent) = {
     val playground = dom.document.getElementById("playground")
-    draw1.drawGameLost
-    dom.window.cancelAnimationFrame(nextFrame)
-    dom.window.clearInterval(nextInt)
+    println("----wsConnectError")
+//    draw1.drawGameLost
+//    dom.window.cancelAnimationFrame(nextFrame)
+//    dom.window.clearInterval(nextInt)
     playground.insertBefore(paraGraph(s"Failed: code: ${e.colno}"), playground.firstChild)
     e
   }
@@ -269,8 +274,9 @@ object GameHolder extends js.JSApp {
   }
 
   private def wsConnectClose(e:Event) = {
-    dom.window.cancelAnimationFrame(nextFrame)
-    dom.window.clearInterval(nextInt)
+    println("last Ws close")
+//    dom.window.cancelAnimationFrame(nextFrame)
+//    dom.window.clearInterval(nextInt)
     e
   }
 
@@ -278,6 +284,7 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
+        dom.window.requestAnimationFrame(gameRender())
         nextInt=dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
@@ -302,13 +309,16 @@ object GameHolder extends js.JSApp {
 
       case data: WsMsgProtocol.GridDataSync =>
         //TODO here should be better code.
-        if(data.frameCount<grid.frameCount){
+        println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
+        /*if(data.frameCount<grid.frameCount){
           println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
         }else if(data.frameCount>grid.frameCount){
           // println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
           syncGridData = Some(data)
           justSynced = true
-        }
+        }*/
+        syncGridData = Some(data)
+        justSynced = true
 
       //drawGrid(msgData.uid, data)
       //网络延迟检测

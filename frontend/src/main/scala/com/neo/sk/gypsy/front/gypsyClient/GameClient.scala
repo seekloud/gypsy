@@ -354,7 +354,7 @@ class GameClient (override val boundary: Point) extends Grid {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
     //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
-    frameCount = frameCount
+    frameCount = data.frameCount
     //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
     if(data.foodDetails.nonEmpty){
