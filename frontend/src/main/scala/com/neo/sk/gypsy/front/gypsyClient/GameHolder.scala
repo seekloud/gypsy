@@ -66,6 +66,7 @@ object GameHolder extends js.JSApp {
   /**可变参数*/
   var myId = -1l
   private[this] var nextFrame = 0
+  private[this] var nextInt = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
@@ -89,8 +90,10 @@ object GameHolder extends js.JSApp {
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
-    draw1.drawGameWait()
+    draw1.drawGameWelcome()
     drawOff.drawBackground()
+    draw1.drawGameOn()
+    draw2.drawRankMap()
     dom.window.onload = {
       (_: Event) =>
         LoginPage.homePage()
@@ -123,10 +126,9 @@ object GameHolder extends js.JSApp {
   }
 
   def startGame: Unit = {
+    grid.reStart
     println("start---")
-    draw1.drawGameOn()
 //    draw1.drawGameWait()
-    draw2.drawRankMap()
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -156,7 +158,6 @@ object GameHolder extends js.JSApp {
         if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Escape && !isDead) {
-
             LoginPage.homePage()
             webSocketClient.closeWs
             isDead = true
@@ -188,7 +189,6 @@ object GameHolder extends js.JSApp {
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
         webSocketClient.sendMsg(mp)
-        println(11)
       }
     }
     }
@@ -238,20 +238,13 @@ object GameHolder extends js.JSApp {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
-          if(firstCome) {
-            ctx.fillStyle = "rgba(99, 99, 99, 1)"
-            ctx.font = "36px Helvetica"
-            ctx.fillText("Please wait.", 350, 180)
-          } else {
-            ctx.fillStyle = "rgba(99, 99, 99, 1)"
-            ctx.font = "36px Helvetica"
-            ctx.fillText("Ops, Loading....", 350, 250)
-          }
+          draw1.drawGameWait(firstCome)
       }
 
     }else{
       draw1.drawGameLost
       dom.window.cancelAnimationFrame(nextFrame)
+      dom.window.clearInterval(nextInt)
     }
   }
 
@@ -264,6 +257,7 @@ object GameHolder extends js.JSApp {
     val playground = dom.document.getElementById("playground")
     draw1.drawGameLost
     dom.window.cancelAnimationFrame(nextFrame)
+    dom.window.clearInterval(nextInt)
     playground.insertBefore(paraGraph(s"Failed: code: ${e.colno}"), playground.firstChild)
     e
   }
@@ -275,8 +269,8 @@ object GameHolder extends js.JSApp {
   }
 
   private def wsConnectClose(e:Event) = {
-    JsFunc.alert("网络连接失败，请重新刷新")
     dom.window.cancelAnimationFrame(nextFrame)
+    dom.window.clearInterval(nextInt)
     e
   }
 
@@ -284,11 +278,11 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
-        dom.window.setInterval(() => gameLoop, frameRate)
+        nextInt=dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
-//        grid.addActionWithFrameFromServer(m.id,m)
+        //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id){
           grid.addActionWithFrame(m.id,m)
         }
@@ -332,7 +326,8 @@ object GameHolder extends js.JSApp {
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.deadModel(id,"GameOver!",killNum,score,lifeTime,maxScore,webSocketClient)
+        DeadPage.gameOverModel(id,killNum,score,lifeTime,maxScore,webSocketClient)
+        grid.reStart
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
