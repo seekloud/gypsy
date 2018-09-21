@@ -133,6 +133,7 @@ object RoomActor {
           Behaviors.same
 
         case Mouse(id,x,y,frame,n) =>
+          println(msg)
           log.debug(s"gor $msg")
           //为什么一个动作要插入两次？
           grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
