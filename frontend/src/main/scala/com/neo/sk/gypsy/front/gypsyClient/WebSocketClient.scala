@@ -90,8 +90,8 @@ case class WebSocketClient(
       }
 
       webSocketOpt.get.onclose = { event: Event =>
-//        wsSetup = false
-//        webSocketOpt=None
+        wsSetup = false
+        webSocketOpt=None
         closeCallback(event)
       }
     }
