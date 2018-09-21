@@ -11,7 +11,6 @@ import com.neo.sk.gypsy.front.utils.JsFunc
 import com.neo.sk.gypsy.shared.ptcl._
 import scalatags.JsDom.all._
 
-import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Document => _,Canvas}
@@ -34,7 +33,7 @@ import scala.collection.mutable
   * Date: 2018/9/13
   * Time: 13:26
   */
-object GameHolder extends js.JSApp {
+class GameHolder {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
@@ -65,8 +64,8 @@ object GameHolder extends js.JSApp {
 
   /**可变参数*/
   var myId = -1l
-  private[this] var nextFrame = 0
-  private[this] var nextInt = 0
+  var nextFrame = 0
+  var nextInt = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,Long,Player)]
@@ -88,16 +87,11 @@ object GameHolder extends js.JSApp {
 
 
 
-  @scala.scalajs.js.annotation.JSExport
-  override def main(): Unit = {
+  def init(): Unit = {
     draw1.drawGameWelcome()
     drawOff.drawBackground()
     draw1.drawGameOn()
     draw2.drawRankMap()
-    dom.window.onload = {
-      (_: Event) =>
-        LoginPage.homePage()
-    }
   }
 
   def getActionSerialNum=actionSerialNumGenerator.getAndIncrement()
@@ -127,9 +121,10 @@ object GameHolder extends js.JSApp {
   }
 
   def startGame: Unit = {
-    grid.reStart
     println("start---")
 //    draw1.drawGameWait()
+    nextInt=dom.window.setInterval(() => gameLoop, frameRate)
+    dom.window.requestAnimationFrame(gameRender())
   }
 
   def gameRender(): Double => Unit = { d =>
@@ -137,7 +132,6 @@ object GameHolder extends js.JSApp {
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != -1l) {
-      println("gameRender-gameRender")
       draw(offsetTime)
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
@@ -150,21 +144,21 @@ object GameHolder extends js.JSApp {
     addActionListenEvent
   }
 
+
   def addActionListenEvent = {
     canvas3.focus()
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
         println(s"keydown: ${e.keyCode}")
-        if (watchKeys.contains(e.keyCode)) {
+        if (e.keyCode == KeyCode.Escape && !isDead) {
+          webSocketClient.closeWs
+          dom.window.cancelAnimationFrame(nextFrame)
+          dom.window.clearInterval(nextInt)
+          LoginPage.homePage()
+        } else if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
-          if (e.keyCode == KeyCode.Escape && !isDead) {
-            LoginPage.homePage()
-            dom.window.cancelAnimationFrame(nextFrame)
-            dom.window.clearInterval(nextInt)
-            webSocketClient.closeWs
-            isDead = true
-          } else if (e.keyCode == KeyCode.Space) {
+          if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
@@ -188,7 +182,6 @@ object GameHolder extends js.JSApp {
 
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
-        println(mp)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
@@ -247,8 +240,6 @@ object GameHolder extends js.JSApp {
 
     }else{
       draw1.drawGameLost
-      dom.window.cancelAnimationFrame(nextFrame)
-      dom.window.clearInterval(nextInt)
     }
   }
 
@@ -260,9 +251,7 @@ object GameHolder extends js.JSApp {
   private def wsConnectError(e:ErrorEvent) = {
     val playground = dom.document.getElementById("playground")
     println("----wsConnectError")
-//    draw1.drawGameLost
-//    dom.window.cancelAnimationFrame(nextFrame)
-//    dom.window.clearInterval(nextInt)
+    draw1.drawGameLost
     playground.insertBefore(paraGraph(s"Failed: code: ${e.colno}"), playground.firstChild)
     e
   }
@@ -275,8 +264,6 @@ object GameHolder extends js.JSApp {
 
   private def wsConnectClose(e:Event) = {
     println("last Ws close")
-//    dom.window.cancelAnimationFrame(nextFrame)
-//    dom.window.clearInterval(nextInt)
     e
   }
 
@@ -284,8 +271,6 @@ object GameHolder extends js.JSApp {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
-        dom.window.requestAnimationFrame(gameRender())
-        nextInt=dom.window.setInterval(() => gameLoop, frameRate)
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
@@ -331,13 +316,12 @@ object GameHolder extends js.JSApp {
 
       case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-          DeadPage.deadModel(id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
+          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime,maxScore,webSocketClient)
           grid.removePlayer(id)
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.gameOverModel(id,killNum,score,lifeTime,maxScore,webSocketClient)
-        grid.reStart
+        DeadPage.gameOverModel(this,id,killNum,score,lifeTime,maxScore,webSocketClient)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
