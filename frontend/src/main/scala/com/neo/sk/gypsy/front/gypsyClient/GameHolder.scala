@@ -330,7 +330,7 @@ class GameHolder {
             killList :+=(200,killerId,deadPlayer)
           }
         }else{
-          Shortcut.playMusic("shutdown")
+          Shortcut.playMusic("shutdownM")
         }
         if(killerId==myId){
           grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
@@ -339,6 +339,8 @@ class GameHolder {
             case 3 => Shortcut.playMusic("3Kill")
             case 4 => Shortcut.playMusic("4Kill")
             case 5 => Shortcut.playMusic("5Kill")
+            case 6 => Shortcut.playMusic("godlikeM")
+            case 7 => Shortcut.playMusic("legendaryM")
             case _ => Shortcut.playMusic("unstop")
           }
         }
