@@ -10,7 +10,7 @@ import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.math.{Pi, cos, pow, sin, sqrt}
+import scala.math.{Pi, cos, pow, sin, sqrt,atan2,abs,acos}
 import scala.util.Random
 
 /**
@@ -189,13 +189,15 @@ class GridOnServer(override val boundary: Point) extends Grid {
             //自身cell合并检测
             player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
               val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
+              val deg= acos(abs(cell.x-cell2.x)/distance)
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  if (cell.x < cell2.x) cellX -= 1
-                  else if (cell.x > cell2.x) cellX += 1
-                  if (cell.y < cell2.y) cellY -= 1
-                  else if (cell.y > cell2.y) cellY += 1
+                    if (cell.x < cell2.x) cellX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
+                    else if (cell.x > cell2.x) cellX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
+                    if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+                    else if (cell.y > cell2.y) cellY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+
                 }
                 else if (distance < radiusTotal / 2) {
                   if (cell.radius > cell2.radius) {

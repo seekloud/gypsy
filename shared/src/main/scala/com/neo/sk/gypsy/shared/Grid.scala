@@ -166,22 +166,6 @@ trait Grid {
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
       var target=Position(player.targetX,player.targetY)
-    /*  var isNext=false
-      if(System.currentTimeMillis()-player.lastSplit>1500){
-        player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach {
-          cell2 =>
-            val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
-            val radiusTotal = cell.radius + cell2.radius+2
-            if (distance <= radiusTotal && player.lastSplit > System.currentTimeMillis() - mergeInterval) {
-              isNext=true
-              target = Position(mouseAct.clientX , mouseAct.clientY)
-              if(newSpeed>cell2.speed) newSpeed=cell2.speed
-
-            }
-        }
-      }
-*/
-
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
      // val deg1 = atan2(player.targetY , player.targetX )
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
@@ -223,6 +207,35 @@ trait Grid {
       //cell移动+边界检测
       var newX = if ((cell.x + move.x) > boundary.x-15) boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
       var newY = if ((cell.y + move.y) > boundary.y-15) boundary.y-15 else if ((cell.y + move.y) <= 15) 15 else cell.y + move.y
+
+      player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
+        val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
+        val deg= acos(abs(newX-cell2.x)/distance)
+        val mouseX=mouseAct.clientX+player.x
+        val mouseY=mouseAct.clientY+player.y
+        val cos1=((cell2.x-cell.x)*(mouseX-cell.x)+(cell2.y-cell.y)*(mouseY-cell.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(newY - mouseY, 2) + pow(newX - mouseX, 2)))
+        val cos2=((cell.x-cell2.x)*(mouseX-cell2.x)+(cell.y-cell2.y)*(mouseY-cell2.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
+        val cos3=((cell.x-mouseX)*(cell2.x-mouseX)+(cell.y-mouseY)*(cell2.y-mouseY))/sqrt((pow(newY - mouseY, 2) + pow(newX - mouseX, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
+        val radiusTotal = cell.radius + cell2.radius+2
+        if (distance < radiusTotal) {
+          if (player.lastSplit > System.currentTimeMillis() - mergeInterval&&System.currentTimeMillis()-player.lastSplit>1000) {
+            if(cos1<=0){
+              newSpeed+=2
+            }else if(cos2<=0){
+              if(newSpeed>cell2.speed){
+                newSpeed=if(cell2.speed-2>=0)cell2.speed else 0
+              }
+            }else if(cos3<=0){
+              newSpeed=0
+            }else{
+              if (cell.x < cell2.x) newX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
+              else if (cell.x > cell2.x) newX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
+              if (cell.y < cell2.y) newY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+              else if (cell.y > cell2.y) newY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+            }
+          }
+        }
+      }
 
       List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat))
     }
