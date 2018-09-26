@@ -75,14 +75,30 @@ case class DrawGame(
 
   }
 
-  //等待提示文字
-  def drawGameWait(): Unit = {
+  //欢迎文字
+  def drawGameWelcome(): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Welcome.", 150, 180)
   }
+
+  //等待文字
+  def drawGameWait(firstCome:Boolean): Unit = {
+    ctx.fillStyle = Color.White.toString()
+    ctx.fillRect(0, 0, size.x , size.y )
+    if(firstCome) {
+      ctx.fillStyle = "rgba(99, 99, 99, 1)"
+      ctx.font = "36px Helvetica"
+      ctx.fillText("Please wait.", 350, 180)
+    } else {
+      ctx.fillStyle = "rgba(99, 99, 99, 1)"
+      ctx.font = "36px Helvetica"
+      ctx.fillText("Ops, Loading....", 350, 250)
+    }
+  }
+
 
   //离线提示文字
   def drawGameLost: Unit = {
@@ -151,17 +167,17 @@ case class DrawGame(
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-      println("kk"+killerId)
-      println("dd"+deadPlayer)
-      println("gg"+grid.playerMap)
+//      println("kk"+killerId)
+//      println("dd"+deadPlayer)
+//      println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val killImg = if (deadPlayer.kill > 3) shutdown
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) killingspree
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) dominating
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) unstoppable
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) godlike
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) legendary
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
+      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
       else if (killerId == myId) youkill
       else kill
       if (showTime > 0) {
@@ -187,7 +203,6 @@ case class DrawGame(
       (killList,isKill)
     }
   }
-
 
   def drawGrid(uid: Long, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量

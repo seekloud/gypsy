@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
+import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -22,6 +23,7 @@ import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
 import io.circe.syntax._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 /**
@@ -52,6 +54,7 @@ object RoomManager {
 
   /**
     * @param roomMap (roomId,(房间创建时间，房内人数))
+    * @author sky
     * */
   def idle(roomMap:mutable.HashMap[Int,(Long,Int)])(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
@@ -70,7 +73,7 @@ object RoomManager {
             if(msg.room!="2"){
               getRoomActor(ctx,msg.room,false) ! RoomActor.CheckName(msg.name,msg.replyTo)
             }else{
-              val freeRoom=roomMap.filter(r=>(curTime-r._2._1<2000*60)&&r._2._2<10)
+              val freeRoom=roomMap.filter(r=>(curTime-r._2._1<AppSettings.waitTime*60*1000)&&r._2._2<AppSettings.limitCount)
               if(freeRoom.isEmpty){
                 val roomId=roomIdGenerator.getAndIncrement()
                 getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)

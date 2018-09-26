@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.front.utils
 
 import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLAudioElement
 
 import scala.scalajs.js.Date
 
@@ -76,6 +77,18 @@ object Shortcut {
 
   def scheduleOnce(f: () => Any, delayMillisecond: Long): Int = {
     dom.window.setTimeout(() => f(), delayMillisecond)
+  }
+
+  def playMusic(id:String)={
+    println("--------1Blood")
+    val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
+    audio.play()
+  }
+
+  def stopMusic(id:String)={
+    println("--------1Blood")
+    val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
+    audio.pause()
   }
 
 
