@@ -53,7 +53,7 @@ case class WebSocketClient(
 
   def setUp(url:String,maxScore:Int)=
     if(wsSetup){
-      println()
+      println("-----error")
     }else{
       val gameStream = new WebSocket(url)
       webSocketOpt = Some(gameStream)
@@ -91,12 +91,15 @@ case class WebSocketClient(
 
       webSocketOpt.get.onclose = { event: Event =>
         wsSetup = false
-        sendMsg(UserLeft)
+        webSocketOpt=None
         closeCallback(event)
       }
     }
 
   def closeWs={
+    wsSetup = false
+    sendMsg(UserLeft)
+    println("---close Ws active")
     webSocketOpt.get.close()
   }
 

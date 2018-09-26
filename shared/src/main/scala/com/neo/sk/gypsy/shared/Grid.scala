@@ -166,6 +166,7 @@ trait Grid {
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
       var target=Position(player.targetX,player.targetY)
+
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
      // val deg1 = atan2(player.targetY , player.targetX )
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
@@ -175,8 +176,6 @@ trait Grid {
 
       target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
 
-      //val target = MousePosition(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y,0l)
-      //val target = MousePosition(mouseAct.clientX , mouseAct.clientY ,0l)
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
@@ -254,9 +253,94 @@ trait Grid {
   //食物检测
   def checkPlayerFoodCrash(): Unit
   //mass检测
-  def checkPlayerMassCrash(): Unit
+  def checkPlayerMassCrash(): Unit = {
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newProtected = player.protect
+        val newCells = player.cells.map {
+          cell =>
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            massList.foreach {
+              case p: Mass =>
+                if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
+                  newMass += p.mass
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  massList = massList.filterNot(l => l == p)
+                }
+            }
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+        }
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+  }
   //mass检测
-  def checkVirusMassCrash(): Unit
+  def checkVirusMassCrash(): Unit = {
+    val virus1 = virus.flatMap{v=>
+      var newMass = v.mass
+      var newRadius = v.radius
+      var newSpeed = v.speed
+      var newTargetX = v.targetX
+      var newTargetY = v.targetY
+      var newX = v.x
+      var newY = v.y
+      var hasMoved = false
+      val (nx,ny)= normalization(newTargetX,newTargetY)
+      massList.foreach {
+        case p: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
+            val (mx,my)=normalization(p.targetX,p.targetY)
+           // println(s"mx$mx,my$my")
+            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
+            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+
+            newX += vx.toInt
+            newY += vy.toInt
+            hasMoved =true
+            val borderCalc = 0
+            if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+            if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+            if (newX < borderCalc) newX = borderCalc
+            if (newY < borderCalc) newY = borderCalc
+            newMass += p.mass
+            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+            newTargetX = vx
+            newTargetY = vy
+            massList = massList.filterNot(l => l == p)
+          }
+      }
+      newSpeed -= 0.3
+      if(newSpeed<0) newSpeed=0
+      if(hasMoved==false && newSpeed!=0){
+        newX += (nx*newSpeed).toInt
+        newY += (ny*newSpeed).toInt
+        val borderCalc = 0
+        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
+        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
+        if (newX < borderCalc) newX = borderCalc
+        if (newY < borderCalc) newY = borderCalc
+      }
+      if(newMass>virusMassLimit){
+        newMass = newMass/2
+                newRadius = 4 + sqrt(newMass) * mass2rRate
+                val newX2 = newX + (nx*newRadius*2).toInt
+                val newY2 = newY + (ny*newRadius*2).toInt
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed),v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
+      }else{
+        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
+      }
+    }
+    virus = virus1
+  }
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit
 
@@ -301,7 +385,6 @@ trait Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,player.protect,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
@@ -352,14 +435,13 @@ trait Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,player.protect,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
 
 
-  def massDecrease():Unit={
+  def massDerease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
       val newCells=player.cells.map{cell=>
         var newMass = cell.mass
@@ -390,7 +472,7 @@ trait Grid {
      tick = tick+1
     if(tick%10==1){
       tick =1
-      massDecrease()
+      massDerease()
     }
 
 
@@ -406,8 +488,6 @@ trait Grid {
 
   def getGridData(id:Long) = {
     myId = id
-//    println(s"玩家id：$myId")
-//    println(s"玩家列表：$playerMap")
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
 //    println(s"zoom：$zoom")

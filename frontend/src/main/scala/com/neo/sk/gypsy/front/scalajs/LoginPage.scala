@@ -1,7 +1,9 @@
 package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.front.gypsyClient.GameHolder.joinGame
+import com.neo.sk.gypsy.front.gypsyClient.GameHolder
+import com.neo.sk.gypsy.front.utils.JsFunc
+//import com.neo.sk.gypsy.front.gypsyClient.GameHolder.joinGame
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.MousePosition
@@ -47,10 +49,10 @@ object LoginPage {
             select(*.id := "roomId",name := "home",
               option(value := "",attr("disabled"):="", "房间"),
               optgroup(attr("label") := "无尽模式",
-                option(value := "11",selected := "selected", "房间1"),
+                option(value := "11", "房间1"),
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "2", "限时匹配")),
+                option(value := "2", selected := "selected","限时匹配")),
             )
           )
         ),
@@ -160,7 +162,8 @@ object LoginPage {
   })
 
   def homePage(): Unit = {
-
+    val gameHolder=new GameHolder
+    gameHolder.init()
     val guestIndex = guestModel
     val nameField: Input = dom.document.getElementById("guestName").asInstanceOf[HTMLInputElement]
     val loginButton: Button = dom.document.getElementById("guestLogin").asInstanceOf[HTMLButtonElement]
@@ -183,7 +186,7 @@ object LoginPage {
                   println(s"name${nameField.value} has existed ")
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
-                  joinGame(rsp.roomId, nameField.value)
+                  gameHolder.joinGame(rsp.roomId, nameField.value)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
@@ -244,7 +247,7 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          joinGame("11",userName.value, 1,rsp.data.get.score)
+                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -293,7 +296,7 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          joinGame("11",userName.value, 1,rsp.data.get.score)
+                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -379,4 +382,5 @@ object LoginPage {
 
 
   }
+
 }

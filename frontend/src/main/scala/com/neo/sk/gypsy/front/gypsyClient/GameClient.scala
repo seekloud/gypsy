@@ -310,7 +310,7 @@ class GameClient (override val boundary: Point) extends Grid {
           }else{ //与预执下的操作数据不一致，进行回滚
             uncheckActionWithFrame.remove(gameAction.serialNum)
             if(frame < frameCount){
-              rollback(frame)
+//              rollback(frame)
             }else{
               removeActionWithFrame(tankId,a,f)
               gameAction match {
@@ -332,7 +332,7 @@ class GameClient (override val boundary: Point) extends Grid {
     }else{
       if(frame < frameCount && frameCount - maxDelayFrame >= frame){
         //回滚
-        rollback(frame)
+//        rollback(frame)
       }else{
         gameAction match {
           case a:KeyCode=>
@@ -354,7 +354,7 @@ class GameClient (override val boundary: Point) extends Grid {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
     //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
-    frameCount = frameCount
+    frameCount = data.frameCount
     //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
     if(data.foodDetails.nonEmpty){
@@ -399,5 +399,19 @@ class GameClient (override val boundary: Point) extends Grid {
         }
       case None =>
     }
+  }
+
+  def reStart={
+    myId = 0L
+    frameCount = 0l
+    food = Map[Point, Int]()
+    foodPool = 300
+    virus = List[Virus]()
+    playerMap = Map.empty[Long,Player]
+    massList = List[Mass]()
+    tick = 0
+    actionMap = Map.empty[Long, Map[Long, KeyCode]]
+    mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
+    deadPlayerMap=Map.empty[Long,Player]
   }
 }

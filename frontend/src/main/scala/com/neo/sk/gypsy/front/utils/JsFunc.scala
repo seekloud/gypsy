@@ -24,5 +24,4 @@ object JsFunc extends js.Object{
 
 
 
-
 }
