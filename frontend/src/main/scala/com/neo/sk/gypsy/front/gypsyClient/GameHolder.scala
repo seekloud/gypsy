@@ -7,13 +7,12 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
-import com.neo.sk.gypsy.front.utils.JsFunc
+import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
 import com.neo.sk.gypsy.shared.ptcl._
 import scalatags.JsDom.all._
-
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
-import org.scalajs.dom.html.{Document => _,Canvas}
+import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -265,6 +264,7 @@ class GameHolder {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
+        Shortcut.playMusic("bg")
         println(s"myID:$myId")
 
       case m:WsMsgProtocol.KeyCode =>
@@ -305,7 +305,8 @@ class GameHolder {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case WsMsgProtocol.SnakeRestart(id) =>
-
+        Shortcut.stopMusic("bg")
+        Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
       case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
@@ -315,7 +316,6 @@ class GameHolder {
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-
         DeadPage.gameOverModel(this,id,killNum,score,lifeTime,maxScore)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
@@ -329,7 +329,20 @@ class GameHolder {
           }else{
             killList :+=(200,killerId,deadPlayer)
           }
+        }else{
+          Shortcut.playMusic("shutdown")
         }
+        if(killerId==myId){
+          grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+            case 1 => Shortcut.playMusic("1Blood")
+            case 2 => Shortcut.playMusic("2Kill")
+            case 3 => Shortcut.playMusic("3Kill")
+            case 4 => Shortcut.playMusic("4Kill")
+            case 5 => Shortcut.playMusic("5Kill")
+            case _ => Shortcut.playMusic("unstop")
+          }
+        }
+
 
       case WsMsgProtocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
@@ -346,10 +359,13 @@ class GameHolder {
     }
   }
 
+
+
   def gameClose={
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
+    Shortcut.stopMusic("bg")
     LoginPage.homePage()
   }
 }

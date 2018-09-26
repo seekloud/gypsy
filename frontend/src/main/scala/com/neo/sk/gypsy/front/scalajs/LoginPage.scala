@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.gypsyClient.GameHolder
+import com.neo.sk.gypsy.front.utils.JsFunc
 //import com.neo.sk.gypsy.front.gypsyClient.GameHolder.joinGame
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
@@ -381,4 +382,5 @@ object LoginPage {
 
 
   }
+
 }
