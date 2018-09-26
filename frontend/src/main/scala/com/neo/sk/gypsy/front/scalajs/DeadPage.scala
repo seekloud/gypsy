@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.gypsyClient.{GameHolder, WebSocketClient}
-import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
+import com.neo.sk.gypsy.front.utils.{Http, JsFunc, LayuiJs, Shortcut}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{MousePosition, UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp, WsMsgProtocol}
@@ -24,6 +24,7 @@ import scalatags.JsDom.short.*
 object DeadPage {
 
   def deadModel(game:GameHolder,id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+    Shortcut.stopMusic("bg")
     game.isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
@@ -94,6 +95,7 @@ object DeadPage {
   }
 
   def gameOverModel(game:GameHolder,id:Long,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+    Shortcut.stopMusic("bg")
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
       override val title: UndefOr[Boolean] = false
