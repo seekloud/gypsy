@@ -9,6 +9,7 @@ import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
@@ -174,6 +175,7 @@ object RoomActor {
             dispatchTo(subscribersMap,p._1,WsMsgProtocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
           }
           timer.cancel(SyncTimeKey)
+          roomManager ! RemoveRoom(room)
           Behaviors.stopped
         case x =>
           log.warn(s"got unknown msg: $x")
@@ -226,6 +228,7 @@ object RoomActor {
 
         case TimeOut=>
           log.info("matchRoom timeOut!!")
+          roomManager ! RemoveRoom(room)
           dispatch(subscribersMap,MatchRoomError)
           Behaviors.stopped
 
