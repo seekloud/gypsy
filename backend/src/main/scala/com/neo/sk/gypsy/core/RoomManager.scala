@@ -40,6 +40,7 @@ object RoomManager {
   val roomIdGenerator = new AtomicInteger(100)
   case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class RemoveRoom(id:String) extends Command
 
   val behaviors:Behavior[Command] ={
     log.debug(s"UserManager start...")
@@ -56,7 +57,7 @@ object RoomManager {
     * @param roomMap (roomId,(房间创建时间，房内人数))
     * @author sky
     * */
-  def idle(roomMap:mutable.HashMap[Int,(Long,Int)])(implicit timer:TimerScheduler[Command])=
+  def idle(roomMap:mutable.HashMap[String,(Long,Int)])(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
@@ -77,7 +78,7 @@ object RoomManager {
               if(freeRoom.isEmpty){
                 val roomId=roomIdGenerator.getAndIncrement()
                 getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
-                roomMap.put(roomId,(curTime,1))
+                roomMap.put("match-"+roomId,(curTime,1))
               }else{
                 import scala.util.Random
                 val roomId=Random.shuffle(freeRoom.keys.toList).head
@@ -88,6 +89,11 @@ object RoomManager {
               }
             }
             Behavior.same
+
+          case msg:RemoveRoom=>
+            roomMap.remove(msg.id)
+            log.info(s"room---${msg.id}--remove")
+            Behaviors.same
 
           case x=>
             log.debug(s"msg can't handle with ${x}")
