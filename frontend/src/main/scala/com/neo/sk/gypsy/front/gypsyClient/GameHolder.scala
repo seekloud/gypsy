@@ -188,7 +188,7 @@ object GameHolder extends js.JSApp {
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         //gameStream.send(MousePosition(e.pageX-windWidth/2, e.pageY-48-window.y.toDouble/2).asJson.noSpaces)
         webSocketClient.sendMsg(mp)
-        println(11)
+        //println(11)
       }
     }
     }

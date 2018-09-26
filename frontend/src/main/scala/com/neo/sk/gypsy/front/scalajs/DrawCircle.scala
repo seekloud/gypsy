@@ -20,11 +20,13 @@ object DrawCircle {
     pointList.tail.foreach{
       point=>
         theta=2*Math.PI *point.x+phase
-        val rad=radius+point.y*5
+        val rad=radius+point.y*3
         x0=centerX+rad*Math.cos(theta)
         y0=centerY+rad*Math.sin(theta)
         ctx.lineTo(x0,y0)
     }
+    ctx.lineJoin="round"
+    ctx.lineCap="round"
     ctx.stroke()
   }
 

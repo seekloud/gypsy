@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
+import com.neo.sk.gypsy.front.scalajs.DrawCircle
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom.CanvasRenderingContext2D
@@ -289,8 +290,8 @@ case class DrawGame(
           case _  => "#ad43a2"   //紫
         }
         ctx.beginPath()
-        ctx.arc(xfix+offx,yfix+offy,cell.radius+5,0,2*Math.PI)
-        // DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+5)
+        //ctx.arc(xfix+offx,yfix+offy,cell.radius+5,0,2*Math.PI)
+         DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+5)
         ctx.fill()
         ctx.restore()
         ctx.save()
