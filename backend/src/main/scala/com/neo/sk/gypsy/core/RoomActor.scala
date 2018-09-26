@@ -68,7 +68,7 @@ object RoomActor {
             val userMap = mutable.HashMap[Long, String]()
             val grid = new GridOnServer(bounds)
             if(matchRoom){
-              timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.waitTime.minutes)
+              timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
               wait(room,userMap,subscribersMap,grid)
             }else{
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
