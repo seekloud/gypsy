@@ -81,10 +81,10 @@ object RoomManager {
                 roomMap.put("match-"+roomId,(curTime,1))
               }else{
                 import scala.util.Random
-                val roomId=Random.shuffle(freeRoom.keys.toList).head
-                getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
-                roomMap.get(roomId).foreach{ r=>
-                  roomMap.update(roomId,(r._1,r._2+1))
+                val roomString=Random.shuffle(freeRoom.keys.toList).head
+                getRoomActor(ctx,roomString,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
+                roomMap.get(roomString).foreach{ r=>
+                  roomMap.update(roomString,(r._1,r._2+1))
                 }
               }
             }
