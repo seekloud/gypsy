@@ -135,7 +135,6 @@ case class DrawGame(
   def drawGameOn2()={
     ctx.clearRect(0, 0, width, height)
     run(angle)
-    println("wait-------------1111")
     for ( j <- 1 until particle.length) {
       val p = particle(j)
       p.update()
