@@ -329,7 +329,7 @@ trait Grid {
             var splitRadius = 0.0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.mass > splitLimit && player.cells.size < 16) {
+            if (split && cell.mass > splitLimit && player.cells.size < maxCellNum) {
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toInt
               newMass = newMass - splitMass
