@@ -10,6 +10,8 @@ import org.scalajs.dom.html.{Canvas, Image}
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
+
+import scala.collection.mutable.ArrayBuffer
 import scala.math._
 /**
   * User: sky
@@ -74,6 +76,113 @@ case class DrawGame(
     ctx.fillRect(0, 0, size.x , size.y )
 
   }
+ //绘制转圈动画
+  var p =  ArrayBuffer()
+  var particle = ArrayBuffer[Particle]()
+  var angle = Math.PI/4
+  var width = canvas.width
+  var height = canvas.height
+  def getRandomInt(min:Double, max:Double):Double= {
+    return min + Math.floor(Math.random() * (max - min + 1))
+  }
+  class Particle(x1:Double,y1:Double){
+    var x= x1
+    var y = y1
+    var r = getRandomInt(10, 16)
+    var vx:Double = 0
+    var vy:Double= 0
+    var ax:Double = 0
+    var ay:Double = 0
+    var al:Double = 1
+
+    def update()={
+      this.ax = getRandomInt(-0.001, 0.001)
+      this.ay = getRandomInt(0.01, 0.02)
+      this.vx =this.vx+this.ax
+      this.vy =this.vy+this.ay
+      this.x+=this.vx
+      this.y+=this.vy
+
+      if (this.r >= 0.01) {
+        this.r -= 0.2
+        this.al =this.al-0.001
+      } else {
+        this.r = 0
+        this.al = 0
+      }
+    }
+
+    def draw(): Unit ={
+      ctx.fillStyle = "rgba(0,0,255," + this.al + ")"
+      ctx.beginPath()
+      ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false)
+      ctx.fill();
+      //      ctx.fillStyle = "rgba(99, 99, 99, 1)"
+      //      ctx.font = "60px Helvetica"
+      //      ctx.fillText(""+time+"s", 710, 350)
+      //      clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
+    }
+  }
+
+  def run(a:Double) {
+    var r = 140
+    var x = r * Math.sin(a) + width / 2
+    var y = r * Math.cos(a) + ((height / 2)-80)
+    var p = new Particle(x, y)
+    particle.append(p)
+  }
+
+  def animate():Double => Unit ={d =>
+    ctx.clearRect(0, 0, width, height)
+    run(angle)
+    dom.window.requestAnimationFrame(animate)
+    var j = 0
+    var time = 1
+    for ( j <- 1 until particle.length) {
+      var p = particle(j)
+      p.update()
+      p.draw()
+    }
+    if (angle <= 2 * Math.PI) {
+      angle += 0.04
+    } else {
+      angle = 0
+    }
+  }
+
+
+  var timeNum = 0
+  var clock1=0
+  def drawGameOn2(): Unit = {
+    dom.window.requestAnimationFrame(animate())
+  }
+  //绘制等待时间
+  def drawClock():Unit={
+    clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
+  }
+  def clock(time:Int):Unit={
+    ctx.fillStyle = Color.White.toString()
+    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillStyle = "rgba(99, 19, 99, 1)"
+    ctx.font = "36px Helvetica"
+    ctx.fillText("正在等待玩家进入", 640, 100)
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
+    ctx.font = "70px Helvetica"
+    ctx.fillText(""+time+"s", 718, 350)
+    timeNum = timeNum+1
+    println(timeNum)
+  }
+  //清除计数
+  def cleanClock():Unit={
+    dom.window.clearInterval(clock1)
+  }
+
+
+
+
+
+
+
 
   //欢迎文字
   def drawGameWelcome(): Unit = {
