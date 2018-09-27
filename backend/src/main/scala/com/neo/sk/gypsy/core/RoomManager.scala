@@ -145,7 +145,7 @@ object RoomManager {
       Supervision.Resume
   }
 
-  private def getRoomActor(ctx: ActorContext[Command],name:String,matchRoom:Boolean):ActorRef[RoomActor.Command] decider= {
+  private def getRoomActor(ctx: ActorContext[Command],name:String,matchRoom:Boolean):ActorRef[RoomActor.Command] = {
     val childName = s"RoomActor-$name"
     ctx.child(childName).getOrElse{
       ctx.spawn(RoomActor.create(name,matchRoom),childName)
