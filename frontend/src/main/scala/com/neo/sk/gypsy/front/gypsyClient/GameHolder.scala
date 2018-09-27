@@ -42,7 +42,8 @@ class GameHolder {
   private[this] val ctx2 = canvas2.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-
+  private[this] val canvas4 = dom.document.getElementById("ClockView").asInstanceOf[Canvas]
+  private[this] val ctx4 = canvas4.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
   private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -52,6 +53,7 @@ class GameHolder {
   private[this] val draw1=DrawGame(ctx,canvas,window)
   private[this] val draw2=DrawGame(ctx2,canvas2,window)
   private[this] val draw3=DrawGame(ctx3,canvas3,window)
+  private[this] val draw4=DrawGame(ctx4,canvas4,window)
   private[this] val drawOff=DrawGame(offCtx,offScreenCanvas,bounds)
 
   /**
@@ -118,10 +120,16 @@ class GameHolder {
     grid.update()
   }
 
-  def startGame: Unit = {
+  def startGame(room:String): Unit = {
     println("start---")
-    draw1.drawGameWait(firstCome)
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
+    if(room!=null&& (room.equals("11") ||room.equals("12"))){
+      //      draw1.drawGameOn()
+    }else{
+      draw1.drawGameOn2()
+      draw4.drawClock()
+    }
+
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -130,6 +138,7 @@ class GameHolder {
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != -1l) {
+      draw4.cleanClock()
       draw(offsetTime)
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
@@ -138,7 +147,7 @@ class GameHolder {
   def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
     val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
     webSocketClient.setUp(url,maxScore)
-    startGame
+    startGame(room)
     addActionListenEvent
   }
 
@@ -352,6 +361,7 @@ class GameHolder {
         }
 
       case WsMsgProtocol.MatchRoomError=>
+        draw4.cleanClock()
         JsFunc.alert("超过等待时间请重新选择")
         LoginPage.homePage()
 
