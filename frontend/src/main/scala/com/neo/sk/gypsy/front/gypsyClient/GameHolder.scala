@@ -321,7 +321,6 @@ class GameHolder {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case WsMsgProtocol.SnakeRestart(id) =>
-        Shortcut.stopMusic("bg")
         Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
