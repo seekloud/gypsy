@@ -230,6 +230,7 @@ class GameHolder {
           draw1.drawGameWait(firstCome)
       }
 
+
     }else{
       draw1.drawGameLost
     }
