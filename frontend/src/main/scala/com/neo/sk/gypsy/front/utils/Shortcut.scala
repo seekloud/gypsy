@@ -80,16 +80,19 @@ object Shortcut {
   }
 
   def playMusic(id:String)={
-    println("--------1Blood")
     val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
     audio.play()
   }
 
-  def stopMusic(id:String)={
-    println("--------1Blood")
+  def pauseMusic(id:String)={
     val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
     audio.pause()
   }
 
+  def stopMusic(id:String)={
+    val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
+    audio.pause()
+    audio.currentTime=0.0
+  }
 
 }

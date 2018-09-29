@@ -132,21 +132,18 @@ case class DrawGame(
   }
 
   def run(a:Double) {
-    var r = 140
-    var x = r * Math.sin(a) + width / 2
-    var y = r * Math.cos(a) + ((height / 2)-80)
-    var p = new Particle(x, y)
+    val r = 140
+    val x = r * Math.sin(a) + width / 2
+    val y = r * Math.cos(a) + ((height / 2)-80)
+    val p = new Particle(x, y)
     particle.append(p)
   }
 
-  def animate():Double => Unit ={d =>
+  def drawGameOn2()={
     ctx.clearRect(0, 0, width, height)
     run(angle)
-    dom.window.requestAnimationFrame(animate)
-    var j = 0
-    var time = 1
     for ( j <- 1 until particle.length) {
-      var p = particle(j)
+      val p = particle(j)
       p.update()
       p.draw()
     }
@@ -160,9 +157,7 @@ case class DrawGame(
 
   var timeNum = 0
   var clock1=0
-  def drawGameOn2(): Unit = {
-    dom.window.requestAnimationFrame(animate())
-  }
+
   //绘制等待时间
   def drawClock():Unit={
     clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
@@ -183,12 +178,6 @@ case class DrawGame(
   def cleanClock():Unit={
     dom.window.clearInterval(clock1)
   }
-
-
-
-
-
-
 
 
   //欢迎文字

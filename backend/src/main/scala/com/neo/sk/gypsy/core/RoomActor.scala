@@ -92,7 +92,7 @@ object RoomActor {
       msg match {
         case CheckName(name,replyTo)=>
           log.info(s"$name check name")
-          if(grid.playerMap.exists(_._2.name.trim==name)){
+          if(userMap.exists(_._2==name)){
            replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
           }else{
             UserDao.getUserByName(name).map{
@@ -185,7 +185,7 @@ object RoomActor {
   }
 
   /**
-    * */
+    * 本状态为等待匹配创建房间*/
   def wait(
             room:String,
             userMap:mutable.HashMap[Long,String],

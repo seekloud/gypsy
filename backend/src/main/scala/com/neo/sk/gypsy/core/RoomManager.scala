@@ -56,6 +56,7 @@ object RoomManager {
   /**
     * @param roomMap (roomId,(房间创建时间，房内人数))
     * @author sky
+    *
     * */
   def idle(roomMap:mutable.HashMap[String,(Long,Int)])(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
