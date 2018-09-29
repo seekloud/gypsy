@@ -25,6 +25,13 @@ case class DrawGame(
               ) {
 
   private[this] val  img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
+  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
+  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
+  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
+  private[this] val  circle4 = dom.document.getElementById("circle4").asInstanceOf[HTMLElement]
+  private[this] val  circle5 = dom.document.getElementById("circle5").asInstanceOf[HTMLElement]
+  private[this] val  circle6 = dom.document.getElementById("circle6").asInstanceOf[HTMLElement]
   private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
   private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
   private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
@@ -383,15 +390,15 @@ case class DrawGame(
     }
 
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
-      ctx.fillStyle = color.toInt match{
-        case 0 => "#f3456d"  //(243,69,109)   b30e35
-        case 1 => "#f49930"  //(244, 153, 48)  a65d0a
-        case 2  => "#f4d95b"  //244, 217, 91   917600
-        case 3  => "#4cd964"   //76, 217, 100  05851b
-        case 4  => "#9fe0f6"   //159, 224, 246  037da6
-        case 5  => "#bead92"   //190, 173, 146   875a16
-        case 6  => "#cfe6ff"  //207, 230, 255   4174ab
-        case _  => "#de9dd6"   //222, 157, 214   8f3284
+      val circleImg = color.toInt match{
+        case 0 => circle //(243,69,109)   b30e35
+        case 1 => circle1 //(244, 153, 48)  a65d0a
+        case 2  => circle2 //244, 217, 91   917600
+        case 3  => circle3   //76, 217, 100  05851b
+        case 4  => circle4  //159, 224, 246  037da6
+        case 5  => circle5   //190, 173, 146   875a16
+        case 6  => circle6  //207, 230, 255   4174ab
+        case _  => circle3  //222, 157, 214   8f3284
       }
       cells.sortBy(_.id).foreach{ cell=>
 
@@ -402,7 +409,7 @@ case class DrawGame(
         ctx.save()
 
         //if(xfix>=cell.radius+5&&xfix<=bounds.x-cell.radius-5&&yfix>=cell.radius+5&&yfix<=bounds.y-cell.radius-5){
-        ctx.save()
+       /* ctx.save()
         ctx.fillStyle = color.toInt match{
           case 0 => "#bf3558" //粉
           case 1 => "#cc8a43"  //棕
@@ -433,12 +440,10 @@ case class DrawGame(
         ctx.arc(xfix+offx,yfix+offy,cell.radius+2,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+2)
         ctx.fill()
-        ctx.restore()
-
-        ctx.beginPath()
-        ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
+        ctx.restore()*/
+        ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
+        //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
-        ctx.fill()
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
@@ -453,7 +458,8 @@ case class DrawGame(
         val nameWidth = ctx.measureText(name).width
         //        ctx.strokeStyle = "grey"
         //        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
-        ctx.fillStyle = MyColors.background
+
+        ctx.fillStyle =if(circleImg==circle) "black" else MyColors.background
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
