@@ -126,11 +126,18 @@ class GameHolder {
     if(room!=null&& (room.equals("11") ||room.equals("12"))){
       //      draw1.drawGameOn()
     }else{
-      draw1.drawGameOn2()
+      dom.window.requestAnimationFrame(animate())
       draw4.drawClock()
     }
 
     dom.window.requestAnimationFrame(gameRender())
+  }
+
+  def animate():Double => Unit ={d =>
+    draw1.drawGameOn2()
+    if(myId == -1l){
+      dom.window.requestAnimationFrame(animate())
+    }
   }
 
   def gameRender(): Double => Unit = { d =>
@@ -314,7 +321,6 @@ class GameHolder {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case WsMsgProtocol.SnakeRestart(id) =>
-        Shortcut.stopMusic("bg")
         Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 

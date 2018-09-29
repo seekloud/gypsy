@@ -24,7 +24,7 @@ import scalatags.JsDom.short.*
 object DeadPage {
 
   def deadModel(game:GameHolder,id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
-    Shortcut.stopMusic("bg")
+    Shortcut.pauseMusic("bg")
     game.isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
