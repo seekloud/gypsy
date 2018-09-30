@@ -202,12 +202,23 @@ trait Grid {
         }
       }
 
+
       //cell移动+边界检测
-      var newX = if ((cell.x + move.x) > boundary.x-15) boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
+      var newX = if ((cell.x + move.x) > boundary.x-15)  boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
       var newY = if ((cell.y + move.y) > boundary.y-15) boundary.y-15 else if ((cell.y + move.y) <= 15) 15 else cell.y + move.y
 
+      var isCorner= false
       var isParallel =false
-      player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
+      if((newX<=15&&newY<=15)||
+        (newX>=boundary.x-15&&newY<=15)||
+        (newX<=15&&newY>=boundary.y-15)||
+        (newX>=boundary.x-15&&newY>=boundary.y-15)){
+        isCorner=true
+      }
+
+      //println(newX+"dddd"+newY+"dkfkadf"+isCorner)
+      player.cells.filterNot(p => p == cell).sortBy(_.isCorner).foreach { cell2 =>
+        println(cell2)
         val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
         val deg= acos(abs(newX-cell2.x)/distance)
         val radiusTotal = cell.radius + cell2.radius+2
@@ -219,10 +230,30 @@ trait Grid {
             val cos2=((cell.x-cell2.x)*(mouseX-cell2.x)+(cell.y-cell2.y)*(mouseY-cell2.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
             val cos3=((cell.x-mouseX)*(cell2.x-mouseX)+(cell.y-mouseY)*(cell2.y-mouseY))/sqrt((pow(newY - mouseY, 2) + pow(newX - mouseX, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
             if(cos1<=0){
-              newSpeed+=2
+              if(newX==15&&newY==15){}
+              else if(newX==15&&newY==boundary.y-15){}
+              else if(newX==boundary.x-15&&newY==15){}
+              else if(newX==boundary.x-15&&newY==boundary.y-15){}
+              else{
+                newSpeed+=2
+              }
             }else if(cos2<=0){
-              if(newSpeed>cell2.speed){
-                newSpeed=if(cell2.speed-2>=0)cell2.speed else 0
+              if(!cell2.isCorner){
+                if(newSpeed>cell2.speed){
+                  newSpeed=if(cell2.speed-2>=0)cell2.speed-2 else 0
+                }
+                if((cell2.x<=15&&cell2.y<=15)||
+                  (cell2.x>=boundary.x-15&&cell2.y<=15)||
+                  (cell2.x<=15&&cell2.y>=boundary.y-15)||
+                  (cell2.x>=boundary.x-15&&cell2.y>=boundary.y-15)){
+                  newX=cell.x
+                  newY=cell.y
+                }
+              }else{
+               // println("kajdsflaf")
+                isCorner=true
+                newX=cell.x
+                newY=cell.y
               }
             }else if(cos3<=0){
               newSpeed=0
@@ -237,7 +268,10 @@ trait Grid {
         }
       }
 
-      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel))
+    //  println("dkjfakdfjaldsfkja"+isCorner)
+      //List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
+     //println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
+      List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
     val length = newCells.length
     val newX = newCells.map(_.x).sum / length

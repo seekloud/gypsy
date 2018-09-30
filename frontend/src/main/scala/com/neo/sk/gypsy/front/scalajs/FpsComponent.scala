@@ -29,7 +29,7 @@ object FpsComponent{
     addFps()
     if(isRenderFps){
       ctx.font = "20px Helvetica"
-      ctx.fillStyle = Color.Black.toString()
+      ctx.fillStyle = Color.White.toString()
       val fpsString = "fps : "
       val pingString = "ping: "
       ctx.fillText(fpsString, 750, 30)

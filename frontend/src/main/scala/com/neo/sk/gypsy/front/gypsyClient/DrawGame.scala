@@ -40,6 +40,9 @@ case class DrawGame(
   private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
   private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
   private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
+  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
+  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+  private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
   private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
@@ -217,8 +220,9 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    ctx.fillStyle = MyColors.background
-    ctx.fillRect(0,0,size.x,size.y)
+    //ctx.fillStyle = MyColors.background
+    //ctx.fillRect(0,0,size.x,size.y)
+    ctx.drawImage(background1,0,0,size.x,size.y)
     ctx.save()
     //绘制条纹
     ctx.strokeStyle = MyColors.stripe
@@ -330,6 +334,7 @@ case class DrawGame(
     centerScale(scale,size.x/2,size.y/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
+    //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
@@ -397,39 +402,6 @@ case class DrawGame(
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
 
-        //if(xfix>=cell.radius+5&&xfix<=bounds.x-cell.radius-5&&yfix>=cell.radius+5&&yfix<=bounds.y-cell.radius-5){
-       /* ctx.save()
-        ctx.fillStyle = color.toInt match{
-          case 0 => "#bf3558" //粉
-          case 1 => "#cc8a43"  //棕
-          case 2  => "#bd9e2f"  //棕绿
-          case 3  => "#22a834"   //绿
-          case 4  => "#3da2c4"   //天蓝
-          case 5  => "#b88237"   //深棕
-          case 6  => "#558cc2"   //深蓝
-          case _  => "#ad43a2"   //紫
-        }
-        ctx.beginPath()
-        //ctx.arc(xfix+offx,yfix+offy,cell.radius+5,0,2*Math.PI)
-         DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+5)
-        ctx.fill()
-        ctx.restore()
-        ctx.save()
-        ctx.fillStyle = color.toInt match{
-          case 0 => "#cc4a6c"
-          case 1 => "#d69753"
-          case 2  => "#ccae43"
-          case 3  => "#3dbf4f"
-          case 4  => "#50b1d1"
-          case 5  => "#cf9748"
-          case 6  => "#74a7de"
-          case _  => "#cc64c2"
-        }
-        ctx.beginPath()
-        ctx.arc(xfix+offx,yfix+offy,cell.radius+2,0,2*Math.PI)
-        //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius+2)
-        ctx.fill()
-        ctx.restore()*/
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
@@ -445,10 +417,10 @@ case class DrawGame(
         // println(nameFont)
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
-        //        ctx.strokeStyle = "grey"
-        //        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.strokeStyle = "grey"
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
 
-        ctx.fillStyle =if(circleImg==circle) "black" else MyColors.background
+        ctx.fillStyle = MyColors.background
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
