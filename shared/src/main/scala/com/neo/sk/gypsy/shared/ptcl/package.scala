@@ -72,7 +72,8 @@ package object ptcl {
                  speed:Double = 12,
                  speedX:Float = 0,
                  speedY:Float = 0,
-                 parallel:Boolean = false
+                 parallel:Boolean = false,
+                 isCorner:Boolean =false
                  )
 
   case class Mass(
