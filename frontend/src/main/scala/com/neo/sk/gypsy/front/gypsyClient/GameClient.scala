@@ -25,7 +25,7 @@ class GameClient (override val boundary: Point) extends Grid {
   var currentRank = List.empty[Score]
   //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
-
+//序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 

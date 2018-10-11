@@ -134,6 +134,7 @@ class GameHolder {
   }
 
   def animate():Double => Unit ={d =>
+    //加载转圈
     draw1.drawGameOn2()
     if(myId == -1l){
       dom.window.requestAnimationFrame(animate())
@@ -144,6 +145,7 @@ class GameHolder {
 //    println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
+    //myId != -1l 为非匹配模式开始等待的时候
     if(myId != -1l) {
       draw4.cleanClock()
       draw(offsetTime)

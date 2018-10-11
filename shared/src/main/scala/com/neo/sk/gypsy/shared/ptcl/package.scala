@@ -52,7 +52,7 @@ package object ptcl {
                    color:String,
                    x:Int,
                    y:Int,
-                   targetX:Int = 0,
+                   targetX:Int = 0,//运动方向，大部分做了归一化
                    targetY:Int = 0,
                    kill:Int = 0,
                    protect:Boolean = true,//出生保护
