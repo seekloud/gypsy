@@ -49,10 +49,10 @@ object LoginPage {
             select(*.id := "roomId",name := "home",
               option(value := "",attr("disabled"):="", "房间"),
               optgroup(attr("label") := "无尽模式",
-                option(value := "11", "房间1"),
+                option(value := "11",selected := "selected", "房间1"),
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "2", selected := "selected","限时匹配")),
+                option(value := "2", "限时匹配")),
             )
           )
         ),
