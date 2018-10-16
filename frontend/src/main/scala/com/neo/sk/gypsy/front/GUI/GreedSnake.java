@@ -50,6 +50,10 @@ public class GreedSnake implements KeyListener {
     labelHelp = new JLabel("SPACE or P for pause", JLabel.CENTER);
     panelButtom.add(labelHelp, BorderLayout.SOUTH);
     cp.add(panelButtom, BorderLayout.SOUTH);
+    /*
+    pack()//是自动适应大小。在写程序的时候，如果定义了preferred size，则会按照首选大小画框架大小；或者按照容器内组件的大小来自适应大小。
+    vailate()//是重新调整大小，前提是已经设置大小（已经调用了setSize()），且大小发生变化。如最大最小化窗口。
+    */
     mainFrame.addKeyListener(this);
     mainFrame.pack();
     mainFrame.setResizable(false);
