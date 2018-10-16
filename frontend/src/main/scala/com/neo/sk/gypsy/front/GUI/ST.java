@@ -21,12 +21,11 @@ public class ST extends JPanel implements Runnable {
   boolean paused = true;
   int timeInterval = 150;
   Image bg = new ImageIcon("backend/src/main/resources/img/b2.jpg").getImage();
-
+  SwingListener sl = new SwingListener(this);
   ST(){
     JFrame frame = new JFrame();
     JButton btn = new JButton("Start");
     JLabel label = new JLabel("说明：123！");
-
     //设置大小
     btn.setPreferredSize(new Dimension(50,50));
 
@@ -75,8 +74,8 @@ public class ST extends JPanel implements Runnable {
 
 //    this.addMouseListener(ma);   //鼠标点击进入等事件监听用这个
 //    鼠标拖动移动这两个用这个
-    this.addMouseMotionListener(ma);
-    this.addKeyListener(ka);
+    this.addMouseMotionListener(sl);
+    this.addKeyListener(sl);
 
     frame.add(label,BorderLayout.NORTH);
     frame.add(this,BorderLayout.CENTER);
@@ -92,7 +91,13 @@ public class ST extends JPanel implements Runnable {
 
 //    绘制背景
     g.drawImage(bg,0,0,this.getWidth(),this.getWidth(),null);
-    //以下g的绘图貌似参数的数据类型都是int，如果要用float请看g2的绘图
+    /*
+     *以下g的绘图貌似参数的数据类型都是int，如果要用float请看g2的绘图
+     * 带fill的绘图时画实心，带draw的是空心，包括后面的g2画图也是
+     *
+     *
+     *
+    */
 
     //设置颜色
     g.setColor(Color.red);
@@ -121,9 +126,9 @@ public class ST extends JPanel implements Runnable {
 
     g.setColor(Color.BLUE);
     g2 = (Graphics2D) g;
+//    g2.rotate(90);
     Shape s01 = new Ellipse2D.Float(50, 110, 20, 20);
     g2.draw(s01);
-
     //设置线条的粗细
 //    Stroke stroke03 = new BasicStroke(5);
 //    g2.setStroke(stroke03);
@@ -153,12 +158,11 @@ public class ST extends JPanel implements Runnable {
 
 
   MouseAdapter ma = new MouseAdapter() {
-    public void mousePressed(MouseEvent e) {
-      // 鼠标按下去会产生一个点
-      s="mouse click!";
-      repaint();
-    }
-
+//    public void mousePressed(MouseEvent e) {
+//      // 鼠标按下去会产生一个点
+//      s="mouse click!";
+//      repaint();
+//    }
     public void mouseMoved(MouseEvent e){
       s= "point:"+"("+e.getX()+","+e.getY()+")";
       repaint();
@@ -217,19 +221,37 @@ public class ST extends JPanel implements Runnable {
   };
 
 
+
+
   @Override
   public void run() {
     System.out.println("run!");
     running = true;
+    SwingListener sl = new SwingListener(this);
+    this.addMouseMotionListener(sl);
+    this.addKeyListener(sl);
+
+
     while(running){
       try {
+        //延时
         Thread.sleep(timeInterval);
       } catch (Exception e) {
         break;
       }
       if(!paused){
         x+=4;
-        paint(this.getGraphics());
+
+        this.addMouseMotionListener(sl);
+        this.addKeyListener(sl);
+        this.setFocusable(true);
+        repaint();
+        /*
+        用paint会闪
+        https://blog.csdn.net/sangjinchao/article/details/53052897
+        */
+        //        paint(this.getGraphics());
+
       }
 
 
