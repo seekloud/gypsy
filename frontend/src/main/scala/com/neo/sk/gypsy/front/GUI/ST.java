@@ -1,10 +1,7 @@
 package com.neo.sk.gypsy.front.GUI;
 
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.*;
 import javax.swing.*;
 
@@ -12,26 +9,48 @@ import javax.swing.*;
 /**
  * Created by yangxingyuan on 2018/10/14
  */
-public class ST extends JPanel {
-  int x=40,y=40;
+public class ST extends JPanel implements Runnable {
+  int x = 0;
+
   //  Graphics g;
   Graphics2D g2;
   String s = "123";
   Shape shape;
   Shape shapef;
-
+  boolean running = false;
+  boolean paused = true;
+  int timeInterval = 150;
   Image bg = new ImageIcon("backend/src/main/resources/img/b2.jpg").getImage();
-
-
-
 
   ST(){
     JFrame frame = new JFrame();
+    JButton btn = new JButton("Start");
+    JLabel label = new JLabel("说明：123！");
+
+    //设置大小
+    btn.setPreferredSize(new Dimension(50,50));
+
+    // 使btn不可用
+//    btn.setEnabled(false);
+
+    btn.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e) {
+        paused = !paused;
+        String showBtn = paused? "Start" : "Pause";
+        btn.setText(showBtn);
+//        System.out.println("click !!!!");
+      }
+    });
+
+
     //开始时窗口大小
     frame.setSize( 800, 600);
-    frame.setLayout(null);
+    //是否可以调整窗口大小
+    frame.setResizable(false);
+
+//    frame.setLayout(null);
     //画布大小，起始位置
-    this.setBounds(100, 100, 800, 700);
+    this.setBounds(0, 0, 800, 700);
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
     //加这句为了获取键盘的监听事件，但网上又说要写setVisible(true)后面才行，试了下加前面也是可以
@@ -59,11 +78,14 @@ public class ST extends JPanel {
     this.addMouseMotionListener(ma);
     this.addKeyListener(ka);
 
-    frame.add(this);
+    frame.add(label,BorderLayout.NORTH);
+    frame.add(this,BorderLayout.CENTER);
+    frame.add(btn,BorderLayout.SOUTH);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
   }
   public static void main(String[] args) {
-    new ST();
+    ST st = new ST();
+    (new Thread(st)).start();
   }
   public void paint(Graphics g){
     super.paint(g);
@@ -92,9 +114,12 @@ public class ST extends JPanel {
     // 绘制字符串
     g.drawString("Hello Swing", 80, 100);
 
+    g.setColor(Color.YELLOW);
+    //绘制实心圆(int x, int y, int width, int height)
+    g.fillOval(100+x%400, 300, 20, 20);
 
 
-
+    g.setColor(Color.BLUE);
     g2 = (Graphics2D) g;
     Shape s01 = new Ellipse2D.Float(50, 110, 20, 20);
     g2.draw(s01);
@@ -192,6 +217,23 @@ public class ST extends JPanel {
   };
 
 
+  @Override
+  public void run() {
+    System.out.println("run!");
+    running = true;
+    while(running){
+      try {
+        Thread.sleep(timeInterval);
+      } catch (Exception e) {
+        break;
+      }
+      if(!paused){
+        x+=4;
+        paint(this.getGraphics());
+      }
 
 
+    }
+
+  }
 }
