@@ -9,9 +9,9 @@ import javax.swing.*;
 /**
  * Created by yangxingyuan on 2018/10/14
  */
-public class ST extends JPanel implements Runnable {
+public class ST extends JPanel{
   int x = 0;
-
+  ST st = this;
   //  Graphics g;
   Graphics2D g2;
   String s = "123";
@@ -22,10 +22,11 @@ public class ST extends JPanel implements Runnable {
   int timeInterval = 150;
   Image bg = new ImageIcon("backend/src/main/resources/img/b2.jpg").getImage();
   SwingListener sl = new SwingListener(this);
+  JFrame frame = new JFrame();
+  JButton btn = new JButton("Start");
+  JLabel label = new JLabel("说明：123！");
   ST(){
-    JFrame frame = new JFrame();
-    JButton btn = new JButton("Start");
-    JLabel label = new JLabel("说明：123！");
+
     //设置大小
     btn.setPreferredSize(new Dimension(50,50));
 
@@ -34,6 +35,14 @@ public class ST extends JPanel implements Runnable {
 
     btn.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent e) {
+        /*
+         *这里注意！
+         * 在Button点击事件后焦点会转移到Button上，导致Panel的键盘监听事件失效
+         * 使用requestFocus重新获取Panel焦点
+         *
+        */
+        st.requestFocus();
+
         paused = !paused;
         String showBtn = paused? "Start" : "Pause";
         btn.setText(showBtn);
@@ -84,7 +93,8 @@ public class ST extends JPanel implements Runnable {
   }
   public static void main(String[] args) {
     ST st = new ST();
-    (new Thread(st)).start();
+//    Control ctl = new Control();
+    (new Thread(st.new Control())).start();
   }
   public void paint(Graphics g){
     super.paint(g);
@@ -221,41 +231,35 @@ public class ST extends JPanel implements Runnable {
   };
 
 
-
-
-  @Override
-  public void run() {
-    System.out.println("run!");
-    running = true;
-    SwingListener sl = new SwingListener(this);
-    this.addMouseMotionListener(sl);
-    this.addKeyListener(sl);
-
-
-    while(running){
-      try {
-        //延时
-        Thread.sleep(timeInterval);
-      } catch (Exception e) {
-        break;
-      }
-      if(!paused){
-        x+=4;
-
-        this.addMouseMotionListener(sl);
-        this.addKeyListener(sl);
-        this.setFocusable(true);
-        repaint();
+   class Control implements Runnable{
+    @Override
+    public void run() {
+      System.out.println("run!");
+      SwingListener sl = new SwingListener(st);
+      st.addMouseMotionListener(sl);
+      st.addKeyListener(sl);
+      st.setFocusable(true);
+      while(true){
+        try {
+          //延时
+          Thread.sleep(timeInterval);
+        } catch (Exception e) {
+          break;
+        }
+        if(!paused){
+          x+=4;
+          System.out.println(st.isFocusable());
+          repaint();
         /*
         用paint会闪
         https://blog.csdn.net/sangjinchao/article/details/53052897
         */
-        //        paint(this.getGraphics());
+          //        paint(this.getGraphics());
 
+        }
       }
-
-
     }
-
   }
+
+
 }
