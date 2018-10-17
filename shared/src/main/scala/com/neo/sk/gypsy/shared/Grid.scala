@@ -128,6 +128,7 @@ trait Grid {
     frameCount += 1
   }
 
+  //具体函数定义在GridOnServer
   def feedApple(appleCount: Int): Unit
   def addVirus(virus: Int): Unit
 //食物更新
@@ -156,8 +157,8 @@ trait Grid {
 
     mass.copy(x = newX, y = newY, speed = newSpeed)
   }
-  feedApple(foodPool + playerMap.size * 3 - food.size)
-  addVirus(virusNum - virus.size)
+  feedApple(foodPool + playerMap.size * 3 - food.size) //增添食物
+  addVirus(virusNum - virus.size) //增添病毒
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
@@ -167,13 +168,15 @@ trait Grid {
       var newSpeed = cell.speed
       var target=Position(player.targetX,player.targetY)
 
+      //转换成极坐标
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
      // val deg1 = atan2(player.targetY , player.targetX )
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
+      //速度*方向==向某个方向移动的距离
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      target = if(!cell.parallel) Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y) else Position(mouseAct.clientX , mouseAct.clientY )
+      target = if(!cell.parallel) Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y) else Position(mouseAct.clientX , mouseAct.clientY)
 
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
@@ -217,6 +220,7 @@ trait Grid {
       }
 
       //println(newX+"dddd"+newY+"dkfkadf"+isCorner)
+      //遍历计算每个cell的新速度
       player.cells.filterNot(p => p == cell).sortBy(_.isCorner).foreach { cell2 =>
         println(cell2)
         val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
@@ -268,9 +272,9 @@ trait Grid {
         }
       }
 
-    //  println("dkjfakdfjaldsfkja"+isCorner)
+      //println("dkjfakdfjaldsfkja"+isCorner)
       //List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
-     //println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
+      //println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
       List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
     val length = newCells.length
