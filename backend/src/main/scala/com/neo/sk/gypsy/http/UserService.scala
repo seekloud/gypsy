@@ -208,11 +208,32 @@ trait UserService extends ServiceUtils with SessionBase {
     }
   }
 
+  private val watcherJoin = (path("watcherJoin") & get){
+    loggingAction {
+      _ =>
+        parameter(
+          'room.as[String],
+          'name.as[String]) {
+          (room,name) =>
+            val watcherId = idGenerator.getAndIncrement()
+            val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, name, ""), System.currentTimeMillis()).toSessionMap
+            //随机分配一个视角给前端
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.WatchGame(room,name,watcherId,_))
+            dealFutureResult(
+              flowFuture.map(r=>
+                addSession(session) {
+                  handleWebSocketMessages(r)
+                }
+              )
+            )
+        }
+    }
+  }
+
 
   val userRoutes: Route =
     pathPrefix("user") {
-      guestLogin ~ userRegister ~ userLogin~userLoginWs~updateMaxScore~checkName
-
+      guestLogin ~ userRegister ~ userLogin ~ userLoginWs ~ updateMaxScore~checkName ~ watcherJoin
     }
 
 

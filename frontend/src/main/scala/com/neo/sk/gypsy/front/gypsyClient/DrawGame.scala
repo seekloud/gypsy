@@ -494,6 +494,7 @@ case class DrawGame(
 
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
+    //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
   }

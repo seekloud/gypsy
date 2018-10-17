@@ -44,9 +44,4 @@ object Boot extends HttpService {
     println(s"Server is listening on http://localhost:${httpPort}/gypsy/cell")
   }
 
-
-
-
-
-
 }

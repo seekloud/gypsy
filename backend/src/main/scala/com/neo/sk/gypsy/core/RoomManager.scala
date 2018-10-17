@@ -41,6 +41,7 @@ object RoomManager {
   case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:String) extends Command
+  case class WatchGame(room:String,sender:String,id:Long,replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
 
   val behaviors:Behavior[Command] ={
     log.debug(s"UserManager start...")
@@ -69,6 +70,11 @@ object RoomManager {
               msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id)
             }
             Behaviors.same
+
+          case msg:WatchGame=>
+            msg.replyTo ! webSocketChatFlow(getRoomActor(ctx, msg.room,false),msg.sender,msg.id)
+            Behaviors.same
+
 
           case msg:CheckName=>
             val curTime=System.currentTimeMillis()
@@ -103,7 +109,7 @@ object RoomManager {
     }
 
 
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
     import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
     import com.neo.sk.gypsy.utils.byteObject.ByteObject._
@@ -129,7 +135,7 @@ object RoomManager {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
+      .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
       case t:WsMsgProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)

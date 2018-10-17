@@ -186,6 +186,7 @@ object LoginPage {
                   println(s"name${nameField.value} has existed ")
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
+                  //进入游戏
                   gameHolder.joinGame(rsp.roomId, nameField.value)
                   LayuiJs.layer.close(guestIndex)
                 }
@@ -202,6 +203,7 @@ object LoginPage {
 
     }
 
+    //敲回车可登陆
     nameField.onkeypress = {
       (event: KeyboardEvent) =>
         if (event.keyCode == 13) {

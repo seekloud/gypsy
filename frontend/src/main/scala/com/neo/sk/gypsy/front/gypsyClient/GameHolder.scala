@@ -102,11 +102,14 @@ class GameHolder {
     NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
     if (webSocketClient.getWsState) {
+      //差不多每三秒同步一次
+      //不同步
       if (!justSynced) {
         update()
       } else {
 //        println("back")
         if (syncGridData.nonEmpty) {
+          //同步
           grid.setSyncGridData(syncGridData.get)
           syncGridData = None
         }
@@ -124,12 +127,13 @@ class GameHolder {
     println("start---")
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
     if(room!=null&& (room.equals("11") ||room.equals("12"))){
+      //房间1和2
       //      draw1.drawGameOn()
     }else{
+      //限时匹配
       dom.window.requestAnimationFrame(animate())
       draw4.drawClock()
     }
-
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -151,11 +155,17 @@ class GameHolder {
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
+  //userType: 0(游客)，-1(观战模式)
   def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
     val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
+    //开启websocket
     webSocketClient.setUp(url,maxScore)
+    //gameloop + gamerender
     startGame(room)
-    addActionListenEvent
+    //用户行为：使用键盘or鼠标(观战模式不响应键盘鼠标事件）
+    if(userType != -1){
+      addActionListenEvent
+    }
   }
 
 
@@ -245,8 +255,6 @@ class GameHolder {
         case None =>
           draw1.drawGameWait(firstCome)
       }
-
-
     }else{
       draw1.drawGameLost
     }
