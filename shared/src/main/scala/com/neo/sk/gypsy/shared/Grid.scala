@@ -263,8 +263,7 @@ trait Grid {
               if (cell.y < cell2.y) newY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
               else if (cell.y > cell2.y) newY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
               isParallel=true
-            }
-          }
+            }         }
         }
       }
 
@@ -390,8 +389,8 @@ trait Grid {
   }
 
 
-
-  def massDerease():Unit={
+//超过200的cell质量衰减
+  def massDecrease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
       val newCells=player.cells.map{cell=>
         var newMass = cell.mass
@@ -422,7 +421,7 @@ trait Grid {
      tick = tick+1
     if(tick%10==1){
       tick =1
-      massDerease()
+      massDecrease()
     }
 
 

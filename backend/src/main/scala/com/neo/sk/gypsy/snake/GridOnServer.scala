@@ -33,7 +33,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var newFoods = Map[Point, Int]()
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
+  private[this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
 
 
   var currentRank = List.empty[Score]

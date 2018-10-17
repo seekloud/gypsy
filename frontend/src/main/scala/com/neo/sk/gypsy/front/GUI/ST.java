@@ -15,6 +15,7 @@ public class ST extends JPanel{
   //  Graphics g;
   Graphics2D g2;
   String s = "123";
+  String tfShow = "1234";
   Shape shape;
   Shape shapef;
   boolean running = false;
@@ -24,7 +25,9 @@ public class ST extends JPanel{
   SwingListener sl = new SwingListener(this);
   JFrame frame = new JFrame();
   JButton btn = new JButton("Start");
-  JLabel label = new JLabel("说明：123！");
+  JLabel label = new JLabel("说明：按开始后小球开始由左向右运动！键盘输入o,l,a,r绘制各种图形");
+  JPanel jp = new JPanel();
+  JTextField jf = new JTextField(10);
   ST(){
 
     //设置大小
@@ -85,8 +88,13 @@ public class ST extends JPanel{
 //    鼠标拖动移动这两个用这个
     this.addMouseMotionListener(sl);
     this.addKeyListener(sl);
+    jf.setSize(200,100);
+    jf.addKeyListener(sl);
+    jp.add(label,BorderLayout.WEST);
+    jp.add(jf,BorderLayout.EAST);
 
-    frame.add(label,BorderLayout.NORTH);
+    frame.add(jp,BorderLayout.NORTH);
+//    frame.add(label,BorderLayout.NORTH);
     frame.add(this,BorderLayout.CENTER);
     frame.add(btn,BorderLayout.SOUTH);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -128,6 +136,9 @@ public class ST extends JPanel{
 
     // 绘制字符串
     g.drawString("Hello Swing", 80, 100);
+    g.setFont(new Font("宋体",Font.BOLD,20));
+    g.setColor(Color.WHITE);
+    g.drawString(tfShow, 400, 20);
 
     g.setColor(Color.YELLOW);
     //绘制实心圆(int x, int y, int width, int height)
@@ -151,6 +162,8 @@ public class ST extends JPanel{
       g2.fill(shapef);
     }
 
+//    通过RGB设置字体颜色，透明度a没搜到方法
+    g.setColor(new Color(255,255,255));
     g.drawString(s,200,200);
 
 //    if(!s.equals("")){
@@ -235,10 +248,10 @@ public class ST extends JPanel{
     @Override
     public void run() {
       System.out.println("run!");
-      SwingListener sl = new SwingListener(st);
-      st.addMouseMotionListener(sl);
-      st.addKeyListener(sl);
-      st.setFocusable(true);
+//      SwingListener sl = new SwingListener(st);
+//      st.addMouseMotionListener(sl);
+//      st.addKeyListener(sl);
+      st.requestFocus(true);
       while(true){
         try {
           //延时
@@ -248,7 +261,6 @@ public class ST extends JPanel{
         }
         if(!paused){
           x+=4;
-          System.out.println(st.isFocusable());
           repaint();
         /*
         用paint会闪

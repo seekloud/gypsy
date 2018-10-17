@@ -51,11 +51,16 @@ public class SwingListener implements KeyListener, MouseListener,MouseMotionList
         break;
 
 //        new Rectangle2D.Float(10, 250, 130, 30);
-      case 'r':
+      case 'r' :
 //          shape = new RoundRectangle2D.Double(10, 250, 130, 30);
         st.shape = new Rectangle2D.Float(10, 250, 130, 30);
         st.shapef = new Rectangle2D.Float(150, 250, 130, 30);
         break;
+      case KeyEvent.VK_ENTER:
+        st.tfShow = st.jf.getText();
+        System.out.println("enter!");
+        break;
+
     }
 
     st.repaint();
