@@ -156,8 +156,8 @@ class GameHolder {
   }
 
   //userType: 0(游客)，-1(观战模式)
-  def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0,watcher:Boolean): Unit = {
-    val url = UserRoute.getWebSocketUri(dom.document, room, name, userType,watcher)
+  def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+    val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
     //开启websocket
     webSocketClient.setUp(url,maxScore)
     //gameloop + gamerender
