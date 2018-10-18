@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.{RoomIdRsp, RoomPlayerInfoRsp}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -40,6 +41,8 @@ object RoomManager {
   val roomIdGenerator = new AtomicInteger(100)
   case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
+  case class GetGamePlayerList(roomId:String ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
   case class RemoveRoom(id:String) extends Command
 
   val behaviors:Behavior[Command] ={
@@ -94,6 +97,21 @@ object RoomManager {
           case msg:RemoveRoom=>
             roomMap.remove(msg.id)
             log.info(s"room---${msg.id}--remove")
+            Behaviors.same
+
+          case msg:GetGamePlayerList =>
+            if(!msg.roomId.contains("match-"))
+             {
+              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+            }
+            Behaviors.same
+
+          case msg:GetRoomId =>
+            ctx.children.foreach{
+              i =>
+                val roomActor=i.upcast[RoomActor.Command]
+                roomActor ! RoomActor.getRoomId(msg.playerId,msg.replyTo)
+            }
             Behaviors.same
 
           case x=>
