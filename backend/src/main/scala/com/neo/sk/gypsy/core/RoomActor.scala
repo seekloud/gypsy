@@ -169,6 +169,7 @@ object RoomActor {
 
         case Sync =>
           grid.getSubscribersMap(subscribersMap)
+          grid.getUserList(userList)
           grid.update()
           val feedApples = grid.getFeededApple
           if (tickCount % 20 == 5) {
