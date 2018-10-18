@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.snake
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
+import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
 import com.neo.sk.gypsy.shared.ptcl._
@@ -10,7 +10,7 @@ import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.math.{Pi, cos, pow, sin, sqrt,atan2,abs,acos}
+import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
 
 /**
@@ -34,6 +34,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
+  private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
   var currentRank = List.empty[Score]
@@ -143,7 +144,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
           dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player))
 
           Left(killer)
@@ -470,6 +471,10 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
     subscriber=subscribersMap
+  }
+
+  def getUserList(userList:mutable.ListBuffer[UserInfo])={
+    userLists = userList
   }
 
 }

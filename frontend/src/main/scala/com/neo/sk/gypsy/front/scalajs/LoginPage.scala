@@ -53,6 +53,10 @@ object LoginPage {
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
                 option(value := "2", selected := "selected","限时匹配")),
+            ),
+            p(
+              input(*.id :="watcher", *.`type` :="radio",value :="watcher"),
+              "观战模式"
             )
           )
         ),
@@ -170,6 +174,7 @@ object LoginPage {
     val userLoginButton: Button = dom.document.getElementById("userLogin").asInstanceOf[HTMLButtonElement]
     val userRegisterButton: Button = dom.document.getElementById("userRegister").asInstanceOf[HTMLButtonElement]
     val roomId:Input = dom.document.getElementById("roomId").asInstanceOf[HTMLInputElement]
+    val watcher:Input = dom.document.getElementById("watcher").asInstanceOf[HTMLInputElement]
 
     nameField.focus()
     loginButton.onclick = {
@@ -187,7 +192,7 @@ object LoginPage {
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
                   //进入游戏
-                  gameHolder.joinGame(rsp.roomId, nameField.value)
+                  gameHolder.joinGame(rsp.roomId, nameField.value,0,0,watcher.value.toBoolean)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
@@ -201,6 +206,13 @@ object LoginPage {
 
       //修改参数一为房间编号（简单版中为：11,12,21,22）
 
+    }
+
+    watcher.onclick = {
+      (e:MouseEvent) =>{
+        dom.console.log(e)
+        dom.console.log(watcher.value)
+      }
     }
 
     //敲回车可登陆
@@ -249,7 +261,7 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
+                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score,watcher.value.toBoolean)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -298,7 +310,7 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
+                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score,watcher.value.toBoolean)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>

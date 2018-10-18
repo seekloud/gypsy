@@ -38,10 +38,9 @@ object RoomManager {
   case object TimeKey
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(100)
-  case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class JoinGame(room:String,sender:String,id:Long,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:String) extends Command
-  case class WatchGame(room:String,sender:String,id:Long,replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
 
   val behaviors:Behavior[Command] ={
     log.debug(s"UserManager start...")
@@ -65,16 +64,11 @@ object RoomManager {
         msg match {
           case msg:JoinGame=>
             if(msg.room.contains("match-")){
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,true),msg.sender,msg.id)
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,true),msg.sender,msg.id,msg.watchGame)
             }else{
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id)
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id,msg.watchGame)
             }
             Behaviors.same
-
-          case msg:WatchGame=>
-            msg.replyTo ! webSocketChatFlow(getRoomActor(ctx, msg.room,false),msg.sender,msg.id)
-            Behaviors.same
-
 
           case msg:CheckName=>
             val curTime=System.currentTimeMillis()
