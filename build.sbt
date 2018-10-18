@@ -4,9 +4,9 @@ name := "gypsy"
 
 val scalaV = "2.12.6"
 //val scalaV = "2.11.8"
-
 val projectName = "gypsy"
-val projectVersion = "1.0.0"
+val projectVersion = "2018.09.27"
+
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"
 
@@ -54,6 +54,7 @@ lazy val frontend = (project in file("frontend"))
       "io.circe" %%% "circe-parser" % "0.8.0",
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "io.suzaku" %%% "diode" % "1.1.2",
+      "in.nvilla" %%% "monadic-html" % "0.4.0-RC1" withSources(),
       //"com.lihaoyi" %%% "upickle" % "0.6.6",
       "com.lihaoyi" %%% "scalatags" % "0.6.5"
       //"org.scala-js" %%% "scalajs-java-time" % scalaJsJavaTime

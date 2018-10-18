@@ -57,14 +57,23 @@ package object ptcl {
                    kill:Int = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
-                   cells:List[Cell]
+                   var killerName:String= "",
+                   width:Double =  8 + sqrt(10)*12,
+                   height:Double =  8 + sqrt(10)*12,
+                   cells:List[Cell],
+                   startTime:Long=System.currentTimeMillis()
                    )
   case class Cell(
+                 id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 10,
+                 mass:Double = 10,  //小球体重
                  radius:Double = 4 + sqrt(10)*6,
-                 speed:Double = 12
+                 speed:Double = 12,
+                 speedX:Float = 0,
+                 speedY:Float = 0,
+                 parallel:Boolean = false,
+                 isCorner:Boolean =false
                  )
 
   case class Mass(
@@ -77,9 +86,19 @@ package object ptcl {
                  radius:Double,
                  speed:Double
                  )
+  case class Virus(
+                  x:Int,
+                  y:Int,
+                  mass:Double,
+                  radius:Double,
+                  splitNumber:Int = 13,
+                  targetX:Double = 0.0,
+                  targetY:Double = 0.0,
+                  speed:Double = 0
+                  )
   object Boundary{
-    val w = 3600
-    val h = 1800
+    val w = 4800
+    val h = 2400
   }
 
   object Window{
@@ -88,4 +107,20 @@ package object ptcl {
   }
 
 
+  case class Captcha(
+                      showapi_res_error:String="",
+                      showapi_res_code:Int,
+                      showapi_res_body:CaptchaBody
+  )
+  case class CaptchaBody(
+                          img_path_https:String,
+                          ret_code:Int,
+                          img_path:String,
+                          text:String
+                        )
+
+  case class Position(
+                       clientX:Double,
+                       clientY:Double
+                     )
 }
