@@ -54,12 +54,11 @@ trait UserService extends ServiceUtils with SessionBase {
       _ =>
         parameter(
           'room.as[String],
-          'name.as[String],
-          'watchgame.as[Boolean]) {
-          (room,name,watchgame) =>
+          'name.as[String]) {
+          (room,name) =>
             val guestId = idGenerator.getAndIncrement()
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, guestId, name, ""), System.currentTimeMillis()).toSessionMap
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,guestId,watchgame,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,guestId,false,_))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {
@@ -147,9 +146,8 @@ trait UserService extends ServiceUtils with SessionBase {
     memberAuth{
       user=>
         parameter(
-          'room.as[String],
-          'watchgame.as[Boolean]){(room,watchgame)=>
-          val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,user.name,user.userId,watchgame,_))
+          'room.as[String]){room=>
+          val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,user.name,user.userId,false,_))
           dealFutureResult(
             flowFuture.map(r=>
               handleWebSocketMessages(r)
@@ -216,13 +214,12 @@ trait UserService extends ServiceUtils with SessionBase {
       _ =>
         parameter(
           'room.as[String],
-          'name.as[String],
-          'watchgame.as[Boolean]) {
-          (room,name,watchgame) =>
+          'name.as[String]) {
+          (room,name) =>
             val watcherId = idGenerator.getAndIncrement()
             val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, name, ""), System.currentTimeMillis()).toSessionMap
             //随机分配一个视角给前端
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,watcherId,watchgame,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,watcherId,true,_))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {

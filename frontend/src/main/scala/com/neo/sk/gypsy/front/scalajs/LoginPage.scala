@@ -192,7 +192,11 @@ object LoginPage {
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
                   //进入游戏
-                  gameHolder.joinGame(rsp.roomId, nameField.value,0,0,watcher.checked)
+                  var id = 0
+                  if(watcher.checked){
+                    id = -1
+                  }
+                  gameHolder.joinGame(rsp.roomId, nameField.value,id,0)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
@@ -254,7 +258,11 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score,watcher.checked)
+                          var id = 1
+                          if(watcher.checked){
+                            id = -1
+                          }
+                          gameHolder.joinGame("11",userName.value, id,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -303,7 +311,11 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score,watcher.checked)
+                          var id = 1
+                          if(watcher.checked){
+                            id = -1
+                          }
+                          gameHolder.joinGame("11",userName.value, id,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
