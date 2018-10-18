@@ -65,6 +65,7 @@ class GameHolder {
 
   /**可变参数*/
   var myId = -1l
+  var usertype = 0
   var nextFrame = 0
   var nextInt = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
@@ -157,6 +158,7 @@ class GameHolder {
 
   //userType: 0(游客)，-1(观战模式)
   def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+    usertype = userType
     val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
     //开启websocket
     webSocketClient.setUp(url,maxScore)
@@ -293,17 +295,16 @@ class GameHolder {
 
       case m:WsMsgProtocol.KeyCode =>
         //grid.addActionWithFrameFromServer(m.id,m)
-        if(myId!=m.id){
+        if(myId!=m.id || usertype == -1){
           grid.addActionWithFrame(m.id,m)
         }
       case m:WsMsgProtocol.MousePosition =>
 //        grid.addActionWithFrameFromServer(m.id,m)
-        if(myId!=m.id){
+        if(myId!=m.id || usertype == -1){
           grid.addMouseActionWithFrame(m.id,m)
         }
 
       case WsMsgProtocol.Ranks(current, history) =>
-
         grid.currentRank = current
         grid.historyRank = history
       case WsMsgProtocol.FeedApples(foods) =>
