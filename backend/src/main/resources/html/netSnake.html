@@ -1,28 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>justTest</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=0">
+  <title>Gypsy</title>
+  <style>
+
+      .input-group{
+          float: left;
+          margin-left: 130px;
+      }
+
+      #room{
+          width: 20%;
+          float: right;
+          margin-right: 40px;
+      }
+
+    .login-main{
+      width: 375px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+    .dead-main{
+        margin: 0 auto;
+        line-height: 58px;
+        background-color: #393D49;
+        box-sizing: border-box;
+    }
+    .user-login-header{
+      text-align: center;
+    }
+    .user-login-body .layui-form-item{
+      position: relative;
+    }
+
+    .user-login-box{
+      padding: 20px;
+    }
+    .user-login-icon{
+      position: absolute;
+      left: 1px;
+      top: 1px;
+      width: 38px;
+      line-height: 36px;
+      text-align: center;
+      color: #d2d2d2;
+    }
+    .user-login-body .layui-form-item .layui-input{
+      padding-left: 38px;
+    }
+      .user-login-codeimg{
+          max-height: 38px;
+          width: 100%;
+          cursor: pointer;
+          box-sizing: border-box;
+      }
+      .user-jump-change{
+          float: right;
+      }
+      .register-link{
+          color: #029789!important;
+      }
+      .login-back{
+          float: right;
+          line-height: 38px;
+          padding-top: 20px;
+      }
+      #statsText{
+          cursor: default;
+          color: #fff;
+          text-align: center;
+          font-weight: bold;
+      }
+      #statsSubtext{
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          line-height: 60px;
+          font-size: 12px;
+          color: #000;
+          text-align: center;
+      }
+      #MiddleView{
+        z-index:2;
+        position:absolute;
+      }
+      #GameView{
+          position: absolute;
+          z-index: 1;
+      }
+      #TopView{
+        z-index: 3;
+        position: absolute;
+      }
+
+    /*  .room-select{
+          height: 38px;
+          line-height: 1.3;
+          border-width: 1px;
+          border-style: solid;
+          background-color: #fff;
+          border-radius: 2px;
+      }*/
+
+  </style>
+
+  <script src="/gypsy/static/js/layui.js"></script>
+  <link rel="stylesheet" href="/gypsy/static/css/layui.css">
 </head>
 <body>
 
 
-  <h1>hello there:</h1>
+<h1>Gypsy:<small>按E吐小球，按F分裂</small></h1>
 
-
-  <form action="#">
-    <label for="name">Name: </label><input id="name" type="text" />
-    <input id="join" type="button" value="Join!"/>
-  </form>
 
   <br>
-  <canvas id="GameView" tabindex="1"></canvas>
+         <canvas id="GameView" tabindex="1"></canvas>
+         <canvas id="MiddleView" tabindex="2" ></canvas>
+         <canvas id="TopView" tabindex="3" style="cursor: url(/gypsy/static/img/hand.png),auto;"></canvas>
+         <canvas id="ClockView" tabindex="4"></canvas>
 
 
   <div id="playground"></div>
-  <!--<img id="background" style="width:3600px;height:1800px" src="/gypsy/static/img/back3.jpg">-->
+  <img id="background" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/background.jpg">
+  <img id="background1" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/b2.jpg">
+  <img id="virus" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/virus.png">
+  <img id="circle" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle.png">
+  <img id="circle1" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle1.png">
+  <img id="circle2" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle2.png">
+  <img id="circle3" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle3.png">
+  <img id="circle4" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle4.png">
+  <img id="circle5" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle5.png">
+  <img id="circle6" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/circle6.png">
+<!--  <img id="sky" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/timg1.jpg">-->
+  <img id="youkill" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/youkill.png">
+  <img id="kill" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/kill.png">
+  <img id="shutdown" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/shutdown.png">
+  <img id="killingspree" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/killingspree.png">
+  <img id="dominating" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/dominating.png">
+  <img id="unstoppable" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/unstoppable.png">
+  <img id="godlike" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/godlike.png">
+  <img id="legendary" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/legendary.png">
+  <img id="mass" style="width:3600px;height:1800px;display:none" src="/gypsy/static/img/mass.png">
+<audio id="1Blood" src="/gypsy/static/music/1Blood.mp3" preload="auto"></audio>
+<audio id="2Kill" src="/gypsy/static/music/2Kill.mp3" preload="auto"></audio>
+<audio id="3Kill" src="/gypsy/static/music/3Kill.mp3" preload="auto"></audio>
+<audio id="4Kill" src="/gypsy/static/music/4Kill.mp3" preload="auto"></audio>
+<audio id="5Kill" src="/gypsy/static/music/5Kill.mp3" preload="auto"></audio>
+<audio id="godlikeM" src="/gypsy/static/music/godlike.mp3" preload="auto"></audio>
+<audio id="legendaryM" src="/gypsy/static/music/legendary.mp3" preload="auto"></audio>
+<audio id="unstop" src="/gypsy/static/music/unstop.mp3" preload="auto"></audio>
+<audio id="shutdownM" src="/gypsy/static/music/shutdown.mp3" preload="auto"></audio>
+<audio id="bg" src="/gypsy/static/music/bg.mp3" preload="auto" loop="loop"></audio>
+
+
+  <canvas id="offScreen" style="width:3600px;height:1800px; display:none" tabindex="4"></canvas>
   <script type="text/javascript" src="/gypsy/static/sjsout/frontend-fastopt.js"></script>
   <!--<script type="text/javascript" src="/gypsy/frontend-launcher.js"></script>-->
+
+  <script>
+      //一般直接写在一个js文件中
+      layui.use(['layer', 'form','element'], function(){
+          var $=layui.$
+              ,layer = layui.layer
+              ,form = layui.form
+              , element = layui.element
+              ,router=layui.router()
+              ,seach=layui.search;
+          form.render();
+      });
+
+  </script>
 
 
 </body>

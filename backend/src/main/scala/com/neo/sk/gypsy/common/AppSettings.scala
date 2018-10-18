@@ -71,4 +71,11 @@ object AppSettings {
   val hestiaSecureKey = hestiaConfig.getString("secureKey")
   val hestiaAddress = hestiaConfig.getString("address")
 
+  val gameConfig=config.getConfig("game")
+  val waitTime=gameConfig.getInt("waitTime")
+  val matchTime=gameConfig.getInt("matchTime")
+  val gameTime=gameConfig.getInt("gameTime")
+  val limitCount=gameConfig.getInt("limitCount")
+
+
 }

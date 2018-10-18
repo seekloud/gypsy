@@ -15,7 +15,7 @@ trait SlickTables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = tAdmin.schema ++ tRoom.schema ++ tUser.schema
+  lazy val schema: profile.SchemaDescription = tAdmin.schema ++ tUser.schema
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -44,44 +44,6 @@ trait SlickTables {
   }
   /** Collection-like TableQuery object for table tAdmin */
   lazy val tAdmin = new TableQuery(tag => new tAdmin(tag))
-
-  /** Entity class storing rows of table tRoom
-   *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey
-   *  @param roomName Database column room_name SqlType(varchar), Length(255,true)
-   *  @param creater Database column creater SqlType(varchar), Length(255,true), Default(admin)
-   *  @param createTime Database column create_time SqlType(int8)
-   *  @param roomType Database column room_type SqlType(int4), Default(0)
-   *  @param isClose Database column is_close SqlType(int4), Default(0)
-   *  @param limitNumber Database column limit_number SqlType(int4), Default(30) */
-  case class rRoom(id: Long, roomName: String, creater: String = "admin", createTime: Long, roomType: Int = 0, isClose: Int = 0, limitNumber: Int = 30)
-  /** GetResult implicit for fetching rRoom objects using plain SQL queries */
-  implicit def GetResultrRoom(implicit e0: GR[Long], e1: GR[String], e2: GR[Int]): GR[rRoom] = GR{
-    prs => import prs._
-    rRoom.tupled((<<[Long], <<[String], <<[String], <<[Long], <<[Int], <<[Int], <<[Int]))
-  }
-  /** Table description of table room. Objects of this class serve as prototypes for rows in queries. */
-  class tRoom(_tableTag: Tag) extends profile.api.Table[rRoom](_tableTag, "room") {
-    def * = (id, roomName, creater, createTime, roomType, isClose, limitNumber) <> (rRoom.tupled, rRoom.unapply)
-    /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(roomName), Rep.Some(creater), Rep.Some(createTime), Rep.Some(roomType), Rep.Some(isClose), Rep.Some(limitNumber)).shaped.<>({r=>import r._; _1.map(_=> rRoom.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
-
-    /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
-    val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
-    /** Database column room_name SqlType(varchar), Length(255,true) */
-    val roomName: Rep[String] = column[String]("room_name", O.Length(255,varying=true))
-    /** Database column creater SqlType(varchar), Length(255,true), Default(admin) */
-    val creater: Rep[String] = column[String]("creater", O.Length(255,varying=true), O.Default("admin"))
-    /** Database column create_time SqlType(int8) */
-    val createTime: Rep[Long] = column[Long]("create_time")
-    /** Database column room_type SqlType(int4), Default(0) */
-    val roomType: Rep[Int] = column[Int]("room_type", O.Default(0))
-    /** Database column is_close SqlType(int4), Default(0) */
-    val isClose: Rep[Int] = column[Int]("is_close", O.Default(0))
-    /** Database column limit_number SqlType(int4), Default(30) */
-    val limitNumber: Rep[Int] = column[Int]("limit_number", O.Default(30))
-  }
-  /** Collection-like TableQuery object for table tRoom */
-  lazy val tRoom = new TableQuery(tag => new tRoom(tag))
 
   /** Entity class storing rows of table tUser
    *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey

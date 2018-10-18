@@ -50,12 +50,18 @@ trait ResourceService {
         getFromResourceDirectory("sjsout")
       }
     } ~
+      pathPrefix("font") {
+        extractUnmatchedPath { path =>
+          getFromResourceDirectory("font")
+        }
+      }~
     pathPrefix("img") {
       getFromResourceDirectory("img")
-    } ~
-    pathPrefix("test") {
-      getFromDirectory("D:\\workstation\\sbt\\vigour\\logs\\test")
-    }
+    }~
+      pathPrefix("music") {
+        getFromResourceDirectory("music")
+      }
+
   }
 
   //cache code copied from zhaorui.

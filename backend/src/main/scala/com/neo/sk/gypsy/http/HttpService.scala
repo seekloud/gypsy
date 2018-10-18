@@ -1,10 +1,17 @@
 package com.neo.sk.gypsy.http
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Scheduler}
+import akka.http.javadsl.server.Route
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.Timeout
+import com.neo.sk.gypsy.common.Constant.UserRolesType
+import com.neo.sk.gypsy.http.SessionBase.GypsySession
+import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -13,7 +20,9 @@ import scala.concurrent.ExecutionContextExecutor
   * Date: 8/26/2016
   * Time: 10:27 PM
   */
-trait HttpService extends SnakeService with ResourceService{
+trait HttpService extends ResourceService
+  with UserService
+{
 
 
   implicit val system: ActorSystem
@@ -24,23 +33,32 @@ trait HttpService extends SnakeService with ResourceService{
 
   implicit val timeout: Timeout
 
+  implicit val scheduler: Scheduler
 
 
-  val snakeRoute = {
-    (path("snake") & get) {
-      getFromResource("html/mySnake.html")
+
+  val routes: server.Route =
+    ignoreTrailingSlash {
+      pathPrefix("gypsy") {
+        (path("cell") & get) {
+          pathEndOrSingleSlash {
+          optionalGypsySession{
+            case Some(_)=>
+            getFromResource("html/netSnake.html")
+            case None=>
+              log.info("guest comeIn withOut session")
+              addSession( GypsySession(BaseUserInfo(UserRolesType.guest,0,"",""),System.currentTimeMillis()).toSessionMap){
+                ctx=>
+                  ctx.redirect("/gypsy/cell",StatusCodes.SeeOther)
+              }
+           }
+          }
+        }~
+          userRoutes~
+          resourceRoutes
+
+      }
     }
-  }
-
-
-  val routes =
-    pathPrefix("gypsy") {
-      snakeRoute ~
-      netSnakeRoute ~
-      resourceRoutes
-    }
-
-
 
 
   def tmp = {
