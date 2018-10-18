@@ -11,6 +11,7 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.models.Dao.UserDao
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.{PlayerInfo, RoomIdInfo, RoomIdRsp, RoomPlayerInfoRsp}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -57,6 +58,8 @@ object RoomActor {
   private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class getGamePlayerList(roomId:String,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
+  case class getRoomId(playerId:String,replyTo:ActorRef[RoomIdRsp]) extends Command
 
   val bounds = Point(Boundary.w, Boundary.h)
 
@@ -177,6 +180,24 @@ object RoomActor {
           timer.cancel(SyncTimeKey)
           roomManager ! RemoveRoom(room)
           Behaviors.stopped
+
+        case getGamePlayerList(roomId,replyTo) =>
+          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2)}.toList
+          if(playerList!=null){
+            replyTo ! RoomPlayerInfoRsp(playerList,0,"ok")
+          }
+          else{
+            replyTo ! RoomPlayerInfoRsp(playerList,404,"该房间内没有玩家")
+          }
+          Behaviors.same
+
+        case getRoomId(playerId,replyTo) =>
+          val IsqueryUser = if(userMap.keySet.contains(playerId.toLong)) true else false
+          if(IsqueryUser){
+            replyTo ! RoomIdRsp(RoomIdInfo(room.toLong),0,"ok")
+          }
+          Behaviors.same
+
         case x =>
           log.warn(s"got unknown msg: $x")
           Behaviors.unhandled
