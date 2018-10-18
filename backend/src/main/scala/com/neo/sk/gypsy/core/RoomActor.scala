@@ -115,15 +115,20 @@ object RoomActor {
             userList(x).shareList.append(id)
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
+            //观察者前端的id是其观察对象的id
+            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(userList(x).id),userList)
+            dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
           }else{
             userList.append(UserInfo(id, name, mutable.ListBuffer[Long]()))
             userMap.put(id,name)
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
             grid.addSnake(id, name)
+            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
+            dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           }
-          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
-          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
+//          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
+//          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           Behaviors.same
 
         case Left(id, name) =>
