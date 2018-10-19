@@ -25,6 +25,8 @@ object WsMsgProtocol {
 
   case class KeyCode(id: Long,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
 
+  case class WatchChange(id:Long, watchId: Long) extends WsMsgServer
+
   case object UserLeft extends WsMsgServer
 
   case object ErrorWsMsgServer extends WsMsgServer
