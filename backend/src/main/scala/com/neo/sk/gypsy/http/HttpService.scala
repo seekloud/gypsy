@@ -55,7 +55,8 @@ trait HttpService extends ResourceService
           }
         }~
           userRoutes~
-          resourceRoutes
+          resourceRoutes~
+          esheepRoutes
 
       }
     }
