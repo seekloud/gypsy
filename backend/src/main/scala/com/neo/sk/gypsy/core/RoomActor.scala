@@ -7,6 +7,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
+import akka.testkit.TestActor.Watch
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
@@ -14,7 +15,7 @@ import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{KeyCode, MatchRoomError, MousePosition, UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.snake.GridOnServer
 import io.circe.Decoder
 import io.circe.parser._
@@ -45,6 +46,8 @@ object RoomActor {
   private case object TimeOut extends Command
 
   private case class Join(id: Long, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront],watchgame:Boolean) extends Command
+
+  private case class ChangeWatch(id: Long, watchId: Long) extends Command
 
   private case class Left(id: Long, name: String) extends Command
 
@@ -129,6 +132,23 @@ object RoomActor {
           }
 //          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
 //          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
+          Behaviors.same
+
+        case ChangeWatch(id, watchId) =>
+          log.info(s"get $msg")
+          for(i<- 0 until userList.length){
+            for(j<-0 until userList(i).shareList.length){
+              if(userList(i).shareList(j) == id){
+                userList(i).shareList.remove(j)
+              }
+            }
+            if(userList(i).id == watchId){
+              userList(i).shareList.append(id)
+              //切换视角
+              dispatchTo(subscribersMap,id, WsMsgProtocol.Id(watchId),userList)
+              dispatchTo(subscribersMap,id,grid.getGridData(watchId),userList)
+            }
+          }
           Behaviors.same
 
         case Left(id, name) =>
@@ -317,6 +337,9 @@ object RoomActor {
           Left(id,name)
         case WsMsgProtocol.Ping(timestamp)=>
           NetTest(id,timestamp)
+        case WatchChange(id, watchId) =>
+          log.debug(s"切换观察者: $watchId")
+          ChangeWatch(id, watchId)
         case _=>
           UnKnowAction
       }
