@@ -190,13 +190,11 @@ trait Grid {
     val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
-//      print(cell)
       var newSpeed = cell.speed
       var target=Position(player.targetX,player.targetY)
 
       //转换成极坐标
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
-     // val deg1 = atan2(player.targetY , player.targetX )
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       //速度*方向==向某个方向移动的距离
@@ -217,12 +215,9 @@ trait Grid {
           newSpeed -= 2
         } else {
           if (distance < cell.radius) {
-            //println("在圆内")
             if (cell.speed > 0) {
-              //println("come here")
               newSpeed = cell.speed - acceleration
             } else newSpeed = 0
-            //println(s"new speed ${newSpeed} ,star.speed -slowDown${cell.speed - slowDown},slowDown${slowDown}")
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
               cell.speed + acceleration
@@ -248,7 +243,6 @@ trait Grid {
       //println(newX+"dddd"+newY+"dkfkadf"+isCorner)
       //遍历计算每个cell的新速度
       player.cells.filterNot(p => p == cell).foreach { cell2 =>
-//        println(cell2)
         val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
         val deg= acos(abs(newX-cell2.x)/distance)
         val radiusTotal = cell.radius + cell2.radius+2
@@ -282,6 +276,7 @@ trait Grid {
               }else{
                // println("kajdsflaf")
                 isCorner=true
+                newSpeed = 0
                 newX=cell.x
                 newY=cell.y
               }
@@ -298,8 +293,7 @@ trait Grid {
         }
       }
 
-      //println("dkjfakdfjaldsfkja"+isCorner)
-      //List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
+
 //      println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
       List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
