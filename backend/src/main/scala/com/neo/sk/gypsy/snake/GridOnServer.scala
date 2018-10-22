@@ -135,7 +135,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
@@ -221,7 +221,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY))
+            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
         }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -271,7 +271,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
 
         val length = newCells.length
@@ -308,7 +308,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -339,7 +339,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length

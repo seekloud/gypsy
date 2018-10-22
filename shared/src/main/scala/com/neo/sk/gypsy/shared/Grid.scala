@@ -131,7 +131,32 @@ trait Grid {
   //具体函数定义在GridOnServer
   def feedApple(appleCount: Int): Unit
   def addVirus(virus: Int): Unit
-//食物更新
+
+  def updatePlayer()={
+
+    val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
+    val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
+
+    //先移动到指定位置
+//    println(playerMap.values)
+    playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap
+
+    checkPlayerFoodCrash()
+    checkPlayerMassCrash()
+    checkPlayer2PlayerCrash()
+    val mergeInFlame=checkCellMerge()
+    checkPlayerVirusCrash(mergeInFlame)
+    checkPlayerShotMass(keyAct,mouseAct)
+    checkVirusMassCrash()
+    checkPlayerSplit(keyAct,mouseAct)
+    tick = tick+1
+    if(tick%10==1){
+      tick =1
+      massDerease()
+    }
+  }
+
+  //食物更新
   private[this] def updateSpots() = {
   //更新喷出小球的位置
   massList = massList.map { mass =>
@@ -165,6 +190,7 @@ trait Grid {
     val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
+//      print(cell)
       var newSpeed = cell.speed
       var target=Position(player.targetX,player.targetY)
 
@@ -221,8 +247,8 @@ trait Grid {
 
       //println(newX+"dddd"+newY+"dkfkadf"+isCorner)
       //遍历计算每个cell的新速度
-      player.cells.filterNot(p => p == cell).sortBy(_.isCorner).foreach { cell2 =>
-        println(cell2)
+      player.cells.filterNot(p => p == cell).foreach { cell2 =>
+//        println(cell2)
         val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
         val deg= acos(abs(newX-cell2.x)/distance)
         val radiusTotal = cell.radius + cell2.radius+2
@@ -274,7 +300,7 @@ trait Grid {
 
       //println("dkjfakdfjaldsfkja"+isCorner)
       //List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
-      //println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
+//      println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
       List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
     val length = newCells.length
@@ -285,8 +311,8 @@ trait Grid {
     val bottom = newCells.map(a => a.y - a.radius).min
     val top = newCells.map(a => a.y + a.radius).max
 
+//    println(newCells)
     player.copy(x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
-
   }
 
   //食物检测
@@ -329,7 +355,7 @@ trait Grid {
               val massY = (cell.y + (newRadius - 50) * degY).toInt
               massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -379,7 +405,7 @@ trait Grid {
               splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
               cellId = cellIdgenerator.getAndIncrement().toLong
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY), Cell(cellId, splitX, splitY, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner), Cell(cellId, splitX, splitY, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
         }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -392,8 +418,6 @@ trait Grid {
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
-
-
 
   def massDerease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
@@ -408,32 +432,6 @@ trait Grid {
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
   }
-  def updatePlayer()={
-
-     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
-     val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
-
-     //先移动到指定位置
-     playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap
-     checkPlayerFoodCrash()
-     checkPlayerMassCrash()
-     checkPlayer2PlayerCrash()
-     val mergeInFlame=checkCellMerge()
-     checkPlayerVirusCrash(mergeInFlame)
-     checkPlayerShotMass(keyAct,mouseAct)
-     checkVirusMassCrash()
-     checkPlayerSplit(keyAct,mouseAct)
-     tick = tick+1
-    if(tick%10==1){
-      tick =1
-      massDerease()
-    }
-
-
-  }
-
-
-
 
   def updateAndGetGridData() = {
     update()
