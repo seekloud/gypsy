@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.utils
 
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import org.slf4j.LoggerFactory
 
@@ -86,6 +86,39 @@ object EsheepClient extends HttpUtil {
         log.debug(s"${methodName}  failed,error:${error.getMessage}")
         Left(ErrorRsp(-1,error.getMessage))
     }
+  }
+
+  def inputRecoder(token:String,playerId: String, nickname: String, killing: Int, killed: Int, score: Int, gameExtent: String, startTime: Long, endTime: Long): Future[Either[String,String]]={
+    val methodName = s"addPlayerRecord"
+    val url = s"${baseUrl}/esheep/api/gameServer/addPlayerRecord?token=${token}"
+
+    val data = EsheepProtocol.RecordInfo(playerId,gameId,nickname,killing,killed,score,gameExtent,startTime,endTime).asJson.noSpaces
+
+    val sn = appId + System.currentTimeMillis()
+    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
+    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
+
+    postJsonRequestSend(methodName,url,Nil,postData).map{
+      case Right(jsonStr) =>
+        decode[SuccessRsp](jsonStr) match {
+          case Right(rsp) =>
+            if(rsp.errCode == 0){
+              Right(s"${methodName} success")
+            }else{
+              log.debug(s"${methodName} failed,error:${rsp.msg}")
+              Left("error")
+            }
+          case Left(error) =>
+            log.warn(s"${methodName} parse json error:${error.getMessage}")
+            Left("error")
+        }
+      case Left(error) =>
+        log.debug(s"${methodName}  failed,error:${error.getMessage}")
+        Left("error")
+    }
+
+
+
   }
 
 
