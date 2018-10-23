@@ -126,7 +126,7 @@ case class DrawGame(
       ctx.fillStyle = "rgba(0,0,255," + this.al + ")"
       ctx.beginPath()
       ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false)
-      ctx.fill();
+      ctx.fill()
       //      ctx.fillStyle = "rgba(99, 99, 99, 1)"
       //      ctx.font = "60px Helvetica"
       //      ctx.fillText(""+time+"s", 710, 350)
@@ -333,7 +333,8 @@ case class DrawGame(
     ctx.save()
     centerScale(scale,size.x/2,size.y/2)
 
-    ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
+    //TODO /2
+    ctx.drawImage(offScreenCanvas,offx/2,offy/2,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变

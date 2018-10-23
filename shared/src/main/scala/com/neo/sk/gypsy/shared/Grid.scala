@@ -242,7 +242,7 @@ trait Grid {
 
       //println(newX+"dddd"+newY+"dkfkadf"+isCorner)
       //遍历计算每个cell的新速度
-      player.cells.filterNot(p => p == cell).foreach { cell2 =>
+      player.cells.filterNot(p => p == cell).sortBy(_.isCorner).reverse.foreach { cell2 =>
         val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
         val deg= acos(abs(newX-cell2.x)/distance)
         val radiusTotal = cell.radius + cell2.radius+2
@@ -292,7 +292,6 @@ trait Grid {
           }
         }
       }
-
 
 //      println(List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner)))
       List(Cell(cell.id, newX, newY, cell.mass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
