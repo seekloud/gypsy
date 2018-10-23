@@ -26,6 +26,7 @@ package object ptcl {
                                msg: String = "ok"
                              ) extends CommonRsp
 
+
 ////排行榜信息
   case class Score(id: Long, n: String, k: Int, score: Double, t: Option[Long] = None)
 

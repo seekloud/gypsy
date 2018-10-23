@@ -39,6 +39,8 @@ object EsheepSyncClient {
 
   final case class VerifyAccessCode(accessCode:Long, rsp:ActorRef[EsheepProtocol.VerifyAccessCodeRsp]) extends Command
 
+  final case class InputRecord(playerId:String,nickname: String, killing: Int, killed:Int, score: Int, startTime: Long, endTime: Long ) extends Command
+
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String, behavior: Behavior[Command], durationOpt: Option[FiniteDuration] = None,timeOut: TimeOut  = TimeOut("busy time error"))
                                   (implicit stashBuffer: StashBuffer[Command],
@@ -147,6 +149,20 @@ object EsheepSyncClient {
           ctx.self ! RefreshToken
           timer.cancel(RefreshTokenKey)
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
+
+        case r:InputRecord =>
+          EsheepClient.inputRecoder(tokenInfo.gsToken,r.playerId,r.nickname,r.killing,r.killed,r.score,"",r.startTime,r.endTime).onComplete{
+            case Success(rst) =>
+              rst match {
+                case Right(value) =>
+                  log.info(s"${ctx.self.path} input record success")
+                case Left(error) =>
+                  log.error(s"${ctx.self.path} input record fail,error: ${error}")
+              }
+            case Failure(exception) =>
+              log.warn(s"${ctx.self.path} input record fail,error: ${exception}")
+          }
+          Behaviors.same
 
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknow msg=${msg}")
