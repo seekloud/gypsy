@@ -334,7 +334,7 @@ case class DrawGame(
     centerScale(scale,size.x/2,size.y/2)
 
     //TODO /2
-    ctx.drawImage(offScreenCanvas,offx/2,offy/2,bounds.x,bounds.y)
+    ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
