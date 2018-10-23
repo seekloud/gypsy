@@ -163,7 +163,6 @@ object EsheepSyncClient {
   private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
     errorRsp.errCode match {
       case 1000 =>
-        //token过期处理
         ctx.self ! RefreshToken
         ctx.self ! msg
 
