@@ -49,10 +49,14 @@ object LoginPage {
             select(*.id := "roomId",name := "home",
               option(value := "",attr("disabled"):="", "房间"),
               optgroup(attr("label") := "无尽模式",
-                option(value := "11",selected := "selected", "房间1"),
+                option(value := "11", "房间1"),
                 option(value := "12", "房间2")),
               optgroup(attr("label") := "限时模式",
-                option(value := "2", "限时匹配")),
+                option(value := "2", selected := "selected","限时匹配")),
+            ),
+            p(
+              input(*.id :="watcher", *.`type` :="checkbox",value :="watcher"),
+              "观战模式"
             )
           )
         ),
@@ -170,6 +174,7 @@ object LoginPage {
     val userLoginButton: Button = dom.document.getElementById("userLogin").asInstanceOf[HTMLButtonElement]
     val userRegisterButton: Button = dom.document.getElementById("userRegister").asInstanceOf[HTMLButtonElement]
     val roomId:Input = dom.document.getElementById("roomId").asInstanceOf[HTMLInputElement]
+    val watcher:Input = dom.document.getElementById("watcher").asInstanceOf[HTMLInputElement]
 
     nameField.focus()
     loginButton.onclick = {
@@ -180,13 +185,18 @@ object LoginPage {
           LayuiJs.msg("大兄弟,名字不能起的太长!", 0, 2000, 6)
         } else {
           if (roomId.value != "") {
-            Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value)).map{
+            Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value.toLong)).map{
               case Right(rsp) =>
                 if (rsp.errCode != 0) {
                   println(s"name${nameField.value} has existed ")
                   LayuiJs.msg(rsp.msg, 5, 2000)
                 } else {
-                  gameHolder.joinGame(rsp.roomId, nameField.value)
+                  //进入游戏
+                  var id = 0
+                  if(watcher.checked){
+                    id = -1
+                  }
+                  gameHolder.joinGame(rsp.roomId, nameField.value,id,0)
                   LayuiJs.layer.close(guestIndex)
                 }
               case Left(e) =>
@@ -202,6 +212,7 @@ object LoginPage {
 
     }
 
+    //敲回车可登陆
     nameField.onkeypress = {
       (event: KeyboardEvent) =>
         if (event.keyCode == 13) {
@@ -247,7 +258,11 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
+                          var id = 1
+                          if(watcher.checked){
+                            id = -1
+                          }
+                          gameHolder.joinGame(11L,userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -296,7 +311,11 @@ object LoginPage {
                           println(s"name or password error in login ${rsp.errCode} ")
                           LayuiJs.msg(rsp.msg, 5, 2000)
                         } else {
-                          gameHolder.joinGame("11",userName.value, 1,rsp.data.get.score)
+                          var id = 1
+                          if(watcher.checked){
+                            id = -1
+                          }
+                          gameHolder.joinGame(11L,userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -377,7 +396,6 @@ object LoginPage {
             userLoginButton.click()
             LayuiJs.layer.close(registerIndex)
         }
-
     }
 
 

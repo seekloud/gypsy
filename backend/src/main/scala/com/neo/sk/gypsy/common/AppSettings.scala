@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import com.neo.sk.gypsy.utils.SessionSupport.SessionConfig
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
+import collection.JavaConverters._
 
 /**
   * User: Taoz
@@ -77,6 +78,22 @@ object AppSettings {
   val gameTime=gameConfig.getInt("gameTime")
   val limitCount=gameConfig.getInt("limitCount")
 
+  val esheepConfig = appConfig.getConfig("esheep")
+  val esheepAppId = esheepConfig.getString("appId")
+  val esheepSecureKey = esheepConfig.getString("secureKey")
+  val esheepProtocol = esheepConfig.getString("protocol")
+  val esheepHost = esheepConfig.getString("host")
+  val esheepPort = esheepConfig.getInt("port")
+  val esheepDomain = esheepConfig.getString("domain")
+  val esheepGameId = esheepConfig.getLong("gameId")
+  val esheepGameKey = esheepConfig.getString("gsKey")
+  val esheepAuthToken = esheepConfig.getBoolean("authToken")
+  val appSecureMap = {
+    val appIds = appConfig.getStringList("client.appIds").asScala
+    val secureKeys = appConfig.getStringList("client.secureKeys").asScala
+    require(appIds.length == secureKeys.length, "appIdList.length and secureKeys.length not equel.")
+    appIds.zip(secureKeys).toMap
+  }
 
   val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
   val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
