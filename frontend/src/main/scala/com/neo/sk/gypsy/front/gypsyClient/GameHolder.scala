@@ -124,11 +124,10 @@ class GameHolder {
     grid.update()
   }
 
-  def startGame(room:String): Unit = {
+  def startGame(room:Long): Unit = {
     println("start---")
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-    if(room!=null&& (room.equals("11") ||room.equals("12"))){
-      //房间1和2
+    if(room.toString!=null && (room==11 ||room==12)){
       //      draw1.drawGameOn()
     }else{
       //限时匹配
@@ -157,7 +156,7 @@ class GameHolder {
   }
 
   //userType: 0(游客)，-1(观战模式)
-  def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+  def joinGame(room: Long, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
     usertype = userType
     val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
     //开启websocket

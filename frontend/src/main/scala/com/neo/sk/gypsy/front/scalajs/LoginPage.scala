@@ -185,7 +185,7 @@ object LoginPage {
           LayuiJs.msg("大兄弟,名字不能起的太长!", 0, 2000, 6)
         } else {
           if (roomId.value != "") {
-            Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value)).map{
+            Http.getAndParse[CheckNameRsp](UserRoute.checkName(nameField.value, roomId.value.toLong)).map{
               case Right(rsp) =>
                 if (rsp.errCode != 0) {
                   println(s"name${nameField.value} has existed ")
@@ -262,7 +262,7 @@ object LoginPage {
                           if(watcher.checked){
                             id = -1
                           }
-                          gameHolder.joinGame("11",userName.value, id,rsp.data.get.score)
+                          gameHolder.joinGame(11L,userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
@@ -315,7 +315,7 @@ object LoginPage {
                           if(watcher.checked){
                             id = -1
                           }
-                          gameHolder.joinGame("11",userName.value, id,rsp.data.get.score)
+                          gameHolder.joinGame(11L,userName.value, 1,rsp.data.get.score)
                           LayuiJs.layer.close(loginIndex)
                         }
                       case Left(e) =>
