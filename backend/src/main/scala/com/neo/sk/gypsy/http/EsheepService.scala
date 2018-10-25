@@ -44,8 +44,6 @@ trait EsheepService  extends ServiceUtils with SessionBase{
 
   implicit val timeout: Timeout
 
-  val idGenerator = new AtomicInteger(1000000)
-  val secretKey = "dsacsodaux84fsdcs4wc32xm"
 
   private[this] val log = LoggerFactory.getLogger(getClass)
 
