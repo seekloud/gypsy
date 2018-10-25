@@ -40,7 +40,7 @@ object RoomManager {
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(20000)
   case class JoinGame(roomId:Long,sender:String,id:Long,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
-  case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
   case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
   case class GetGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command

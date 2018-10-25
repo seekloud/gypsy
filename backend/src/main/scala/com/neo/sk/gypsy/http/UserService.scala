@@ -212,7 +212,7 @@ trait UserService extends ServiceUtils with SessionBase {
     loggingAction {
       _ =>
         parameter(
-          'room.as[String],
+          'room.as[Long],
           'name.as[String]) {
           (room,name) =>
             val watcherId = idGenerator.getAndIncrement()
