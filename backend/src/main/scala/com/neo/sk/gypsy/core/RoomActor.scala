@@ -12,6 +12,7 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.models.Dao.UserDao
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -60,13 +61,15 @@ object RoomActor {
   private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class getGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
+  case class getRoomId(playerId:String,replyTo:ActorRef[RoomIdRsp]) extends Command
 
   case class UserInfo(id:Long, name:String, shareList:mutable.ListBuffer[Long]) extends Command
 
   val bounds = Point(Boundary.w, Boundary.h)
 
-  def create(room:String,matchRoom:Boolean):Behavior[Command] = {
-    log.debug(s"RoomActor-$room start...")
+  def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
+    log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
@@ -76,17 +79,17 @@ object RoomActor {
             val grid = new GridOnServer(bounds)
             if(matchRoom){
               timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
-              wait(room,userList,userMap,subscribersMap,grid)
+              wait(roomId,userList,userMap,subscribersMap,grid)
             }else{
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-              idle(room,userList,userMap,subscribersMap,grid,0l)
+              idle(roomId,userList,userMap,subscribersMap,grid,0l)
             }
         }
     }
   }
 
   def idle(
-            room:String,
+            roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[Long,String],
             subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
@@ -100,13 +103,13 @@ object RoomActor {
         case CheckName(name,replyTo)=>
           log.info(s"$name check name")
           if(userMap.exists(_._2==name)){
-           replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+           replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
           }else{
             UserDao.getUserByName(name).map{
               case Some(_)=>
-                replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
               case None=>
-                replyTo ! CheckNameRsp(room)
+                replyTo ! CheckNameRsp(roomId)
             }
           }
           Behavior.same
@@ -212,7 +215,7 @@ object RoomActor {
           if(tickCount==0){
             dispatch(subscribersMap,grid.getAllGridData)
           }
-          idle(room,userList,userMap,subscribersMap,grid,tickCount+1)
+          idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
 
         case NetTest(id, createTime) =>
           //log.info(s"Net Test: createTime=$createTime")
@@ -226,8 +229,27 @@ object RoomActor {
             dispatchTo(subscribersMap,p._1,WsMsgProtocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime),userList)
           }
           timer.cancel(SyncTimeKey)
-          roomManager ! RemoveRoom(room)
+          roomManager ! RemoveRoom(roomId)
           Behaviors.stopped
+
+        case getGamePlayerList(_ ,replyTo) =>
+          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2)}.toList
+          if(playerList!=null){
+            replyTo ! RoomPlayerInfoRsp(players(playerList),0,"ok")
+          }
+          else{
+            replyTo ! RoomPlayerInfoRsp(players(playerList),404,"该房间内没有玩家")
+          }
+          Behaviors.same
+
+        case getRoomId(playerId,replyTo) =>
+          val IsqueryUser = if(userMap.keySet.contains(playerId.toLong)) true else false
+          if(IsqueryUser){
+            replyTo ! RoomIdRsp(roomInfo(roomId.toLong),0,"ok")
+          }
+          else replyTo ! RoomIdRsp(roomInfo(-1L),1000,"该玩家不在游戏中")
+          Behaviors.same
+
         case x =>
           log.warn(s"got unknown msg: $x")
           Behaviors.unhandled
@@ -238,7 +260,7 @@ object RoomActor {
   /**
     * 本状态为等待匹配创建房间*/
   def wait(
-            room:String,
+            roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[Long,String],
             subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
@@ -248,13 +270,13 @@ object RoomActor {
         case CheckName(name,replyTo)=>
           log.info(s"$name check name")
           if(userMap.exists(_._2 == name)){
-            replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+            replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
           }else{
             UserDao.getUserByName(name).map{
               case Some(_)=>
-                replyTo ! CheckNameRsp(room,10000,"UserName has existed!")
+                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
               case None=>
-                replyTo ! CheckNameRsp(room)
+                replyTo ! CheckNameRsp(roomId)
             }
           }
           Behavior.same
@@ -273,14 +295,14 @@ object RoomActor {
               dispatchTo(subscribersMap,r, WsMsgProtocol.Id(r),userList)
               dispatchTo(subscribersMap,r,grid.getGridData(r),userList)
             }
-            idle(room,userList,userMap,subscribersMap,grid,0l)
+            idle(roomId,userList,userMap,subscribersMap,grid,0l)
           }else{
             Behaviors.same
           }
 
         case TimeOut=>
           log.info("matchRoom timeOut!!")
-          roomManager ! RemoveRoom(room)
+          roomManager ! RemoveRoom(roomId)
           dispatch(subscribersMap,MatchRoomError)
           Behaviors.stopped
 
