@@ -2,13 +2,15 @@ package com.neo.sk.gypsy.snake
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
+import com.neo.sk.gypsy.core.EsheepSyncClient
+import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
-
+import com.neo.sk.gypsy.Boot.esheepClient
 import scala.collection.mutable
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
@@ -146,6 +148,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
           }
           dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
           dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player))
+          esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
 
           Left(killer)
         } else {

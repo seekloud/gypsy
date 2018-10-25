@@ -10,7 +10,7 @@ import com.neo.sk.gypsy.http.HttpService
 
 import scala.language.postfixOps
 import akka.actor.typed.scaladsl.adapter._
-import com.neo.sk.gypsy.core.RoomManager
+import com.neo.sk.gypsy.core.{EsheepSyncClient, RoomManager}
 
 /**
   * User: Taoz
@@ -35,13 +35,14 @@ object Boot extends HttpService {
   val log: LoggingAdapter = Logging(system, getClass)
 
   val roomManager: ActorRef[RoomManager.Command] =system.spawn(RoomManager.behaviors,"roomManager")
+  val esheepClient:ActorRef[EsheepSyncClient.Command] = system.spawn(EsheepSyncClient.create,"esheepSyncClient")
 
   def main(args: Array[String]) {
     log.info("Starting.")
     Http().bindAndHandle(routes, httpInterface, httpPort)
     log.info(s"Listen to the $httpInterface:$httpPort")
     log.info("Done.")
-    println(s"Server is listening on http://localhost:${httpPort}/gypsy/cell")
+    println(s"Server is listening on http://localhost:${httpPort}/gypsy/game")
   }
 
 }

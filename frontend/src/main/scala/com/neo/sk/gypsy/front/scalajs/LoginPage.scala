@@ -396,7 +396,6 @@ object LoginPage {
             userLoginButton.click()
             LayuiJs.layer.close(registerIndex)
         }
-
     }
 
 
