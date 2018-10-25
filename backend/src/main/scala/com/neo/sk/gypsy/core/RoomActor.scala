@@ -11,13 +11,16 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.models.Dao.UserDao
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, GypsyGameConfigImpl, GypsyGameSnapshot, UserJoinRoom}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{KeyCode, MatchRoomError, MousePosition, UserLeft}
 import com.neo.sk.gypsy.snake.GridOnServer
+import com.neo.sk.gypsy.utils.byteObject.ByteObject
 import io.circe.Decoder
 import io.circe.parser._
+import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -54,6 +57,8 @@ object RoomActor {
 
   private case class NetTest(id: Long, createTime: Long) extends Command
 
+  final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
+
   private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
@@ -67,11 +72,16 @@ object RoomActor {
           implicit timer =>
             val subscribersMap = mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
             val userMap = mutable.HashMap[Long, String]()
+//            implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GridOnServer(bounds)
+            grid.setRoomId(room)
             if(matchRoom){
               timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
               wait(room,userMap,subscribersMap,grid)
             }else{
+              if(AppSettings.gameRecordIsWork){
+               getGameRecorder(ctx,grid,room.toInt)
+              }
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
               idle(room,userMap,subscribersMap,grid,0l)
             }
@@ -87,6 +97,7 @@ object RoomActor {
             tickCount:Long
           )(
             implicit timer:TimerScheduler[Command]
+//            sendBuffer:MiddleBufferInJvm
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
@@ -146,9 +157,15 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap)
           grid.update()
           val feedApples = grid.getFeededApple
+          val gridData = grid.getAllGridData
+          val eventList = grid.getEvents()
+          if(AppSettings.gameRecordIsWork){
+            getGameRecorder(ctx,grid,room.toInt) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+          }
+
           if (tickCount % 20 == 5) {
             //remind 此处传输全局数据-同步数据
-            val gridData = grid.getAllGridData
+//            val gridData = grid.getAllGridData
             dispatch(subscribersMap,gridData)
           } else {
             if (feedApples.nonEmpty) {
@@ -159,7 +176,8 @@ object RoomActor {
             dispatch(subscribersMap,WsMsgProtocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           if(tickCount==0){
-            dispatch(subscribersMap,grid.getAllGridData)
+//            dispatch(subscribersMap,grid.getAllGridData)
+            dispatch(subscribersMap,gridData)
           }
           idle(room,userMap,subscribersMap,grid,tickCount+1)
 
@@ -168,6 +186,13 @@ object RoomActor {
           //log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap,id, WsMsgProtocol.Pong(createTime))
           Behaviors.same
+
+//          不明其意
+        case ChildDead(name, childRef) =>
+          log.debug(s"${ctx.self.path} recv a msg:${msg}")
+          ctx.unwatch(childRef)
+          Behaviors.same
+
 
         case TimeOut=>
           val overTime=System.currentTimeMillis()
@@ -294,4 +319,24 @@ object RoomActor {
       ).mapMaterializedValue(outActor => actor ! Join(id, name, outActor))
     Flow.fromSinkAndSource(in, out)
   }
+
+
+  //暂未考虑下匹配的情况
+//  private def getGameRecorder(ctx: ActorContext[Command],gameContainer:GameContainerServerImpl,roomId:Long):ActorRef[GameRecorder.Command] = {
+  private def getGameRecorder(ctx: ActorContext[Command],grid:GridOnServer,roomId:Int):ActorRef[GameRecorder.Command] = {
+    val childName = s"gameRecorder"
+    ctx.child(childName).getOrElse{
+      val curTime = System.currentTimeMillis()
+      val fileName = s"gypsyGame_${curTime}"
+//      val gameInformation = TankGameEvent.GameInformation(curTime,AppSettings.tankGameConfig.getTankGameConfigImpl())
+//      val gameInformation = GameInformation(curTime,GypsyGameConfigImpl())
+      val gameInformation = ""
+      val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
+      val actor = ctx.spawn(GameRecorder.create(fileName,curTime,initStateOpt,roomId),childName)
+      ctx.watchWith(actor,ChildDead(childName,actor))
+      actor
+    }.upcast[GameRecorder.Command]
+  }
+
+
 }
