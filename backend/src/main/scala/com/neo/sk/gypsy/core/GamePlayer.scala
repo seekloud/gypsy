@@ -66,7 +66,15 @@ object GamePlayer {
   ):Behavior[Command] =
     Behaviors.receive[Command] {(ctx, msg) =>
       msg match {
-        case
+        case SwitchBehavior(name, behavior, durationOpt, timeOut) =>
+          switchBehavior(ctx, name, behavior,durationOpt, timeOut)
+
+        case TimeOut(m) =>
+          log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
+          Behaviors.stopped
+
+        case unknowMsg =>
+
       }
     }
 
