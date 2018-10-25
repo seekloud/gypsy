@@ -53,18 +53,47 @@ trait EsheepService  extends ServiceUtils with SessionBase{
 
   private def playGame = (path("playGame") & get) {
     parameter(
-      'name.as[String],
       'userId.as[Long],
       'userName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
-    ){ case (name, userId, nickName, accessCode, roomIdOpt) =>
+    ){ case ( userId, nickName, accessCode, roomIdOpt) =>
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode.toLong, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
-            val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, name, ""), System.currentTimeMillis()).toSessionMap
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomIdOpt.getOrElse(1000001),name,userId,_))
+            val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, nickName, ""), System.currentTimeMillis()).toSessionMap
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomIdOpt.getOrElse(1000001),nickName,userId,false,_))
+            dealFutureResult(
+              flowFuture.map(r=>
+                addSession(session) {
+                  handleWebSocketMessages(r)
+                }
+              )
+            )
+          } else{
+            complete(AuthUserErrorRsp(rsp.msg))
+          }
+        }.recover{
+          case e:Exception =>
+            log.warn(s"verifyAccess code failed, code=${accessCode}, error:${e.getMessage}")
+            complete(AuthUserErrorRsp(e.getMessage))
+        }
+      }
+    }
+  }
+  private def watchGame = (path("watchGame") & get) {
+    parameter(
+      'userId.as[Long],
+      'accessCode.as[String],
+      'roomId.as[Long]
+    ){ case ( userId,  accessCode, roomId) =>
+      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode.toLong, e))
+      dealFutureResult{
+        verifyAccessCodeFutureRst.map{ rsp =>
+          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+            val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, userId.toString, ""), System.currentTimeMillis()).toSessionMap
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId.toString,userId,true,_))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {
@@ -84,9 +113,8 @@ trait EsheepService  extends ServiceUtils with SessionBase{
     }
   }
 
-
   val esheepRoutes: Route =
-    playGame
+    playGame~watchGame
 
 
 }
