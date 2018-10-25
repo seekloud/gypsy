@@ -4,6 +4,7 @@ import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.core.EsheepSyncClient
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
+import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
 import com.neo.sk.gypsy.shared.ptcl._
@@ -35,6 +36,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
+  private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
   var currentRank = List.empty[Score]
@@ -135,7 +137,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
@@ -144,7 +146,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
           dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
 
@@ -222,7 +224,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY))
+            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
         }.filterNot(_.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -272,7 +274,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
 
         val length = newCells.length
@@ -309,7 +311,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -340,7 +342,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY)
+            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -472,6 +474,10 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
     subscriber=subscribersMap
+  }
+
+  def getUserList(userList:mutable.ListBuffer[UserInfo])={
+    userLists = userList
   }
 
 }
