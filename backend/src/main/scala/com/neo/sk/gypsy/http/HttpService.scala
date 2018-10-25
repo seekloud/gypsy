@@ -39,20 +39,18 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
   val routes: server.Route =
     ignoreTrailingSlash {
       pathPrefix("gypsy") {
-        (path("game") & get) {
-          pathEndOrSingleSlash {
+        pathEndOrSingleSlash {
           optionalGypsySession{
             case Some(_)=>
-            getFromResource("html/gypsy.html")
+              getFromResource("html/gypsy.html")
             case None=>
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,0,"",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
                   ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
               }
-           }
           }
-        }~userRoutes~resourceRoutes~esheepRoutes~apiRoutes
+        }~resourceRoutes~userRoutes~esheepRoutes~apiRoutes
 
       }
     }
