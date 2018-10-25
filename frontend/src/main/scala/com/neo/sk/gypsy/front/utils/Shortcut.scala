@@ -79,6 +79,14 @@ object Shortcut {
     dom.window.setTimeout(() => f(), delayMillisecond)
   }
 
+  def schedule(f: () => Unit, delayMillisecond: Long): Int = {
+    dom.window.setInterval(() => f(), delayMillisecond)
+  }
+
+  def cancelSchedule(h:Int): Unit = {
+    dom.window.clearInterval(h)
+  }
+
   def playMusic(id:String)={
     val audio=dom.document.getElementById(id).asInstanceOf[HTMLAudioElement]
     audio.play()

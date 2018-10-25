@@ -10,5 +10,6 @@ object Constant {
     val devManager = "ROLE_DEV_MANAGER"    //管理员
     val comMember = "ROLE_ENT"  //会员
     val guest = "ROLE_GUEST"
+    val watcher = "WATCHER" //观战者
   }
 }

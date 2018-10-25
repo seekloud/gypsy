@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -37,10 +38,13 @@ object RoomManager {
   sealed trait Command
   case object TimeKey
   case object TimeOut extends Command
-  val roomIdGenerator = new AtomicInteger(100)
-  case class JoinGame(room:String,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
-  case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
-  case class RemoveRoom(id:String) extends Command
+  val roomIdGenerator = new AtomicInteger(20000)
+  case class JoinGame(roomId:Long,sender:String,id:Long,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
+  case class RemoveRoom(id:Long) extends Command
+  case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
+  case class GetGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
+  case class GetRoomList(replyTo:ActorRef[RoomListRsp]) extends Command
 
   val behaviors:Behavior[Command] ={
     log.debug(s"UserManager start...")
@@ -58,28 +62,28 @@ object RoomManager {
     * @author sky
     *
     * */
-  def idle(roomMap:mutable.HashMap[String,(Long,Int)])(implicit timer:TimerScheduler[Command])=
+  def idle(roomMap:mutable.HashMap[Long,(Long,Int)])(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
           case msg:JoinGame=>
-            if(msg.room.contains("match-")){
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,true),msg.sender,msg.id)
+            if(msg.roomId.toString.startsWith("1")){
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
             }else{
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id)
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,false),msg.sender,msg.id,msg.watchGame)
             }
             Behaviors.same
 
           case msg:CheckName=>
             val curTime=System.currentTimeMillis()
-            if(msg.room!="2"){
-              getRoomActor(ctx,msg.room,false) ! RoomActor.CheckName(msg.name,msg.replyTo)
+            if(msg.roomId!=2){
+              getRoomActor(ctx,msg.roomId,false) ! RoomActor.CheckName(msg.name,msg.replyTo)
             }else{
               val freeRoom=roomMap.filter(r=>(curTime-r._2._1<AppSettings.waitTime*60*1000)&&r._2._2<AppSettings.limitCount)
               if(freeRoom.isEmpty){
                 val roomId=roomIdGenerator.getAndIncrement()
-                getRoomActor(ctx,"match-"+roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
-                roomMap.put("match-"+roomId,(curTime,1))
+                getRoomActor(ctx,roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
+                roomMap.put(roomId,(curTime,1))
               }else{
                 import scala.util.Random
                 val roomString=Random.shuffle(freeRoom.keys.toList).head
@@ -96,6 +100,27 @@ object RoomManager {
             log.info(s"room---${msg.id}--remove")
             Behaviors.same
 
+          case msg:GetGamePlayerList =>
+            if(msg.roomId.toString.startsWith("1"))
+             {
+              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+            }
+            Behaviors.same
+
+          case msg:GetRoomId =>
+            ctx.children.foreach{
+              i =>
+                val roomActor=i.upcast[RoomActor.Command]
+                roomActor ! RoomActor.getRoomId(msg.playerId,msg.replyTo)
+            }
+            Behaviors.same
+
+          case msg:GetRoomList =>
+            val RoomList=roomMap.keys.toList
+            msg.replyTo ! RoomListRsp(roomListInfo(RoomList),0,"ok")
+            Behaviors.same
+
+
           case x=>
             log.debug(s"msg can't handle with ${x}")
             Behaviors.unhandled
@@ -103,7 +128,7 @@ object RoomManager {
     }
 
 
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
     import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
     import com.neo.sk.gypsy.utils.byteObject.ByteObject._
@@ -129,7 +154,7 @@ object RoomManager {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
+      .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
       case t:WsMsgProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)
@@ -146,10 +171,10 @@ object RoomManager {
       Supervision.Resume
   }
 
-  private def getRoomActor(ctx: ActorContext[Command],name:String,matchRoom:Boolean):ActorRef[RoomActor.Command] = {
-    val childName = s"RoomActor-$name"
+  private def getRoomActor(ctx: ActorContext[Command],roomId:Long,matchRoom:Boolean):ActorRef[RoomActor.Command] = {
+    val childName = s"RoomActor-$roomId"
     ctx.child(childName).getOrElse{
-      ctx.spawn(RoomActor.create(name,matchRoom),childName)
+      ctx.spawn(RoomActor.create(roomId,matchRoom),childName)
     }.upcast[RoomActor.Command]
   }
 }

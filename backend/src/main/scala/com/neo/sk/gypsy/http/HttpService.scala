@@ -20,8 +20,7 @@ import scala.concurrent.ExecutionContextExecutor
   * Date: 8/26/2016
   * Time: 10:27 PM
   */
-trait HttpService extends ResourceService
-  with UserService
+trait HttpService extends ResourceService with OutApiService with UserService with EsheepService
 {
 
 
@@ -40,22 +39,20 @@ trait HttpService extends ResourceService
   val routes: server.Route =
     ignoreTrailingSlash {
       pathPrefix("gypsy") {
-        (path("cell") & get) {
+        (path("game") & get) {
           pathEndOrSingleSlash {
           optionalGypsySession{
             case Some(_)=>
-            getFromResource("html/netSnake.html")
+            getFromResource("html/gypsy.html")
             case None=>
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,0,"",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
-                  ctx.redirect("/gypsy/cell",StatusCodes.SeeOther)
+                  ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
               }
            }
           }
-        }~
-          userRoutes~
-          resourceRoutes
+        }~userRoutes~resourceRoutes~esheepRoutes~apiRoutes
 
       }
     }

@@ -26,6 +26,7 @@ package object ptcl {
                                msg: String = "ok"
                              ) extends CommonRsp
 
+
 ////排行榜信息
   case class Score(id: Long, n: String, k: Int, score: Double, t: Option[Long] = None)
 
@@ -60,7 +61,7 @@ package object ptcl {
                    var killerName:String= "",
                    width:Double =  8 + sqrt(10)*12,
                    height:Double =  8 + sqrt(10)*12,
-                   cells:List[Cell],
+                   cells:List[Cell],//分裂
                    startTime:Long=System.currentTimeMillis()
                    )
   case class Cell(
@@ -75,7 +76,7 @@ package object ptcl {
                  parallel:Boolean = false,
                  isCorner:Boolean =false
                  )
-
+//吐出的小球
   case class Mass(
                  x:Int,
                  y:Int,
@@ -89,7 +90,7 @@ package object ptcl {
   case class Virus(
                   x:Int,
                   y:Int,
-                  mass:Double,
+                  mass:Double,  //质量
                   radius:Double,
                   splitNumber:Int = 13,
                   targetX:Double = 0.0,
