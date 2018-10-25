@@ -78,4 +78,9 @@ object AppSettings {
   val limitCount=gameConfig.getInt("limitCount")
 
 
+  val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
+  val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
+
+  val essfMapKeyName = "essfMap"
+
 }
