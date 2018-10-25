@@ -65,7 +65,6 @@ object RoomManager {
           case msg:JoinGame=>
 
               msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room.toString,false),msg.sender,msg.id)
-
             Behaviors.same
 
           case msg:CheckName=>
