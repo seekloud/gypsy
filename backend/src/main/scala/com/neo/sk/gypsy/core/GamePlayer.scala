@@ -24,15 +24,13 @@ object GamePlayer {
   final case class SwitchBehavior(
                                  name: String,
                                  behavior: Behavior[Command],
-                                 duration: Option[FiniteDuration]
-                                 )
-
+                                 duration: Option[FiniteDuration],
+                                 timeOut: TimeOut = TimeOut("busy time error")
+                                 ) extends Command
 
   private final case object BehaviorChangeKey
   private final case object BehaviorWaitKey
   private final case object GameLoopKey
-
-
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName:String,
@@ -54,6 +52,12 @@ object GamePlayer {
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
         //操作数据库
+        RecordDAO.getRecordById(recordId).map{
+          case Some(r) =>
+
+          case None =>
+            log.debug(s"record--$recordId didn't exist!!")
+        }
         switchBehavior(ctx,"busy",busy())
       }
     }
@@ -74,7 +78,8 @@ object GamePlayer {
           Behaviors.stopped
 
         case unknowMsg =>
-
+          stashBuffer.stash(unknowMsg)
+          Behaviors.same
       }
     }
 
