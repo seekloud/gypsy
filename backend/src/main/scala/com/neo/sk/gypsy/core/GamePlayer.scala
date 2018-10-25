@@ -1,12 +1,17 @@
 package com.neo.sk.gypsy.core
 
+import java.io.FileReader
+
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+import com.neo.sk.gypsy.models.Dao.RecordDao
 
 import scala.concurrent.duration.FiniteDuration
+import com.neo.sk.gypsy.utils.ESSFSupport._
+import org.seekloud.essf.io.FrameInputStream
 
 
 /**
@@ -52,9 +57,18 @@ object GamePlayer {
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
         //操作数据库
-        RecordDAO.getRecordById(recordId).map{
+        RecordDao.getRecordById(recordId).map{
           case Some(r) =>
-
+            val replay = initFileReader(r.filePath)
+            val info = replay.init()
+            try{
+              ctx.self ! SwitchBehavior("work",
+                Work()
+                )
+            }catch {
+              case e:Throwable=>
+                log.error("error--"+ e.getMessage)
+            }
           case None =>
             log.debug(s"record--$recordId didn't exist!!")
         }
@@ -63,6 +77,25 @@ object GamePlayer {
     }
   }
 
+  def work(fileReader: FrameInputStream,
+
+          )(
+    implicit stashBuffer:StashBuffer[Command],
+    timer:TimerScheduler[Command],
+    sendBuffer: MiddleBufferInJvm
+  ):Behavior[Command]={
+    Behaviors.receive[Command]{(ctx,msg)=>
+      case msg:InitReply =>
+
+      case msg:TimeOut=>
+        Behaviors.stopped
+
+      case unKnowMsg =>
+        stashBuffer.stash(unKnowMsg)
+        Behavior.same
+
+    }
+  }
 
   private def busy()(
     implicit stashBuffer:StashBuffer[Command],
