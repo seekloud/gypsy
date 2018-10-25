@@ -120,10 +120,10 @@ class GameHolder {
     grid.update()
   }
 
-  def startGame(room:String): Unit = {
+  def startGame(room:Long): Unit = {
     println("start---")
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-    if(room!=null&& (room.equals("11") ||room.equals("12"))){
+    if(room.toString!=null && (room==11 ||room==12)){
       //      draw1.drawGameOn()
     }else{
       dom.window.requestAnimationFrame(animate())
@@ -151,7 +151,7 @@ class GameHolder {
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
-  def joinGame(room: String, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+  def joinGame(room: Long, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
     val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
     webSocketClient.setUp(url,maxScore)
     startGame(room)
