@@ -14,7 +14,6 @@ import scala.xml.Elem
 object MainPage extends PageSwitcher{
 
   private val currentPage: Rx[Elem] = currentHashVar.map{
-    case "playGame":: playerId :: playerName ::accessCode :: Nil=> new GamePage(playerId.toLong, playerName,0l,accessCode).render
     case "playGame" :: playerId :: playerName :: roomId :: accessCode :: Nil => new GamePage(playerId.toLong, playerName, roomId.toLong, accessCode).render
     case "watchGame" :: roomId :: accessCode :: Nil=> <div>WatchGame Page</div>//TODO new WatchGame().render
     case "watchGame" :: roomId :: playerId :: Nil => <div>WatchGame Page</div>//TODO new WatchGame().render
