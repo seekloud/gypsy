@@ -38,7 +38,7 @@ object RoomManager {
   case object TimeKey
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(100)
-  case class JoinGame(room:Long,sender:String,id:Long, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class JoinGame(room:String,sender:String,id:Long,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,room:String,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:String) extends Command
 
@@ -63,8 +63,11 @@ object RoomManager {
       (ctx,msg)=>
         msg match {
           case msg:JoinGame=>
-
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room.toString,false),msg.sender,msg.id)
+            if(msg.room.contains("match-")){
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,true),msg.sender,msg.id,msg.watchGame)
+            }else{
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.room,false),msg.sender,msg.id,msg.watchGame)
+            }
             Behaviors.same
 
           case msg:CheckName=>
@@ -100,7 +103,7 @@ object RoomManager {
     }
 
 
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long): Flow[Message, Message, Any] ={
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
     import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
     import com.neo.sk.gypsy.utils.byteObject.ByteObject._
@@ -126,7 +129,7 @@ object RoomManager {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(RoomActor.joinGame(actor,id, sender)) // ... and route them through the chatFlow ...
+      .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
       case t:WsMsgProtocol.WsMsgFront =>
         val sendBuffer = new MiddleBufferInJvm(409600)

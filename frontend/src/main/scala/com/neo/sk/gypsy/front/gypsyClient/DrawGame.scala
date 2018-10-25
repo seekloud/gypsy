@@ -72,8 +72,8 @@ case class DrawGame(
   //文本高度
   val textLineHeight = 14
 
-  private[this] val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
-  private[this] val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
+  private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
+  private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -126,7 +126,7 @@ case class DrawGame(
       ctx.fillStyle = "rgba(0,0,255," + this.al + ")"
       ctx.beginPath()
       ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false)
-      ctx.fill();
+      ctx.fill()
       //      ctx.fillStyle = "rgba(99, 99, 99, 1)"
       //      ctx.font = "60px Helvetica"
       //      ctx.fillText(""+time+"s", 710, 350)
@@ -220,8 +220,6 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    //ctx.fillStyle = MyColors.background
-    //ctx.fillRect(0,0,size.x,size.y)
     ctx.drawImage(background1,0,0,size.x,size.y)
     ctx.save()
     //绘制条纹
@@ -333,6 +331,7 @@ case class DrawGame(
     ctx.save()
     centerScale(scale,size.x/2,size.y/2)
 
+    //TODO /2
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
@@ -494,6 +493,7 @@ case class DrawGame(
 
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
+    //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
   }
