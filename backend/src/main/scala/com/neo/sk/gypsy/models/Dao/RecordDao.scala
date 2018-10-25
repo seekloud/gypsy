@@ -17,4 +17,8 @@ object RecordDao {
     db.run(tUserRecordMap ++= list)
   }
 
+  def getRecordById(id:Long)={
+    db.run(tGameRecord.filter(_.recordId === id).result.headOption)
+  }
+
 }

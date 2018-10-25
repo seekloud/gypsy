@@ -95,5 +95,4 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
     }
   }
 
-
 }
