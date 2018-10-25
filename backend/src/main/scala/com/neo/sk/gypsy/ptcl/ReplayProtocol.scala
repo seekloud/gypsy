@@ -7,7 +7,7 @@ package com.neo.sk.gypsy.ptcl
   */
 object ReplayProtocol {
   final case class EssfMapKey(
-                               roomId:Int,
+                               roomId:Long,
                                userId: Long,
                                name:String
                              )

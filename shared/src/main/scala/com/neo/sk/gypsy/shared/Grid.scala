@@ -186,7 +186,7 @@ trait Grid {
     tick = tick+1
     if(tick%10==1){
       tick =1
-      massDerease()
+      massDecrease()
     }
   }
 
@@ -445,7 +445,6 @@ trait Grid {
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
-  def massDerease():Unit={
 
 //超过200的cell质量衰减
   def massDecrease():Unit={

@@ -83,13 +83,13 @@ object RoomActor {
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GridOnServer(bounds)
-            grid.setRoomId(room)
+            grid.setRoomId(roomId)
             if(matchRoom){
               timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
               wait(roomId,userList,userMap,subscribersMap,grid)
             }else{
               if(AppSettings.gameRecordIsWork){
-               getGameRecorder(ctx,grid,room.toInt)
+               getGameRecorder(ctx,grid,roomId.toInt)
               }
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
               idle(roomId,userList,userMap,subscribersMap,grid,0l)
@@ -214,7 +214,7 @@ object RoomActor {
           val gridData = grid.getAllGridData
           val eventList = grid.getEvents()
           if(AppSettings.gameRecordIsWork){
-            getGameRecorder(ctx,grid,room.toInt) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+            getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
           }
 
           if (tickCount % 20 == 5) {
@@ -409,7 +409,7 @@ object RoomActor {
 
   //暂未考虑下匹配的情况
 //  private def getGameRecorder(ctx: ActorContext[Command],gameContainer:GameContainerServerImpl,roomId:Long):ActorRef[GameRecorder.Command] = {
-  private def getGameRecorder(ctx: ActorContext[Command],grid:GridOnServer,roomId:Int):ActorRef[GameRecorder.Command] = {
+  private def getGameRecorder(ctx: ActorContext[Command],grid:GridOnServer,roomId:Long):ActorRef[GameRecorder.Command] = {
     val childName = s"gameRecorder"
     ctx.child(childName).getOrElse{
       val curTime = System.currentTimeMillis()
