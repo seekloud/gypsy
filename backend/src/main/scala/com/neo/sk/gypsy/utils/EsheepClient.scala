@@ -5,6 +5,7 @@ import com.neo.sk.gypsy.ptcl.EsheepProtocol
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import org.slf4j.LoggerFactory
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
