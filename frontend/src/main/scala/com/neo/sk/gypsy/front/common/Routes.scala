@@ -24,4 +24,10 @@ object Routes {
     }
   }
 
+  object ApiRoute{
+    private val baseUrl = "/gypsy/api"
+
+    val playGame = baseUrl + "/playGame"
+  }
+
 }

@@ -33,5 +33,11 @@ object UserProtocol {
                            errCode:Int=0,
                            msg:String="ok"
                          )
+  case class JoinGame(
+                     playerId:Long,
+                     playerName:String,
+                     roomId:Long,
+                     accessCode:String
+                     )
 
 }
