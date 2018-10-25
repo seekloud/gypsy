@@ -72,8 +72,8 @@ case class DrawGame(
   //文本高度
   val textLineHeight = 14
 
-  private[this] val stripeX = scala.collection.immutable.Range(0,bounds.y+50,50)
-  private[this] val stripeY = scala.collection.immutable.Range(0,bounds.x+100,100)
+  private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
+  private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -220,8 +220,6 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    //ctx.fillStyle = MyColors.background
-    //ctx.fillRect(0,0,size.x,size.y)
     ctx.drawImage(background1,0,0,size.x,size.y)
     ctx.save()
     //绘制条纹

@@ -10,6 +10,10 @@ import com.neo.sk.gypsy.front.pages.MainPage
 @JSExportTopLevel("front.Main")
 object Main {
 
+  def main(args: Array[String]): Unit ={
+    run()
+  }
+
   @JSExport
   def run(): Unit = {
     MainPage.show()

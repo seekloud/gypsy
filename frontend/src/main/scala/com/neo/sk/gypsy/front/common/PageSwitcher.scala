@@ -1,46 +1,55 @@
 package com.neo.sk.gypsy.front.common
 
-import mhtml.{Var, mount}
+import mhtml.{Rx, Var}
 import org.scalajs.dom
-import org.scalajs.dom.HashChangeEvent
+import org.scalajs.dom.raw.Event
 /**
   * @author zhaoyin
   * @date 2018/10/24  下午1:50
   */
-trait PageSwitcher {
 
-  import scalatags.JsDom.short._
 
-  protected var currentPageName: Var[String] = Var("首页")
-
-  private val bodyContent = div(*.height := "100%").render
+/**
+  * User: Taoz
+  * Date: 4/15/2018
+  * Time: 1:46 PM
+  */
+trait PageSwitcher{
 
   def getCurrentHash: String = dom.window.location.hash
 
+  protected val currentHashVar: Rx[List[String]] = PageSwitcher.currentPageHash
 
-  private[this] var internalTargetHash = ""
+  def switchPageByHash(): Unit = PageSwitcher.switchPageByHash()
+
+}
+
+object PageSwitcher extends PageSwitcher{
+
+  private val currentPageHash: Var[List[String]] = Var(Nil)
 
 
-  //init.
-  {
-
-    val func = {
-      e: HashChangeEvent =>
-        //only handler browser history hash changed.
-        if (internalTargetHash != getCurrentHash) {
-          println(s"hash changed, new hash: $getCurrentHash")
-          switchPageByHash()
-        }
+  def hashStr2Seq(str: String): IndexedSeq[String] = {
+    if (str.length == 0) {
+      IndexedSeq.empty[String]
+    } else if (str.startsWith("#/")) {
+      val t = str.substring(2).split("/").toIndexedSeq
+      if (t.nonEmpty) {
+        t
+      } else IndexedSeq.empty[String]
+    } else {
+      println("Error hash string:" + str + ". hash string must start with [#/]")
+      IndexedSeq.empty[String]
     }
-    dom.window.addEventListener("hashchange", func, useCapture = false)
   }
 
-
-  protected def switchToPage(pageName: String): Unit = {
-    currentPageName.update(_ => pageName)
+  override def switchPageByHash(): Unit = {
+    println(getCurrentHash)
+    currentPageHash := hashStr2Seq(getCurrentHash).toList
   }
 
-  def getCurrentPageName: Var[String] = currentPageName
+  dom.window.onhashchange = { _: Event =>
+    switchPageByHash()
+  }
 
-  def switchPageByHash(): Unit
 }
