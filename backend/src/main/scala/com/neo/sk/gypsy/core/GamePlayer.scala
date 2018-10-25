@@ -21,10 +21,17 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
 
+  final case class SwitchBehavior(
+                                 name: String,
+                                 behavior: Behavior[Command],
+                                 duration: Option[FiniteDuration]
+                                 )
+
 
   private final case object BehaviorChangeKey
   private final case object BehaviorWaitKey
   private final case object GameLoopKey
+
 
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
