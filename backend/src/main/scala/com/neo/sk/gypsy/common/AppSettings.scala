@@ -95,4 +95,9 @@ object AppSettings {
     appIds.zip(secureKeys).toMap
   }
 
+  val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
+  val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
+
+  val essfMapKeyName = "essfMap"
+
 }

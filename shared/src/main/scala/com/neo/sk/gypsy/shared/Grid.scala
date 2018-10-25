@@ -4,12 +4,14 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameEvent, KeyPress, MouseMove, UserActionEvent}
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
 
+import scala.collection.mutable
 import scala.math._
 import scala.util.Random
 
@@ -82,6 +84,10 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
 
+  val ActionEventMap = mutable.HashMap[Long,List[UserActionEvent]]() //frame -> List[UserActionEvent]
+
+  val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+
   var deadPlayerMap=Map.empty[Long,Player]
 
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
@@ -95,17 +101,24 @@ trait Grid {
     r
   }
 
+
+  //这里用不到id！！！
 //键盘事件后，按键动作加入action列表
   def addActionWithFrame(id: Long, keyCode: KeyCode) = {
     val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)
     actionMap += (keyCode.frame -> tmp)
+    val action = KeyPress(keyCode.id,keyCode.keyCode,keyCode.frame,keyCode.serialNum)
+    AddActionEvent(action)
   }
 
   def addMouseActionWithFrame(id: Long, mp:MousePosition) = {
     val map = mouseActionMap.getOrElse(mp.frame, Map.empty)
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
+    val direct = normalization(mp.clientX,mp.clientY)
+    val action = MouseMove(mp.id,direct,mp.frame,mp.serialNum)
+    AddActionEvent(action)
   }
 
   def removeActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
@@ -120,11 +133,32 @@ trait Grid {
         mouseActionMap += (frame->actionQueue)
     }
   }
-//
+
+
+  def AddActionEvent(action:UserActionEvent):Unit ={
+    ActionEventMap.get(action.frame) match {
+      case Some(actionEvents) => ActionEventMap.put(action.frame,action :: actionEvents)
+      case None => ActionEventMap.put(action.frame,List(action))
+    }
+  }
+
+  def AddGameEvent(event:GameEvent):Unit ={
+    GameEventMap.get(event.frame) match {
+      case Some(gameEvents) => GameEventMap.put(event.frame,event :: gameEvents)
+      case None => GameEventMap.put(event.frame,List(event))
+    }
+  }
+
+
+
   def update() = {
     updatePlayer()
     updateSpots()
     actionMap -= frameCount
+    mouseActionMap -= frameCount
+
+    ActionEventMap -= frameCount
+
     frameCount += 1
   }
 
@@ -152,7 +186,7 @@ trait Grid {
     tick = tick+1
     if(tick%10==1){
       tick =1
-      massDerease()
+      massDecrease()
     }
   }
 
@@ -288,8 +322,7 @@ trait Grid {
               if (cell.y < cell2.y) newY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
               else if (cell.y > cell2.y) newY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
               isParallel=true
-            }
-          }
+            }         }
         }
       }
 
@@ -412,7 +445,9 @@ trait Grid {
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
-  def massDerease():Unit={
+
+//超过200的cell质量衰减
+  def massDecrease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
       val newCells=player.cells.map{cell=>
         var newMass = cell.mass
@@ -461,5 +496,9 @@ trait Grid {
     )
   }
   def getAllGridData: WsMsgProtocol.GridDataSync
+
+  def getActionEventMap(frame:Long):List[UserActionEvent]
+
+  def getGameEventMap(frame:Long):List[GameEvent]
 
 }

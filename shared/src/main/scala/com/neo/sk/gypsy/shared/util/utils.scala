@@ -29,7 +29,8 @@ object utils {
     var scale = 1.0
     if(width < 600 && height < 300){
     }else{
-      scale = List(300.0/height,600.0/width).min
+      scale = if(300.0/height>600.0/width){600.0/width}else{300.0/height}
+//      scale = List(300.0/height,600.0/width).min
     }
     scale
   }

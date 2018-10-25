@@ -2,18 +2,22 @@ package com.neo.sk.gypsy.snake
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.core.EsheepSyncClient
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
-import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserJoinRoom
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.Boot.esheepClient
+
 import scala.collection.mutable
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
+import com.neo.sk.gypsy.core.EsheepSyncClient
+import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.Boot.esheepClient
+import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 
 /**
   * User: Taoz
@@ -47,12 +51,20 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def addSnake(id: Long, name: String) = waitingJoin += (id -> name)
 
+  private var roomId = 0l
+
+  def setRoomId(id:Long)={
+    roomId = id
+  }
 
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(7)
-      playerMap += id -> Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
+      val player = Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
+      playerMap += id -> player
+      val event = UserJoinRoom(roomId,player,frameCount)
+      AddGameEvent(event)
     }
     waitingJoin = Map.empty[Long, String]
   }
@@ -91,6 +103,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   }
 
   override def feedApple(appleCount: Int): Unit = {
+    //TODO 考虑出生时的苹果列表
     feededApples = Nil
     var appleNeeded = appleCount
     while (appleNeeded > 0) {
@@ -101,6 +114,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
       food += (p->color)
       appleNeeded -= 1
     }
+    val event = GenerateApples(feededApples,frameCount)
+    AddGameEvent(event)
   }
 
   override def addVirus(v: Int): Unit = {
@@ -110,9 +125,12 @@ class GridOnServer(override val boundary: Point) extends Grid {
       val p =randomEmptyPoint()
       val mass = 50 + random.nextInt(50)
       val radius = 4 + sqrt(mass) * mass2rRate
+      addedVirus ::= Virus(p.x,p.y,mass,radius)
       virus ::= Virus(p.x,p.y,mass,radius)
       virusNeeded -= 1
     }
+    val event = GenerateVirus(addedVirus,frameCount)
+    AddGameEvent(event)
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {
@@ -455,6 +473,33 @@ class GridOnServer(override val boundary: Point) extends Grid {
     )
   }
 
+//获取快照
+  def getSnapShot()={
+
+    val playerDetails =  playerMap.map{
+      case (id,player) => player
+    }.toList
+
+    val foodDetails = food.map{f=>
+      Food(f._2,f._1.x,f._1.y)
+    }.toList
+
+    GypsyGameEvent.GypsyGameSnapInfo(
+      frameCount,
+      playerDetails,
+      foodDetails,
+      massList,
+      virus
+    )
+  }
+
+//  获取事件
+  def getEvents()={
+    (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
+      .filter(_.isInstanceOf[WsMsgServer]).map(_.asInstanceOf[WsMsgServer])
+  }
+
+
   override def update(): Unit = {
     super.update()
     genWaitingStar()  //新增
@@ -474,6 +519,15 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
     subscriber=subscribersMap
+  }
+
+
+  override def getActionEventMap(frame:Long): List[UserActionEvent] = {
+    ActionEventMap.getOrElse(frame,List.empty)
+  }
+
+  override def getGameEventMap(frame: Long): List[GypsyGameEvent.GameEvent] = {
+    GameEventMap.getOrElse(frame,List.empty)
   }
 
   def getUserList(userList:mutable.ListBuffer[UserInfo])={
