@@ -53,7 +53,7 @@ trait UserService extends ServiceUtils with SessionBase {
     loggingAction {
       _ =>
         parameter(
-          'room.as[String],
+          'room.as[Long],
           'name.as[String]) {
           (room,name) =>
             val guestId = idGenerator.getAndIncrement()
@@ -145,7 +145,7 @@ trait UserService extends ServiceUtils with SessionBase {
   private val userLoginWs= path("userLoginWs") {
     memberAuth{
       user=>
-        parameter('room.as[String]){room=>
+        parameter('room.as[Long]){room=>
           val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,user.name,user.userId,_))
           dealFutureResult(
             flowFuture.map(r=>
@@ -196,7 +196,7 @@ trait UserService extends ServiceUtils with SessionBase {
   private val checkName = (path("checkName") & pathEndOrSingleSlash & get) {
     loggingAction {
       _ =>
-        parameter('name.as[String],'room.as[String]){
+        parameter('name.as[String],'room.as[Long]){
           (name,room)=>
             val flowFuture:Future[CheckNameRsp]=roomManager ? (RoomManager.CheckName(name,room,_))
             dealFutureResult(

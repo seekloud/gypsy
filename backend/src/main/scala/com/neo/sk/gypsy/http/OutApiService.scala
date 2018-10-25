@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.http
 
 import org.slf4j.LoggerFactory
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Scheduler}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.headers.CacheDirectives.{`max-age`, public}
 import akka.http.scaladsl.model.headers.`Cache-Control`
@@ -9,9 +9,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.neo.sk.gypsy.core.RoomManager
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.{RoomIdInfo, RoomIdRsp, RoomPlayerInfoRsp}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
+import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import io.circe.generic.auto._
@@ -19,6 +21,10 @@ import io.circe.syntax._
 import io.circe._
 
 trait OutApiService extends ServiceUtils with SessionBase{
+
+  implicit val timeout: Timeout
+
+  implicit val scheduler: Scheduler
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
@@ -32,7 +38,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
   }
 
   private val getGamePlayerList = (path("getGamePlayerList") & post & pathEndOrSingleSlash){
-    dealPostReq[String] { RoomId =>
+    dealPostReq[Long] { RoomId =>
       val msgFuture:Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(RoomId,_))
       msgFuture.map{
         msg => complete(msg)
@@ -40,6 +46,15 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
+  private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash){
+    dealPostReq[String] { _ =>
+      val msgFuture:Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
+      msgFuture.map{
+        msg => complete(msg)
+      }
+    }
+  }
+
   val apiRoutes:Route=
-    getRoomId~getGamePlayerList
+    getRoomId~getGamePlayerList~getGameRoomList
 }
