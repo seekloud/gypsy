@@ -27,7 +27,26 @@ object Routes {
   object ApiRoute{
     private val baseUrl = "/gypsy/api"
 
-    val playGame = baseUrl + "/playGame"
+    private def playGame(playerId:Long,
+                         playerName:String,
+                         roomId:Long,
+                         accessCode:String
+                        ) = if(roomId == 0)
+      baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
+    else
+      baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode&roomId=$roomId"
+    val watchGame = baseUrl + "/watchGame"
+    def getWebSocketUri(document: Document,
+                        playerId:Long,
+                        playerName:String,
+                        roomId:Long,
+                        accessCode:String,
+                        userType:Int):String = {
+      val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
+      val wsUrl = if(userType == 0) playGame(playerId,playerName,roomId,accessCode)
+      s"$wsProtocol://${dom.document.location.host}$wsUrl"
+
+    }
   }
 
 }
