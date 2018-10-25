@@ -51,6 +51,11 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   def addSnake(id: Long, name: String) = waitingJoin += (id -> name)
 
+  private var roomId = 0l
+
+  def setRoomId(id:Long)={
+    roomId = id
+  }
 
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
@@ -58,7 +63,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
       val color = new Random(System.nanoTime()).nextInt(7)
       val player = Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
       playerMap += id -> player
-      val event = UserJoinRoom(room,player,frameCount)
+      val event = UserJoinRoom(roomId,player,frameCount)
       AddGameEvent(event)
     }
     waitingJoin = Map.empty[Long, String]
@@ -497,7 +502,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   override def update(): Unit = {
     super.update()
-    genWaitingStart()  //新增
+    genWaitingStar()  //新增
     updateRanks()  //排名
   }
 

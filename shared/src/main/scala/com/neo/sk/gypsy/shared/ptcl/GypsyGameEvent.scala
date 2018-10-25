@@ -24,8 +24,8 @@ object GypsyGameEvent {
   final case class DecodeError() extends WsMsgServer
 
 
-  final case class UserJoinRoom(roomId:Int,playState:Player,override val frame:Long) extends UserEvent with WsMsgServer
-  final case class UserLeftRoom(userId:Long,userName:String,roomId:Int,override val frame:Long) extends UserEvent with WsMsgServer
+  final case class UserJoinRoom(roomId:Long,playState:Player,override val frame:Long) extends UserEvent with WsMsgServer
+  final case class UserLeftRoom(userId:Long,userName:String,roomId:Long,override val frame:Long) extends UserEvent with WsMsgServer
 
   final case class GenerateApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
