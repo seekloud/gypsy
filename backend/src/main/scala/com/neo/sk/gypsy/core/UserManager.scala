@@ -66,19 +66,32 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
+    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgFront] = {
+      import io.circe.generic.auto._
+      import io.circe.parser._
+      try {
+        val wsMsg = decode[GypsyGameEvent.WsMsgFront](s).right.get
+        Some(wsMsg)
+      }catch {
+        case e: Exception =>
+          log.warn(s"parse front msg failed when json parse,s=${s}")
+          None
+      }
+    }
+
     Flow[Message]
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[WsMsgServer](buffer) match {
-            case Right(req) => req
+          bytesDecode[GypsyGameEvent.WsMsgFront](buffer) match {
+            case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              ErrorWsMsgServer
+              UserActor.WebSocketMsg(None)
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          ErrorWsMsgServer
+          UserActor.WebSocketMsg(msg)
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is

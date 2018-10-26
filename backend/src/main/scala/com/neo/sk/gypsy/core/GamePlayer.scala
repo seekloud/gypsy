@@ -151,7 +151,8 @@ object GamePlayer {
   import org.seekloud.byteobject.ByteObject._
   def dispatchByteTo(subscribe:ActorRef[GypsyGameEvent.WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(msg.eventsData)
-    msg.stateData.foreach(s=>subscribe ! ReplayFrameData(s))
+    // foreach和map都可以去掉Option
+    msg.stateData.foreach(s => subscribe ! ReplayFrameData(s))
   }
 
   private def busy()(
