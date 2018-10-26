@@ -57,7 +57,7 @@ object EsheepClient extends HttpUtil {
     }
   }
 
-  def verifyAccessCode(accessCode:Long,token:String): Future[Either[ErrorRsp,EsheepProtocol.VerifyAccessCodeInfo]] = {
+  def verifyAccessCode(accessCode:String,token:String): Future[Either[ErrorRsp,EsheepProtocol.VerifyAccessCodeInfo]] = {
     val methodName = s"verifyAccessCode"
     val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
 
