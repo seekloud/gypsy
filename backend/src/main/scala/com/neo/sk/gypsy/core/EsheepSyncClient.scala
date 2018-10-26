@@ -39,7 +39,7 @@ object EsheepSyncClient {
 
   final case object RefreshToken extends Command
 
-  final case class VerifyAccessCode(accessCode:Long, rsp:ActorRef[EsheepProtocol.VerifyAccessCodeRsp]) extends Command
+  final case class VerifyAccessCode(accessCode:String, rsp:ActorRef[EsheepProtocol.VerifyAccessCodeRsp]) extends Command
 
   final case class InputRecord(playerId:String,nickname: String, killing: Int, killed:Int, score: Int, startTime: Long, endTime: Long ) extends Command
 

@@ -33,11 +33,11 @@ object EsheepClient extends HttpUtil {
 
     val data = EsheepProtocol.GameServerKey2TokenReq(gameId,gameServerKey).asJson.noSpaces
 
-    val sn = appId + System.currentTimeMillis().toString
-    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
-    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
+//    val sn = appId + System.currentTimeMillis().toString
+//    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
+//    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
 
-    postJsonRequestSend(methodName,url,Nil,postData).map{
+    postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
         decode[EsheepProtocol.GameServerKey2TokenRsp](jsonStr) match {
           case Right(rsp) =>
@@ -57,7 +57,7 @@ object EsheepClient extends HttpUtil {
     }
   }
 
-  def verifyAccessCode(accessCode:Long,token:String): Future[Either[ErrorRsp,EsheepProtocol.VerifyAccessCodeInfo]] = {
+  def verifyAccessCode(accessCode:String,token:String): Future[Either[ErrorRsp,EsheepProtocol.VerifyAccessCodeInfo]] = {
     val methodName = s"verifyAccessCode"
     val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
 
@@ -95,11 +95,11 @@ object EsheepClient extends HttpUtil {
 
     val data = EsheepProtocol.RecordInfo(playerId,gameId,nickname,killing,killed,score,gameExtent,startTime,endTime).asJson.noSpaces
 
-    val sn = appId + System.currentTimeMillis()
-    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
-    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
+//    val sn = appId + System.currentTimeMillis()
+//    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
+//    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
 
-    postJsonRequestSend(methodName,url,Nil,postData).map{
+    postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
         decode[SuccessRsp](jsonStr) match {
           case Right(rsp) =>

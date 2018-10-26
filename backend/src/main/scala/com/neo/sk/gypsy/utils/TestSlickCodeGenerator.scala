@@ -21,7 +21,8 @@ import scala.concurrent.duration.Duration
 object TestSlickCodeGenerator {
   val slickDriver = "slick.jdbc.PostgresProfile"
   val jdbcDriver = "org.postgresql.Driver"
-  val url = "jdbc:postgresql://10.1.29.247:5432/pyramid"
+//  val url = "jdbc:postgresql://10.1.29.247:5432/pyramid"
+  val url = "jdbc:postgresql://10.1.29.250:5432/pyramid"
   // val url = "jdbc:postgresql://localhost:5432/pyramid"
   val outputFolder = "target/gencode/genTablesPsql"
   val pkg = "com.neo.sk.pyramid.models"
