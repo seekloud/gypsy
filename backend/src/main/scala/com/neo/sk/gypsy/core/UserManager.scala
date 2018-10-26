@@ -6,12 +6,13 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.stream.scaladsl.Flow
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.ActorAttributes
-import com.neo.sk.gypsy.core.RoomActor.ChildDead
-import com.neo.sk.gypsy.core.RoomManager.{decider, log}
+import akka.util.ByteString
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
 import com.neo.sk.gypsy.utils.byteObject.ByteObject.bytesDecode
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import akka.stream.{ActorAttributes, Supervision}
 
 /**
   * @author zhaoyin
@@ -23,7 +24,9 @@ object UserManager {
 
   trait Command
 
-  final case class GetReplaySocketFlow(replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
+
+  final case class GetReplaySocketFlow(playerName: String,playerId: Long, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -31,6 +34,7 @@ object UserManager {
       ctx =>
         Behaviors.withTimers[Command]{
           implicit timer =>
+            //todo 自增计时器
             idle()
         }
     }
@@ -41,12 +45,13 @@ object UserManager {
                   implicit timer: TimerScheduler[Command]
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
-      msg match {(ctx, msg) =>
-        case GetReplaySocketFlow(replyTo) =>
+      msg match {
+        case GetReplaySocketFlow(playerName,playerId,recordId,frame,replyTo) =>
           //TODO getUserActorOpt
-          val userActor = getUserActor(ctx, uid)
+          val userActor = getUserActor(ctx, playerId)
+          //开始创建flow
           replyTo ! getWebSocketFlow(userActor)
-          userActor ! UserActor.StartReply()
+          userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
 
         case unknow =>
@@ -81,15 +86,27 @@ object UserManager {
         // FIXME: We need to handle TextMessage.Streamed as well.
       }.via(UserActor.flow(userActor))
       .map{
-        //TODO
+        case t: GypsyGameEvent.ReplayFrameData =>
+          BinaryMessage.Strict(ByteString(t.ws))
+
+        case x =>
+          log.debug(s"akka stream receive unknown msg=${x}")
+          TextMessage.apply("")
       }.withAttributes(ActorAttributes.supervisionStrategy(decider))
+  }
+
+  private val decider: Supervision.Decider = {
+    e: Throwable =>
+      e.printStackTrace()
+      log.error(s"ws stream failed with $e")
+      Supervision.Resume
   }
 
 
   private def getUserActor(ctx: ActorContext[Command], id: Long):ActorRef[UserActor.Command] = {
     val childName = s"UserActor-${id}"
     ctx.child(childName).getOrElse{
-      val actor = ctx.spawn(UserActor.create(),childName)
+      val actor = ctx.spawn(UserActor.create(id),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[UserActor.Command]
