@@ -39,7 +39,7 @@ object GamePlayer {
   final case class SwitchBehavior(
                                  name: String,
                                  behavior: Behavior[Command],
-                                 duration: Option[FiniteDuration],
+                                 duration: Option[FiniteDuration] = None,
                                  timeOut: TimeOut = TimeOut("busy time error")
                                  ) extends Command
 
@@ -48,7 +48,7 @@ object GamePlayer {
   private final case object GameLoopKey
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
-                                   behaviorName:String,
+                                   behaviorName: String,
                                    behavior: Behavior[Command],
                                    durationOpt: Option[FiniteDuration] = None,
                                    timeOut: TimeOut  = TimeOut("busy time error"))
@@ -61,7 +61,7 @@ object GamePlayer {
   }
 
   /**来自UserActor的消息**/
-  case class InitReplay(userActor: ActorRef[GypsyGameEvent.WsMsgServer], userId: Long,frame:Int) extends Command
+  case class InitReplay(userActor: ActorRef[GypsyGameEvent.WsMsgSource], userId: Long,frame:Int) extends Command
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
@@ -123,6 +123,7 @@ object GamePlayer {
               timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
               Behaviors.same
           }
+
         case GameLoop=>
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>

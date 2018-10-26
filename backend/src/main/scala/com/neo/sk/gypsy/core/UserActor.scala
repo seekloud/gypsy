@@ -30,7 +30,7 @@ object UserActor {
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
 
-  case class UserFrontActor(actor: ActorRef[GypsyGameEvent.WsMsgServer]) extends Command
+  case class UserFrontActor(actor: ActorRef[GypsyGameEvent.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
   case class StartReply(recordId:Long, playerId:Long, frame:Int) extends Command
@@ -100,7 +100,7 @@ object UserActor {
 
   private def idle(
                     uId: Long,
-                    frontActor: ActorRef[GypsyGameEvent.WsMsgServer]
+                    frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
