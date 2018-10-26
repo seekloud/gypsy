@@ -27,7 +27,13 @@ object Routes {
   object ApiRoute{
     private val baseUrl = "/gypsy/api"
 
-    val playGame = baseUrl + "/playGame"
+    val playgame = baseUrl + "/playGame"
+
+    val watchgame = baseUrl + "/watchgame"
+
+
+
+
   }
 
 }
