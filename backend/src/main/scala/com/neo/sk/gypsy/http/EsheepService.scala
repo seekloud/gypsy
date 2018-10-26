@@ -51,12 +51,12 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def playGame = (path("playGame") & get) {
     parameter(
-      'userId.as[Long],
-      'userName.as[String],
+      'playerId.as[Long],
+      'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
     ){ case ( userId, nickName, accessCode, roomIdOpt) =>
-      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode.toLong, e))
+      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
@@ -80,14 +80,13 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       }
     }
   }
-
   private def watchGame = (path("watchGame") & get) {
     parameter(
       'userId.as[Long],
       'accessCode.as[String],
       'roomId.as[Long]
     ){ case ( userId,  accessCode, roomId) =>
-      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode.toLong, e))
+      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
@@ -131,6 +130,4 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   val esheepRoutes: Route =
     playGame ~ watchGame ~ watchRecord
-
-
 }
