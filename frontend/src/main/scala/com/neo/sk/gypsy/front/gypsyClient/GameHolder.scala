@@ -19,7 +19,7 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import scala.math._
-import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
+//import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 import org.scalajs.dom.html
 

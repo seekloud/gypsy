@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserActionEvent
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
@@ -25,7 +26,7 @@ class GameClient (override val boundary: Point) extends Grid {
   var currentRank = List.empty[Score]
   //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
-
+//序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
@@ -49,7 +50,7 @@ class GameClient (override val boundary: Point) extends Grid {
             var cellY = cell.y
              player.cells.filterNot(p => p == cell).sortBy(_.radius).reverse.foreach { cell2 =>
               val distance = sqrt(pow(cell.y - cell2.y, 2) + pow(cell.x - cell2.x, 2))
-               val deg= acos(abs(cell.x-cell2.x)/distance)
+              val deg= acos(abs(cell.x-cell2.x)/distance)
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
@@ -414,4 +415,9 @@ class GameClient (override val boundary: Point) extends Grid {
     mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
     deadPlayerMap=Map.empty[Long,Player]
   }
+
+  override def getActionEventMap(frame: Long): List[UserActionEvent] = {List.empty}
+
+  override def getGameEventMap(frame: Long): List[GypsyGameEvent.GameEvent] = {List.empty}
+
 }
