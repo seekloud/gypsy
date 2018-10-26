@@ -51,8 +51,8 @@ trait EsheepService  extends ServiceUtils with SessionBase{
 
   private def playGame = (path("playGame") & get) {
     parameter(
-      'userId.as[Long],
-      'userName.as[String],
+      'playerId.as[Long],
+      'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
     ){ case ( userId, nickName, accessCode, roomIdOpt) =>
@@ -111,11 +111,7 @@ trait EsheepService  extends ServiceUtils with SessionBase{
     }
   }
 
-  val esheepRoutes: Route =
-    pathPrefix("api"){
-      playGame~watchGame
-    }
-
-
-
+  val esheepRoutes: Route =pathPrefix("api"){
+    playGame ~ watchGame
+  }
 }

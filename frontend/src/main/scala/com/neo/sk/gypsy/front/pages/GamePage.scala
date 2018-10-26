@@ -28,7 +28,9 @@ class GamePage(playerId:Long, playerName:String, roomId:Long, accessCode:String)
   def init()={
     val gameHolder = new GameHolder
     gameHolder.init()
-    playGame()
+    //直接建立websocket连接
+    //TODO maxScore
+    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0,0)
   }
 
   override def render: Elem = {
@@ -40,16 +42,6 @@ class GamePage(playerId:Long, playerName:String, roomId:Long, accessCode:String)
       {clockView}
       {offScreen}
     </div>
-  }
-
-  private def playGame()={
-    val bodyStr = JoinGame(playerId,playerName,roomId,accessCode).asJson.noSpaces
-    Http.postJsonAndParse[SuccessRsp](ApiRoute.playGame,bodyStr).map{
-      case Right(rsp) =>
-
-      case Left(e) =>
-        println(s"parse error in login $e ")
-    }
   }
 
 }

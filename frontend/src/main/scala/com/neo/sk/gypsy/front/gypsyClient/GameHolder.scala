@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.front.gypsyClient
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.front.common.Routes.UserRoute
+import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
@@ -156,13 +156,19 @@ class GameHolder {
   }
 
   //userType: 0(游客)，-1(观战模式)
-  def joinGame(room: Long, name: String, userType: Int = 0, maxScore: Int = 0): Unit = {
+  def joinGame(playerId: Long,
+               playerName:String,
+               roomId: Long,
+               accessCode:String,
+               userType: Int = 0,
+               maxScore: Int = 0
+              ): Unit = {
     usertype = userType
-    val url = UserRoute.getWebSocketUri(dom.document, room, name, userType)
+    val url = ApiRoute.getWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
     webSocketClient.setUp(url,maxScore)
     //gameloop + gamerender
-    startGame(room)
+    startGame(roomId)
     //用户行为：使用键盘or鼠标(观战模式不响应键盘鼠标事件）
     if(userType != -1){
       addActionListenEvent
