@@ -5,8 +5,13 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 
 object GypsyGameEvent {
 
+
   sealed trait WsMsgFront
-  sealed trait WsMsgServer
+
+  sealed trait WsMsgSource
+  case object CompleteMsgServe extends WsMsgSource
+  case class FailMsgServer(ex: Exception) extends WsMsgSource
+  sealed trait WsMsgServer extends WsMsgSource
 
   sealed trait GameEvent {
     val frame:Long
@@ -18,6 +23,11 @@ object GypsyGameEvent {
     val userId:Long
     val serialNum:Int
   }
+
+  /**
+    * replay-frame-msg
+    */
+  final case class ReplayFrameData(ws:Array[Byte]) extends WsMsgSource
 
 
   final case class EventData(list:List[WsMsgServer]) extends WsMsgServer
