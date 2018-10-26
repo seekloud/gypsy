@@ -16,13 +16,13 @@ import com.neo.sk.gypsy.utils.ESSFSupport._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.encoder.BytesEncoder
-
-
 import com.neo.sk.gypsy.models.SlickTables._
 import com.neo.sk.gypsy.models.Dao._
+
 import scala.language.implicitConversions
 import com.neo.sk.gypsy.utils.ESSFSupport.userMapEncode
 import com.neo.sk.gypsy.Boot.executor
+
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success}
 import scala.concurrent.{Await, Future}
@@ -38,13 +38,16 @@ object GameRecorder {
   sealed trait Command
 
   final case class GameRecord(event:(List[GypsyGameEvent.WsMsgServer],Option[GypsyGameEvent.GameSnapshot])) extends Command
-  final case object SaveDate extends Command
+  final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
+  final case object RoomClose extends Command
+  final case object StopRecord extends Command
+
 
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 1.minute
+  private final val saveTime = 30.minute
 
   final case class SwitchBehavior(
                                   name: String,
@@ -109,11 +112,10 @@ object GameRecorder {
     middleBuffer: MiddleBufferInJvm
   ) : Behavior[Command] = {
     import gameRecordData._
-    Behaviors.receive{ (ctx,msg) =>
+    Behaviors.receive[Command]{ (ctx,msg) =>
       msg match {
         case t:GameRecord =>
           //log.info(s"${ctx.self.path} work get msg gameRecord")
-
           val wsMsg = t.event._1
           wsMsg.foreach{
             case UserJoinRoom(roomId ,player,frame) =>
@@ -159,9 +161,13 @@ object GameRecorder {
         case Save =>
           log.info(s"${ctx.self.path} work get msg save")
           timer.startSingleTimer(SaveDateKey, Save, saveTime)
-          ctx.self ! SaveDate
+          ctx.self ! SaveDate(false)
           switchBehavior(ctx,"save",save(gameRecordData,essfMap,userAllMap,userMap,startF,endF))
 
+        case RoomClose =>
+          log.info(s"${ctx.self.path} work get msg save, room close")
+          ctx.self ! SaveDate(true)
+          switchBehavior(ctx,"save",save(gameRecordData,essfMap,userAllMap,userMap,startF,endF))
 
 
         case unknow =>
@@ -170,6 +176,33 @@ object GameRecorder {
       }
 
 
+    }.receiveSignal{
+      case (ctx,PostStop) =>
+        timer.cancelAll()
+        log.info(s"${ctx.self.path} stopping....")
+        // todo  保存信息
+        val mapInfo = essfMap.map{
+          essf=>
+            if(essf._2.leftF == -1L){
+              (essf._1,EssfMapJoinLeftInfo(essf._2.joinF,endF))
+            }else{
+              essf
+            }
+        }
+        recorder.putMutableInfo(AppSettings.essfMapKeyName,userMapEncode(mapInfo))
+        recorder.finish()
+        val endTime = System.currentTimeMillis()
+        val filePath = AppSettings.gameDataDirectoryPath + fileName + s"_$fileIndex"
+//        val recordInfo = rGameRecord(-1L, roomId, gameRecordData.gameInformation.gameStartTime, endTime,filePath)
+        val recordInfo = rGameRecord(-1L, gameRecordData.roomId,gameRecordData.StartTime, endTime,filePath,gameRecordData.InitialTime)
+        val recordId =Await.result(RecordDao.insertGameRecord(recordInfo), 1.minute)
+        val list = ListBuffer[rUserRecordMap]()
+        userAllMap.foreach{
+          userRecord =>
+            list.append(rUserRecordMap(userRecord._1, recordId, roomId))
+        }
+        Await.result(RecordDao.insertUserRecordList(list.toList), 2.minute)
+        Behaviors.stopped
     }
   }
 
@@ -188,7 +221,7 @@ object GameRecorder {
     import gameRecordData._
     Behaviors.receive{(ctx,msg) =>
       msg match {
-        case SaveDate =>
+        case date:SaveDate =>
           log.info(s"${ctx.self.path} save get msg saveDate")
           val mapInfo = essfMap.map{
             essf=>

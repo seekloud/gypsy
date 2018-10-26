@@ -62,7 +62,8 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
                 StatusCodes.SeeOther
               )
           }
-        } ~ userRoutes ~ resourceRoutes ~ esheepRoutes ~ apiRoutes
+        }~resourceRoutes~userRoutes~esheepRoutes~apiRoutes
+
       }
     }
 
