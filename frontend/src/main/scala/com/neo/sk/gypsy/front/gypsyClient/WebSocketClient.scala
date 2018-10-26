@@ -18,7 +18,7 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import scala.math._
-import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
+//import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 import org.scalajs.dom.html
 
@@ -26,6 +26,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
 import scala.collection.mutable
+
+import org.seekloud.byteobject.ByteObject._
+import org.seekloud.byteobject.MiddleBufferInJs
+
 /**
   * User: sky
   * Date: 2018/9/13
@@ -47,7 +51,7 @@ case class WebSocketClient(
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
   def sendMsg(msg:WsMsgServer) = {
-    import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
+    import org.seekloud.byteobject.ByteObject._
     webSocketOpt.get.send(msg.fillMiddleBuffer(sendBuffer).result())
   }
 
@@ -70,7 +74,6 @@ case class WebSocketClient(
         //        println(s"recv msg:${event.data.toString}")
         event.data match {
           case blobMsg:Blob =>
-            import com.neo.sk.gypsy.front.utils.byteObject.ByteObject._
             val fr = new FileReader()
             fr.readAsArrayBuffer(blobMsg)
             fr.onloadend = { _: Event =>
