@@ -12,6 +12,8 @@ object GypsyGameEvent {
   case object CompleteMsgServe extends WsMsgSource
   case class FailMsgServer(ex: Exception) extends WsMsgSource
   sealed trait WsMsgServer extends WsMsgSource
+  final case class SyncGameAllState(gState:GypsyGameSnapInfo) extends WsMsgServer
+
 
   sealed trait GameEvent {
     val frame:Long
@@ -28,6 +30,8 @@ object GypsyGameEvent {
     * replay-frame-msg
     */
   final case class ReplayFrameData(ws:Array[Byte]) extends WsMsgSource
+  final case class InitReplayError(msg:String) extends WsMsgServer
+  final case class ReplayFinish() extends WsMsgServer
 
 
   final case class EventData(list:List[WsMsgServer]) extends WsMsgServer

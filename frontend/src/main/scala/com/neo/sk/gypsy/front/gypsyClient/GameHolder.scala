@@ -32,7 +32,7 @@ import scala.collection.mutable
   * Date: 2018/9/13
   * Time: 13:26
   */
-class GameHolder {
+class GameHolder(replay:Boolean = false) {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
@@ -72,7 +72,7 @@ class GameHolder {
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
 
-  val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
+  val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,getWsMessageHandler,wsConnectClose,replay)
 
   val grid = new GameClient(bounds)
 
@@ -304,6 +304,8 @@ class GameHolder {
     e
   }
 
+  private def getWsMessageHandler:GypsyGameEvent.WsMsgServer => Unit = if (replay) replayMessageHandler else wsMessageHandler
+
   private def wsMessageHandler(data:WsMsgFront,maxScore:Int):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
@@ -402,6 +404,23 @@ class GameHolder {
       case msg@_ =>
         println(s"unknown $msg")
 
+    }
+  }
+
+  private def replayMessageHandler(data:GypsyGameEvent.WsMsgServer):Unit = {
+    data match {
+      case e:GypsyGameEvent.EventData =>
+        e.list.foreach(r=>replayMessageHandler(r))
+
+      case e:GypsyGameEvent.SyncGameAllState =>
+
+      case e:GypsyGameEvent.DecodeError =>
+
+      case e:GypsyGameEvent.ReplayFinish=>
+        //游戏回放结束
+        dom.window.cancelAnimationFrame(nextFrame)
+        //todo closeHolder
+      case _ => println("unknow msg")
     }
   }
 
