@@ -48,7 +48,7 @@ package object ptcl {
 
 
   case class Player(
-                   id:Long,
+                   id:String,
                    name:String,
                    color:String,
                    x:Int,

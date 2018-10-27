@@ -52,8 +52,8 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
           }
         }~ path("playGame") {
           parameter(
-            'playerId.as[Long],
-            'playerName.as[Long],
+            'playerId.as[String],
+            'playerName.as[String],
             'accessCode.as[String],
             'roomId.as[Long].?
           ){
@@ -62,7 +62,18 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
                 StatusCodes.SeeOther
               )
           }
-        }~resourceRoutes~userRoutes~esheepRoutes~apiRoutes
+        } ~ path("watchRecord"){
+          parameter(
+            'recordId.as[Long],
+            'playerId.as[String],
+            'frame.as[Int],
+            'accessCode.as[String]
+          ){
+            case (recordId, playerId,frame,accessCode) =>
+              redirect(s"/gyspy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
+                StatusCodes.SeeOther)
+          }
+        } ~ resourceRoutes ~ userRoutes ~ esheepRoutes ~ apiRoutes
 
       }
     }

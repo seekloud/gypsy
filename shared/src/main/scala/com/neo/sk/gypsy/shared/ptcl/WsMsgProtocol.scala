@@ -21,11 +21,11 @@ object WsMsgProtocol {
 
   /**
     * 后端解析*/
-  case class MousePosition(id: Long,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
+  case class MousePosition(id: String,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
 
-  case class KeyCode(id: Long,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
+  case class KeyCode(id: String,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
 
-  case class WatchChange(id:Long, watchId: Long) extends WsMsgServer
+  case class WatchChange(id:String, watchId: Long) extends WsMsgServer
 
   case object UserLeft extends WsMsgServer
 
@@ -50,21 +50,21 @@ object WsMsgProtocol {
                          aLs: List[Food]
                        ) extends WsMsgFront
 
-  case class Id(id: Long) extends WsMsgFront
+  case class Id(id: String) extends WsMsgFront
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
 
-  case class SnakeRestart(id:Long) extends WsMsgFront
+  case class SnakeRestart(id:String) extends WsMsgFront
 
-  case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class UserDeadMessage(id:String,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
-  case class KillMessage(killerId:Long,deadPlayer:Player) extends WsMsgFront
+  case class KillMessage(killerId:String,deadPlayer:Player) extends WsMsgFront
 
-  case class GameOverMessage(id:Long,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
   case object MatchRoomError extends WsMsgFront
 
-  case class UserMerge(id:Long,player: Player)extends WsMsgFront
+  case class UserMerge(id:String,player: Player)extends WsMsgFront
 
   case class Pong(timestamp: Long)extends WsMsgFront
 
