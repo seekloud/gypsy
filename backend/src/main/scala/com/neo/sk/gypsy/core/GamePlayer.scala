@@ -17,6 +17,7 @@ import com.neo.sk.gypsy.utils.ESSFSupport._
 import org.seekloud.essf.io.FrameInputStream
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, ReplayFrameData}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.language.implicitConversions
 import scala.concurrent.duration._
@@ -70,10 +71,10 @@ object GamePlayer {
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
         //操作数据库
-        RecordDao.getRecordById(recordId).map{
-          case Some(r) =>
-            val replay = initFileReader(r.filePath)
-            val info = replay.init()
+        RecordDao.getRecordById(recordId).map {
+          case Some(r)=>
+            val replay=initFileReader(r.filePath)
+            val info=replay.init()
             try{
               ctx.self ! SwitchBehavior("work",
                 work(
@@ -83,9 +84,9 @@ object GamePlayer {
                 ))
             }catch {
               case e:Throwable=>
-                log.error("error--"+ e.getMessage)
+                log.error("error---"+e.getMessage)
             }
-          case None =>
+          case None=>
             log.debug(s"record--$recordId didn't exist!!")
         }
         switchBehavior(ctx,"busy",busy())
@@ -94,7 +95,7 @@ object GamePlayer {
   }
 
   def work(fileReader: FrameInputStream,
-           metaData:GameInformation,
+           metaData:String,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[GypsyGameEvent.WsMsgSource]]= None
           )(
@@ -106,7 +107,7 @@ object GamePlayer {
       msg match {
         case msg:InitReplay =>
           log.info("start new replay !")
-          //只要看回放，就不能再玩儿游戏了
+          //停止之前的重放
           timer.cancel(GameLoopKey)
           userMap.find(_._1.userId == msg.userId) match {
             case Some(u) =>

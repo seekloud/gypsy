@@ -8,7 +8,7 @@ package com.neo.sk.gypsy.ptcl
 object ReplayProtocol {
   final case class EssfMapKey(
                                roomId:Long,
-                               userId: Long,
+                               userId: String,
                                name:String
                              )
   final case class EssfMapJoinLeftInfo(
