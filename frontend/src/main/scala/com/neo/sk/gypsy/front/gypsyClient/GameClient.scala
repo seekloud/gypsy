@@ -8,6 +8,8 @@ import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 
 import scala.collection.mutable
 import scala.math._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 
 /**
   * User: sky
@@ -31,7 +33,8 @@ class GameClient (override val boundary: Point) extends Grid {
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: WsMsgProtocol.GridDataSync={
-    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
+//    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
+    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, 1.0)
   }
 
   override def checkCellMerge: Boolean = {
@@ -358,16 +361,17 @@ class GameClient (override val boundary: Point) extends Grid {
     frameCount = data.frameCount
     //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    if(data.foodDetails.nonEmpty){
+    /*if(data.foodDetails.nonEmpty){
       food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-    }
+    }*/
     if(food.nonEmpty&&data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{
         f=>
           food-=Point(f.x,f.y)
       }
     }
-    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
+    //food改为增量传输这里暂时不用
+//    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     massList = data.massDetails
     virus = data.virusDetails
 

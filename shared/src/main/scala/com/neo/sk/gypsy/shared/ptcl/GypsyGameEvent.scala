@@ -27,12 +27,17 @@ object GypsyGameEvent {
   final case class UserJoinRoom(roomId:Long,playState:Player,override val frame:Long) extends UserEvent with WsMsgServer
   final case class UserLeftRoom(userId:Long,userName:String,roomId:Long,override val frame:Long) extends UserEvent with WsMsgServer
 
-  final case class GenerateApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class GenerateApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateMass(override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateCells(override val frame:Long) extends EnvironmentEvent with WsMsgServer
 
   //是否做消失事件？？？
+
+  final case class ReduceApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class ReduceVirus(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+
+
 
   //  缩放放到
   final case class ShowScale(override val frame:Long,scale:Double) extends EnvironmentEvent with WsMsgServer

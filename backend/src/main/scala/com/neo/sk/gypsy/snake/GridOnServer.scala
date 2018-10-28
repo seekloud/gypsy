@@ -19,6 +19,9 @@ import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.Boot.esheepClient
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
+
 /**
   * User: Taoz
   * Date: 9/3/2016
@@ -35,8 +38,8 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
 
   private[this] var waitingJoin = Map.empty[Long, String]
-  private[this] var feededApples: List[Food] = Nil
-  private[this] var newFoods = Map[Point, Int]()
+//  private[this] var feededApples: List[Food] = Nil
+  private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
@@ -104,17 +107,17 @@ class GridOnServer(override val boundary: Point) extends Grid {
 
   override def feedApple(appleCount: Int): Unit = {
     //TODO 考虑出生时的苹果列表
-    feededApples = Nil
+//    feededApples = Nil
     var appleNeeded = appleCount
     while (appleNeeded > 0) {
       val p = randomEmptyPoint()
       val color = random.nextInt(7)
-      feededApples ::= Food(color,p.x,p.y)
+//      feededApples ::= Food(color,p.x,p.y)
       newFoods+=(p->color)
       food += (p->color)
       appleNeeded -= 1
     }
-    val event = GenerateApples(feededApples,frameCount)
+    val event = GenerateApples(newFoods,frameCount)
     AddGameEvent(event)
   }
 
@@ -435,7 +438,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   }
 
   override def getAllGridData: WsMsgProtocol.GridDataSync = {
-    val foodDetails: List[Food] = Nil
+//    val foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
@@ -464,7 +467,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     WsMsgProtocol.GridDataSync(
       frameCount,
       playerDetails,
-      foodDetails,
+//      foodDetails,
       massList,
       virus,
       1.0,
@@ -506,7 +509,11 @@ class GridOnServer(override val boundary: Point) extends Grid {
     updateRanks()  //排名
   }
 
-  def getFeededApple = feededApples
+  def getNewApples = newFoods
+  def cleanNewApple = {
+    newFoods = Map.empty
+  }
+
 
   def randomEmptyPoint(): Point = {
     val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))

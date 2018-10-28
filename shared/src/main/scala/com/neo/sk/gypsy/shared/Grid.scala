@@ -14,6 +14,7 @@ import com.neo.sk.gypsy.shared.util.utils
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 
 /**
@@ -35,48 +36,16 @@ trait Grid {
 
   val cellIdgenerator = new AtomicInteger(1000000)
 
-  val historyRankLength = 5
-
-  val slowBase = 10
-  val initMassLog = utils.logSlowDown(10,slowBase)
-  val acceleration  = 2
-//质量转半径率
-  val mass2rRate = 6
-  //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
-  val coverRate = 0
   var frameCount = 0l
-//合并时间间隔
-  val mergeInterval = 18 * 1000
-  //分裂时间间隔
-  val splitInterval = 2 * 1000
-//最小分裂大小
-  val splitLimit = 30
-  //分裂初始速度
-  val splitBaseSpeed = 40
-  //食物质量
-  val foodMass = 1
   //食物列表
   var food = Map[Point, Int]()
-  //食物池
-  var foodPool = 300
   //病毒列表
   var virus = List[Virus]()
-  //病毒数量
-  var virusNum:Int = 8
-  //病毒质量上限
-  var virusMassLimit:Int = 200
+
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
   var massList = List[Mass]()
-  val shotMass = 10
-  val shotSpeed = 100
-  //最大分裂个数
-  val maxCellNum = 16
-  //质量衰减下限
-  val decreaseLimit = 200
-  //衰减率
-  val decreaseRate = 0.995
   //衰减周期计数
   var tick = 0
   //操作列表  帧数->(用户ID->操作)
@@ -168,13 +137,32 @@ trait Grid {
 
   def updatePlayer()={
 
+    def updatePlayerMap(player: Player, mouseActMap: Map[Long, MousePosition],decrease:Boolean)={
+      if(decrease){
+        updatePlayerMove(massDecrease(player),mouseActMap)
+      }else{
+        updatePlayerMove(player,mouseActMap)
+      }
+    }
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
 
-    //先移动到指定位置
-//    println(playerMap.values)
-    playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap
+    //先移动到指定位置，同时进行质量衰减
+    tick = tick+1
 
+    playerMap = if(tick%10==1){
+      tick =1
+      playerMap.values.map(updatePlayerMap(_,mouseAct,true)).map(s=>(s.id,s)).toMap
+      //      massDecrease()
+    }else{
+      playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
+    }
+    checkCrash(keyAct,mouseAct)
+
+  }
+
+//  碰撞检测
+  def checkCrash(keyAct: Map[Long,KeyCode], mouseAct: Map[Long, MousePosition])={
     checkPlayerFoodCrash()
     checkPlayerMassCrash()
     checkPlayer2PlayerCrash()
@@ -183,12 +171,8 @@ trait Grid {
     checkPlayerShotMass(keyAct,mouseAct)
     checkVirusMassCrash()
     checkPlayerSplit(keyAct,mouseAct)
-    tick = tick+1
-    if(tick%10==1){
-      tick =1
-      massDecrease()
-    }
   }
+
 
   //食物更新
   private[this] def updateSpots() = {
@@ -201,7 +185,7 @@ trait Grid {
     var newSpeed = mass.speed
     var newX = mass.x
     var newY = mass.y
-    newSpeed -= 25
+    newSpeed -= massSpeedDecayRate
     if (newSpeed < 0) newSpeed = 0
     if (!(deltaY).isNaN) newY += deltaY.toInt
     if (!(deltaX).isNaN) newX += deltaX.toInt
@@ -447,7 +431,7 @@ trait Grid {
 
 
 //超过200的cell质量衰减
-  def massDecrease():Unit={
+/*  def massDecrease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
       val newCells=player.cells.map{cell=>
         var newMass = cell.mass
@@ -459,7 +443,20 @@ trait Grid {
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
+  }*/
+
+  def massDecrease(player:Player)={
+    val newCells=player.cells.map{cell=>
+      var newMass = cell.mass
+      if(cell.mass > decreaseLimit)
+        newMass = cell.mass*decreaseRate
+      cell.copy(mass = newMass)
+    }
+    player.copy(cells = newCells)
   }
+
+
+
 
   def updateAndGetGridData() = {
     update()
@@ -475,12 +472,12 @@ trait Grid {
     val width = Window.w/scale/2
     val height = Window.h/scale/2
 
-    var foodDetails: List[Food] = Nil
+//    var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-    food.foreach{
+/*    food.foreach{
       case (p,mass) =>
         foodDetails ::= Food(mass, p.x, p.y)
-    }
+    }*/
     playerMap.foreach{
       case (id,player) =>
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
@@ -489,7 +486,7 @@ trait Grid {
     WsMsgProtocol.GridDataSync(
       frameCount,
       playerDetails,
-      foodDetails,
+//      foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       scale

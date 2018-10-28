@@ -210,7 +210,8 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap)
           grid.getUserList(userList)
           grid.update()
-          val feedApples = grid.getFeededApple
+          val newApples = grid.getNewApples
+          val feedapples = newApples.map(p=>Food(p._2,p._1.x,p._1.y)).toList
           val gridData = grid.getAllGridData
           val eventList = grid.getEvents()
           if(AppSettings.gameRecordIsWork){
@@ -222,8 +223,10 @@ object RoomActor {
 //            val gridData = grid.getAllGridData
             dispatch(subscribersMap,gridData)
           } else {
-            if (feedApples.nonEmpty) {
-              dispatch(subscribersMap,WsMsgProtocol.FeedApples(feedApples))
+            if (newApples.nonEmpty) {
+//              dispatch(subscribersMap,WsMsgProtocol.FeedApples(newApples))
+              dispatch(subscribersMap,WsMsgProtocol.FeedApples(feedapples))
+              grid.cleanNewApple
             }
           }
           if (tickCount % 20 == 1) {

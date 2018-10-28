@@ -38,7 +38,7 @@ object WsMsgProtocol {
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
-                           foodDetails: List[Food],
+//                           foodDetails: List[Food],
                            massDetails: List[Mass],
                            virusDetails: List[Virus],
                            scale:Double, //缩放比例
@@ -48,6 +48,7 @@ object WsMsgProtocol {
 
   case class FeedApples(
                          aLs: List[Food]
+//                         aLs: Map[Point, Int]
                        ) extends WsMsgFront
 
   case class Id(id: Long) extends WsMsgFront

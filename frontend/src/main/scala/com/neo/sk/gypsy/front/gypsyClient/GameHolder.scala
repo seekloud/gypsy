@@ -241,7 +241,8 @@ class GameHolder {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          drawGameView.drawGrid(myId,data,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
+          val foods = grid.food
+          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
           ctx.save()
           ctx.font = "34px Helvetica"
@@ -307,7 +308,7 @@ class GameHolder {
         grid.currentRank = current
         grid.historyRank = history
       case WsMsgProtocol.FeedApples(foods) =>
-
+//        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
       case data: WsMsgProtocol.GridDataSync =>
