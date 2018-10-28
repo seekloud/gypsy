@@ -5,8 +5,6 @@ package com.neo.sk.gypsy.shared.ptcl
   */
 object WsSourceProtocol {
   trait WsMsgSource
-
   case object CompleteMsgServer extends WsMsgSource
   case class FailMsgServer(ex: Exception) extends WsMsgSource
-
 }

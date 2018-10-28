@@ -75,4 +75,10 @@ object WsMsgProtocol {
   val delayFrame = 1 //延时帧数，抵消网络延时
 
   val maxDelayFrame = 3
+
+
+  sealed trait WsSendMsg
+  case object WsSendComplete extends WsSendMsg
+  case class WsSendFailed(ex:Throwable) extends WsSendMsg
+  sealed trait UserAction extends WsSendMsg
 }
