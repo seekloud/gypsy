@@ -135,6 +135,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
+
   val apiRoutes:Route=
     getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer
 }
