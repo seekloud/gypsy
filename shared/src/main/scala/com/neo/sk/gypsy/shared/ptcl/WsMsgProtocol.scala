@@ -15,7 +15,7 @@ object WsMsgProtocol {
   sealed trait WsMsgFront extends WsMsgSource
 
   trait GameAction{
-    val serialNum:Int
+    val serialNum:Int //类似每一帧的动作顺序
     val frame:Long
   }
 
@@ -23,15 +23,15 @@ object WsMsgProtocol {
     * 后端解析*/
   case class MousePosition(id: String,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
 
-  case class KeyCode(id: String,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
+  case class KeyCode(id: String,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgFront with WsMsgServer
 
-  case class WatchChange(id:String, watchId: Long) extends WsMsgServer
+  case class WatchChange(id:String, watchId: Long) extends WsMsgServer //????
 
-  case object UserLeft extends WsMsgServer
+  case object UserLeft extends WsMsgServer //???
 
-  case object ErrorWsMsgServer extends WsMsgServer
+  case object ErrorWsMsgServer extends WsMsgServer //???
 
-  case class Ping(timestamp: Long) extends WsMsgServer
+  case class Ping(timestamp: Long) extends WsMsgServer //???
 
   /**
     * 前端解析*/
