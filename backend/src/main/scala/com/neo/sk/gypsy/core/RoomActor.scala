@@ -15,10 +15,10 @@ import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, GypsyGameConfigImpl, GypsyGameSnapshot, UserJoinRoom}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.snake.GridOnServer
+import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.utils.byteObject.ByteObject
 import io.circe.Decoder
 import io.circe.parser._
@@ -49,17 +49,17 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  private case class Join(id: Long, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront],watchgame:Boolean) extends Command
+  private case class Join(id: String, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront],watchgame:Boolean) extends Command
 
-  private case class ChangeWatch(id: Long, watchId: Long) extends Command
+  private case class ChangeWatch(id: String, watchId: String) extends Command
 
-  private case class Left(id: Long, name: String) extends Command
+  private case class Left(id: String, name: String) extends Command
 
-  private case class Key(id: Long, keyCode: Int,frame:Long,n:Int) extends Command
+  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
 
-  private case class Mouse(id: Long, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
+  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
 
-  private case class NetTest(id: Long, createTime: Long) extends Command
+  private case class NetTest(id: String, createTime: Long) extends Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
@@ -69,7 +69,7 @@ object RoomActor {
   case class getGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
   case class getRoomId(playerId:String,replyTo:ActorRef[RoomIdRsp]) extends Command
 
-  case class UserInfo(id:Long, name:String, shareList:mutable.ListBuffer[Long]) extends Command
+  case class UserInfo(id:String, name:String, shareList:mutable.ListBuffer[String]) extends Command
 
   val bounds = Point(Boundary.w, Boundary.h)
 
@@ -78,11 +78,11 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
-            val userMap = mutable.HashMap[Long, String]()
+            val subscribersMap = mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]()
+            val userMap = mutable.HashMap[String, String]()
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
-            val grid = new GridOnServer(bounds)
+            val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
             if(matchRoom){
               timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
@@ -101,9 +101,9 @@ object RoomActor {
   def idle(
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
-            userMap:mutable.HashMap[Long,String],
-            subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
-            grid:GridOnServer,
+            userMap:mutable.HashMap[String,String],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]],
+            grid:GameServer,
             tickCount:Long
           )(
             implicit timer:TimerScheduler[Command]
@@ -136,7 +136,7 @@ object RoomActor {
             dispatchTo(subscribersMap,id, WsMsgProtocol.Id(userList(x).id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
           }else{
-            userList.append(UserInfo(id, name, mutable.ListBuffer[Long]()))
+            userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
             userMap.put(id,name)
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
@@ -268,7 +268,7 @@ object RoomActor {
           Behaviors.same
 
         case getRoomId(playerId,replyTo) =>
-          val IsqueryUser = if(userMap.keySet.contains(playerId.toLong)) true else false
+          val IsqueryUser = if(userMap.keySet.contains(playerId)) true else false
           if(IsqueryUser){
             replyTo ! RoomIdRsp(roomInfo(roomId.toLong),0,"ok")
           }
@@ -287,9 +287,9 @@ object RoomActor {
   def wait(
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
-            userMap:mutable.HashMap[Long,String],
-            subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]],
-            grid:GridOnServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
+            userMap:mutable.HashMap[String,String],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]],
+            grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
         case CheckName(name,replyTo)=>
@@ -349,12 +349,12 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]], msg: WsMsgProtocol.WsMsgFront) = {
+  def dispatch(subscribers:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]], msg: WsMsgProtocol.WsMsgFront) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]], id:Long, msg:WsMsgProtocol.WsMsgFront,userList:mutable.ListBuffer[UserInfo]) = {
-    var shareList = mutable.ListBuffer[Long]()
+  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]], id:String, msg:WsMsgProtocol.WsMsgFront,userList:mutable.ListBuffer[UserInfo]) = {
+    var shareList = mutable.ListBuffer[String]()
     userList.foreach(user =>
       if(user.id == id){
         shareList = user.shareList
@@ -372,7 +372,7 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: Long, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer, WsSourceProtocol.WsMsgSource, Any] = {
+  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer,WsMsgSource, Any] = {
     val in = Flow[WsMsgProtocol.WsMsgServer]
       .map {
         case KeyCode(i,keyCode,f,n)=>
@@ -382,7 +382,7 @@ object RoomActor {
           Mouse(id,clientX,clientY,f,n)
         case UserLeft=>
           Left(id,name)
-        case WsMsgProtocol.Ping(timestamp)=>
+        case Ping(timestamp)=>
           NetTest(id,timestamp)
         case WatchChange(id, watchId) =>
           log.debug(s"切换观察者: $watchId")
@@ -393,12 +393,12 @@ object RoomActor {
       .to(sink(actor))
 
     val out =
-      ActorSource.actorRef[WsSourceProtocol.WsMsgSource](
+      ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case WsSourceProtocol.CompleteMsgServer ⇒
+          case CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case WsSourceProtocol.FailMsgServer(e)  ⇒ e
+          case FailMsgServer(e)  ⇒ e
         },
         bufferSize = 64,
         overflowStrategy = OverflowStrategy.dropHead
@@ -409,7 +409,7 @@ object RoomActor {
 
   //暂未考虑下匹配的情况
 //  private def getGameRecorder(ctx: ActorContext[Command],gameContainer:GameContainerServerImpl,roomId:Long):ActorRef[GameRecorder.Command] = {
-  private def getGameRecorder(ctx: ActorContext[Command],grid:GridOnServer,roomId:Long):ActorRef[GameRecorder.Command] = {
+  private def getGameRecorder(ctx: ActorContext[Command], grid:GameServer, roomId:Long):ActorRef[GameRecorder.Command] = {
     val childName = s"gameRecorder"
     ctx.child(childName).getOrElse{
       val curTime = System.currentTimeMillis()

@@ -143,6 +143,10 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
+  def closeHolder = {
+    dom.window.cancelAnimationFrame(nextFrame)
+  }
+
   def gameRender(): Double => Unit = { d =>
 //    println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
@@ -303,9 +307,9 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:GypsyGameEvent.WsMsgServer => Unit = if (replay) replayMessageHandler else wsMessageHandler
+  private def getWsMessageHandler:(GypsyGameEvent.WsMsgServer, Int) => Unit = if (replay) replayMessageHandler else wsMessageHandler
 
-  private def wsMessageHandler(data:WsMsgFront,maxScore:Int):Unit = {
+  private def wsMessageHandler(data:GypsyGameEvent.WsMsgServer,maxScore:Int):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
@@ -406,19 +410,53 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-  private def replayMessageHandler(data:GypsyGameEvent.WsMsgServer):Unit = {
+  private def replayMessageHandler(data:GypsyGameEvent.WsMsgServer,maxScore:Int = 0):Unit = {
     data match {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))
 
       case e:GypsyGameEvent.SyncGameAllState =>
+        //todo 拿到全量数据改怎么办
+        val data = e.gState
+        syncGridData = GridDataSync(data.frameCount,
+          data.playerDetails,data.foodDetails,
+          data.massDetails,data.virusDetails)
+        justSynced = true
 
-      case e:GypsyGameEvent.DecodeError =>
+      case e:GypsyGameEvent.UserActionEvent =>
+        e match {
+          case g: GypsyGameEvent.MouseMove =>
+            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
+          case g: GypsyGameEvent.KeyPress =>
+            //todo
+            grid.addActionWithFrame(g.userId,)
+        }
+
+      case e:GypsyGameEvent.GameEvent =>
+        e match {
+          case g: GypsyGameEvent.UserJoinRoom =>
+            grid.playerMap += g.playState.id -> g.playState
+          case g: GypsyGameEvent.UserLeftRoom =>
+            grid.removePlayer(g.userId)
+          case g: GypsyGameEvent.GenerateApples =>
+            grid.food ++= g.apples.map(a => Point(a.x, a.y) -> a.color)
+          case g: GypsyGameEvent.GenerateVirus =>
+            grid.virus ++= g.virus
+        }
 
       case e:GypsyGameEvent.ReplayFinish=>
         //游戏回放结束
         dom.window.cancelAnimationFrame(nextFrame)
         //todo closeHolder
+        closeHolder
+
+      case e:GypsyGameEvent.DecodeError =>
+        //todo closeHolder
+
+      case e:GypsyGameEvent.InitReplayError =>
+        //todo closeHolder
+        closeHolder
+
       case _ => println("unknow msg")
     }
   }

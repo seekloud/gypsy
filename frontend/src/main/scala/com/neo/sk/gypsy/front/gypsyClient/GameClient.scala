@@ -379,7 +379,6 @@ class GameClient (override val boundary: Point) extends Grid {
     }
   }
 
-
   //从第frame开始回滚到现在
   def rollback(frame:Long) = {
     gameSnapshotMap.get(frame) match {
