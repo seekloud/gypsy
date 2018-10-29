@@ -7,7 +7,7 @@ import akka.stream.scaladsl.Flow
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.ActorAttributes
 import akka.util.ByteString
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
+import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.utils.byteObject.ByteObject.bytesDecode
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
@@ -65,11 +65,11 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgServer] = {
+    implicit def parseJsonString2WsMsgFront(s:String): Option[ptcl.WsMsgServer] = {
       import io.circe.generic.auto._
       import io.circe.parser._
       try {
-        val wsMsg = decode[GypsyGameEvent.WsMsgServer](s).right.get
+        val wsMsg = decode[ptcl.WsMsgServer](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -82,7 +82,7 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[GypsyGameEvent.WsMsgServer](buffer) match {
+          bytesDecode[ptcl.WsMsgServer](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")

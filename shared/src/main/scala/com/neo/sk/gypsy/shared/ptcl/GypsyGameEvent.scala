@@ -5,14 +5,6 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 
 object GypsyGameEvent {
 
-  sealed trait WsMsgSource
-
-  case object CompleteMsgServe extends WsMsgSource
-  case class FailMsgServer(ex: Exception) extends WsMsgSource
-
-  sealed trait WsMsgFront extends WsMsgSource
-  sealed trait WsMsgServer
-
   sealed trait GameEvent {
     val frame:Long
   }

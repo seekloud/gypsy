@@ -39,7 +39,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var newFoods = Map[Point, Int]()
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]()
+  private [this] var subscriber=mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
@@ -517,7 +517,7 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]) ={
     subscriber=subscribersMap
   }
 
