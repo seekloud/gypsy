@@ -14,6 +14,7 @@ object GypsyGameEvent {
 
   trait UserEvent extends GameEvent
   trait EnvironmentEvent extends GameEvent
+  trait InfoChange extends GameEvent
   trait UserActionEvent extends UserEvent{
     val userId:Long
     val serialNum:Int
@@ -28,16 +29,24 @@ object GypsyGameEvent {
   final case class UserLeftRoom(userId:Long,userName:String,roomId:Long,override val frame:Long) extends UserEvent with WsMsgServer
 
   final case class GenerateApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class RemoveApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
-  final case class GenerateMass(override val frame:Long) extends EnvironmentEvent with WsMsgServer
-  final case class GenerateCells(override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class RemoveVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class GenerateMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class RemoveMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+
+
+
+
+  //  Cell变化直接做到用户信息改变那了
+//  final case class GenerateCells(override val frame:Long) extends EnvironmentEvent with WsMsgServer
 
   //是否做消失事件？？？
 
   final case class ReduceApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class ReduceVirus(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
 
-
+  final case class PlayerInfoChange(player: Map[Long,Player],override val frame:Long) extends InfoChange with WsMsgServer
 
   //  缩放放到
   final case class ShowScale(override val frame:Long,scale:Double) extends EnvironmentEvent with WsMsgServer

@@ -4,7 +4,7 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameEvent, KeyPress, MouseMove, UserActionEvent}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
@@ -41,7 +41,8 @@ trait Grid {
   var food = Map[Point, Int]()
   //病毒列表
   var virus = List[Virus]()
-
+  //病毒map (ID->Virus)
+  var virusMap = Map[Long,Virus]
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
@@ -144,6 +145,7 @@ trait Grid {
         updatePlayerMove(player,mouseActMap)
       }
     }
+    //TODO 确认下是不是frameCount
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
 
@@ -158,7 +160,8 @@ trait Grid {
       playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
     }
     checkCrash(keyAct,mouseAct)
-
+    val event = PlayerInfoChange(playerMap,frameCount)
+    AddGameEvent(event)
   }
 
 //  碰撞检测
@@ -342,6 +345,8 @@ trait Grid {
 
   //发射小球
   def checkPlayerShotMass(actMap: Map[Long, KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
+    //TODO 这里写下有哪些是分裂的
+
     val newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
@@ -357,14 +362,20 @@ trait Grid {
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
+            var newMassList =  List.empty[Mass]
             if (shot && newMass > shotMass * 3) {
               newMass -= shotMass
               newRadius = 4 + sqrt(newMass) * 6
               val massRadius = 4 + sqrt(shotMass) * 6
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+//              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
+            massList ::=newMassList
+//            生成mass事件
+            val event = GenerateMass(newMassList,frameCount)
+            AddGameEvent(event)
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
@@ -377,7 +388,8 @@ trait Grid {
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-
+//    val event = PlayerInfoChange(playerMap,frameCount)
+//    AddGameEvent(event)
   }
 
   //分裂检测
@@ -427,6 +439,8 @@ trait Grid {
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+//    val event = PlayerInfoChange(playerMap,frameCount)
+//    AddGameEvent(event)
   }
 
 
