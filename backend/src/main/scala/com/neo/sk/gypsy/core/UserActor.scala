@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import scala.concurrent.duration._
@@ -25,7 +26,7 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[GypsyGameEvent.WsMsgServer]) extends Command
+  case class WebSocketMsg(reqOpt: Option[ptcl.WsMsgServer]) extends Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
@@ -33,7 +34,7 @@ object UserActor {
   /**
     * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
     * */
-  case class UserFrontActor(actor: ActorRef[GypsyGameEvent.WsMsgSource]) extends Command
+  case class UserFrontActor(actor: ActorRef[ptcl.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
@@ -60,15 +61,15 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, GypsyGameEvent.WsMsgSource,Any] = {
+  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, ptcl.WsMsgSource,Any] = {
     val in = Flow[WebSocketMsg].to(sink(actor))
     val out =
-      ActorSource.actorRef[GypsyGameEvent.WsMsgSource](
+      ActorSource.actorRef[ptcl.WsMsgSource](
         completionMatcher = {
-          case GypsyGameEvent.CompleteMsgServe ⇒
+          case ptcl.CompleteMsgServer() ⇒
         },
         failureMatcher = {
-          case GypsyGameEvent.FailMsgServer(e)  ⇒ e
+          case ptcl.FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -103,7 +104,7 @@ object UserActor {
 
   private def idle(
                     uId: String,
-                    frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
+                    frontActor: ActorRef[ptcl.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,

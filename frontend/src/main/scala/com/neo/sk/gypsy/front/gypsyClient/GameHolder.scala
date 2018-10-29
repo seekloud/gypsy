@@ -9,6 +9,7 @@ import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
 import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
@@ -307,9 +308,9 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:(GypsyGameEvent.WsMsgServer, Int) => Unit = if (replay) replayMessageHandler else wsMessageHandler
+  private def getWsMessageHandler:(ptcl.WsMsgServer, Int) => Unit = if (replay) replayMessageHandler else wsMessageHandler
 
-  private def wsMessageHandler(data:GypsyGameEvent.WsMsgServer,maxScore:Int):Unit = {
+  private def wsMessageHandler(data:ptcl.WsMsgServer,maxScore:Int):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
@@ -398,7 +399,7 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
-      case WsMsgProtocol.MatchRoomError=>
+      case WsMsgProtocol.MatchRoomError()=>
         drawClockView.cleanClock()
         JsFunc.alert("超过等待时间请重新选择")
         //todo
@@ -410,7 +411,7 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-  private def replayMessageHandler(data:GypsyGameEvent.WsMsgServer,maxScore:Int = 0):Unit = {
+  private def replayMessageHandler(data:ptcl.WsMsgServer,maxScore:Int = 0):Unit = {
     data match {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))
