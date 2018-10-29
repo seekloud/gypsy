@@ -9,13 +9,6 @@ import scala.math._
   */
 package object ptcl {
 
-  trait WsMsgServer
-
-  trait WsMsgSource
-  case object CompleteMsgServer extends WsMsgSource
-  case class FailMsgServer(ex: Exception) extends WsMsgSource
-  trait WsMsgFront extends WsMsgSource
-
 
   trait CommonRsp {
     val errCode: Int

@@ -7,7 +7,6 @@ import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import scala.concurrent.duration._
@@ -64,12 +63,12 @@ object UserActor {
   def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, GypsyGameEvent.WsMsgSource,Any] = {
     val in = Flow[WebSocketMsg].to(sink(actor))
     val out =
-      ActorSource.actorRef[ptcl.WsMsgSource](
+      ActorSource.actorRef[GypsyGameEvent.WsMsgSource](
         completionMatcher = {
-          case ptcl.CompleteMsgServe ⇒
+          case GypsyGameEvent.CompleteMsgServe ⇒
         },
         failureMatcher = {
-          case ptcl.FailMsgServer(e)  ⇒ e
+          case GypsyGameEvent.FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -104,7 +103,7 @@ object UserActor {
 
   private def idle(
                     uId: String,
-                    frontActor: ActorRef[ptcl.WsMsgSource]
+                    frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
