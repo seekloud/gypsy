@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl
 
 import scalatags.JsDom.all._
 import scala.scalajs.js.JSApp
@@ -39,7 +40,7 @@ import org.seekloud.byteobject.MiddleBufferInJs
 case class WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
-                            messageHandler:(GypsyGameEvent.WsMsgServer,Int) => Unit,
+                            messageHandler:(ptcl.WsMsgServer,Int) => Unit,
                             closeCallback:Event => Unit,
                             replay:Boolean = false
                           ) {
@@ -113,10 +114,10 @@ case class WebSocketClient(
 
   import org.seekloud.byteobject.ByteObject._
 
-  private def replayEventDecode(a:ArrayBuffer):GypsyGameEvent.WsMsgServer= {
+  private def replayEventDecode(a:ArrayBuffer):ptcl.WsMsgServer= {
     val middleDataInJs = new MiddleBufferInJs(a)
     if(a.byteLength > 0){
-      bytesDecode[List[GypsyGameEvent.WsMsgServer]](middleDataInJs) match{
+      bytesDecode[List[ptcl.WsMsgServer]](middleDataInJs) match{
         case Right(r)=>
           GypsyGameEvent.EventData(r)
         case Left(e) =>
@@ -128,7 +129,7 @@ case class WebSocketClient(
     }
   }
 
-  private def replayStateDecode(a: ArrayBuffer):GypsyGameEvent.WsMsgServer={
+  private def replayStateDecode(a: ArrayBuffer):ptcl.WsMsgServer={
     val middleDataInJs = new MiddleBufferInJs(a)
     bytesDecode[GypsyGameEvent.GameSnapshot](middleDataInJs) match {
       case Right(r)=>
