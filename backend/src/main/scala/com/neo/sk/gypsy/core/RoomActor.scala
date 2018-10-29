@@ -18,7 +18,6 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.utils.byteObject.ByteObject
 import io.circe.Decoder
@@ -50,7 +49,7 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  private case class Join(id: String, name: String, subscriber: ActorRef[ptcl.WsMsgFront],watchgame:Boolean) extends Command
+  private case class Join(id: String, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront],watchgame:Boolean) extends Command
 
   private case class ChangeWatch(id: String, watchId: String) extends Command
 
@@ -79,7 +78,7 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]()
+            val subscribersMap = mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]()
             val userMap = mutable.HashMap[String, String]()
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
@@ -103,7 +102,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]],
             grid:GameServer,
             tickCount:Long
           )(
@@ -289,7 +288,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]],
             grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
@@ -350,11 +349,11 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]], msg: ptcl.WsMsgFront) = {
+  def dispatch(subscribers:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]], msg: WsMsgProtocol.WsMsgFront) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]], id:String, msg:ptcl.WsMsgFront,userList:mutable.ListBuffer[UserInfo]) = {
+  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]], id:String, msg:WsMsgProtocol.WsMsgFront,userList:mutable.ListBuffer[UserInfo]) = {
     var shareList = mutable.ListBuffer[String]()
     userList.foreach(user =>
       if(user.id == id){
@@ -373,8 +372,8 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[ptcl.WsMsgServer,WsMsgSource, Any] = {
-    val in = Flow[ptcl.WsMsgServer]
+  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer,WsMsgSource, Any] = {
+    val in = Flow[WsMsgProtocol.WsMsgServer]
       .map {
         case KeyCode(i,keyCode,f,n)=>
           log.debug(s"键盘事件$keyCode")
