@@ -28,7 +28,7 @@ package object ptcl {
 
 
 ////排行榜信息
-  case class Score(id: Long, n: String, k: Int, score: Double, t: Option[Long] = None)
+  case class Score(id: String, n: String, k: Int, score: Double, t: Option[Long] = None)
 
 
   case class Food(color:Int, x:Int, y:Int)

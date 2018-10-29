@@ -1,5 +1,8 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+/**
+  * Created by wangchengyuan
+  */
 object ApiProtocol {
 
   case class roomInfo(

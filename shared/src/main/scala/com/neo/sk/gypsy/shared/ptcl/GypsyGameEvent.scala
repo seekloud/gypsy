@@ -5,15 +5,13 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 
 object GypsyGameEvent {
 
-
-  sealed trait WsMsgFront
-
   sealed trait WsMsgSource
+
   case object CompleteMsgServe extends WsMsgSource
   case class FailMsgServer(ex: Exception) extends WsMsgSource
-  sealed trait WsMsgServer extends WsMsgSource
-  final case class SyncGameAllState(gState:GypsyGameSnapInfo) extends WsMsgServer
 
+  sealed trait WsMsgFront extends WsMsgSource
+  sealed trait WsMsgServer
 
   sealed trait GameEvent {
     val frame:Long
@@ -33,13 +31,16 @@ object GypsyGameEvent {
   final case class InitReplayError(msg:String) extends WsMsgServer
   final case class ReplayFinish() extends WsMsgServer
 
-
-  final case class EventData(list:List[WsMsgServer]) extends WsMsgServer
+  /**
+    * replay in front
+    * */
   final case class DecodeError() extends WsMsgServer
-
-
+  final case class EventData(list:List[WsMsgServer]) extends WsMsgServer
+  final case class SyncGameAllState(gState:GypsyGameSnapInfo) extends WsMsgServer
   final case class UserJoinRoom(roomId:Long,playState:Player,override val frame:Long) extends UserEvent with WsMsgServer
   final case class UserLeftRoom(userId:String,userName:String,roomId:Long,override val frame:Long) extends UserEvent with WsMsgServer
+  final case class MouseMove(userId:String,direct:(Double,Double),override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgServer
+  final case class KeyPress(userId:String,keyCode: Int,override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgServer
 
   final case class GenerateApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
@@ -50,12 +51,6 @@ object GypsyGameEvent {
 
   //  缩放放到
   final case class ShowScale(override val frame:Long,scale:Double) extends EnvironmentEvent with WsMsgServer
-
-
-
-  final case class MouseMove(userId:String,direct:(Double,Double),override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgServer
-  final case class KeyPress(userId:String,keyCode: Int,override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgServer
-
 
   sealed trait GameSnapshot
   final case class GypsyGameSnapshot(

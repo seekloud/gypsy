@@ -25,15 +25,18 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[GypsyGameEvent.WsMsgFront]) extends Command
+  case class WebSocketMsg(reqOpt: Option[GypsyGameEvent.WsMsgServer]) extends Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
 
+  /**
+    * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
+    * */
   case class UserFrontActor(actor: ActorRef[GypsyGameEvent.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
-  case class StartReply(recordId:Long, playerId:Long, frame:Int) extends Command
+  case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
 
@@ -73,7 +76,7 @@ object UserActor {
     Flow.fromSinkAndSource(in, out)
   }
 
-  def create(uId:Long):Behavior[Command] = {
+  def create(uId:String):Behavior[Command] = {
     Behaviors.setup[Command]{ctx =>
       log.debug(s"${ctx.self.path} is starting...")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
@@ -84,7 +87,7 @@ object UserActor {
     }
   }
 
-  private def init(uId: Long)(
+  private def init(uId: String)(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
     timer:TimerScheduler[Command]
@@ -99,7 +102,7 @@ object UserActor {
     }
 
   private def idle(
-                    uId: Long,
+                    uId: String,
                     frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
@@ -113,6 +116,8 @@ object UserActor {
           Behaviors.same
       }
     }
+
+
 
   /**
     * replay-actor
