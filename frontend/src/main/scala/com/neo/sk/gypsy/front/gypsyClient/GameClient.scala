@@ -27,7 +27,7 @@ class GameClient (override val boundary: Point) extends Grid {
   //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
 //序列号->(frame,Id,GameAction)
-  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,Long,GameAction)]()
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: WsMsgProtocol.GridDataSync={
@@ -138,7 +138,7 @@ class GameClient (override val boundary: Point) extends Grid {
   override def checkPlayer2PlayerCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
-        var killer = 0l
+        var killer = ""
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
             var newMass = cell.mass
@@ -297,15 +297,15 @@ class GameClient (override val boundary: Point) extends Grid {
     virus = virus1
   }
 
-  def addUncheckActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
+  def addUncheckActionWithFrame(id: String, gameAction: GameAction, frame: Long) = {
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
   }
 
-  def addActionWithFrameFromServer(id:Long,gameAction:GameAction) = {
+  def addActionWithFrameFromServer(id:String,gameAction:GameAction) = {
     val frame=gameAction.frame
     if(myId == id){
       uncheckActionWithFrame.get(gameAction.serialNum) match {
-        case Some((f,tankId,a)) =>
+        case Some((f,playerId,a)) =>
           if(f == frame){ //fixme 此处存在advanceFrame差异
             uncheckActionWithFrame.remove(gameAction.serialNum)
           }else{ //与预执下的操作数据不一致，进行回滚
@@ -313,7 +313,7 @@ class GameClient (override val boundary: Point) extends Grid {
             if(frame < frameCount){
 //              rollback(frame)
             }else{
-              removeActionWithFrame(tankId,a,f)
+              removeActionWithFrame(playerId,a,f)
               gameAction match {
                 case a:KeyCode=>
                   addActionWithFrame(id,a)
@@ -403,16 +403,16 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
   def reStart={
-    myId = 0L
+    myId = ""
     frameCount = 0l
     food = Map[Point, Int]()
     foodPool = 300
     virus = List[Virus]()
-    playerMap = Map.empty[Long,Player]
+    playerMap = Map.empty[String,Player]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Long, Map[Long, KeyCode]]
-    mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
+    actionMap = Map.empty[Long, Map[String, KeyCode]]
+    mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 

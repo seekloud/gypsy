@@ -30,7 +30,7 @@ trait Grid {
 
   def info(msg: String): Unit
 
-  var myId = 0L
+  var myId = ""
   val random = new Random(System.nanoTime())
 
   val cellIdgenerator = new AtomicInteger(1000000)
@@ -66,7 +66,7 @@ trait Grid {
   //病毒质量上限
   var virusMassLimit:Int = 200
   //玩家列表
-  var playerMap = Map.empty[Long,Player]
+  var playerMap = Map.empty[String,Player]
   //喷出小球列表
   var massList = List[Mass]()
   val shotMass = 10
@@ -80,9 +80,9 @@ trait Grid {
   //衰减周期计数
   var tick = 0
   //操作列表  帧数->(用户ID->操作)
-  var actionMap = Map.empty[Long, Map[Long, KeyCode]]
+  var actionMap = Map.empty[Long, Map[String, KeyCode]]
 
-  var mouseActionMap = Map.empty[Long, Map[Long, MousePosition]]
+  var mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
 
   val ActionEventMap = mutable.HashMap[Long,List[UserActionEvent]]() //frame -> List[UserActionEvent]
 
@@ -93,7 +93,7 @@ trait Grid {
 //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
 //用户离开，从列表中去掉
-  def removePlayer(id: Long): Option[Player] = {
+  def removePlayer(id: String): Option[Player] = {
     val r = playerMap.get(id)
     if (r.isDefined) {
       playerMap -= id
@@ -104,7 +104,7 @@ trait Grid {
 
   //这里用不到id！！！
 //键盘事件后，按键动作加入action列表
-  def addActionWithFrame(id: Long, keyCode: KeyCode) = {
+  def addActionWithFrame(id: String, keyCode: KeyCode) = {
     val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)
     actionMap += (keyCode.frame -> tmp)
@@ -112,7 +112,7 @@ trait Grid {
     AddActionEvent(action)
   }
 
-  def addMouseActionWithFrame(id: Long, mp:MousePosition) = {
+  def addMouseActionWithFrame(id: String, mp:MousePosition) = {
     val map = mouseActionMap.getOrElse(mp.frame, Map.empty)
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
@@ -121,7 +121,7 @@ trait Grid {
     AddActionEvent(action)
   }
 
-  def removeActionWithFrame(id: Long, gameAction: GameAction, frame: Long) = {
+  def removeActionWithFrame(id: String, gameAction: GameAction, frame: Long) = {
     gameAction match {
       case k:KeyCode=>
         val map = actionMap.getOrElse(frame,Map.empty)
@@ -168,8 +168,8 @@ trait Grid {
 
   def updatePlayer()={
 
-    val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[Long, MousePosition])
-    val keyAct = actionMap.getOrElse(frameCount, Map.empty[Long, KeyCode])
+    val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
+    val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
 
     //先移动到指定位置
 //    println(playerMap.values)
@@ -220,7 +220,7 @@ trait Grid {
   addVirus(virusNum - virus.size) //增添病毒
 }
 
-  private[this] def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
+  private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
     val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
@@ -357,7 +357,7 @@ trait Grid {
   def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit
 
   //发射小球
-  def checkPlayerShotMass(actMap: Map[Long, KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
+  def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
@@ -397,7 +397,7 @@ trait Grid {
   }
 
   //分裂检测
-  def checkPlayerSplit(actMap: Map[Long,KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
+  def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
@@ -466,7 +466,7 @@ trait Grid {
     getGridData(myId)
   }
 
-  def getGridData(id:Long) = {
+  def getGridData(id:String) = {
     myId = id
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))

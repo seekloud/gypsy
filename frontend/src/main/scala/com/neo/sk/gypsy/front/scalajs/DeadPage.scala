@@ -23,7 +23,7 @@ import scalatags.JsDom.all._
 import scalatags.JsDom.short.*
 object DeadPage {
 
-  def deadModel(game:GameHolder,id:Long,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def deadModel(game:GameHolder,id:String,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
     Shortcut.pauseMusic("bg")
     game.isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
@@ -79,7 +79,8 @@ object DeadPage {
 
       //override def btn2: UndefOr[js.Function2[Any, Any, Any]] =
     })
-    if(id<1000000&&score>maxScore){
+    //todo id<1000000
+    if(score>maxScore){
       val bodyStr=UserMaxScore(id,score).asJson.noSpaces
       Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
         case Left(e) =>
@@ -94,7 +95,7 @@ object DeadPage {
 
   }
 
-  def gameOverModel(game:GameHolder,id:Long,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def gameOverModel(game:GameHolder,id:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
     Shortcut.stopMusic("bg")
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
@@ -136,7 +137,8 @@ object DeadPage {
           ))
       ).toString().asInstanceOf[HTMLElement]
     })
-    if(id<1000000&&score>maxScore){
+    //todo id<1000000
+    if(score>maxScore){
       val bodyStr=UserMaxScore(id,score).asJson.noSpaces
       Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
         case Left(e) =>

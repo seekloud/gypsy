@@ -40,7 +40,8 @@ case class WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
                             messageHandler:(WsMsgFront,Int) => Unit,
-                            closeCallback:Event => Unit
+                            closeCallback:Event => Unit,
+                            replay:Boolean = false
                           ) {
   private var wsSetup=false
 
@@ -78,9 +79,13 @@ case class WebSocketClient(
             fr.readAsArrayBuffer(blobMsg)
             fr.onloadend = { _: Event =>
               val buf = fr.result.asInstanceOf[ArrayBuffer]
-              val middleDataInJs = new MiddleBufferInJs(buf)
-              val data = bytesDecode[WsMsgFront](middleDataInJs).right.get
-              messageHandler(data,maxScore)
+              if(replay) {
+                messageHandler(replayEventDecode(buf))
+              }else{
+                val middleDataInJs = new MiddleBufferInJs(buf)
+                val data = bytesDecode[WsMsgFront](middleDataInJs).right.get
+                messageHandler(data,maxScore)
+              }
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
@@ -104,6 +109,34 @@ case class WebSocketClient(
     sendMsg(UserLeft)
     println("---close Ws active")
     webSocketOpt.get.close()
+  }
+
+  import org.seekloud.byteobject.ByteObject._
+
+  private def replayEventDecode(a:ArrayBuffer):GypsyGameEvent.WsMsgServer= {
+    val middleBufferInJs = new MiddleBufferInJs(a)
+    if(a.byteLength > 0){
+      bytesDecode[List[GypsyGameEvent.WsMsgServer]](middleBufferInJs) match{
+        case Right(r)=>
+          GypsyGameEvent.EventData(r)
+        case Left(e) =>
+          println(e.message)
+          replayStateDecode(a)
+      }
+    }else{
+      GypsyGameEvent.DecodeError()
+    }
+  }
+
+  private def replayStateDecode(a: ArrayBuffer):GypsyGameEvent.WsMsgServer={
+    val middleBufferInJs = new MiddleBufferInJs(a)
+    bytesDecode[GypsyGameEvent.GameSnapshot](middleBufferInJs) match {
+      case Right(r)=>
+        GypsyGameEvent.SyncGameAllState(r.asInstanceOf[GypsyGameEvent.GypsyGameSnapshot].state)
+      case Left(e) =>
+        println(e.message)
+        GypsyGameEvent.DecodeError()
+    }
   }
 
 

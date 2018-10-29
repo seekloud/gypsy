@@ -22,7 +22,6 @@ import scala.math._
 //import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
 import org.scalajs.dom.html
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
@@ -32,7 +31,7 @@ import scala.collection.mutable
   * Date: 2018/9/13
   * Time: 13:26
   */
-class GameHolder {
+class GameHolder(replay:Boolean = false) {
 
   val bounds = Point(Boundary.w, Boundary.h)
   val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
@@ -64,15 +63,15 @@ class GameHolder {
   private[this] var firstCome=true
 
   /**可变参数*/
-  var myId = -1l
+  var myId = "" //myId变成String类型
   var usertype = 0
   var nextFrame = 0
   var nextInt = 0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
-  private[this] var killList = List.empty[(Int,Long,Player)]
+  private[this] var killList = List.empty[(Int,String,Player)]
 
-  val webSocketClient=WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose)
+  val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,getWsMessageHandler,wsConnectClose,replay)
 
   val grid = new GameClient(bounds)
 
@@ -124,22 +123,22 @@ class GameHolder {
     grid.update()
   }
 
-  def startGame(room:Long): Unit = {
+  def start(): Unit = {
     println("start---")
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-    if(room.toString!=null && (room==11 ||room==12)){
-      //      draw1.drawGameOn()
-    }else{
-      //限时匹配
-      dom.window.requestAnimationFrame(animate())
-      drawClockView.drawClock()
-    }
+//    if(room.get==11 ||room.get==12){
+//      //      draw1.drawGameOn()
+//    }else{
+//      //限时匹配
+//      dom.window.requestAnimationFrame(animate())
+//      drawClockView.drawClock()
+//    }
     dom.window.requestAnimationFrame(gameRender())
   }
 
   def animate():Double => Unit ={d =>
     drawGameView.drawGameOn2()
-    if(myId == -1l){
+    if(myId == ""){
       dom.window.requestAnimationFrame(animate())
     }
   }
@@ -148,15 +147,28 @@ class GameHolder {
 //    println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != -1l) {
+    if(myId != "") {
       drawClockView.cleanClock()
       draw(offsetTime)
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
+  def watchRecord(
+                 recordId:Long,
+                 playerId:String,
+                 frame:Int,
+                 accessCode:String
+                 ):Unit = {
+    myId = playerId
+    val url = ApiRoute.getwrWebSocketUri(recordId,playerId,frame,accessCode)
+    //todo maxscore应该是多少？
+    webSocketClient.setUp(url,0)
+    start()
+  }
+
   //userType: 0(游客)，-1(观战模式)
-  def joinGame(playerId: Long,
+  def joinGame(playerId: String,
                playerName:String,
                roomId: Long,
                accessCode:String,
@@ -164,11 +176,11 @@ class GameHolder {
                maxScore: Int = 0
               ): Unit = {
     usertype = userType
-    val url = ApiRoute.getWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
+    val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
     webSocketClient.setUp(url,maxScore)
     //gameloop + gamerender
-    startGame(roomId)
+    start()
     //用户行为：使用键盘or鼠标(观战模式不响应键盘鼠标事件）
     if(userType != -1){
       addActionListenEvent
@@ -291,6 +303,8 @@ class GameHolder {
     e
   }
 
+  private def getWsMessageHandler:GypsyGameEvent.WsMsgServer => Unit = if (replay) replayMessageHandler else wsMessageHandler
+
   private def wsMessageHandler(data:WsMsgFront,maxScore:Int):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
@@ -349,7 +363,7 @@ class GameHolder {
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
-        val a = grid.playerMap.getOrElse(killerId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
         if(deadPlayer.id!=myId){
           if(!isDead){
@@ -362,7 +376,7 @@ class GameHolder {
           Shortcut.playMusic("shutdownM")
         }
         if(killerId==myId){
-          grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
             case 1 => Shortcut.playMusic("1Blood")
             case 2 => Shortcut.playMusic("2Kill")
             case 3 => Shortcut.playMusic("3Kill")
@@ -383,7 +397,8 @@ class GameHolder {
       case WsMsgProtocol.MatchRoomError=>
         drawClockView.cleanClock()
         JsFunc.alert("超过等待时间请重新选择")
-        LoginPage.homePage()
+        //todo
+//        LoginPage.homePage()
 
       case msg@_ =>
         println(s"unknown $msg")
@@ -391,13 +406,29 @@ class GameHolder {
     }
   }
 
+  private def replayMessageHandler(data:GypsyGameEvent.WsMsgServer):Unit = {
+    data match {
+      case e:GypsyGameEvent.EventData =>
+        e.list.foreach(r=>replayMessageHandler(r))
 
+      case e:GypsyGameEvent.SyncGameAllState =>
+
+      case e:GypsyGameEvent.DecodeError =>
+
+      case e:GypsyGameEvent.ReplayFinish=>
+        //游戏回放结束
+        dom.window.cancelAnimationFrame(nextFrame)
+        //todo closeHolder
+      case _ => println("unknow msg")
+    }
+  }
 
   def gameClose={
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
     Shortcut.stopMusic("bg")
-    LoginPage.homePage()
+    //todo
+//    LoginPage.homePage()
   }
 }
