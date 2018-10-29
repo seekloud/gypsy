@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy.snake
+package com.neo.sk.gypsy.gypsyServer
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
@@ -24,7 +24,7 @@ import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
   * Date: 9/3/2016
   * Time: 9:55 PM
   */
-class GridOnServer(override val boundary: Point) extends Grid {
+class GameServer(override val boundary: Point) extends Grid {
 
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
@@ -34,22 +34,22 @@ class GridOnServer(override val boundary: Point) extends Grid {
   override def info(msg: String): Unit = log.info(msg)
 
 
-  private[this] var waitingJoin = Map.empty[Long, String]
+  private[this] var waitingJoin = Map.empty[String, String]
   private[this] var feededApples: List[Food] = Nil
   private[this] var newFoods = Map[Point, Int]()
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]()
+  private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
   var currentRank = List.empty[Score]
-  private[this] var historyRankMap = Map.empty[Long, Score]
+  private[this] var historyRankMap = Map.empty[String, Score]
   var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 
   private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
-  def addSnake(id: Long, name: String) = waitingJoin += (id -> name)
+  def addSnake(id: String, name: String) = waitingJoin += (id -> name)
 
   private var roomId = 0l
 
@@ -66,7 +66,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
       val event = UserJoinRoom(roomId,player,frameCount)
       AddGameEvent(event)
     }
-    waitingJoin = Map.empty[Long, String]
+    waitingJoin = Map.empty[String, String]
   }
 
   implicit val scoreOrdering = new Ordering[Score] {
@@ -136,7 +136,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
   override def checkPlayer2PlayerCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
-        var killer = 0l
+        var killer = ""
         val score=player.cells.map(_.mass).sum
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
@@ -182,11 +182,11 @@ class GridOnServer(override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map {
       case Right(s) => (s.id, s)
-      case Left(_) => (-2l, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+      case Left(_) => (-2l, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == -2l).toMap
     newPlayerMap.foreach {
       case Left(killId) =>
-        val a = playerMap.getOrElse(killId, Player(0, "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         playerMap += (killId -> a.copy(kill = a.kill + 1))
       case Right(_) =>
     }
@@ -517,7 +517,7 @@ class GridOnServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[Long,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]]) ={
     subscriber=subscribersMap
   }
 

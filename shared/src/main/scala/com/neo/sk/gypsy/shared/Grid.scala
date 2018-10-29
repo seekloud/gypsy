@@ -90,9 +90,9 @@ trait Grid {
 
   var deadPlayerMap=Map.empty[Long,Player]
 
-//  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
+  //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
-//用户离开，从列表中去掉
+  //用户离开，从列表中去掉
   def removePlayer(id: String): Option[Player] = {
     val r = playerMap.get(id)
     if (r.isDefined) {
@@ -101,9 +101,8 @@ trait Grid {
     r
   }
 
-
   //这里用不到id！！！
-//键盘事件后，按键动作加入action列表
+  //键盘事件后，按键动作加入action列表
   def addActionWithFrame(id: String, keyCode: KeyCode) = {
     val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)

@@ -26,7 +26,7 @@ object UserManager {
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
 
-  final case class GetReplaySocketFlow(playerName: String,playerId: Long, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -39,7 +39,6 @@ object UserManager {
         }
     }
   }
-
 
   private def idle()(
                   implicit timer: TimerScheduler[Command]
@@ -66,11 +65,11 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgFront] = {
+    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgServer] = {
       import io.circe.generic.auto._
       import io.circe.parser._
       try {
-        val wsMsg = decode[GypsyGameEvent.WsMsgFront](s).right.get
+        val wsMsg = decode[GypsyGameEvent.WsMsgServer](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -83,7 +82,7 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[GypsyGameEvent.WsMsgFront](buffer) match {
+          bytesDecode[GypsyGameEvent.WsMsgServer](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -116,7 +115,7 @@ object UserManager {
   }
 
 
-  private def getUserActor(ctx: ActorContext[Command], id: Long):ActorRef[UserActor.Command] = {
+  private def getUserActor(ctx: ActorContext[Command], id: String):ActorRef[UserActor.Command] = {
     val childName = s"UserActor-${id}"
     ctx.child(childName).getOrElse{
       val actor = ctx.spawn(UserActor.create(id),childName)
