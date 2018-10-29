@@ -6,6 +6,7 @@ import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey}
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl
 import org.seekloud.byteobject._
 import org.seekloud.essf.io.FrameOutputStream
 import org.slf4j.LoggerFactory
@@ -37,7 +38,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[GypsyGameEvent.WsMsgServer],Option[GypsyGameEvent.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[ptcl.WsMsgServer],Option[GypsyGameEvent.GameSnapshot])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
