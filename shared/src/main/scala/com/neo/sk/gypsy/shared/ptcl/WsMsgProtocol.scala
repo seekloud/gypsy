@@ -11,6 +11,13 @@ object WsMsgProtocol {
   /**
     * WsMsgServer、WsMsgFront、WsMsgSource
     * */
+  sealed trait WsMsgServer
+
+  trait WsMsgSource
+  case object CompleteMsgServer extends WsMsgSource
+  case class FailMsgServer(ex: Exception) extends WsMsgSource
+
+  sealed trait WsMsgFront extends WsMsgSource
 
   trait GameAction{
     val serialNum:Int //类似每一帧的动作顺序
@@ -62,7 +69,7 @@ object WsMsgProtocol {
 
   case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
-  case class MatchRoomError() extends WsMsgFront
+  case object MatchRoomError extends WsMsgFront
 
   case class UserMerge(id:String,player: Player)extends WsMsgFront
 
