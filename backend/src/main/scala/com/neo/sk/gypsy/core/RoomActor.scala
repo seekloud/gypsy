@@ -12,7 +12,7 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.models.Dao.UserDao
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, GypsyGameConfigImpl, GypsyGameSnapshot, UserJoinRoom}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol, WsSourceProtocol}
