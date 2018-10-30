@@ -1,7 +1,5 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import com.neo.sk.gypsy.shared.ptcl.WsSourceProtocol.WsMsgSource
-
 /**
   * User: sky
   * Date: 2018/9/5
@@ -10,22 +8,30 @@ import com.neo.sk.gypsy.shared.ptcl.WsSourceProtocol.WsMsgSource
   */
 object WsMsgProtocol {
 
+  /**
+    * WsMsgServer、WsMsgFront、WsMsgSource
+    * */
   sealed trait WsMsgServer
+
+  trait WsMsgSource
+  case object CompleteMsgServer extends WsMsgSource
+  case class FailMsgServer(ex: Exception) extends WsMsgSource
 
   sealed trait WsMsgFront extends WsMsgSource
 
   trait GameAction{
-    val serialNum:Int
+    val serialNum:Int //类似每一帧的动作顺序
     val frame:Long
   }
 
   /**
-    * 后端解析*/
-  case class MousePosition(id: Long,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
+    * 后端解析
+    * */
+  case class MousePosition(id: String,clientX:Double,clientY:Double,override val frame:Long,override val serialNum:Int) extends GameAction with WsMsgFront with WsMsgServer
 
-  case class KeyCode(id: Long,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgServer with WsMsgFront
+  case class KeyCode(id: String,keyCode: Int,override val frame:Long,override val serialNum:Int)extends GameAction with WsMsgFront with WsMsgServer
 
-  case class WatchChange(id:Long, watchId: Long) extends WsMsgServer
+  case class WatchChange(id:String, watchId: String) extends WsMsgServer
 
   case object UserLeft extends WsMsgServer
 
@@ -34,7 +40,8 @@ object WsMsgProtocol {
   case class Ping(timestamp: Long) extends WsMsgServer
 
   /**
-    * 前端解析*/
+    * 前端解析
+    * */
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
@@ -42,7 +49,7 @@ object WsMsgProtocol {
                            massDetails: List[Mass],
                            virusDetails: List[Virus],
                            scale:Double, //缩放比例
-                           var newFoodDetails:List[Food]=Nil,
+                           var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends WsMsgFront
 
@@ -50,21 +57,21 @@ object WsMsgProtocol {
                          aLs: List[Food]
                        ) extends WsMsgFront
 
-  case class Id(id: Long) extends WsMsgFront
+  case class Id(id: String) extends WsMsgFront
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
 
-  case class SnakeRestart(id:Long) extends WsMsgFront
+  case class SnakeRestart(id:String) extends WsMsgFront
 
-  case class UserDeadMessage(id:Long,killerId:Long,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
-  case class KillMessage(killerId:Long,deadPlayer:Player) extends WsMsgFront
+  case class KillMessage(killerId:String,deadPlayer:Player) extends WsMsgFront
 
-  case class GameOverMessage(id:Long,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
 
   case object MatchRoomError extends WsMsgFront
 
-  case class UserMerge(id:Long,player: Player)extends WsMsgFront
+  case class UserMerge(id:String,player: Player)extends WsMsgFront
 
   case class Pong(timestamp: Long)extends WsMsgFront
 
@@ -75,4 +82,12 @@ object WsMsgProtocol {
   val delayFrame = 1 //延时帧数，抵消网络延时
 
   val maxDelayFrame = 3
+
+  /**
+    * Websocket client
+    * */
+  sealed trait WsSendMsg
+  case object WsSendComplete extends WsSendMsg
+  case class WsSendFailed(ex:Throwable) extends WsSendMsg
+  sealed trait UserAction extends WsSendMsg
 }
