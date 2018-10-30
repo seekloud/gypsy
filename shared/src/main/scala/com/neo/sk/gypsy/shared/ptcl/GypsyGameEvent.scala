@@ -5,8 +5,6 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 
 object GypsyGameEvent {
 
-  sealed trait WsMsgFront
-  sealed trait WsMsgServer
 
   sealed trait GameEvent {
     val frame:Long
@@ -30,8 +28,11 @@ object GypsyGameEvent {
 
   final case class GenerateApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class RemoveApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgServer
-  final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
-  final case class RemoveVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+//  final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  // TODO mass改变是否要算进生成病毒
+  final case class GenerateVirus(virus: Map[Long,Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+//  final case class RemoveVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
+  final case class RemoveVirus(virus: Map[Long,Virus],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class GenerateMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class RemoveMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgServer
 
@@ -67,7 +68,8 @@ object GypsyGameEvent {
     playerDetails: List[Player],
     foodDetails: List[Food],
     massDetails: List[Mass],
-    virusDetails: List[Virus],
+//    virusDetails: List[Virus],
+    virusDetails: Map[Long,Virus]
   )
 
   final case class GameInformation(
