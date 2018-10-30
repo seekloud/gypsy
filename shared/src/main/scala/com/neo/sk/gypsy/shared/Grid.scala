@@ -42,7 +42,7 @@ trait Grid {
   //病毒列表
   var virus = List[Virus]()
   //病毒map (ID->Virus)
-  var virusMap = Map[Long,Virus]
+  var virusMap = Map.empty[Long,Virus]
   //玩家列表
   var playerMap = Map.empty[Long,Player]
   //喷出小球列表
@@ -122,8 +122,8 @@ trait Grid {
 
 
   def update() = {
-    updatePlayer()
     updateSpots()
+    updatePlayer()
     actionMap -= frameCount
     mouseActionMap -= frameCount
 
@@ -159,6 +159,7 @@ trait Grid {
     }else{
       playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
     }
+//    碰撞检测
     checkCrash(keyAct,mouseAct)
     val event = PlayerInfoChange(playerMap,frameCount)
     AddGameEvent(event)
@@ -176,6 +177,51 @@ trait Grid {
     checkPlayerSplit(keyAct,mouseAct)
   }
 
+
+  def updateVirus() :Unit ={
+    val NewVirus = virusMap.map{vi=>
+      val v =vi._2
+      val (nx,ny)= normalization(v.targetX,v.targetY)
+      var newX = v.x
+      var newY = v.y
+      var newSpeed = v.speed
+      //      var newMass = v.mass
+//      var newRadius = v.radius
+//      var newSpeed = v.speed
+//      var newTargetX = v.targetX
+//      var newTargetY = v.targetY
+      if(v.speed!=0){
+        newX = v.x + (nx*v.speed).toInt
+        newY = v.y + (ny*v.speed).toInt
+        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0 else v.speed-virusSpeedDecayRate
+        val newPoint =ExamBoundary(newX,newY)
+        newX = newPoint._1
+        newY = newPoint._2
+      }
+      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed)
+    }
+    virusMap ++= NewVirus
+  }
+
+//边界超越校验
+  def ExamBoundary(newX:Int,newY:Int)={
+    val x = if(newX>boundary.x){
+      boundary.x
+    } else if(newX<0){
+      0
+    }else{
+      newX
+    }
+    val y = if(newY>boundary.y){
+      boundary.y
+    } else if(newY<0){
+      0
+    }else{
+      newY
+    }
+
+    (x,y)
+  }
 
   //食物更新
   private[this] def updateSpots() = {
@@ -203,8 +249,13 @@ trait Grid {
 
     mass.copy(x = newX, y = newY, speed = newSpeed)
   }
+
+//病毒更新
+  updateVirus()
+
   feedApple(foodPool + playerMap.size * 3 - food.size) //增添食物
-  addVirus(virusNum - virus.size) //增添病毒
+//  addVirus(virusNum - virus.size) //增添病毒
+  addVirus(virusNum - virusMap.size) //增添病毒
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[Long, MousePosition]) = {
@@ -347,7 +398,7 @@ trait Grid {
   def checkPlayerShotMass(actMap: Map[Long, KeyCode], mouseActMap: Map[Long, MousePosition]): Unit = {
     //TODO 这里写下有哪些是分裂的
 
-    val newPlayerMap = playerMap.values.map {
+    var newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
         val shot = actMap.get(player.id) match {
@@ -387,7 +438,7 @@ trait Grid {
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
-    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+    playerMap ++= newPlayerMap.map(s => (s.id, s)).toMap
 //    val event = PlayerInfoChange(playerMap,frameCount)
 //    AddGameEvent(event)
   }
@@ -502,7 +553,8 @@ trait Grid {
       playerDetails,
 //      foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+//      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       scale
     )
   }

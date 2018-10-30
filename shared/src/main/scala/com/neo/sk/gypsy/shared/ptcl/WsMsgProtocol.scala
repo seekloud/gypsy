@@ -10,9 +10,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsSourceProtocol.WsMsgSource
   */
 object WsMsgProtocol {
 
-  sealed trait WsMsgServer
 
-  sealed trait WsMsgFront extends WsMsgSource
 
   trait GameAction{
     val serialNum:Int
@@ -40,7 +38,8 @@ object WsMsgProtocol {
                            playerDetails: List[Player],
 //                           foodDetails: List[Food],
                            massDetails: List[Mass],
-                           virusDetails: List[Virus],
+//                           virusDetails: List[Virus],
+                           virusDetails: Map[Long,Virus],
                            scale:Double, //缩放比例
                            var newFoodDetails:List[Food]=Nil,
                            var eatenFoodDetails:List[Food]=Nil

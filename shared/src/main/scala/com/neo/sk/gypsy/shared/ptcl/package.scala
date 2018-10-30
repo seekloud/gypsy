@@ -10,6 +10,27 @@ import scala.math._
 package object ptcl {
 
 
+  /**
+    * WsMsgServer、WsMsgFront、WsMsgSource
+    * */
+
+
+  trait WsMsgSource
+  case class CompleteMsgServer() extends WsMsgSource
+  case class FailMsgServer(ex: Exception) extends WsMsgSource
+
+  trait WsMsgFront extends WsMsgSource
+
+  trait WsMsgServer extends WsMsgSource
+
+  /**
+    * Websocket client
+    * */
+  sealed trait WsSendMsg
+  case object WsSendComplete extends WsSendMsg
+  case class WsSendFailed(ex:Throwable) extends WsSendMsg
+  sealed trait UserAction extends WsSendMsg
+
   trait CommonRsp {
     val errCode: Int
     val msg: String
@@ -88,6 +109,7 @@ package object ptcl {
                  speed:Double
                  )
   case class Virus(
+                  vid:Long,
                   x:Int,
                   y:Int,
                   mass:Double,  //质量

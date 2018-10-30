@@ -41,6 +41,7 @@ object GameConfig {
   val decreaseRate = 0.995
   //小球速度衰减率
   val massSpeedDecayRate = 25
-
+//  病毒衰减速度
+  val virusSpeedDecayRate = 0.3
 
 }
