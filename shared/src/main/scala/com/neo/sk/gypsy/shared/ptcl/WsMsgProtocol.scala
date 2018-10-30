@@ -32,6 +32,8 @@ object WsMsgProtocol {
   /**
     * 前端解析
     * */
+  case object ErrorWsMsgFront extends WsMsgFront
+
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
