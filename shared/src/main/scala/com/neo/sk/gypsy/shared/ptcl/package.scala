@@ -16,7 +16,7 @@ package object ptcl {
 
   trait WsMsgSource
   case class CompleteMsgServer() extends WsMsgSource
-  case class FailMsgServer(ex: Exception) extends WsMsgSource
+  case class FailMsgServer(ex: Throwable) extends WsMsgSource
 
   trait WsMsgFront extends WsMsgSource
 

@@ -25,17 +25,20 @@ import com.neo.sk.gypsy.shared.ptcl
 object WsClient {
 
   private val log = LoggerFactory.getLogger("WSClient")
+  private val logPrefix = "WSClient"
 
 
   sealed trait WsCommand
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
   case object Stop extends WsCommand
 
-  def create(
-            ):Behavior[WsCommand] = {
+  def create(gameClient: ActorRef[ptcl.WsMsgSource],
+             _system: ActorSystem,
+             _materializer: Materializer,
+             _executor: ExecutionContextExecutor):Behavior[WsCommand] = {
     Behaviors.setup[WsCommand]{ ctx=>
       Behaviors.withTimers{ timer =>
-        working()(timer)
+        working(gameClient)(timer,_system,_materializer,_executor)
       }
 
     }
@@ -56,19 +59,26 @@ object WsClient {
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
           val source = getSource(ctx.self)
           val sink = getSink(gameClient)
-          val ((stream,response, _)) =
+          val ((stream,response), _) =
             source
               .viaMat(webSocketFlow)(Keep.both)
               .toMat(sink)(Keep.both)
               .run()
 
           val connected = response.flatMap { upgrade =>
-
-
+            if(upgrade.response.status == StatusCodes.SwitchingProtocols){
+              Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
+            } else {
+              throw new RuntimeException(s"WSClient connection failed: ${upgrade.response.status}")
+            }
           }
           //链接建立时
           connected.onComplete(i=> log.info(i.toString))
           Behaviors.same
+
+        case Stop =>
+          log.info("WsClient now stop")
+          Behavior.stopped
       }
     }
   }
@@ -96,25 +106,22 @@ object WsClient {
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
         log.debug(s"msg from websocket: $msg")
-        //todo 捋清protocol
-        TextMsg(msg)
+        ErrorWsMsgFront
 
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[](buffer) match{
+          bytesDecode[ptcl.WsMsgFront](buffer) match{
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
-              //todo
-              TextMsg("decode error")
+              ErrorWsMsgFront
           }
         msg
-    }.to(ActorSink.actorRef[ptcl.WsMsgSource](actor,ptcl.CompleteMsgServer(),ptcl.FailMsgServer))
+    }.to(ActorSink.actorRef[ptcl.WsMsgSource](actor,ptcl.CompleteMsgServer(), ptcl.FailMsgServer))
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
-    //todo ???
     val host = "localhost:30372"
     s"$wsProtocol://$host/gypsy/api/playGameClient?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }

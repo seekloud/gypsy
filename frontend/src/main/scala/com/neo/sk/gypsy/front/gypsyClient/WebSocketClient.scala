@@ -83,14 +83,14 @@ case class WebSocketClient(
                 messageHandler(replayEventDecode(buf))
               }else{
                 val middleDataInJs = new MiddleBufferInJs(buf)
-                val data = bytesDecode[WsMsgFront](middleDataInJs).right.get
+                val data = bytesDecode[ptcl.WsMsgFront](middleDataInJs).right.get
                 messageHandler(data,maxScore)
               }
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
             import io.circe.parser._
-            val data = decode[WsMsgFront](jsonStringMsg).right.get
+            val data = decode[ptcl.WsMsgFront](jsonStringMsg).right.get
             messageHandler(data,maxScore)
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }

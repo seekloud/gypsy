@@ -396,7 +396,7 @@ object RoomActor {
     val out =
       ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case CompleteMsgServer ⇒
+          case CompleteMsgServer() ⇒
         },
         failureMatcher = {
           case FailMsgServer(e)  ⇒ e
