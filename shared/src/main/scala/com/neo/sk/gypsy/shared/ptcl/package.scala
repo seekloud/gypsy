@@ -20,6 +20,18 @@ package object ptcl {
 
   trait WsMsgFront extends WsMsgSource
 
+
+
+  /**
+    * Websocket client
+    * */
+  sealed trait WsSendMsg
+  case object WsSendComplete extends WsSendMsg
+  case class WsSendFailed(ex:Throwable) extends WsSendMsg
+  sealed trait UserAction extends WsSendMsg
+
+
+
   trait CommonRsp {
     val errCode: Int
     val msg: String
