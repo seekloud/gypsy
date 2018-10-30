@@ -12,7 +12,7 @@ object UserProtocol {
                                password:String,
                              )
   case class UserLoginRsqJson(
-                         id:Long,
+                         id:String,
                          name:String,
                          headImg:String,
                          score: Int
@@ -25,7 +25,7 @@ object UserProtocol {
                          )
 
   case class UserMaxScore(
-                         id:Long,
+                         id:String,
                          score:Int
                          )
   case class CheckNameRsp(
@@ -33,10 +33,15 @@ object UserProtocol {
                            errCode:Int=0,
                            msg:String="ok"
                          )
-  case class JoinGame(
-                     playerId:Long,
+  case class JoinGameWithRoomId(
+                     playerId:String,
                      playerName:String,
                      roomId:Long,
+                     accessCode:String
+                     )
+  case class JoinGame(
+                     playerId: String,
+                     playerName:String,
                      accessCode:String
                      )
 

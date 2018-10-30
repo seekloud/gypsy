@@ -20,10 +20,10 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 /**
-  * User: sky
-  * Date: 2018/10/11
+  * User: yangxinyuan
+  * Date: 2018/10/20
   * Time: 14:39
-  * 本部分实现tank支持ESSF存储文件IO接口
+  * 本部分实现gypsy支持ESSF存储文件IO接口
   */
 object ESSFSupport {
   import org.seekloud.byteobject.ByteObject._

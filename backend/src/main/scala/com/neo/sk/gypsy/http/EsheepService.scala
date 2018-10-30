@@ -21,15 +21,15 @@ import com.neo.sk.gypsy.utils.SecureUtil
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.Boot.{esheepClient, executor, roomManager, timeout}
+import com.neo.sk.gypsy.Boot.{esheepClient, executor, roomManager, timeout, userManager}
 import akka.actor.typed.scaladsl.AskPattern._
-import com.neo.sk.gypsy.core.{EsheepSyncClient, RoomManager}
+import com.neo.sk.gypsy.core.{EsheepSyncClient, RoomManager,UserManager}
 import com.neo.sk.gypsy.http.ServiceUtils.CommonRsp
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-trait EsheepService  extends ServiceUtils with SessionBase{
+trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   import io.circe.generic.auto._
   import io.circe.syntax._
   import io.circe._
@@ -51,8 +51,8 @@ trait EsheepService  extends ServiceUtils with SessionBase{
 
   private def playGame = (path("playGame") & get) {
     parameter(
-      'userId.as[Long],
-      'userName.as[String],
+      'playerId.as[Long],
+      'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
     ){ case ( userId, nickName, accessCode, roomIdOpt) =>
@@ -111,8 +111,23 @@ trait EsheepService  extends ServiceUtils with SessionBase{
     }
   }
 
+  private def watchRecord = (path("watchRecord") & get){
+    parameter(
+      'recordId.as[Long],
+      'playerId.as[Long],
+      'frame.as[Int],
+      'accessCode.as[String]
+    ){ (recordId, playerId, frame, accessCode) =>
+      authPlatUser(accessCode){player =>
+        //TODO
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,player.playerId,recordId,frame,_))
+        dealFutureResult(
+          flowFuture.map(t => handleWebSocketMessages(t))
+        )
+      }
+    }
+  }
+
   val esheepRoutes: Route =
-    playGame~watchGame
-
-
+    playGame ~ watchGame ~ watchRecord
 }

@@ -9,29 +9,16 @@ import scala.math._
   */
 package object ptcl {
 
-/*
-
   /**
     * WsMsgServer、WsMsgFront、WsMsgSource
     * */
-
+  trait WsMsgServer
 
   trait WsMsgSource
   case class CompleteMsgServer() extends WsMsgSource
   case class FailMsgServer(ex: Exception) extends WsMsgSource
 
   trait WsMsgFront extends WsMsgSource
-
-  trait WsMsgServer extends WsMsgSource
-
-  /**
-    * Websocket client
-    * */
-  sealed trait WsSendMsg
-  case object WsSendComplete extends WsSendMsg
-  case class WsSendFailed(ex:Throwable) extends WsSendMsg
-  sealed trait UserAction extends WsSendMsg
-*/
 
   trait CommonRsp {
     val errCode: Int
@@ -51,7 +38,7 @@ package object ptcl {
 
 
 ////排行榜信息
-  case class Score(id: Long, n: String, k: Int, score: Double, t: Option[Long] = None)
+  case class Score(id: String, n: String, k: Int, score: Double, t: Option[Long] = None)
 
 
   case class Food(color:Int, x:Int, y:Int)
@@ -71,7 +58,7 @@ package object ptcl {
 
 
   case class Player(
-                   id:Long,
+                   id:String,
                    name:String,
                    color:String,
                    x:Int,

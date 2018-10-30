@@ -14,9 +14,9 @@ import io.circe.syntax._
 import scala.xml.Elem
 /**
   * @author zhaoyin
-  * @date 2018/10/24  下午2:02
+  * @date 2018/10/26  下午4:48
   */
-class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:String) extends Page{
+class WatchRecord(recordId:Long,playerId:String,frame:Int,accessCode:String) extends Page{
 
   private val gameView = <canvas id ="GameView" tabindex="1"></canvas>
   private val middleView = <canvas id="MiddleView" tabindex="2" ></canvas>
@@ -24,13 +24,12 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
   private val clockView = <canvas id="ClockView" tabindex="4"></canvas>
   private val offScreen = <canvas id="offScreen" style="width:3600px;height:1800px; display:none" tabindex="4"></canvas>
 
-
   def init()={
-    val gameHolder = new GameHolder
+    val gameHolder = new GameHolder(true)
     gameHolder.init()
     //直接建立websocket连接
     //TODO maxScore
-    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0,0)
+    gameHolder.watchRecord(recordId,playerId, frame, accessCode)
   }
 
   override def render: Elem = {
@@ -43,5 +42,4 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
       {offScreen}
     </div>
   }
-
 }

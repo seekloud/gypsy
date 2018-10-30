@@ -39,20 +39,41 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
   val routes: server.Route =
     ignoreTrailingSlash {
       pathPrefix("gypsy") {
-        (path("game") & get) {
-          pathEndOrSingleSlash {
+        pathEndOrSingleSlash {
           optionalGypsySession{
             case Some(_)=>
-            getFromResource("html/gypsy.html")
+              getFromResource("html/gypsy.html")
             case None=>
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,0,"",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
                   ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
               }
-           }
           }
-        }~userRoutes~resourceRoutes~esheepRoutes~apiRoutes
+        }~ path("playGame") {
+          parameter(
+            'playerId.as[String],
+            'playerName.as[String],
+            'accessCode.as[String],
+            'roomId.as[Long].?
+          ){
+            case (playerId, playerName, accessCode,roomIdOpt) =>
+              redirect(s"/gypsy#/playGame/${playerId}/${playerName}/${roomIdOpt.getOrElse(0l)}/${accessCode}",
+                StatusCodes.SeeOther
+              )
+          }
+        } ~ path("watchRecord"){
+          parameter(
+            'recordId.as[Long],
+            'playerId.as[String],
+            'frame.as[Int],
+            'accessCode.as[String]
+          ){
+            case (recordId, playerId,frame,accessCode) =>
+              redirect(s"/gyspy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
+                StatusCodes.SeeOther)
+          }
+        } ~ resourceRoutes ~ userRoutes ~ esheepRoutes ~ apiRoutes
 
       }
     }
@@ -85,6 +106,5 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
       Flow.fromSinkAndSource(in, out)
     }
   }
-
 
 }

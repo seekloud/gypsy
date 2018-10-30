@@ -14,6 +14,7 @@ import scala.util.{Failure, Success}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+
 object EsheepSyncClient {
 
   private val log = LoggerFactory.getLogger(this.getClass)
