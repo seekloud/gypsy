@@ -137,7 +137,7 @@ trait Grid {
 
   def updatePlayer()={
 
-    def updatePlayerMap(player: Player, mouseActMap: Map[Long, MousePosition],decrease:Boolean)={
+    def updatePlayerMap(player: Player, mouseActMap: Map[String, MousePosition],decrease:Boolean)={
       if(decrease){
         updatePlayerMove(massDecrease(player),mouseActMap)
       }else{
@@ -165,7 +165,7 @@ trait Grid {
   }
 
 //  碰撞检测
-  def checkCrash(keyAct: Map[Long,KeyCode], mouseAct: Map[Long, MousePosition])={
+  def checkCrash(keyAct: Map[String,KeyCode], mouseAct: Map[String, MousePosition])={
     checkPlayerFoodCrash()
     checkPlayerMassCrash()
     checkPlayer2PlayerCrash()

@@ -56,7 +56,7 @@ object GypsyGameEvent {
   final case class ReduceApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
   final case class ReduceVirus(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgServer
 
-  final case class PlayerInfoChange(player: Map[Long,Player],override val frame:Long) extends InfoChange with WsMsgServer
+  final case class PlayerInfoChange(player: Map[String,Player],override val frame:Long) extends InfoChange with WsMsgServer
 
   //  缩放放到
   final case class ShowScale(override val frame:Long,scale:Double) extends EnvironmentEvent with WsMsgServer
