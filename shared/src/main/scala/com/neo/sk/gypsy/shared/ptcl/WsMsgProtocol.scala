@@ -10,7 +10,9 @@ import com.neo.sk.gypsy.shared.ptcl.WsSourceProtocol.WsMsgSource
   */
 object WsMsgProtocol {
 
+  sealed trait WsMsgServer
 
+  sealed trait WsMsgFront extends WsMsgSource
 
   trait GameAction{
     val serialNum:Int

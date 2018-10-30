@@ -9,6 +9,7 @@ import scala.math._
   */
 package object ptcl {
 
+/*
 
   /**
     * WsMsgServer、WsMsgFront、WsMsgSource
@@ -30,6 +31,7 @@ package object ptcl {
   case object WsSendComplete extends WsSendMsg
   case class WsSendFailed(ex:Throwable) extends WsSendMsg
   sealed trait UserAction extends WsSendMsg
+*/
 
   trait CommonRsp {
     val errCode: Int
