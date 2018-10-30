@@ -479,12 +479,12 @@ class GridOnServer(override val boundary: Point) extends Grid {
     virusMap ++= virus1
    if(removeMass.nonEmpty){
      val event = RemoveMass(removeMass,frameCount)
-     dispatch(subscriber,event)
+//     dispatch(subscriber,event)
      AddGameEvent(event)
    }
    if(newVirus.nonEmpty){
      val event = GenerateVirus(newVirus,frameCount)
-     dispatch(subscriber,event)
+//     dispatch(subscriber,event)
      AddGameEvent(event)
    }
 

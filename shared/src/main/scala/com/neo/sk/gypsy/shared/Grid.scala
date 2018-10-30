@@ -423,7 +423,7 @@ trait Grid {
 //              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
               newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
-            massList ::=newMassList
+            massList :::=newMassList
 //            生成mass事件
             val event = GenerateMass(newMassList,frameCount)
             AddGameEvent(event)
@@ -438,7 +438,7 @@ trait Grid {
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
-    playerMap ++= newPlayerMap.map(s => (s.id, s)).toMap
+    playerMap ++= newPlayerMap.map(s => (s.id, s)).toList
 //    val event = PlayerInfoChange(playerMap,frameCount)
 //    AddGameEvent(event)
   }
