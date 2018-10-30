@@ -39,7 +39,7 @@ object RoomManager {
   case object TimeKey
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(20000)
-  case class JoinGame(roomId:Long,sender:String,id:Long,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class JoinGame(roomId:Long,sender:String,id:String,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
   case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
@@ -128,7 +128,7 @@ object RoomManager {
     }
 
 
-  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: Long, watchgame: Boolean): Flow[Message, Message, Any] ={
+  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: String, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
     import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
     import com.neo.sk.gypsy.utils.byteObject.ByteObject._

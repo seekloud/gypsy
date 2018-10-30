@@ -28,7 +28,7 @@ object ApiProtocol {
                        startTime:Long,
                        endTime:Long,
                        userCounts:Int,
-                       userList:Seq[Long]
+                       userList:Seq[String]
                        )
 
   case class RecordsInfo(
