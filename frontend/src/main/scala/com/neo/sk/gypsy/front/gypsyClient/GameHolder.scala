@@ -168,7 +168,7 @@ class GameHolder(replay:Boolean = false) {
     myId = playerId
     val url = ApiRoute.getwrWebSocketUri(recordId,playerId,frame,accessCode)
     //todo maxscore应该是多少？
-    webSocketClient.setUp(url,0)
+    webSocketClient.setUp(url)
     start()
   }
 
@@ -178,12 +178,11 @@ class GameHolder(replay:Boolean = false) {
                roomId: Long,
                accessCode:String,
                userType: Int = 0,
-               maxScore: Int = 0
               ): Unit = {
     usertype = userType
     val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
-    webSocketClient.setUp(url,maxScore)
+    webSocketClient.setUp(url)
     //gameloop + gamerender
     start()
     //用户行为：使用键盘or鼠标(观战模式不响应键盘鼠标事件）
@@ -309,9 +308,9 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:(ptcl.WsMsgServer, Int) => Unit = if (replay) replayMessageHandler else wsMessageHandler
+  private def getWsMessageHandler:(ptcl.WsMsgFront) => Unit = if (replay) replayMessageHandler else wsMessageHandler
 
-  private def wsMessageHandler(data:ptcl.WsMsgServer,maxScore:Int):Unit = {
+  private def wsMessageHandler(data:ptcl.WsMsgFront):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
@@ -324,7 +323,7 @@ class GameHolder(replay:Boolean = false) {
           grid.addActionWithFrame(m.id,m)
         }
       case m:WsMsgProtocol.MousePosition =>
-//        grid.addActionWithFrameFromServer(m.id,m)
+       //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id || usertype == -1){
           grid.addMouseActionWithFrame(m.id,m)
         }
@@ -360,12 +359,12 @@ class GameHolder(replay:Boolean = false) {
 
       case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime,maxScore)
+          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
           grid.removePlayer(id)
         }
 
       case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.gameOverModel(this,id,killNum,score,lifeTime,maxScore)
+        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
 
       case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
@@ -412,39 +411,39 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-  private def replayMessageHandler(data:ptcl.WsMsgServer,maxScore:Int = 0):Unit = {
+  private def replayMessageHandler(data:ptcl.WsMsgFront):Unit = {
     data match {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))
 
-      case e:GypsyGameEvent.SyncGameAllState =>
-        //todo 拿到全量数据改怎么办
-        val data = e.gState
-        syncGridData = GridDataSync(data.frameCount,
-          data.playerDetails,data.foodDetails,
-          data.massDetails,data.virusDetails)
-        justSynced = true
+//      case e:GypsyGameEvent.SyncGameAllState =>
+//        //todo 拿到全量数据改怎么办
+//        val data = e.gState
+//        syncGridData = GridDataSync(data.frameCount,
+//          data.playerDetails,data.foodDetails,
+//          data.massDetails,data.virusDetails)
+//        justSynced = true
+//
+//      case e:GypsyGameEvent.UserActionEvent =>
+//        e match {
+//          case g: GypsyGameEvent.MouseMove =>
+//            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
+//          case g: GypsyGameEvent.KeyPress =>
+//            //todo
+//            grid.addActionWithFrame(g.userId,)
+//        }
 
-      case e:GypsyGameEvent.UserActionEvent =>
-        e match {
-          case g: GypsyGameEvent.MouseMove =>
-            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
-          case g: GypsyGameEvent.KeyPress =>
-            //todo
-            grid.addActionWithFrame(g.userId,)
-        }
-
-      case e:GypsyGameEvent.GameEvent =>
-        e match {
-          case g: GypsyGameEvent.UserJoinRoom =>
-            grid.playerMap += g.playState.id -> g.playState
-          case g: GypsyGameEvent.UserLeftRoom =>
-            grid.removePlayer(g.userId)
-          case g: GypsyGameEvent.GenerateApples =>
-            grid.food ++= g.apples.map(a => Point(a.x, a.y) -> a.color)
-          case g: GypsyGameEvent.GenerateVirus =>
-            grid.virus ++= g.virus
-        }
+//      case e:GypsyGameEvent.GameEvent =>
+//        e match {
+//          case g: GypsyGameEvent.UserJoinRoom =>
+//            grid.playerMap += g.playState.id -> g.playState
+//          case g: GypsyGameEvent.UserLeftRoom =>
+//            grid.removePlayer(g.userId)
+//          case g: GypsyGameEvent.GenerateApples =>
+//            grid.food ++= g.apples.map(a => Point(a.x, a.y) -> a.color)
+//          case g: GypsyGameEvent.GenerateVirus =>
+//            grid.virus ++= g.virus
+//        }
 
       case e:GypsyGameEvent.ReplayFinish=>
         //游戏回放结束

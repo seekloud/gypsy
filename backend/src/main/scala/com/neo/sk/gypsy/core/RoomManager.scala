@@ -19,8 +19,6 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import io.circe.{Decoder, Encoder}
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
@@ -34,6 +32,8 @@ import scala.collection.mutable
   * Time: 11:09
   */
 object RoomManager {
+  import org.seekloud.byteobject.MiddleBufferInJvm
+
 
   private val log=LoggerFactory.getLogger(this.getClass)
   sealed trait Command
@@ -131,8 +131,7 @@ object RoomManager {
 
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: String, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
-    import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-    import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+    import org.seekloud.byteobject.ByteObject._
     import io.circe.generic.auto._
     import io.circe.parser._
 

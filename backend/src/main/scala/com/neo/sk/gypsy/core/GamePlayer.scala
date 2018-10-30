@@ -175,7 +175,7 @@ object GamePlayer {
   }
 
   import org.seekloud.byteobject.ByteObject._
-  def dispatchTo(subscribe: ActorRef[ptcl.WsMsgSource],msg:ptcl.WsMsgServer)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[ptcl.WsMsgSource],msg:ptcl.WsMsgFront)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 

@@ -38,7 +38,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[ptcl.WsMsgServer],Option[GypsyGameEvent.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[ptcl.WsMsgFront],Option[GypsyGameEvent.GameSnapshot])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
@@ -142,7 +142,6 @@ object GameRecorder {
           if(gameRecordBuffer.size > maxRecordNum){
             val rs = gameRecordBuffer.reverse
             rs.headOption.foreach{ e =>
-
               recorder.writeFrame(e.event._1.fillMiddleBuffer(middleBuffer).result(),e.event._2.map(_.fillMiddleBuffer(middleBuffer).result()))
               rs.tail.foreach{e =>
                 if(e.event._1.nonEmpty){
@@ -200,7 +199,7 @@ object GameRecorder {
         val list = ListBuffer[rUserRecordMap]()
         userAllMap.foreach{
           userRecord =>
-            list.append(rUserRecordMap(userRecord._1, recordId, roomId))
+            list.append(rUserRecordMap(recordId, userRecord._1, roomId))
         }
         Await.result(RecordDao.insertUserRecordList(list.toList), 2.minute)
         Behaviors.stopped
@@ -245,7 +244,7 @@ object GameRecorder {
               //TODO user all ？
               userAllMap.foreach{
                 userRecord =>
-                  list.append(rUserRecordMap(userRecord._1, recordId, roomId))
+                  list.append(rUserRecordMap(recordId,userRecord._1,roomId))
               }
               RecordDao.insertUserRecordList(list.toList).onComplete{
                 case Success(_) =>
