@@ -12,9 +12,9 @@ import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervisio
 import akka.util.{ByteString, Timeout}
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
-import com.neo.sk.gypsy.models.Dao.UserDao
+//import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode, WsMsgServer}
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
@@ -51,7 +51,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def playGame = (path("playGame") & get) {
     parameter(
-      'playerId.as[Long],
+      'playerId.as[String],
       'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
@@ -82,7 +82,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   }
   private def watchGame = (path("watchGame") & get) {
     parameter(
-      'userId.as[Long],
+      'userId.as[String],
       'accessCode.as[String],
       'roomId.as[Long]
     ){ case ( userId,  accessCode, roomId) =>
@@ -114,7 +114,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   private def watchRecord = (path("watchRecord") & get){
     parameter(
       'recordId.as[Long],
-      'playerId.as[Long],
+      'playerId.as[String],
       'frame.as[Int],
       'accessCode.as[String]
     ){ (recordId, playerId, frame, accessCode) =>

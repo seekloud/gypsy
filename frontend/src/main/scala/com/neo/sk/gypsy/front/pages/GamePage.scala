@@ -30,7 +30,7 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
     gameHolder.init()
     //直接建立websocket连接
     //TODO maxScore
-    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0,0)
+    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0)
   }
 
   override def render: Elem = {

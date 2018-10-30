@@ -8,8 +8,6 @@ import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.ActorAttributes
 import akka.util.ByteString
 import com.neo.sk.gypsy.shared.ptcl
-import com.neo.sk.gypsy.utils.byteObject.ByteObject.bytesDecode
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import akka.stream.{ActorAttributes, Supervision}
@@ -19,6 +17,9 @@ import akka.stream.{ActorAttributes, Supervision}
   * @date 2018/10/25  下午9:10
   */
 object UserManager {
+
+  import org.seekloud.byteobject.MiddleBufferInJvm
+
 
   private val log = LoggerFactory.getLogger(this.getClass)
 

@@ -81,9 +81,9 @@ class GameServer(override val boundary: Point) extends Grid {
   implicit val scoreOrdering = new Ordering[Score] {
     override def compare(x: Score, y: Score): Int = {
       var r = (y.score - x.score).toInt
-      if (r == 0) {
-        r = (x.id - y.id).toInt
-      }
+//      if (r == 0) {
+//        r = y.id
+//      }
       r
     }
   }
@@ -199,8 +199,8 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map {
       case Right(s) => (s.id, s)
-      case Left(_) => (-2l, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
-    }.filterNot(_._1 == -2l).toMap
+      case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+    }.filterNot(_._1 == "").toMap
     newPlayerMap.foreach {
       case Left(killId) =>
         val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))

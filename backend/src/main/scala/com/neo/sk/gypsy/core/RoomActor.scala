@@ -11,7 +11,7 @@ import akka.testkit.TestActor.Watch
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
-import com.neo.sk.gypsy.models.Dao.UserDao
+//import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -112,19 +112,19 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case CheckName(name,replyTo)=>
-          log.info(s"$name check name")
-          if(userMap.exists(_._2==name)){
-           replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-          }else{
-            UserDao.getUserByName(name).map{
-              case Some(_)=>
-                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-              case None=>
-                replyTo ! CheckNameRsp(roomId)
-            }
-          }
-          Behavior.same
+//        case CheckName(name,replyTo)=>
+//          log.info(s"$name check name")
+//          if(userMap.exists(_._2==name)){
+//           replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
+//          }else{
+//            UserDao.getUserByName(name).map{
+//              case Some(_)=>
+//                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
+//              case None=>
+//                replyTo ! CheckNameRsp(roomId)
+//            }
+//          }
+//          Behavior.same
 
         case Join(id, name, subscriber,watchgame) =>
           log.info(s"got $msg")
@@ -296,19 +296,19 @@ object RoomActor {
             grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case CheckName(name,replyTo)=>
-          log.info(s"$name check name")
-          if(userMap.exists(_._2 == name)){
-            replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-          }else{
-            UserDao.getUserByName(name).map{
-              case Some(_)=>
-                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-              case None=>
-                replyTo ! CheckNameRsp(roomId)
-            }
-          }
-          Behavior.same
+//        case CheckName(name,replyTo)=>
+//          log.info(s"$name check name")
+//          if(userMap.exists(_._2 == name)){
+//            replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
+//          }else{
+//            UserDao.getUserByName(name).map{
+//              case Some(_)=>
+//                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
+//              case None=>
+//                replyTo ! CheckNameRsp(roomId)
+//            }
+//          }
+//          Behavior.same
 
         case Join(id, name, subscriber,watchgame) =>
           log.info(s"got $msg")
@@ -399,7 +399,7 @@ object RoomActor {
     val out =
       ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case CompleteMsgServer ⇒
+          case CompleteMsgServer() ⇒
         },
         failureMatcher = {
           case FailMsgServer(e)  ⇒ e
