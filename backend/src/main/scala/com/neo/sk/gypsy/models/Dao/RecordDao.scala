@@ -81,11 +81,9 @@ object RecordDao {
       db.run(action2.transactionally)
     }
   }
-}
-
 
   def getRecordById(id:Long)={
     db.run(tGameRecord.filter(_.recordId === id).result.headOption)
   }
-
 }
+
