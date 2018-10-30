@@ -269,7 +269,7 @@ case class DrawGame(
     }
   }
 
-  def drawKill(myId:Long,grid:GameClient,isKill:Boolean,killList:List[(Int,Long,Player)])={
+  def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,Player)])={
     if(isKill){
       val showTime = killList.head._1
       val killerId = killList.head._2
@@ -277,14 +277,14 @@ case class DrawGame(
 //      println("kk"+killerId)
 //      println("dd"+deadPlayer)
 //      println("gg"+grid.playerMap)
-      val killerName = grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
+      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val killImg = if (deadPlayer.kill > 3) shutdown
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
-      else if (grid.playerMap.getOrElse(killerId, Player(0, "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
+      else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
+      else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
+      else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
+      else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
+      else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
       else if (killerId == myId) youkill
       else kill
       if (showTime > 0) {
@@ -311,7 +311,7 @@ case class DrawGame(
     }
   }
 
-  def drawGrid(uid: Long, data: GridDataSync,foodMap:Map[Point, Int],offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -447,7 +447,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:Long,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,size.x,size.y)
     ctx.font = "12px Helvetica"
