@@ -73,11 +73,4 @@ object WsMsgProtocol {
 
   val maxDelayFrame = 3
 
-  /**
-    * Websocket client
-    * */
-  sealed trait WsSendMsg
-  case object WsSendComplete extends WsSendMsg
-  case class WsSendFailed(ex:Throwable) extends WsSendMsg
-  sealed trait UserAction extends WsSendMsg
 }

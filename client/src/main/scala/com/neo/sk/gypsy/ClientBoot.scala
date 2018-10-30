@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import akka.actor.typed.scaladsl.adapter._
 import javafx.application.{Application, Platform}
 import com.neo.sk.gypsy.actor.WsClient
-
+import com.neo.sk.gypsy.actor.GameClient
 import com.neo.sk.gypsy.common.AppSettings._
 
 /**
@@ -20,7 +20,7 @@ object ClientBoot{
   implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val scheduler: Scheduler = system.scheduler
-  val gameHolderClient = system.spawn(GameHolderClient.create(),"gameHolder")
+  val gameHolderClient = system.spawn(GameClient.create(),"gameHolder")
 
   def addToPlatform(fun: => Unit) = {
     Platform.runLater(() => fun)

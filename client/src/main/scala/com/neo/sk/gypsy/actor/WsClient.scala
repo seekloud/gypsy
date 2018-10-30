@@ -12,12 +12,12 @@ import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.ByteString
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
-
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import org.seekloud.byteobject.{MiddleBufferForTest, MiddleBufferInJvm}
 import org.slf4j.LoggerFactory
+import com.neo.sk.gypsy.shared.ptcl
 /**
   * @author zhaoyin
   * @date 2018/10/28  3:38 PM
@@ -29,8 +29,10 @@ object WsClient {
 
   sealed trait WsCommand
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
+  case object Stop extends WsCommand
 
-  def create():Behavior[WsCommand] = {
+  def create(
+            ):Behavior[WsCommand] = {
     Behaviors.setup[WsCommand]{ ctx=>
       Behaviors.withTimers{ timer =>
         working()(timer)
@@ -41,8 +43,10 @@ object WsClient {
 
 
 
-  private def working()(
+  private def working(gameClient: ActorRef[ptcl.WsMsgSource])(
     implicit timer:TimerScheduler[WsCommand],
+    system: ActorSystem,
+    materializer: Materializer,
     executor: ExecutionContextExecutor
   ):Behavior[WsCommand] = {
     Behaviors.receive[WsCommand]{(ctx,msg)=>
@@ -50,13 +54,13 @@ object WsClient {
         case ConnectGame(id,name,accessCode) =>
           val url = getWebSocketUri(id,name,accessCode)
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
-          val source = getSource
-          val sink = getSink
+          val source = getSource(ctx.self)
+          val sink = getSink(gameClient)
           val ((stream,response, _)) =
             source
-          .viaMat(webSocketFlow)(Keep.both)
-          .toMat(sink)(Keep.both)
-          .run()
+              .viaMat(webSocketFlow)(Keep.both)
+              .toMat(sink)(Keep.both)
+              .run()
 
           val connected = response.flatMap { upgrade =>
 
@@ -69,24 +73,26 @@ object WsClient {
     }
   }
 
-  def getSource = ActorSource.actorRef[WsSendMsg](
+  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsSendMsg](
     completionMatcher = {
-      case WsSendComplete =>
+      case ptcl.WsSendComplete =>
+        log.info("Websocket Complete")
+        wsClient ! Stop
     },
     failureMatcher = {
-      case WsSendFailed(ex)  ⇒ ex
+      case ptcl.WsSendFailed(ex)  ⇒ ex
     },
     bufferSize = 8,
     overflowStrategy = OverflowStrategy.fail
   ).collect{
-    case message: UserAction =>
+    case message: ptcl.UserAction =>
       val sendBuffer = new MiddleBufferInJvm(409600)
       BinaryMessage.Strict(ByteString(
         message.fillMiddleBuffer(sendBuffer).result()
       ))
   }
 
-  def getSink =
+  def getSink(actor: ActorRef[ptcl.WsMsgSource]) =
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
         log.debug(s"msg from websocket: $msg")
@@ -104,7 +110,7 @@ object WsClient {
               TextMsg("decode error")
           }
         msg
-    }.to(ActorSink.actorRef[]())
+    }.to(ActorSink.actorRef[ptcl.WsMsgSource](actor,ptcl.CompleteMsgServer(),ptcl.FailMsgServer))
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
