@@ -10,12 +10,14 @@ import akka.stream.scaladsl.{Flow, Keep}
 import akka.stream.typed.scaladsl.{ActorSink, _}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.ByteString
+import com.neo.sk.gypsy.common.StageContext
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
-import scala.concurrent.duration._
+import org.seekloud.byteobject.ByteObject.bytesDecode
+import org.seekloud.byteobject._
+
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import org.seekloud.byteobject.{MiddleBufferForTest, MiddleBufferInJvm}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl
 /**
@@ -33,12 +35,13 @@ object WsClient {
   case object Stop extends WsCommand
 
   def create(gameClient: ActorRef[ptcl.WsMsgSource],
+             stageCtx: StageContext,
              _system: ActorSystem,
              _materializer: Materializer,
              _executor: ExecutionContextExecutor):Behavior[WsCommand] = {
     Behaviors.setup[WsCommand]{ ctx=>
       Behaviors.withTimers{ timer =>
-        working(gameClient)(timer,_system,_materializer,_executor)
+        working(gameClient, stageCtx)(timer,_system,_materializer,_executor)
       }
 
     }
@@ -46,7 +49,9 @@ object WsClient {
 
 
 
-  private def working(gameClient: ActorRef[ptcl.WsMsgSource])(
+  private def working(gameClient: ActorRef[ptcl.WsMsgSource],
+                      stageCtx: StageContext
+                     )(
     implicit timer:TimerScheduler[WsCommand],
     system: ActorSystem,
     materializer: Materializer,
@@ -82,8 +87,8 @@ object WsClient {
       }
     }
   }
-
-  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsSendMsg](
+  //客户端发消息给后台
+  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsMsgSource](
     completionMatcher = {
       case ptcl.WsSendComplete =>
         log.info("Websocket Complete")
@@ -102,6 +107,7 @@ object WsClient {
       ))
   }
 
+  //收到后台发给前端的消息
   def getSink(actor: ActorRef[ptcl.WsMsgSource]) =
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
@@ -111,7 +117,7 @@ object WsClient {
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[ptcl.WsMsgFront](buffer) match{
+          bytesDecode[ptcl.WsMsgSource](buffer) match {
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
@@ -123,7 +129,7 @@ object WsClient {
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
     val host = "localhost:30372"
-    s"$wsProtocol://$host/gypsy/api/playGameClient?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
+    s"$wsProtocol://$host/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
 
 

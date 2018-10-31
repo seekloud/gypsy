@@ -21,7 +21,7 @@ object GameClient {
   def create(): Behavior[ptcl.WsMsgSource] = {
     Behaviors.setup[ptcl.WsMsgSource]{ ctx =>
       implicit val stashBuffer: StashBuffer[ptcl.WsMsgSource] = StashBuffer[ptcl.WsMsgSource](Int.MaxValue)
-      grid = GameHolder.gird
+      grid = GameHolder.grid
       switchBehavior(ctx, "running", running("", -1L))
     }
   }
@@ -38,7 +38,7 @@ object GameClient {
           Behavior.same
 
         //todo 接收后台传来的消息 同frontend里的gameHolder一样
-        case
+//        case
 
       }
     }

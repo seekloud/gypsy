@@ -32,7 +32,7 @@ object WsMsgProtocol {
   /**
     * 前端解析
     * */
-  case object ErrorWsMsgFront extends WsMsgFront
+  case object ErrorWsMsgFront extends WsMsgSource
 
   case class GridDataSync(
                            frameCount: Long,
