@@ -32,7 +32,7 @@ class ClientBoot extends javafx.application.Application{
 
   import ClientBoot._
   override def start(mainStage: Stage): Unit = {
-    val wsClient = system.spawn(WsClient.create(),"WsClient")
+    val wsClient = system.spawn(WsClient.create(gameHolderClient),"WsClient")
   }
 }
 
