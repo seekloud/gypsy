@@ -9,6 +9,9 @@ import javafx.application.{Application, Platform}
 import com.neo.sk.gypsy.actor.WsClient
 import com.neo.sk.gypsy.actor.GameClient
 import com.neo.sk.gypsy.common.AppSettings._
+import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.holder.LoginHolder
+import com.neo.sk.gypsy.scene.LoginScene
 
 /**
   * @author zhaoyin
@@ -32,8 +35,14 @@ class ClientBoot extends javafx.application.Application{
 
   import ClientBoot._
   override def start(mainStage: Stage): Unit = {
-    val wsClient = system.spawn(WsClient.create(gameHolderClient),"WsClient")
+    val context = new StageContext(mainStage)
+    val wsClient = system.spawn(WsClient.create(gameHolderClient,context,system,materializer,executor),"WsClient")
+    val loginScene = new LoginScene()
+    val loginHolder = new LoginHolder(wsClient,loginScene,context)
+    loginHolder.showScene()
   }
+
+
 }
 
 

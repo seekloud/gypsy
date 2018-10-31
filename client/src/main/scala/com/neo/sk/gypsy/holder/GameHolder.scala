@@ -34,14 +34,14 @@ class GameHolder() {
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //todo 游戏渲染
-        gameScene.draw()
+//        gameScene.draw()
       }
     }
     val timeline = new Timeline()
     timeline.setCycleCount(Animation.INDEFINITE)
     val keyFrame = new KeyFrame(Duration.millis(100),{ _ =>
       //todo 游戏循环
-      gameLoop()
+//      gameLoop()
     })
     timeline.getKeyFrames.add(keyFrame)
     animationTimer.start()

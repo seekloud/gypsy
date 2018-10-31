@@ -25,10 +25,15 @@ package object ptcl {
   /**
     * Websocket client
     * */
-  sealed trait WsSendMsg
-  case object WsSendComplete extends WsSendMsg
-  case class WsSendFailed(ex:Throwable) extends WsSendMsg
-  sealed trait UserAction extends WsSendMsg
+//  sealed trait WsMsgSource
+
+  case object WsSendComplete extends WsMsgSource
+
+  case class WsSendFailed(ex:Throwable) extends WsMsgSource
+
+  sealed trait UserAction extends WsMsgSource
+
+//  case class KeyCode(id:Int) extends UserAction
 
 
 
