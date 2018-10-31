@@ -35,14 +35,14 @@ object GypsyGameEvent {
   final case class MouseMove(userId:String,direct:(Double,Double),override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgFront
   final case class KeyPress(userId:String,keyCode: Int,override val frame:Long,override val serialNum:Int) extends UserActionEvent with WsMsgFront
 
-  final case class GenerateApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgFront
-  final case class RemoveApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgFront
+  final case class GenerateApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
+  final case class RemoveApples(apples:Map[Point, Int],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
 //  final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront
   // TODO mass改变是否要算进生成病毒
-  final case class GenerateVirus(virus: Map[Long,Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront
-//  final case class RemoveVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront
-  final case class GenerateMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgFront
-  final case class RemoveMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgFront
+  final case class GenerateVirus(virus: Map[Long,Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
+  final case class RemoveVirus(virus: Map[Long,Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
+  final case class GenerateMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
+  final case class RemoveMass(massList:List[Mass],override val frame:Long) extends EnvironmentEvent with WsMsgFront with WsMsgServer
 
 
 
@@ -55,7 +55,7 @@ object GypsyGameEvent {
   final case class ReduceApples(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgFront
   final case class ReduceVirus(apples:List[Food],override val frame:Long) extends EnvironmentEvent with WsMsgFront
 
-  final case class PlayerInfoChange(player: Map[String,Player],override val frame:Long) extends InfoChange with WsMsgFront
+  final case class PlayerInfoChange(player: Map[String,Player],override val frame:Long) extends InfoChange with WsMsgFront with WsMsgServer
 
   //  缩放放到
   final case class ShowScale(override val frame:Long,scale:Double) extends EnvironmentEvent with WsMsgFront
