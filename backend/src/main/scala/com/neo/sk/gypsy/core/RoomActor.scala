@@ -50,7 +50,7 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  private case class Join(id: String, name: String, subscriber: ActorRef[ptcl.WsMsgFront],watchgame:Boolean) extends Command
+  private case class Join(id: String, name: String, subscriber: ActorRef[ptcl.WsMsgServer],watchgame:Boolean) extends Command
 
   private case class ChangeWatch(id: String, watchId: String) extends Command
 
@@ -79,7 +79,7 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]()
+            val subscribersMap = mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]]()
             val userMap = mutable.HashMap[String, String]()
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
@@ -103,7 +103,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]],
+            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]],
             grid:GameServer,
             tickCount:Long
           )(
@@ -292,7 +292,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]],
+            subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]],
             grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
@@ -353,11 +353,11 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]], msg: ptcl.WsMsgFront) = {
+  def dispatch(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]], msg: ptcl.WsMsgServer) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]], id:String, msg:ptcl.WsMsgFront,userList:mutable.ListBuffer[UserInfo]) = {
+  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]], id:String, msg:ptcl.WsMsgServer,userList:mutable.ListBuffer[UserInfo]) = {
     var shareList = mutable.ListBuffer[String]()
     userList.foreach(user =>
       if(user.id == id){

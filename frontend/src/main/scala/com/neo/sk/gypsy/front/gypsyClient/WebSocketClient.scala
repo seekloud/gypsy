@@ -38,7 +38,7 @@ import org.seekloud.byteobject.MiddleBufferInJs
 case class WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
-                            messageHandler:ptcl.WsMsgFront => Unit,
+                            messageHandler:ptcl.WsMsgServer => Unit,
                             closeCallback:Event => Unit,
                             replay:Boolean = false
                           ) {
@@ -82,14 +82,14 @@ case class WebSocketClient(
                 messageHandler(replayEventDecode(buf))
               }else{
                 val middleDataInJs = new MiddleBufferInJs(buf)
-                val data = bytesDecode[ptcl.WsMsgFront](middleDataInJs).right.get
+                val data = bytesDecode[ptcl.WsMsgServer](middleDataInJs).right.get
                 messageHandler(data)
               }
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
             import io.circe.parser._
-            val data = decode[ptcl.WsMsgFront](jsonStringMsg).right.get
+            val data = decode[ptcl.WsMsgServer](jsonStringMsg).right.get
             messageHandler(data)
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }
@@ -112,10 +112,10 @@ case class WebSocketClient(
 
   import org.seekloud.byteobject.ByteObject._
 
-  private def replayEventDecode(a:ArrayBuffer):ptcl.WsMsgFront= {
+  private def replayEventDecode(a:ArrayBuffer):ptcl.WsMsgServer= {
     val middleDataInJs = new MiddleBufferInJs(a)
     if(a.byteLength > 0){
-      bytesDecode[List[ptcl.WsMsgFront]](middleDataInJs) match{
+      bytesDecode[List[ptcl.WsMsgServer]](middleDataInJs) match{
         case Right(r)=>
           GypsyGameEvent.EventData(r)
         case Left(e) =>
@@ -127,7 +127,7 @@ case class WebSocketClient(
     }
   }
 
-  private def replayStateDecode(a: ArrayBuffer):ptcl.WsMsgFront={
+  private def replayStateDecode(a: ArrayBuffer):ptcl.WsMsgServer={
     val middleDataInJs = new MiddleBufferInJs(a)
     bytesDecode[GypsyGameEvent.GameSnapshot](middleDataInJs) match {
       case Right(r)=>

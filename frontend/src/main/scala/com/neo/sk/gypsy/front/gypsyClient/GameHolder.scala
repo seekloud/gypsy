@@ -308,9 +308,9 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:(ptcl.WsMsgFront) => Unit = if (replay) replayMessageHandler else wsMessageHandler
+  private def getWsMessageHandler:(ptcl.WsMsgServer) => Unit = if (replay) replayMessageHandler else wsMessageHandler
 
-  private def wsMessageHandler(data:ptcl.WsMsgFront):Unit = {
+  private def wsMessageHandler(data:ptcl.WsMsgServer):Unit = {
     data match {
       case WsMsgProtocol.Id(id) =>
         myId = id
@@ -411,7 +411,7 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-  private def replayMessageHandler(data:ptcl.WsMsgFront):Unit = {
+  private def replayMessageHandler(data:ptcl.WsMsgServer):Unit = {
     data match {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))

@@ -42,30 +42,30 @@ object WsMsgProtocol {
                            scale:Double, //缩放比例
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
-                         ) extends WsMsgFront
+                         ) extends WsMsgServer
 
   case class FeedApples(
                          aLs: List[Food]
 //                         aLs: Map[Point, Int]
-                       ) extends WsMsgFront
+                       ) extends WsMsgServer
 
-  case class Id(id: String) extends WsMsgFront
+  case class Id(id: String) extends WsMsgServer
 
-  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
+  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgServer
 
-  case class SnakeRestart(id:String) extends WsMsgFront
+  case class SnakeRestart(id:String) extends WsMsgServer
 
-  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgServer
 
-  case class KillMessage(killerId:String,deadPlayer:Player) extends WsMsgFront
+  case class KillMessage(killerId:String,deadPlayer:Player) extends WsMsgServer
 
-  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgServer
 
-  case class MatchRoomError() extends WsMsgFront
+  case class MatchRoomError() extends WsMsgServer
 
-  case class UserMerge(id:String,player: Player)extends WsMsgFront
+  case class UserMerge(id:String,player: Player)extends WsMsgServer
 
-  case class Pong(timestamp: Long)extends WsMsgFront
+  case class Pong(timestamp: Long)extends WsMsgFront with WsMsgServer
 
   val frameRate = 150
 

@@ -29,7 +29,6 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
     val gameHolder = new GameHolder
     gameHolder.init()
     //直接建立websocket连接
-    //TODO maxScore
     gameHolder.joinGame(playerId,playerName, roomId, accessCode,0)
   }
 
