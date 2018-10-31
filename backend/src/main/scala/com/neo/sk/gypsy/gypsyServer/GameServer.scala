@@ -579,7 +579,7 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]]) ={
     subscriber=subscribersMap
   }
 

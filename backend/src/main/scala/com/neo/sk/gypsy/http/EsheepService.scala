@@ -128,6 +128,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
-  val esheepRoutes: Route =
-    playGame ~ watchGame ~ watchRecord
+  val esheepRoutes: Route = path("api"){
+      playGame ~ watchGame ~ watchRecord
+    }
 }
