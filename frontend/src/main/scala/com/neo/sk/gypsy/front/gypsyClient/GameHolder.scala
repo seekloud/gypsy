@@ -4,7 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
 import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
@@ -206,7 +207,7 @@ class GameHolder(replay:Boolean = false) {
             println(s"down+${e.keyCode.toString}")
           } else {
             println(s"down+${e.keyCode.toString}")
-            val keyCode = WsMsgProtocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+            val keyCode = GypsyGameEvent.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
             grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
             grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
             webSocketClient.sendMsg(keyCode)
@@ -308,34 +309,34 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:(ptcl.WsMsgFront) => Unit = if (replay) replayMessageHandler else wsMessageHandler
+  private def getWsMessageHandler:(GypsyGameEvent.WsMsgSource) => Unit = if (replay) replayMessageHandler else wsMessageHandler
 
-  private def wsMessageHandler(data:ptcl.WsMsgFront):Unit = {
+  private def wsMessageHandler(data:GypsyGameEvent.WsMsgSource):Unit = {
     data match {
-      case WsMsgProtocol.Id(id) =>
+      case GypsyGameEvent.Id(id) =>
         myId = id
         Shortcut.playMusic("bg")
         println(s"myID:$myId")
 
-      case m:WsMsgProtocol.KeyCode =>
+      case m:GypsyGameEvent.KeyCode =>
         //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id || usertype == -1){
           grid.addActionWithFrame(m.id,m)
         }
-      case m:WsMsgProtocol.MousePosition =>
+      case m:GypsyGameEvent.MousePosition =>
        //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id || usertype == -1){
           grid.addMouseActionWithFrame(m.id,m)
         }
 
-      case WsMsgProtocol.Ranks(current, history) =>
+      case GypsyGameEvent.Ranks(current, history) =>
         grid.currentRank = current
         grid.historyRank = history
-      case WsMsgProtocol.FeedApples(foods) =>
+      case GypsyGameEvent.FeedApples(foods) =>
 //        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
-      case data: WsMsgProtocol.GridDataSync =>
+      case data: GypsyGameEvent.GridDataSync =>
         //TODO here should be better code.
         println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
         /*if(data.frameCount<grid.frameCount){
@@ -350,23 +351,23 @@ class GameHolder(replay:Boolean = false) {
 
       //drawGrid(msgData.uid, data)
       //网络延迟检测
-      case WsMsgProtocol.Pong(createTime) =>
+      case GypsyGameEvent.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
 
-      case WsMsgProtocol.SnakeRestart(id) =>
+      case GypsyGameEvent.SnakeRestart(id) =>
         Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
-      case WsMsgProtocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+      case GypsyGameEvent.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
           DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
           grid.removePlayer(id)
         }
 
-      case WsMsgProtocol.GameOverMessage(id,killNum,score,lifeTime)=>
+      case GypsyGameEvent.GameOverMessage(id,killNum,score,lifeTime)=>
         DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
 
-      case WsMsgProtocol.KillMessage(killerId,deadPlayer)=>
+      case GypsyGameEvent.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
@@ -394,12 +395,12 @@ class GameHolder(replay:Boolean = false) {
         }
 
 
-      case WsMsgProtocol.UserMerge(id,player)=>
+      case GypsyGameEvent.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
-      case WsMsgProtocol.MatchRoomError()=>
+      case GypsyGameEvent.MatchRoomError()=>
         drawClockView.cleanClock()
         JsFunc.alert("超过等待时间请重新选择")
         //todo
@@ -411,7 +412,7 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-  private def replayMessageHandler(data:ptcl.WsMsgFront):Unit = {
+  private def replayMessageHandler(data:GypsyGameEvent.WsMsgSource):Unit = {
     data match {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))

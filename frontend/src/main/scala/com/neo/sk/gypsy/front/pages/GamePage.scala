@@ -8,8 +8,6 @@ import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.{UserProtocol, _}
 import com.neo.sk.gypsy.front.utils.Shortcut
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.circe.generic.auto._
-import io.circe.syntax._
 
 import scala.xml.Elem
 /**

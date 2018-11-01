@@ -14,8 +14,9 @@ import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer}
+import com.neo.sk.gypsy.shared.ptcl.{GypsyGameEvent, WsMsgProtocol}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{ErrorWsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import io.circe.{Decoder, Encoder}
@@ -139,7 +140,7 @@ object RoomManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[ptcl.WsMsgServer](buffer) match {
+          bytesDecode[GypsyGameEvent.WsMsgSource](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -156,7 +157,7 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
-      case t:ptcl.WsMsgFront =>
+      case t:GypsyGameEvent.WsMsgSource =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>

@@ -13,14 +13,16 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
-import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
+import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe._
+
 
 trait OutApiService extends ServiceUtils with SessionBase{
+
+  import io.circe.generic.auto._
+  import io.circe.syntax._
+  import io.circe._
 
   implicit val timeout: Timeout
 

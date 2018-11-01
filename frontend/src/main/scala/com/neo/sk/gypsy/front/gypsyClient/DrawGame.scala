@@ -1,7 +1,8 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom

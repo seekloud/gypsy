@@ -27,10 +27,6 @@ import com.neo.sk.gypsy.Boot.executor
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success}
 import scala.concurrent.{Await, Future}
-import io.circe.generic.auto._
-import io.circe.parser.decode
-import io.circe.Error
-import io.circe.Decoder
 import org.seekloud.byteobject.encoder.BytesEncoder
 
 object GameRecorder {
@@ -38,7 +34,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[ptcl.WsMsgFront],Option[GypsyGameEvent.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[GypsyGameEvent.WsMsgSource],Option[GypsyGameEvent.GameSnapshot])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
@@ -48,7 +44,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 30.minute
+  private final val saveTime = 2.minute
 
   final case class SwitchBehavior(
                                   name: String,
