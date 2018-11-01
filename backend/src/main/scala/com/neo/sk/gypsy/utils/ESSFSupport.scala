@@ -5,8 +5,8 @@ package com.neo.sk.gypsy.utils
 import java.io.File
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapInfo, EssfMapJoinLeftInfo, EssfMapKey}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.GameInformation
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GameInformation
 
 //import com.neo.sk.tank.common.AppSettings
 //import com.neo.sk.tank.protocol.ReplayProtocol.{EssfMapInfo, EssfMapJoinLeftInfo, EssfMapKey}
@@ -33,7 +33,7 @@ object ESSFSupport {
     * 存储
     * @author hongruying on 2018/8/14
     * */
-  def initFileRecorder(fileName:String,index:Int,gameInformation: String,initStateOpt:Option[GypsyGameEvent.GameSnapshot] = None)
+  def initFileRecorder(fileName:String,index:Int,gameInformation: String,initStateOpt:Option[Protocol.GameSnapshot] = None)
     (implicit middleBuffer: MiddleBufferInJvm):FrameOutputStream = {
     val dir = new File(AppSettings.gameDataDirectoryPath)
     if(!dir.exists()){
@@ -44,7 +44,7 @@ object ESSFSupport {
     val version = "0.1"
     val gameInformationBytes = gameInformation.fillMiddleBuffer(middleBuffer).result()
     val initStateBytes = initStateOpt.map{
-      case t:GypsyGameEvent.GameSnapshot =>
+      case t:Protocol.GameSnapshot =>
         t.fillMiddleBuffer(middleBuffer).result()
     }.getOrElse(Array[Byte]())
     val recorder = new FrameOutputStream(file)
@@ -71,7 +71,7 @@ object ESSFSupport {
 
   def initStateDecode(a:Array[Byte]) ={
     val buffer = new MiddleBufferInJvm(a)
-    bytesDecode[GypsyGameEvent.GypsyGameSnapshot](buffer)
+    bytesDecode[Protocol.GypsyGameSnapshot](buffer)
   }
 
   def userMapDecode(a:Array[Byte])={

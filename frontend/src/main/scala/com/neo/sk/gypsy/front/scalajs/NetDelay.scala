@@ -4,7 +4,7 @@ package com.neo.sk.gypsy.front.scalajs
 import com.neo.sk.gypsy.front.gypsyClient.WebSocketClient
 import com.neo.sk.gypsy.front.utils.Shortcut
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.Ping
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.Ping
+import com.neo.sk.gypsy.shared.ptcl.Protocol.Ping
 import org.scalajs.dom.raw.WebSocket
 
 

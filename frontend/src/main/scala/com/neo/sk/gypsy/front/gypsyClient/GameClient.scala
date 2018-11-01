@@ -1,9 +1,9 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserActionEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol.UserActionEvent
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 
@@ -431,6 +431,6 @@ class GameClient (override val boundary: Point) extends Grid {
 
   override def getActionEventMap(frame: Long): List[UserActionEvent] = {List.empty}
 
-  override def getGameEventMap(frame: Long): List[GypsyGameEvent.GameEvent] = {List.empty}
+  override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {List.empty}
 
 }

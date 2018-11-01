@@ -8,6 +8,11 @@ package com.neo.sk.gypsy.shared.ptcl
   */
 object WsMsgProtocol {
 
+  trait WsMsgSource
+
+  case object CompleteMsgServer extends WsMsgSource
+  case class FailMsgServer(ex: Throwable) extends WsMsgSource
+
 
 //  trait GameAction{
 //    val serialNum:Int //类似每一帧的动作顺序

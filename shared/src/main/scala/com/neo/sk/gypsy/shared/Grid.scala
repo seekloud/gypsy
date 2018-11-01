@@ -4,10 +4,10 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameAction, KeyCode, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -55,7 +55,7 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
 
-  val ActionEventMap = mutable.HashMap[Long,List[UserActionEvent]]() //frame -> List[UserActionEvent]
+  val ActionEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
 
   val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
 
@@ -91,15 +91,15 @@ trait Grid {
     AddActionEvent(action)
   }
 
-  def removeActionWithFrame(id: String, gameAction: GameAction, frame: Long) = {
-    gameAction match {
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Long) = {
+    userAction match {
       case k:KeyCode=>
         val map = actionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        val actionQueue = map.filterNot(t => t._1 == id && k.serialNum == t._2.serialNum)
         actionMap += (frame->actionQueue)
       case m:MousePosition=>
         val map = mouseActionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        val actionQueue = map.filterNot(t => t._1 == id && m.serialNum == t._2.serialNum)
         mouseActionMap += (frame->actionQueue)
     }
   }
@@ -548,7 +548,7 @@ trait Grid {
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
-    GypsyGameEvent.GridDataSync(
+    Protocol.GridDataSync(
       frameCount,
       playerDetails,
 //      foodDetails,
@@ -558,7 +558,7 @@ trait Grid {
       scale
     )
   }
-  def getAllGridData: GypsyGameEvent.GridDataSync
+  def getAllGridData: Protocol.GridDataSync
 
   def getActionEventMap(frame:Long):List[UserActionEvent]
 

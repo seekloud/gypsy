@@ -4,8 +4,8 @@ import akka.actor.typed.{Behavior, PostStop}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl
 import org.seekloud.byteobject._
 import org.seekloud.essf.io.FrameOutputStream
@@ -34,7 +34,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[GypsyGameEvent.WsMsgSource],Option[GypsyGameEvent.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[Protocol.WsMsgSource],Option[Protocol.GameSnapshot])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
@@ -56,14 +56,14 @@ object GameRecorder {
   case class TimeOut(msg:String) extends Command
 
   final case class GameRecorderData(
-                                    roomId: Long,
-                                    fileName: String,
-                                    fileIndex:Int,
-                                    InitialTime: Long,//本房间内记录最最开始的事件
-                                    StartTime:Long,//该记录开始时间
-                                    initStateOpt: Option[GypsyGameEvent.GameSnapshot],
-                                    recorder:FrameOutputStream,
-                                    var gameRecordBuffer:List[GameRecord]
+                                     roomId: Long,
+                                     fileName: String,
+                                     fileIndex:Int,
+                                     InitialTime: Long, //本房间内记录最最开始的事件
+                                     StartTime:Long, //该记录开始时间
+                                     initStateOpt: Option[Protocol.GameSnapshot],
+                                     recorder:FrameOutputStream,
+                                     var gameRecordBuffer:List[GameRecord]
                                   )
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
@@ -81,7 +81,7 @@ object GameRecorder {
   private final val fileMaxRecordNum = 100000000
   private final val log = LoggerFactory.getLogger(this.getClass)
 
-  def create(fileName:String, InitialTime: Long, initStateOpt:Option[GypsyGameEvent.GameSnapshot] = None, roomId: Long):Behavior[Command] = {
+  def create(fileName:String, InitialTime: Long, initStateOpt:Option[Protocol.GameSnapshot] = None, roomId: Long):Behavior[Command] = {
     Behaviors.setup{ ctx =>
       log.info(s"${ctx.self.path} is starting..")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
