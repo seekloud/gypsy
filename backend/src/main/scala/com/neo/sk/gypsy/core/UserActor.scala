@@ -9,12 +9,14 @@ import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
+import com.neo.sk.gypsy.models.GypsyUserInfo
+
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午10:27
+  *  2018/10/25  下午10:27
   */
 object UserActor {
 
@@ -26,6 +28,8 @@ object UserActor {
   trait Command
 
   case class WebSocketMsg(reqOpt: Option[GypsyGameEvent.WsMsgServer]) extends Command
+
+  case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None) extends Command with RoomManager.Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
@@ -39,6 +43,10 @@ object UserActor {
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
+
+  case object ChangeBehaviorToInit extends Command
+
+  case class StartGame(roomId:Option[Long]) extends Command
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -76,18 +84,18 @@ object UserActor {
     Flow.fromSinkAndSource(in, out)
   }
 
-  def create(uId:String):Behavior[Command] = {
+  def create(uId:String,userInfo:GypsyUserInfo):Behavior[Command] = {
     Behaviors.setup[Command]{ctx =>
       log.debug(s"${ctx.self.path} is starting...")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers[Command]{ implicit timer =>
         implicit val sendBuffer = new MiddleBufferInJvm(8192)
-        init(uId)
+        init(uId,userInfo)
       }
     }
   }
 
-  private def init(uId: String)(
+  private def init(uId: String,userInfo:GypsyUserInfo)(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
     timer:TimerScheduler[Command]
@@ -96,13 +104,14 @@ object UserActor {
       msg match {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
-          switchBehavior(ctx,"idle", idle(uId,frontActor))
+          switchBehavior(ctx,"idle", idle(uId,userInfo,frontActor))
       }
 
     }
 
   private def idle(
                     uId: String,
+                    userInfo:GypsyUserInfo,
                     frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
@@ -114,6 +123,12 @@ object UserActor {
         case StartReply(recordId,playerId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
+
+        case StartGame(roomIdOp) =>
+
+          Behaviors.same
+
+
       }
     }
 

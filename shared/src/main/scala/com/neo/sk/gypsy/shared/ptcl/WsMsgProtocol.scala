@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.WsMsgServer
+
 /**
   * User: sky
   * Date: 2018/9/5
@@ -57,7 +59,7 @@ object WsMsgProtocol {
                          aLs: List[Food]
                        ) extends WsMsgFront
 
-  case class Id(id: String) extends WsMsgFront
+  case class Id(id: String) extends WsMsgFront with WsMsgServer
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
 
@@ -67,9 +69,9 @@ object WsMsgProtocol {
 
   case class KillMessage(killerId:String,deadPlayer:Player) extends WsMsgFront
 
-  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront
+  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends WsMsgFront with WsMsgServer
 
-  case object MatchRoomError extends WsMsgFront
+  case object MatchRoomError extends WsMsgFront with WsMsgServer
 
   case class UserMerge(id:String,player: Player)extends WsMsgFront
 

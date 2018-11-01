@@ -22,7 +22,7 @@ object EsheepProtocol {
 
 
   case class PlayerInfo(
-                         playerId:Long,
+                         playerId:String,
                          nickname:String
                        )
 
