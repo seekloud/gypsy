@@ -4,6 +4,10 @@ import com.neo.sk.gypsy.shared.ptcl.CommonRsp
 
 object EsheepProtocol {
 
+  case class VerifyAccCode(
+                          gameId:Long,
+                          accessCode:String
+                          )
   case class GameServerKey2TokenReq(
                                 gameId:Long,
                                 gsKey:String
