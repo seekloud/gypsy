@@ -117,10 +117,10 @@ object Protocol {
 
    case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
    case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
    case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
    case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
-   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent
+   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent with WsMsgSource
    case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
   case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
