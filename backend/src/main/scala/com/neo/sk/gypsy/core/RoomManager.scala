@@ -69,9 +69,9 @@ object RoomManager {
         msg match {
           case msg:JoinGame=>
             if(msg.roomId.toString.startsWith("1")){
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
-            }else{
               msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,false),msg.sender,msg.id,msg.watchGame)
+            }else{
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
             }
             Behaviors.same
 

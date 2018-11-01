@@ -14,12 +14,12 @@ object EsheepProtocol {
                                 )
 
   case class GameServerKey2TokenInfo(
-                                      gsToken:String,
+                                      token:String,
                                       expireTime:Long
                                     )
 
   case class GameServerKey2TokenRsp(
-                                     data: Option[GameServerKey2TokenInfo],
+                                     data: GameServerKey2TokenInfo,
                                      errCode: Int = 0,
                                      msg: String = "ok"
                                    ) extends CommonRsp
@@ -35,7 +35,7 @@ object EsheepProtocol {
                                  )
 
   case class VerifyAccessCodeRsp(
-                                  data: Option[VerifyAccessCodeInfo],
+                                  data: PlayerInfo,
                                   errCode: Int = 0,
                                   msg: String = "ok"
                                 ) extends CommonRsp

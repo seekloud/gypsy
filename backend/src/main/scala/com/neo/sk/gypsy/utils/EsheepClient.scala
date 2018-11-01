@@ -41,8 +41,8 @@ object EsheepClient extends HttpUtil {
       case Right(jsonStr) =>
         decode[EsheepProtocol.GameServerKey2TokenRsp](jsonStr) match {
           case Right(rsp) =>
-            if(rsp.errCode == 0 && rsp.data.nonEmpty){
-              Right(rsp.data.get)
+            if(rsp.errCode == 0){
+              Right(rsp.data)
             }else{
               log.debug(s"${methodName} failed,error:${rsp.msg}")
               Left(ErrorRsp(rsp.errCode, rsp.msg))
@@ -68,8 +68,8 @@ object EsheepClient extends HttpUtil {
       case Right(jsonStr) =>
         decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
           case Right(rsp) =>
-            if(rsp.errCode == 0 && rsp.data.nonEmpty){
-              Right(rsp.data.get)
+            if(rsp.errCode == 0){
+              Right(EsheepProtocol.VerifyAccessCodeInfo(rsp.data))
             }else{
               log.debug(s"${methodName} failed,error:${rsp.msg}")
               Left(ErrorRsp(rsp.errCode, rsp.msg))
