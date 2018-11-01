@@ -282,7 +282,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
-//    var removeVirus = List.empty[Virus]
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
@@ -428,12 +427,12 @@ class GameServer(override val boundary: Point) extends Grid {
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
 
-            newX += vx.toInt
-            newY += vy.toInt
+//            newX += vx.toInt
+//            newY += vy.toInt
             hasMoved =true
-            val newPoint =ExamBoundary(newX,newY)
-            newX = newPoint._1
-            newY = newPoint._2
+//            val newPoint =ExamBoundary(newX,newY)
+//            newX = newPoint._1
+//            newY = newPoint._2
            /* val borderCalc = 0
             if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
             if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
@@ -481,12 +480,12 @@ class GameServer(override val boundary: Point) extends Grid {
     virusMap ++= virus1
    if(removeMass.nonEmpty){
      val event = RemoveMass(removeMass,frameCount)
-//     dispatch(subscriber,event)
+     dispatch(subscriber,event)
      AddGameEvent(event)
    }
    if(newVirus.nonEmpty){
      val event = GenerateVirus(newVirus,frameCount)
-//     dispatch(subscriber,event)
+     dispatch(subscriber,event)
      AddGameEvent(event)
    }
 
