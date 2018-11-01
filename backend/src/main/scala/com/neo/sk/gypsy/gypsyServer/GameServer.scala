@@ -6,9 +6,9 @@ import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserJoinRoom
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
@@ -19,7 +19,7 @@ import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
 import com.neo.sk.gypsy.core.EsheepSyncClient
 import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.Boot.esheepClient
 
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
@@ -46,7 +46,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]]()
+  private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgSource]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
@@ -179,8 +179,8 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,GypsyGameEvent.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
-          dispatch(subscriber,GypsyGameEvent.KillMessage(killer,player))
+          dispatchTo(subscriber,player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
+          dispatch(subscriber,Protocol.KillMessage(killer,player))
           //添加死亡信息
           val event = UserLeftRoom(player.id,player.name,roomId,frameCount)
           AddGameEvent(event)
@@ -492,7 +492,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   }
 
-  override def getAllGridData: GypsyGameEvent.GridDataSync = {
+  override def getAllGridData: Protocol.GridDataSync = {
 //    val foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
@@ -519,7 +519,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     newFoods=Map[Point, Int]().empty
     eatenFoods = Map[Point, Int]().empty
-    GypsyGameEvent.GridDataSync(
+    Protocol.GridDataSync(
       frameCount,
       playerDetails,
 //      foodDetails,
@@ -543,7 +543,7 @@ class GameServer(override val boundary: Point) extends Grid {
       Food(f._2,f._1.x,f._1.y)
     }.toList
 
-    GypsyGameEvent.GypsyGameSnapInfo(
+    Protocol.GypsyGameSnapInfo(
       frameCount,
       playerDetails,
       foodDetails,
@@ -580,16 +580,16 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]]) ={
     subscriber=subscribersMap
   }
 
 
-  override def getActionEventMap(frame:Long): List[UserActionEvent] = {
+  override def getActionEventMap(frame:Long): List[GameEvent] = {
     ActionEventMap.getOrElse(frame,List.empty)
   }
 
-  override def getGameEventMap(frame: Long): List[GypsyGameEvent.GameEvent] = {
+  override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {
     GameEventMap.getOrElse(frame,List.empty)
   }
 

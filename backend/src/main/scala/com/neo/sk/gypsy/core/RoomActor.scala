@@ -12,7 +12,7 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 //import com.neo.sk.gypsy.models.Dao.UserDao
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl
@@ -50,7 +50,7 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  private case class Join(id: String, name: String, subscriber: ActorRef[GypsyGameEvent.WsMsgSource],watchgame:Boolean) extends Command
+  private case class Join(id: String, name: String, subscriber: ActorRef[WsMsgSource], watchgame:Boolean) extends Command
 
   private case class ChangeWatch(id: String, watchId: String) extends Command
 
@@ -79,7 +79,7 @@ object RoomActor {
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
-            val subscribersMap = mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]]()
+            val subscribersMap = mutable.HashMap[String,ActorRef[WsMsgSource]]()
             val userMap = mutable.HashMap[String, String]()
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
@@ -103,7 +103,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]],
             grid:GameServer,
             tickCount:Long
           )(
@@ -134,7 +134,7 @@ object RoomActor {
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
             //观察者前端的id是其观察对象的id
-            dispatchTo(subscribersMap,id, GypsyGameEvent.Id(userList(x).id),userList)
+            dispatchTo(subscribersMap,id, Protocol.Id(userList(x).id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
           }else{
             userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
@@ -142,7 +142,7 @@ object RoomActor {
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
             grid.addSnake(id, name)
-            dispatchTo(subscribersMap,id, GypsyGameEvent.Id(id),userList)
+            dispatchTo(subscribersMap,id, Protocol.Id(id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           }
 //          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
@@ -160,7 +160,7 @@ object RoomActor {
             if(userList(i).id == watchId){
               userList(i).shareList.append(id)
               //切换视角
-              dispatchTo(subscribersMap,id, GypsyGameEvent.Id(watchId),userList)
+              dispatchTo(subscribersMap,id, Protocol.Id(watchId),userList)
               dispatchTo(subscribersMap,id,grid.getGridData(watchId),userList)
             }
           }
@@ -193,7 +193,7 @@ object RoomActor {
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
-            dispatchTo(subscribersMap,id,GypsyGameEvent.SnakeRestart(id),userList)
+            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
           } else {
             grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
             dispatch(subscribersMap,KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
@@ -226,12 +226,12 @@ object RoomActor {
           } else {
             if (newApples.nonEmpty) {
 //              dispatch(subscribersMap,WsMsgProtocol.FeedApples(newApples))
-              dispatch(subscribersMap,GypsyGameEvent.FeedApples(feedapples))
+              dispatch(subscribersMap,Protocol.FeedApples(feedapples))
               grid.cleanNewApple
             }
           }
           if (tickCount % 20 == 1) {
-            dispatch(subscribersMap,GypsyGameEvent.Ranks(grid.currentRank, grid.historyRankList))
+            dispatch(subscribersMap,Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           if(tickCount==0){
 //            dispatch(subscribersMap,grid.getAllGridData)
@@ -242,7 +242,7 @@ object RoomActor {
         case NetTest(id, createTime) =>
           //log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
-          dispatchTo(subscribersMap,id, GypsyGameEvent.Pong(createTime),userList)
+          dispatchTo(subscribersMap,id, Protocol.Pong(createTime),userList)
           Behaviors.same
 
 //          不明其意
@@ -255,7 +255,7 @@ object RoomActor {
         case TimeOut=>
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
-            dispatchTo(subscribersMap,p._1,GypsyGameEvent.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime),userList)
+            dispatchTo(subscribersMap,p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime),userList)
           }
           timer.cancel(SyncTimeKey)
           roomManager ! RemoveRoom(roomId)
@@ -292,7 +292,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]],
+            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]],
             grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
@@ -321,7 +321,7 @@ object RoomActor {
             timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
             timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.gameTime.minutes)
             userMap.keys.foreach{r=>
-              dispatchTo(subscribersMap,r, GypsyGameEvent.Id(r),userList)
+              dispatchTo(subscribersMap,r, Protocol.Id(r),userList)
               dispatchTo(subscribersMap,r,grid.getGridData(r),userList)
             }
             idle(roomId,userList,userMap,subscribersMap,grid,0l)
@@ -353,11 +353,11 @@ object RoomActor {
     }
   }
 
-  def dispatch(subscribers:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]], msg: GypsyGameEvent.WsMsgSource) = {
+  def dispatch(subscribers:mutable.HashMap[String,ActorRef[WsMsgSource]], msg: WsMsgSource) = {
     subscribers.values.foreach( _ ! msg)
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]], id:String, msg:GypsyGameEvent.WsMsgSource,userList:mutable.ListBuffer[UserInfo]) = {
+  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[WsMsgSource]], id:String, msg:WsMsgSource, userList:mutable.ListBuffer[UserInfo]) = {
     var shareList = mutable.ListBuffer[String]()
     userList.foreach(user =>
       if(user.id == id){
@@ -376,15 +376,15 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgSource,WsMsgSource, Any] = {
-    val in = Flow[WsMsgSource]
+  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[UserAction]): Flow[UserAction,WsMsgSource, Any] = {
+    val in = Flow[UserAction]
       .map {
         case KeyCode(i,keyCode,f,n)=>
           log.debug(s"键盘事件$keyCode")
           Key(id,keyCode,f,n)
         case MousePosition(i,clientX,clientY,f,n)=>
           Mouse(id,clientX,clientY,f,n)
-        case UserLeft=>
+        case UserLeft()=>
           Left(id,name)
         case Ping(timestamp)=>
           NetTest(id,timestamp)
@@ -399,7 +399,7 @@ object RoomActor {
     val out =
       ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case CompleteMsgServer() ⇒
+          case CompleteMsgServer ⇒
         },
         failureMatcher = {
           case FailMsgServer(e)  ⇒ e

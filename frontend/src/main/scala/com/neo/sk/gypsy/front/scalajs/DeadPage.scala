@@ -4,7 +4,7 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.gypsyClient.{GameHolder, WebSocketClient}
 import com.neo.sk.gypsy.front.utils.{Http, JsFunc, LayuiJs, Shortcut}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
@@ -43,7 +43,7 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         game.isDead=false
-        game.webSocketClient.sendMsg(GypsyGameEvent.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
+        game.webSocketClient.sendMsg(Protocol.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 

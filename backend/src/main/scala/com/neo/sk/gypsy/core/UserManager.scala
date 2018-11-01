@@ -9,7 +9,7 @@ import akka.stream.ActorAttributes
 import akka.util.ByteString
 import com.neo.sk.gypsy.shared.ptcl
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
 
 /**
@@ -66,12 +66,12 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgSource] = {
+    implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.WsMsgSource] = {
 
       try {
               import io.circe.generic.auto._
               import io.circe.parser._
-        val wsMsg = decode[GypsyGameEvent.WsMsgSource](s).right.get
+        val wsMsg = decode[Protocol.WsMsgSource](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -84,7 +84,7 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[GypsyGameEvent.WsMsgSource](buffer) match {
+          bytesDecode[Protocol.WsMsgSource](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -100,7 +100,7 @@ object UserManager {
         // FIXME: We need to handle TextMessage.Streamed as well.
       }.via(UserActor.flow(userActor))
       .map{
-        case t: GypsyGameEvent.ReplayFrameData =>
+        case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
 
         case x =>

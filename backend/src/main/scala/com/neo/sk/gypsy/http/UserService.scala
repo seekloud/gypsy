@@ -15,7 +15,7 @@ import com.neo.sk.gypsy.http.SessionBase.GypsySession
 //import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{ErrorWsMsgServer, KeyCode}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{ErrorWsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
