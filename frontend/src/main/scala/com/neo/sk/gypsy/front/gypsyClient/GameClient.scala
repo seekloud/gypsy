@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.Protocol.UserActionEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -30,7 +30,7 @@ class GameClient (override val boundary: Point) extends Grid {
   //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
 //序列号->(frame,Id,GameAction)
-  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,GameAction)]()
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
@@ -310,11 +310,11 @@ class GameClient (override val boundary: Point) extends Grid {
   }*/
   override def checkVirusMassCrash(): Unit ={}
 
-  def addUncheckActionWithFrame(id: String, gameAction: GameAction, frame: Long) = {
+  def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Long) = {
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
   }
 
-  def addActionWithFrameFromServer(id:String,gameAction:GameAction) = {
+  def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
     val frame=gameAction.frame
     if(myId == id){
       uncheckActionWithFrame.get(gameAction.serialNum) match {
@@ -429,7 +429,7 @@ class GameClient (override val boundary: Point) extends Grid {
     deadPlayerMap=Map.empty[Long,Player]
   }
 
-  override def getActionEventMap(frame: Long): List[UserActionEvent] = {List.empty}
+  override def getActionEventMap(frame: Long): List[GameEvent] = {List.empty}
 
   override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {List.empty}
 

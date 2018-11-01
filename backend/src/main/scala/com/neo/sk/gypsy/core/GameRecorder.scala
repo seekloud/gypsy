@@ -19,7 +19,7 @@ import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.encoder.BytesEncoder
 import com.neo.sk.gypsy.models.SlickTables._
 import com.neo.sk.gypsy.models.Dao._
-
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import scala.language.implicitConversions
 import com.neo.sk.gypsy.utils.ESSFSupport.userMapEncode
 import com.neo.sk.gypsy.Boot.executor
@@ -34,7 +34,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[Protocol.WsMsgSource],Option[Protocol.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[GameEvent],Option[Protocol.GameEvent])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
@@ -61,7 +61,7 @@ object GameRecorder {
                                      fileIndex:Int,
                                      InitialTime: Long, //本房间内记录最最开始的事件
                                      StartTime:Long, //该记录开始时间
-                                     initStateOpt: Option[Protocol.GameSnapshot],
+                                     initStateOpt: Option[Protocol.GameEvent],
                                      recorder:FrameOutputStream,
                                      var gameRecordBuffer:List[GameRecord]
                                   )
@@ -81,7 +81,7 @@ object GameRecorder {
   private final val fileMaxRecordNum = 100000000
   private final val log = LoggerFactory.getLogger(this.getClass)
 
-  def create(fileName:String, InitialTime: Long, initStateOpt:Option[Protocol.GameSnapshot] = None, roomId: Long):Behavior[Command] = {
+  def create(fileName:String, InitialTime: Long, initStateOpt:Option[Protocol.GameEvent] = None, roomId: Long):Behavior[Command] = {
     Behaviors.setup{ ctx =>
       log.info(s"${ctx.self.path} is starting..")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)

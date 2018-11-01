@@ -73,7 +73,7 @@ class GameHolder(replay:Boolean = false) {
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
 
-  val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,getWsMessageHandler,wsConnectClose,replay)
+  val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose,replay)
 
   val grid = new GameClient(bounds)
 
@@ -309,9 +309,7 @@ class GameHolder(replay:Boolean = false) {
     e
   }
 
-  private def getWsMessageHandler:(Protocol.WsMsgSource) => Unit = if (replay) replayMessageHandler else wsMessageHandler
-
-  private def wsMessageHandler(data:Protocol.WsMsgSource):Unit = {
+  private def wsMessageHandler(data:GameMessage):Unit = {
     data match {
       case Protocol.Id(id) =>
         myId = id
@@ -406,13 +404,33 @@ class GameHolder(replay:Boolean = false) {
         //todo
 //        LoginPage.homePage()
 
+//      case Protocol.ReplayFrameData(frameIndex, eventsData, stateData) =>
+//        eventsData match {
+//          case EventData(events) =>
+//            events.foreach (event => replayMessageHandler(event, frameIndex))
+//          case Protocol.DecodeError() =>
+//          //            println("events decode error")
+//          case _ =>
+//        }
+//        if(stateData.nonEmpty) {
+//          stateData.get match {
+//            case msg: Snapshot =>
+//              //              println(s"snapshot get")
+//              //              println(s"snapshot:$msg")
+//              replayMessageHandler(msg, frameIndex)
+//            case Protocol.DecodeError() =>
+//            //              println("state decode error")
+//            case _ =>
+//          }
+//        }
+
       case msg@_ =>
         println(s"unknown $msg")
 
     }
   }
 
-  private def replayMessageHandler(data:Protocol.WsMsgSource):Unit = {
+  private def replayMessageHandler(data:Protocol.GameEvent):Unit = {
     data match {
       case e:Protocol.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))

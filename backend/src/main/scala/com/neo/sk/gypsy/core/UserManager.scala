@@ -66,12 +66,12 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[WsMsgSource] = {
+    implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.UserAction] = {
 
       try {
               import io.circe.generic.auto._
               import io.circe.parser._
-        val wsMsg = decode[WsMsgSource](s).right.get
+        val wsMsg = decode[Protocol.UserAction](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -88,11 +88,11 @@ object UserManager {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              Protocol.TextInfo(e.message)
+              UserActor.WebSocketMsg(None)
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          Protocol.TextInfo(msg)
+          UserActor.WebSocketMsg(None)
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is

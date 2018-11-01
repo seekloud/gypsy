@@ -49,7 +49,10 @@ object Protocol {
   /**
     * 前端发送的数据
     * */
-  sealed trait WsSendMsg
+  sealed trait WsSendMsg{
+        val serialNum:Int = -1 //类似每一帧的动作顺序
+        val frame:Long = -1l
+      }
 
   case object WsSendComplete extends WsSendMsg
 
@@ -64,9 +67,9 @@ object Protocol {
 
   case class TextInfo(msg:String) extends UserAction
 
-  case class MousePosition(id: String,clientX:Double,clientY:Double, val frame:Long, val serialNum:Int) extends UserAction with GameMessage
+  case class MousePosition(id: String,clientX:Double,clientY:Double, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
 
-  case class KeyCode(id: String,keyCode: Int, val frame:Long, val serialNum:Int) extends UserAction with GameMessage
+  case class KeyCode(id: String,keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction with GameMessage
 
   case class WatchChange(id:String, watchId: String) extends UserAction
 
@@ -82,6 +85,7 @@ object Protocol {
     * */
   sealed trait GameEvent {
     val frame:Long = -1l
+    val serialNum:Int = -1
   }
 
 //  trait UserEvent extends GameEvent
@@ -95,9 +99,9 @@ object Protocol {
   /**
     * replay-frame-msg
     */
-   case class ReplayFrameData(ws:Array[Byte]) extends GameEvent
-   case class InitReplayError(msg:String) extends GameEvent
-   case class ReplayFinish() extends GameEvent
+   case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
+   case class InitReplayError(msg:String) extends GameMessage
+   case class ReplayFinish() extends GameMessage
 
   /**
     * replay in front
@@ -108,8 +112,8 @@ object Protocol {
 
    case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
    case class UserLeftRoom(userId:String,userName:String,roomId:Long, override val frame:Long) extends GameEvent
-   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, val serialNum:Int) extends GameEvent
-   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, val serialNum:Int) extends GameEvent
+   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
+   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
 
    case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
    case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent

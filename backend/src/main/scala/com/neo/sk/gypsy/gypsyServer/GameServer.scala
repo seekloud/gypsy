@@ -555,7 +555,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //  获取事件
   def getEvents()={
     (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
-      .filter(_.isInstanceOf[WsMsgSource]).map(_.asInstanceOf[WsMsgSource])
+      .filter(_.isInstanceOf[GameEvent]).map(_.asInstanceOf[GameEvent])
   }
 
 

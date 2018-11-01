@@ -36,7 +36,7 @@ import org.seekloud.byteobject.MiddleBufferInJs
 case class WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
-                            messageHandler:Protocol.WsMsgSource => Unit,
+                            messageHandler:Protocol.GameMessage => Unit,
                             closeCallback:Event => Unit,
                             replay:Boolean = false
                           ) {
@@ -48,7 +48,7 @@ case class WebSocketClient(
 
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
-  def sendMsg(msg:Protocol.WsMsgSource) = {
+  def sendMsg(msg:Protocol.UserAction) = {
     import org.seekloud.byteobject.ByteObject._
     webSocketOpt.get.send(msg.fillMiddleBuffer(sendBuffer).result())
   }
@@ -77,17 +77,17 @@ case class WebSocketClient(
             fr.onloadend = { _: Event =>
               val buf = fr.result.asInstanceOf[ArrayBuffer]
               if(replay) {
-                messageHandler(replayEventDecode(buf))
+//                messageHandler(replayEventDecode(buf))
               }else{
                 val middleDataInJs = new MiddleBufferInJs(buf)
-                val data = bytesDecode[Protocol.WsMsgSource](middleDataInJs).right.get
+                val data = bytesDecode[Protocol.GameMessage](middleDataInJs).right.get
                 messageHandler(data)
               }
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
             import io.circe.parser._
-            val data = decode[Protocol.WsMsgSource](jsonStringMsg).right.get
+            val data = decode[Protocol.GameMessage](jsonStringMsg).right.get
             messageHandler(data)
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }
@@ -103,17 +103,17 @@ case class WebSocketClient(
 
   def closeWs={
     wsSetup = false
-    sendMsg(UserLeft)
+    sendMsg(UserLeft())
     println("---close Ws active")
     webSocketOpt.get.close()
   }
 
   import org.seekloud.byteobject.ByteObject._
 
-  private def replayEventDecode(a:ArrayBuffer):Protocol.WsMsgSource= {
+  private def replayEventDecode(a:ArrayBuffer):Protocol.GameEvent= {
     val middleDataInJs = new MiddleBufferInJs(a)
     if(a.byteLength > 0){
-      bytesDecode[List[Protocol.WsMsgSource]](middleDataInJs) match{
+      bytesDecode[List[Protocol.GameEvent]](middleDataInJs) match{
         case Right(r)=>
           Protocol.EventData(r)
         case Left(e) =>
@@ -125,9 +125,9 @@ case class WebSocketClient(
     }
   }
 
-  private def replayStateDecode(a: ArrayBuffer):Protocol.WsMsgSource={
+  private def replayStateDecode(a: ArrayBuffer):Protocol.GameEvent={
     val middleDataInJs = new MiddleBufferInJs(a)
-    bytesDecode[Protocol.GameSnapshot](middleDataInJs) match {
+    bytesDecode[Protocol.GameEvent](middleDataInJs) match {
       case Right(r)=>
         Protocol.SyncGameAllState(r.asInstanceOf[Protocol.GypsyGameSnapshot].state)
       case Left(e) =>
