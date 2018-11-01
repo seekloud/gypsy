@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey}
 import org.seekloud.essf.io.{EpisodeInfo, FrameData, FrameInputStream}
@@ -23,6 +22,7 @@ import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, ReplayFrame
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.implicitConversions
 import scala.concurrent.duration._
+import org.seekloud.byteobject._
 
 
 /**
@@ -64,7 +64,7 @@ object GamePlayer {
   }
 
   /**来自UserActor的消息**/
-  case class InitReplay(userActor: ActorRef[ptcl.WsMsgSource], userId: String,frame:Int) extends Command
+  case class InitReplay(userActor: ActorRef[GypsyGameEvent.WsMsgSource], userId: String,frame:Int) extends Command
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
@@ -105,7 +105,7 @@ object GamePlayer {
            initState:GypsyGameEvent.GameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
-           userOpt:Option[ActorRef[ptcl.WsMsgSource]]= None
+           userOpt:Option[ActorRef[GypsyGameEvent.WsMsgSource]]= None
           )(
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command],
@@ -175,11 +175,11 @@ object GamePlayer {
   }
 
   import org.seekloud.byteobject.ByteObject._
-  def dispatchTo(subscribe: ActorRef[ptcl.WsMsgSource],msg:ptcl.WsMsgFront)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[GypsyGameEvent.WsMsgSource],msg:GypsyGameEvent.WsMsgSource)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 
-  def dispatchByteTo(subscribe:ActorRef[ptcl.WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchByteTo(subscribe:ActorRef[GypsyGameEvent.WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(msg.eventsData)
     // foreach和map都可以去掉Option
     msg.stateData.foreach(s => subscribe ! ReplayFrameData(s))

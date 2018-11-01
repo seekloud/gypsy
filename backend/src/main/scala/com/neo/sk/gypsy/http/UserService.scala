@@ -14,12 +14,12 @@ import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
 //import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{ErrorWsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -30,9 +30,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 trait UserService extends ServiceUtils with SessionBase {
 
-  import io.circe.generic.auto._
-  import io.circe.syntax._
-  import io.circe._
+
 
   implicit val system: ActorSystem
 
@@ -68,6 +66,9 @@ trait UserService extends ServiceUtils with SessionBase {
 //  }
 
   private val checkName = (path("checkName") & pathEndOrSingleSlash & get) {
+    import io.circe.generic.auto._
+    import io.circe.syntax._
+    import io.circe._
     loggingAction {
       _ =>
         parameter('name.as[String],'room.as[Long]){
