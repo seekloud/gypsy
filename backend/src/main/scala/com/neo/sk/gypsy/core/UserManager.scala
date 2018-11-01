@@ -7,8 +7,8 @@ import akka.stream.scaladsl.Flow
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.ActorAttributes
 import akka.util.ByteString
-import com.neo.sk.gypsy.shared.ptcl
 import org.slf4j.LoggerFactory
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
 
@@ -66,12 +66,12 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.WsMsgSource] = {
+    implicit def parseJsonString2WsMsgFront(s:String): Option[WsMsgSource] = {
 
       try {
               import io.circe.generic.auto._
               import io.circe.parser._
-        val wsMsg = decode[Protocol.WsMsgSource](s).right.get
+        val wsMsg = decode[WsMsgSource](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -84,15 +84,15 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[Protocol.WsMsgSource](buffer) match {
+          bytesDecode[Protocol.UserAction](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              UserActor.WebSocketMsg(None)
+              Protocol.TextInfo(e.message)
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          UserActor.WebSocketMsg(msg)
+          Protocol.TextInfo(msg)
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
