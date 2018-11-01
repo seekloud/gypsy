@@ -7,7 +7,8 @@ import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserJoinRoom
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.UserMerge
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
@@ -45,7 +46,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[String,ActorRef[ptcl.WsMsgFront]]()
+  private [this] var subscriber=mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
@@ -178,8 +179,8 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,WsMsgProtocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
-          dispatch(subscriber,WsMsgProtocol.KillMessage(killer,player))
+          dispatchTo(subscriber,player.id,GypsyGameEvent.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
+          dispatch(subscriber,GypsyGameEvent.KillMessage(killer,player))
           //添加死亡信息
           val event = UserLeftRoom(player.id,player.name,roomId,frameCount)
           AddGameEvent(event)
@@ -491,7 +492,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   }
 
-  override def getAllGridData: WsMsgProtocol.GridDataSync = {
+  override def getAllGridData: GypsyGameEvent.GridDataSync = {
 //    val foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
@@ -518,7 +519,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     newFoods=Map[Point, Int]().empty
     eatenFoods = Map[Point, Int]().empty
-    WsMsgProtocol.GridDataSync(
+    GypsyGameEvent.GridDataSync(
       frameCount,
       playerDetails,
 //      foodDetails,
@@ -554,7 +555,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //  获取事件
   def getEvents()={
     (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
-      .filter(_.isInstanceOf[WsMsgServer]).map(_.asInstanceOf[WsMsgServer])
+      .filter(_.isInstanceOf[WsMsgSource]).map(_.asInstanceOf[WsMsgSource])
   }
 
 
@@ -579,7 +580,7 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[ptcl.WsMsgServer]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[GypsyGameEvent.WsMsgSource]]) ={
     subscriber=subscribersMap
   }
 

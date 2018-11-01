@@ -6,7 +6,8 @@ import com.neo.sk.gypsy.front.utils.JsFunc
 //import com.neo.sk.gypsy.front.gypsyClient.GameHolder.joinGame
 import com.neo.sk.gypsy.front.utils.{Http, LayuiJs}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.MousePosition
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.MousePosition
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.MousePosition
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom
