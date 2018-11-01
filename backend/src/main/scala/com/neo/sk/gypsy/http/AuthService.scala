@@ -19,7 +19,7 @@ import com.neo.sk.gypsy.core.EsheepSyncClient
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午9:39
+  *
   */
 trait AuthService extends ServiceUtils{
 
@@ -31,7 +31,7 @@ trait AuthService extends ServiceUtils{
 
   protected def authPlatUser(accessCode:String)(f: EsheepProtocol.PlayerInfo => server.Route) :server.Route = {
     if(false){
-      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode.toLong, e))
+      val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp=>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
@@ -46,7 +46,7 @@ trait AuthService extends ServiceUtils{
         }
       }
     }else{
-      f(EsheepProtocol.PlayerInfo(12,"test"))
+      f(EsheepProtocol.PlayerInfo("test","test"))
     }
   }
 

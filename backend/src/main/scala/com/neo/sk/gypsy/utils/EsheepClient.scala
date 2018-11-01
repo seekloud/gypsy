@@ -2,11 +2,12 @@ package com.neo.sk.gypsy.utils
 
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
+import com.neo.sk.gypsy.ptcl.EsheepProtocol.{PlayerInfo, VerifyAccessCodeInfo}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import org.slf4j.LoggerFactory
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
@@ -58,35 +59,42 @@ object EsheepClient extends HttpUtil {
   }
 
   def verifyAccessCode(accessCode:String,token:String): Future[Either[ErrorRsp,EsheepProtocol.VerifyAccessCodeInfo]] = {
-    val methodName = s"verifyAccessCode"
-    val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
+    if(true){
+      Future(Right(VerifyAccessCodeInfo(
+        PlayerInfo("12222jkl","lily")
+      )))
+    }else{
+      val methodName = s"verifyAccessCode"
+      val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
 
-    val data = Json.obj(
-      ("accessCode",accessCode.asJson)
-    ).noSpaces
+      val data = Json.obj(
+        ("accessCode",accessCode.asJson)
+      ).noSpaces
 
-    val sn = appId + System.currentTimeMillis().toString
-    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
-    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
+      val sn = appId + System.currentTimeMillis().toString
+      val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
+      val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
 
-    postJsonRequestSend(methodName,url,Nil,postData).map{
-      case Right(jsonStr) =>
-        decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
-          case Right(rsp) =>
-            if(rsp.errCode == 0 && rsp.data.nonEmpty){
-              Right(rsp.data.get)
-            }else{
-              log.debug(s"${methodName} failed,error:${rsp.msg}")
-              Left(ErrorRsp(rsp.errCode, rsp.msg))
-            }
-          case Left(error) =>
-            log.warn(s"${methodName} parse json error:${error.getMessage}")
-            Left(ErrorRsp(-1, error.getMessage))
-        }
-      case Left(error) =>
-        log.debug(s"${methodName}  failed,error:${error.getMessage}")
-        Left(ErrorRsp(-1,error.getMessage))
+      postJsonRequestSend(methodName,url,Nil,postData).map{
+        case Right(jsonStr) =>
+          decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
+            case Right(rsp) =>
+              if(rsp.errCode == 0 && rsp.data.nonEmpty){
+                Right(rsp.data.get)
+              }else{
+                log.debug(s"${methodName} failed,error:${rsp.msg}")
+                Left(ErrorRsp(rsp.errCode, rsp.msg))
+              }
+            case Left(error) =>
+              log.warn(s"${methodName} parse json error:${error.getMessage}")
+              Left(ErrorRsp(-1, error.getMessage))
+          }
+        case Left(error) =>
+          log.debug(s"${methodName}  failed,error:${error.getMessage}")
+          Left(ErrorRsp(-1,error.getMessage))
+      }
     }
+
   }
 
   def inputRecoder(token:String,playerId: String, nickname: String, killing: Int, killed: Int, score: Int, gameExtent: String, startTime: Long, endTime: Long): Future[Either[String,String]]={

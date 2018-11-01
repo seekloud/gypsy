@@ -398,9 +398,9 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
-      case WsMsgProtocol.MatchRoomError=>
-        drawClockView.cleanClock()
-        JsFunc.alert("超过等待时间请重新选择")
+//      case WsMsgProtocol.MatchRoomError=>
+//        drawClockView.cleanClock()
+//        JsFunc.alert("超过等待时间请重新选择")
         //todo
 //        LoginPage.homePage()
 
@@ -415,22 +415,22 @@ class GameHolder(replay:Boolean = false) {
       case e:GypsyGameEvent.EventData =>
         e.list.foreach(r=>replayMessageHandler(r))
 
-      case e:GypsyGameEvent.SyncGameAllState =>
-        //todo 拿到全量数据改怎么办
-        val data = e.gState
-        syncGridData = GridDataSync(data.frameCount,
-          data.playerDetails,data.foodDetails,
-          data.massDetails,data.virusDetails)
-        justSynced = true
+//      case e:GypsyGameEvent.SyncGameAllState =>
+//        //todo 拿到全量数据改怎么办
+//        val data = e.gState
+//        syncGridData = GridDataSync(data.frameCount,
+//          data.playerDetails,data.foodDetails,
+//          data.massDetails,data.virusDetails)
+//        justSynced = true
 
-      case e:GypsyGameEvent.UserActionEvent =>
-        e match {
-          case g: GypsyGameEvent.MouseMove =>
-            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
-          case g: GypsyGameEvent.KeyPress =>
-            //todo
-            grid.addActionWithFrame(g.userId,)
-        }
+//      case e:GypsyGameEvent.UserActionEvent =>
+//        e match {
+//          case g: GypsyGameEvent.MouseMove =>
+//            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
+//          case g: GypsyGameEvent.KeyPress =>
+//            //todo
+//            grid.addActionWithFrame(g.userId,g.keyCode)
+//        }
 
       case e:GypsyGameEvent.GameEvent =>
         e match {

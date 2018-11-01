@@ -78,4 +78,7 @@ object GypsyGameEvent {
 //     window:
   )
 
+
+  case class Id(id: String) extends WsMsgFront with WsMsgServer
+
 }

@@ -10,7 +10,7 @@ import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import akka.testkit.TestActor.Watch
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
+import com.neo.sk.gypsy.core.RoomManager.{JoinGame, RemoveRoom}
 import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, GypsyGameConfigImpl, GypsyGameSnapshot, UserJoinRoom}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -50,6 +50,8 @@ object RoomActor {
   private case object TimeOut extends Command
 
   private case class Join(id: String, name: String, subscriber: ActorRef[WsMsgProtocol.WsMsgFront],watchgame:Boolean) extends Command
+
+  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long) extends Command
 
   private case class ChangeWatch(id: String, watchId: String) extends Command
 
@@ -102,7 +104,7 @@ object RoomActor {
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,String],
-            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgProtocol.WsMsgFront]],
+            subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
             grid:GameServer,
             tickCount:Long
           )(
@@ -146,6 +148,30 @@ object RoomActor {
           }
 //          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
 //          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
+          Behaviors.same
+
+
+        case JoinGame(id, name, startTime,subscriber,watchgame) =>
+          log.info(s"got $msg")
+          if(watchgame){
+            val x = (new util.Random).nextInt(userList.length)
+            userList(x).shareList.append(id)
+            ctx.watchWith(subscriber,Left(id,name))
+            subscribersMap.put(id,subscriber)
+            //观察者前端的id是其观察对象的id
+            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(userList(x).id),userList)
+            dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
+          }else{
+            userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
+            userMap.put(id,name)
+            ctx.watchWith(subscriber,Left(id,name))
+            subscribersMap.put(id,subscriber)
+            grid.addSnake(id, name)
+            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
+            dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
+          }
+          //          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
+          //          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           Behaviors.same
 
         case ChangeWatch(id, watchId) =>
@@ -372,39 +398,39 @@ object RoomActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer,WsMsgSource, Any] = {
-    val in = Flow[WsMsgProtocol.WsMsgServer]
-      .map {
-        case KeyCode(i,keyCode,f,n)=>
-          log.debug(s"键盘事件$keyCode")
-          Key(id,keyCode,f,n)
-        case MousePosition(i,clientX,clientY,f,n)=>
-          Mouse(id,clientX,clientY,f,n)
-        case UserLeft=>
-          Left(id,name)
-        case Ping(timestamp)=>
-          NetTest(id,timestamp)
-        case WatchChange(id, watchId) =>
-          log.debug(s"切换观察者: $watchId")
-          ChangeWatch(id, watchId)
-        case _=>
-          UnKnowAction
-      }
-      .to(sink(actor))
-
-    val out =
-      ActorSource.actorRef[WsMsgSource](
-        completionMatcher = {
-          case CompleteMsgServer ⇒
-        },
-        failureMatcher = {
-          case FailMsgServer(e)  ⇒ e
-        },
-        bufferSize = 64,
-        overflowStrategy = OverflowStrategy.dropHead
-      ).mapMaterializedValue(outActor => actor ! Join(id, name, outActor,watchgame))
-    Flow.fromSinkAndSource(in, out)
-  }
+//  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[MousePosition]): Flow[WsMsgProtocol.WsMsgServer,WsMsgSource, Any] = {
+//    val in = Flow[WsMsgProtocol.WsMsgServer]
+//      .map {
+//        case KeyCode(i,keyCode,f,n)=>
+//          log.debug(s"键盘事件$keyCode")
+//          Key(id,keyCode,f,n)
+//        case MousePosition(i,clientX,clientY,f,n)=>
+//          Mouse(id,clientX,clientY,f,n)
+//        case UserLeft=>
+//          Left(id,name)
+//        case Ping(timestamp)=>
+//          NetTest(id,timestamp)
+//        case WatchChange(id, watchId) =>
+//          log.debug(s"切换观察者: $watchId")
+//          ChangeWatch(id, watchId)
+//        case _=>
+//          UnKnowAction
+//      }
+//      .to(sink(actor))
+//
+//    val out =
+//      ActorSource.actorRef[WsMsgSource](
+//        completionMatcher = {
+//          case CompleteMsgServer ⇒
+//        },
+//        failureMatcher = {
+//          case FailMsgServer(e)  ⇒ e
+//        },
+//        bufferSize = 64,
+//        overflowStrategy = OverflowStrategy.dropHead
+//      ).mapMaterializedValue(outActor => actor ! Join(id, name, outActor,watchgame))
+//    Flow.fromSinkAndSource(in, out)
+//  }
 
 
   //暂未考虑下匹配的情况

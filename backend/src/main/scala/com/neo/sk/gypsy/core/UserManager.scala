@@ -1,6 +1,8 @@
 package com.neo.sk.gypsy.core
 
 
+import java.util.concurrent.atomic.AtomicLong
+
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.stream.scaladsl.Flow
@@ -13,10 +15,12 @@ import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import akka.stream.{ActorAttributes, Supervision}
+import com.neo.sk.gypsy.models.GypsyUserInfo
+import com.neo.sk.gypsy.ptcl.EsheepProtocol
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午9:10
+  * 2018/10/25  下午9:10
   */
 object UserManager {
 
@@ -28,30 +32,53 @@ object UserManager {
 
   final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
+  final case class GetWebSocketFlow(name:String,replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None) extends Command
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
     Behaviors.setup[Command]{
       ctx =>
         Behaviors.withTimers[Command]{
           implicit timer =>
+            val uidGenerator = new AtomicLong(1L)
             //todo 自增计时器
-            idle()
+            idle(uidGenerator)
         }
     }
   }
 
-  private def idle()(
+  private def idle(uidGenerator: AtomicLong)(
                   implicit timer: TimerScheduler[Command]
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
         case GetReplaySocketFlow(playerName,playerId,recordId,frame,replyTo) =>
           //TODO getUserActorOpt
-          val userActor = getUserActor(ctx, playerId)
+
+          getUserActorOpt(ctx,playerId) match{
+            case Some(userActor)=>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+          val userActor = getUserActor(ctx, playerId,GypsyUserInfo(playerId,playerName,true))
           //开始创建flow
           replyTo ! getWebSocketFlow(userActor)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
+
+
+        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt) =>
+
+          val userInfo = userInfoOpt.getOrElse(GypsyUserInfo("gypsyGuest" + s"-${uidGenerator.getAndIncrement()}",name,false))
+          getUserActorOpt(ctx, userInfo.userId) match {
+            case Some(userActor) =>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+          val userActor = getUserActor(ctx, userInfo.userId,userInfo)
+          replyTo ! getWebSocketFlow(userActor)
+          userActor ! UserActor.StartGame(roomIdOpt)
+          Behaviors.same
+
 
         case unknow =>
           log.error(s"${ctx.self.path} recv a unknow msg when idle:${unknow}")
@@ -115,13 +142,17 @@ object UserManager {
   }
 
 
-  private def getUserActor(ctx: ActorContext[Command], id: String):ActorRef[UserActor.Command] = {
+  private def getUserActor(ctx: ActorContext[Command], id: String,userInfo:GypsyUserInfo):ActorRef[UserActor.Command] = {
     val childName = s"UserActor-${id}"
     ctx.child(childName).getOrElse{
-      val actor = ctx.spawn(UserActor.create(id),childName)
+      val actor = ctx.spawn(UserActor.create(id,userInfo),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[UserActor.Command]
+  }
+  private def getUserActorOpt(ctx: ActorContext[Command],id:String):Option[ActorRef[UserActor.Command]] = {
+    val childName = s"UserActor-${id}"
+    ctx.child(childName).map(_.upcast[UserActor.Command])
   }
 
 
