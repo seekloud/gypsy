@@ -6,26 +6,30 @@ import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{WebSocketRequest, _}
-import akka.stream.scaladsl.{Flow, Keep}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.stream.typed.scaladsl.{ActorSink, _}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.ByteString
 import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.holder.GameHolder
+import com.neo.sk.gypsy.scene.GameScene
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
-import org.seekloud.byteobject.ByteObject.bytesDecode
-import org.seekloud.byteobject._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import io.circe.parser.decode
+import io.circe.generic.auto._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * @author zhaoyin
   * @date 2018/10/28  3:38 PM
   */
 object WsClient {
-
   private val log = LoggerFactory.getLogger("WSClient")
   private val logPrefix = "WSClient"
 
@@ -66,12 +70,15 @@ object WsClient {
           val sink = getSink(gameClient)
           val ((stream,response), _) =
             source
-              .viaMat(webSocketFlow)(Keep.both)
-              .toMat(sink)(Keep.both)
-              .run()
+            .viaMat(webSocketFlow)(Keep.both)
+            .toMat(sink)(Keep.both)
+            .run()
 
           val connected = response.flatMap { upgrade =>
             if(upgrade.response.status == StatusCodes.SwitchingProtocols){
+              val gameScene = new GameScene()
+              val gameHolder = new GameHolder(stageCtx,gameScene)
+              gameHolder.connectToGameServer(gameHolder)
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
             } else {
               throw new RuntimeException(s"WSClient connection failed: ${upgrade.response.status}")
@@ -88,7 +95,7 @@ object WsClient {
     }
   }
   //客户端发消息给后台
-  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsMsgSource](
+  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsSendMsg](
     completionMatcher = {
       case ptcl.WsSendComplete =>
         log.info("Websocket Complete")

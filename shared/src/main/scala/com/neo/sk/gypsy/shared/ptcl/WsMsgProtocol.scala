@@ -49,7 +49,7 @@ object WsMsgProtocol {
                          aLs: List[Food]
                        ) extends WsMsgFront
 
-  case class Id(id: String) extends WsMsgFront
+  case class Id(id: String) extends WsMsgSource //
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends WsMsgFront
 
