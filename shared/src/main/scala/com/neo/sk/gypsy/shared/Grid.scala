@@ -105,7 +105,7 @@ trait Grid {
   }
 
 
-  def AddActionEvent(action:UserActionEvent):Unit ={
+  def AddActionEvent(action:GameEvent):Unit ={
     ActionEventMap.get(action.frame) match {
       case Some(actionEvents) => ActionEventMap.put(action.frame,action :: actionEvents)
       case None => ActionEventMap.put(action.frame,List(action))
@@ -560,7 +560,7 @@ trait Grid {
   }
   def getAllGridData: Protocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[UserActionEvent]
+  def getActionEventMap(frame:Long):List[GameEvent]
 
   def getGameEventMap(frame:Long):List[GameEvent]
 

@@ -7,6 +7,7 @@ import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
@@ -26,7 +27,7 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[Protocol.WsMsgSource]) extends Command
+  case class WebSocketMsg(reqOpt: Option[Protocol.UserAction]) extends Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
@@ -34,7 +35,7 @@ object UserActor {
   /**
     * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
     * */
-  case class UserFrontActor(actor: ActorRef[Protocol.WsMsgSource]) extends Command
+  case class UserFrontActor(actor: ActorRef[WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command

@@ -80,15 +80,17 @@ object Protocol {
   /**
     * event
     * */
-  sealed trait GameEvent
-
-  trait UserEvent extends GameEvent
-  trait EnvironmentEvent extends GameEvent
-  trait InfoChange extends GameEvent
-  trait UserActionEvent extends UserEvent{
-    val userId:String
-    val serialNum:Int
+  sealed trait GameEvent {
+    val frame:Long = -1l
   }
+
+//  trait UserEvent extends GameEvent
+//  trait EnvironmentEvent extends GameEvent
+//  trait InfoChange extends GameEvent
+//  trait UserActionEvent extends UserEvent{
+//    val userId:String
+//    val serialNum:Int
+//  }
 
   /**
     * replay-frame-msg
@@ -104,22 +106,22 @@ object Protocol {
    case class EventData(list:List[GameEvent]) extends GameEvent
    case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
 
-   case class UserJoinRoom(roomId:Long,playState:Player, val frame:Long) extends GameEvent
-   case class UserLeftRoom(userId:String,userName:String,roomId:Long, val frame:Long) extends GameEvent
-   case class MouseMove(userId:String,direct:(Double,Double), val frame:Long, val serialNum:Int) extends GameEvent
-   case class KeyPress(userId:String,keyCode: Int, val frame:Long, val serialNum:Int) extends GameEvent
+   case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
+   case class UserLeftRoom(userId:String,userName:String,roomId:Long, override val frame:Long) extends GameEvent
+   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, val serialNum:Int) extends GameEvent
+   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, val serialNum:Int) extends GameEvent
 
-   case class GenerateApples(apples:Map[Point, Int], val frame:Long) extends GameEvent
-   case class RemoveApples(apples:Map[Point, Int], val frame:Long) extends GameEvent
-   case class GenerateVirus(virus: Map[Long,Virus], val frame:Long) extends GameEvent
-   case class RemoveVirus(virus: Map[Long,Virus], val frame:Long) extends GameEvent
-   case class GenerateMass(massList:List[Mass], val frame:Long) extends GameEvent
-   case class RemoveMass(massList:List[Mass], val frame:Long) extends GameEvent
-   case class ReduceApples(apples:List[Food], val frame:Long) extends GameEvent
-  case class ReduceVirus(apples:List[Food], val frame:Long) extends GameEvent
-  case class PlayerInfoChange(player: Map[String,Player], val frame:Long) extends GameEvent
+   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+   case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+   case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+   case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
+   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent
+   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
+  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
+  case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
-  case class ShowScale( val frame:Long,scale:Double) extends GameEvent
+  case class ShowScale( override val frame:Long,scale:Double) extends GameEvent
   case class GypsyGameSnapshot(
                                       state:GypsyGameSnapInfo
                                     ) extends GameEvent
