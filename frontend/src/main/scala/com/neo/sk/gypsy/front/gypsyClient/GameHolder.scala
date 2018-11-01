@@ -183,6 +183,7 @@ class GameHolder(replay:Boolean = false) {
     usertype = userType
     val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
+    println("url:   "+url)
     webSocketClient.setUp(url)
     //gameloop + gamerender
     start()
