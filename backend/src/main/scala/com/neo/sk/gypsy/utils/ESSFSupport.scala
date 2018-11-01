@@ -33,7 +33,7 @@ object ESSFSupport {
     * 存储
     * @author hongruying on 2018/8/14
     * */
-  def initFileRecorder(fileName:String,index:Int,gameInformation: String,initStateOpt:Option[Protocol.GameSnapshot] = None)
+  def initFileRecorder(fileName:String,index:Int,gameInformation: String,initStateOpt:Option[Protocol.GameEvent] = None)
     (implicit middleBuffer: MiddleBufferInJvm):FrameOutputStream = {
     val dir = new File(AppSettings.gameDataDirectoryPath)
     if(!dir.exists()){
@@ -44,7 +44,7 @@ object ESSFSupport {
     val version = "0.1"
     val gameInformationBytes = gameInformation.fillMiddleBuffer(middleBuffer).result()
     val initStateBytes = initStateOpt.map{
-      case t:Protocol.GameSnapshot =>
+      case t:Protocol.GameEvent =>
         t.fillMiddleBuffer(middleBuffer).result()
     }.getOrElse(Array[Byte]())
     val recorder = new FrameOutputStream(file)

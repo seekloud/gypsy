@@ -62,15 +62,15 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, Protocol.WsMsgSource,Any] = {
+  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgSource,Any] = {
     val in = Flow[WebSocketMsg].to(sink(actor))
     val out =
-      ActorSource.actorRef[Protocol.WsMsgSource](
+      ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case Protocol.CompleteMsgServer() ⇒
+          case CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case Protocol.FailMsgServer(e)  ⇒ e
+          case FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -105,7 +105,7 @@ object UserActor {
 
   private def idle(
                     uId: String,
-                    frontActor: ActorRef[Protocol.WsMsgSource]
+                    frontActor: ActorRef[WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,

@@ -156,7 +156,7 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
-      case t:Protocol.WsSendMsg =>
+      case t:Protocol.GameMessage =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>

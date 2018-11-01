@@ -16,8 +16,9 @@ import scala.concurrent.duration.FiniteDuration
 import com.neo.sk.gypsy.utils.ESSFSupport._
 import org.seekloud.essf.io.FrameInputStream
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameInformation, ReplayFrameData}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameInformation, GameMessage, ReplayFrameData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.implicitConversions
@@ -64,7 +65,7 @@ object GamePlayer {
   }
 
   /**来自UserActor的消息**/
-  case class InitReplay(userActor: ActorRef[Protocol.WsMsgSource], userId: String, frame:Int) extends Command
+  case class InitReplay(userActor: ActorRef[WsMsgSource], userId: String, frame:Int) extends Command
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
@@ -102,10 +103,10 @@ object GamePlayer {
 
   def work(fileReader: FrameInputStream,
            metaData:String,
-           initState:Protocol.GameSnapshot,
+           initState:Protocol.GameEvent,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
-           userOpt:Option[ActorRef[Protocol.WsMsgSource]]= None
+           userOpt:Option[ActorRef[WsMsgSource]]= None
           )(
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command],
@@ -175,11 +176,11 @@ object GamePlayer {
   }
 
   import org.seekloud.byteobject.ByteObject._
-  def dispatchTo(subscribe: ActorRef[Protocol.WsMsgSource], msg:Protocol.WsMsgSource)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 
-  def dispatchByteTo(subscribe:ActorRef[Protocol.WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchByteTo(subscribe:ActorRef[WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(msg.eventsData)
     // foreach和map都可以去掉Option
     msg.stateData.foreach(s => subscribe ! ReplayFrameData(s))

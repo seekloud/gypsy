@@ -105,7 +105,7 @@ trait Grid {
   }
 
 
-  def AddActionEvent(action:GameEvent):Unit ={
+  def AddActionEvent(action: GameEvent):Unit ={
     ActionEventMap.get(action.frame) match {
       case Some(actionEvents) => ActionEventMap.put(action.frame,action :: actionEvents)
       case None => ActionEventMap.put(action.frame,List(action))
