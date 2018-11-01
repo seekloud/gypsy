@@ -4,8 +4,9 @@ import akka.actor.typed.{Behavior, PostStop}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey}
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl
 import org.seekloud.byteobject._
 import org.seekloud.essf.io.FrameOutputStream
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.encoder.BytesEncoder
 import com.neo.sk.gypsy.models.SlickTables._
 import com.neo.sk.gypsy.models.Dao._
-
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import scala.language.implicitConversions
 import com.neo.sk.gypsy.utils.ESSFSupport.userMapEncode
 import com.neo.sk.gypsy.Boot.executor
@@ -26,10 +27,6 @@ import com.neo.sk.gypsy.Boot.executor
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success}
 import scala.concurrent.{Await, Future}
-import io.circe.generic.auto._
-import io.circe.parser.decode
-import io.circe.Error
-import io.circe.Decoder
 import org.seekloud.byteobject.encoder.BytesEncoder
 
 object GameRecorder {
@@ -37,7 +34,7 @@ object GameRecorder {
 
   sealed trait Command
 
-  final case class GameRecord(event:(List[GypsyGameEvent.WsMsgServer],Option[GypsyGameEvent.GameSnapshot])) extends Command
+  final case class GameRecord(event:(List[GameEvent],Option[Protocol.GameEvent])) extends Command
   final case class SaveDate(left:Boolean) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
@@ -47,7 +44,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 30.minute
+  private final val saveTime = 2.minute
 
   final case class SwitchBehavior(
                                   name: String,
@@ -59,14 +56,14 @@ object GameRecorder {
   case class TimeOut(msg:String) extends Command
 
   final case class GameRecorderData(
-                                    roomId: Long,
-                                    fileName: String,
-                                    fileIndex:Int,
-                                    InitialTime: Long,//本房间内记录最最开始的事件
-                                    StartTime:Long,//该记录开始时间
-                                    initStateOpt: Option[GypsyGameEvent.GameSnapshot],
-                                    recorder:FrameOutputStream,
-                                    var gameRecordBuffer:List[GameRecord]
+                                     roomId: Long,
+                                     fileName: String,
+                                     fileIndex:Int,
+                                     InitialTime: Long, //本房间内记录最最开始的事件
+                                     StartTime:Long, //该记录开始时间
+                                     initStateOpt: Option[Protocol.GameEvent],
+                                     recorder:FrameOutputStream,
+                                     var gameRecordBuffer:List[GameRecord]
                                   )
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
@@ -84,7 +81,7 @@ object GameRecorder {
   private final val fileMaxRecordNum = 100000000
   private final val log = LoggerFactory.getLogger(this.getClass)
 
-  def create(fileName:String, InitialTime: Long, initStateOpt:Option[GypsyGameEvent.GameSnapshot] = None, roomId: Long):Behavior[Command] = {
+  def create(fileName:String, InitialTime: Long, initStateOpt:Option[Protocol.GameEvent] = None, roomId: Long):Behavior[Command] = {
     Behaviors.setup{ ctx =>
       log.info(s"${ctx.self.path} is starting..")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
@@ -141,7 +138,6 @@ object GameRecorder {
           if(gameRecordBuffer.size > maxRecordNum){
             val rs = gameRecordBuffer.reverse
             rs.headOption.foreach{ e =>
-
               recorder.writeFrame(e.event._1.fillMiddleBuffer(middleBuffer).result(),e.event._2.map(_.fillMiddleBuffer(middleBuffer).result()))
               rs.tail.foreach{e =>
                 if(e.event._1.nonEmpty){
@@ -199,7 +195,7 @@ object GameRecorder {
         val list = ListBuffer[rUserRecordMap]()
         userAllMap.foreach{
           userRecord =>
-            list.append(rUserRecordMap(userRecord._1, recordId, roomId))
+            list.append(rUserRecordMap(recordId, userRecord._1, roomId))
         }
         Await.result(RecordDao.insertUserRecordList(list.toList), 2.minute)
         Behaviors.stopped
@@ -244,7 +240,7 @@ object GameRecorder {
               //TODO user all ？
               userAllMap.foreach{
                 userRecord =>
-                  list.append(rUserRecordMap(userRecord._1, recordId, roomId))
+                  list.append(rUserRecordMap(recordId,userRecord._1,roomId))
               }
               RecordDao.insertUserRecordList(list.toList).onComplete{
                 case Success(_) =>

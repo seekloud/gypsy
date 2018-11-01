@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.http
 
+import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{ActorSystem, Scheduler}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.Message
@@ -14,12 +15,12 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
-import com.neo.sk.gypsy.Boot.{esheepClient, executor, roomManager, timeout}
+import com.neo.sk.gypsy.Boot.{esheepClient, executor, scheduler, timeout}
 import com.neo.sk.gypsy.core.EsheepSyncClient
 
 /**
   * @author zhaoyin
-  *
+  * @date 2018/10/25  下午9:39
   */
 trait AuthService extends ServiceUtils{
 
@@ -30,7 +31,7 @@ trait AuthService extends ServiceUtils{
   private def AuthUserErrorRsp(msg: String) = ErrorRsp(10001001, msg)
 
   protected def authPlatUser(accessCode:String)(f: EsheepProtocol.PlayerInfo => server.Route) :server.Route = {
-    if(false){
+    if(true){
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp=>
@@ -46,7 +47,7 @@ trait AuthService extends ServiceUtils{
         }
       }
     }else{
-      f(EsheepProtocol.PlayerInfo("test","test"))
+      f(EsheepProtocol.PlayerInfo("","test"))
     }
   }
 

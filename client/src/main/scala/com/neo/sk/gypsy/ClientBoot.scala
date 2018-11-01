@@ -1,54 +1,36 @@
-//package com.neo.sk.medusa
-//
-//import javafx.application.{Application, Platform}
-//import javafx.stage.Stage
-//
-//import akka.actor.{ActorSystem, Scheduler}
-//import akka.stream.ActorMaterializer
-//import com.neo.sk.medusa.common.AppSettings._
-//import akka.actor.typed.scaladsl.adapter._
-//import akka.http.scaladsl.Http
-//import com.neo.sk.gypsy.actor.{GameMessageReceiver, WSClient}
-//import com.neo.sk.gypsy.common.StageContext
-//import com.neo.sk.gypsy.controller.LoginController
-//import com.neo.sk.gypsy.model.GridOnClient
-//import com.neo.sk.gypsy.scene.{LoginScene, GameViewCanvas, GameScene}
-//
-//import scala.util.{Failure, Success}
-//
-//
-//
-//object ClientBoot {
-//	implicit val system = ActorSystem("medusa", config)
-//	// the executor should not be the default dispatcher.
-//	implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
-//	implicit val materializer: ActorMaterializer = ActorMaterializer()
-//	implicit val scheduler: Scheduler = system.scheduler
-//
-//	val gameMessageReceiver = system.spawn(GameMessageReceiver.create(), "gameController")
-//
-//	def addToPlatform(fun: => Unit) = {
-//		Platform.runLater(() => fun)
-//	}
-//
-//}
-//
-//class ClientBoot extends javafx.application.Application {
-//
-//	import ClientBoot._
-//	override def start(mainStage: Stage): Unit = {
-//		val context = new StageContext(mainStage)
-//		val wsClient = system.spawn(WSClient.create(gameMessageReceiver, context, system, materializer, executor), "WSClient")
-//		val loginScene = new LoginScene()
-//		val loginController = new LoginController(wsClient, loginScene, context)
-//		loginController.showScene()
-//
-//
-////		val gameViewScene = new GameScene()
-////		mainStage.setMaximized(true)
-////		context.switchScene(gameViewScene.GameViewScene,"Medusa")
-//
-//
-//	}
-//
-//}
+package com.neo.sk.gypsy
+
+import javafx.stage.Stage
+import akka.actor.{ActorSystem, Scheduler}
+import akka.stream.ActorMaterializer
+import akka.actor.typed.scaladsl.adapter._
+import javafx.application.{Application, Platform}
+
+
+import com.neo.sk.gypsy.common.AppSettings._
+
+/**
+  * @author zhaoyin
+  * @date 2018/10/28  2:45 PM
+  */
+
+object ClientBoot{
+  implicit val system = ActorSystem("gypsy",config)
+  implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  implicit val scheduler: Scheduler = system.scheduler
+
+  val gameHolderClient = system.spawn(GameHolderClient.create(),"gameHolder")
+
+
+
+}
+class ClientBoot extends javafx.application.Application{
+
+  import ClientBoot._
+  override def start(mainStage: Stage): Unit = {
+    val wsClient = system.spawn(WsClient.create(),"WsClient")
+  }
+}
+
+

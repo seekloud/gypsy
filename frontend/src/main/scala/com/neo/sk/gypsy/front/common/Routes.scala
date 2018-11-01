@@ -31,7 +31,7 @@ object Routes {
                          playerName:String,
                          roomId:Long,
                          accessCode:String
-                        ) = if(roomId == 0)
+                        ) = if(roomId == 0l)
       baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
     else
       baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode&roomId=$roomId"
@@ -45,6 +45,7 @@ object Routes {
                         accessCode:String,
                         userType:Int):String = {
       val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
+      //todo watchGame
       val wsUrl = if(userType == 0) playGame(playerId,playerName,roomId,accessCode)
       s"$wsProtocol://${dom.document.location.host}$wsUrl"
     }
