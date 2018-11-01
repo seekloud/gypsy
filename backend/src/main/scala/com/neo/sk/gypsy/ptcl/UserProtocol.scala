@@ -8,7 +8,7 @@ package com.neo.sk.gypsy.ptcl
 object UserProtocol {
   case class BaseUserInfo(
                            userType: String,
-                           userId: Long,
+                           userId: String,
                            name: String,
                            headImg:String
                          )

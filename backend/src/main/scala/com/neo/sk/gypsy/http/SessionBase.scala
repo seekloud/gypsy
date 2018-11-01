@@ -67,7 +67,7 @@ trait SessionBase extends SessionSupport with ServiceUtils with CirceSupport{
             Some(GypsySession(
               BaseUserInfo(
                 sessionMap(SessionKeys.userType),
-                sessionMap(SessionKeys.userId).toLong,
+                sessionMap(SessionKeys.userId),
                 sessionMap(SessionKeys.name),
                 sessionMap(SessionKeys.headImg)
               ),
