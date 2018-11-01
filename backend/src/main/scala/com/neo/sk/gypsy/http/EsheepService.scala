@@ -47,7 +47,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def AuthUserErrorRsp(msg: String) = ErrorRsp(10001001, msg)
 
-  private def playGame = (path("playGame") & get) {
+  private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
       'playerId.as[String],
       'playerName.as[String],
@@ -132,7 +132,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
-  val esheepRoutes: Route = path("api"){
+  val esheepRoutes: Route = pathPrefix("api"){
       playGame ~ watchGame ~ watchRecord
     }
 }

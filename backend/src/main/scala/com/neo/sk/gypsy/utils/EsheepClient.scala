@@ -61,15 +61,10 @@ object EsheepClient extends HttpUtil {
     val methodName = s"verifyAccessCode"
     val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
 
-    val data = Json.obj(
-      ("accessCode",accessCode.asJson)
-    ).noSpaces
+    val data = EsheepProtocol.VerifyAccCode(gameId, accessCode).asJson.noSpaces
 
-    val sn = appId + System.currentTimeMillis().toString
-    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
-    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
 
-    postJsonRequestSend(methodName,url,Nil,postData).map{
+    postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
         decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
           case Right(rsp) =>
