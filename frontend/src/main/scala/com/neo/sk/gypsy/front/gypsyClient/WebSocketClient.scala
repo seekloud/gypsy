@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl
@@ -13,9 +14,6 @@ import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.raw._
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe.parser._
 
 import scala.math._
 import com.neo.sk.gypsy.shared.util.utils.getZoomRate
@@ -38,7 +36,7 @@ import org.seekloud.byteobject.MiddleBufferInJs
 case class WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
-                            messageHandler:ptcl.WsMsgServer => Unit,
+                            messageHandler:GypsyGameEvent.WsMsgSource => Unit,
                             closeCallback:Event => Unit,
                             replay:Boolean = false
                           ) {
@@ -50,7 +48,7 @@ case class WebSocketClient(
 
   private val sendBuffer: MiddleBufferInJs = new MiddleBufferInJs(8192)
 
-  def sendMsg(msg:WsMsgServer) = {
+  def sendMsg(msg:GypsyGameEvent.WsMsgSource) = {
     import org.seekloud.byteobject.ByteObject._
     webSocketOpt.get.send(msg.fillMiddleBuffer(sendBuffer).result())
   }
@@ -82,14 +80,14 @@ case class WebSocketClient(
                 messageHandler(replayEventDecode(buf))
               }else{
                 val middleDataInJs = new MiddleBufferInJs(buf)
-                val data = bytesDecode[ptcl.WsMsgServer](middleDataInJs).right.get
+                val data = bytesDecode[GypsyGameEvent.WsMsgSource](middleDataInJs).right.get
                 messageHandler(data)
               }
             }
           case jsonStringMsg:String =>
             import io.circe.generic.auto._
             import io.circe.parser._
-            val data = decode[ptcl.WsMsgServer](jsonStringMsg).right.get
+            val data = decode[GypsyGameEvent.WsMsgSource](jsonStringMsg).right.get
             messageHandler(data)
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }
@@ -112,10 +110,10 @@ case class WebSocketClient(
 
   import org.seekloud.byteobject.ByteObject._
 
-  private def replayEventDecode(a:ArrayBuffer):ptcl.WsMsgServer= {
+  private def replayEventDecode(a:ArrayBuffer):GypsyGameEvent.WsMsgSource= {
     val middleDataInJs = new MiddleBufferInJs(a)
     if(a.byteLength > 0){
-      bytesDecode[List[ptcl.WsMsgServer]](middleDataInJs) match{
+      bytesDecode[List[GypsyGameEvent.WsMsgSource]](middleDataInJs) match{
         case Right(r)=>
           GypsyGameEvent.EventData(r)
         case Left(e) =>
@@ -127,7 +125,7 @@ case class WebSocketClient(
     }
   }
 
-  private def replayStateDecode(a: ArrayBuffer):ptcl.WsMsgServer={
+  private def replayStateDecode(a: ArrayBuffer):GypsyGameEvent.WsMsgSource={
     val middleDataInJs = new MiddleBufferInJs(a)
     bytesDecode[GypsyGameEvent.GameSnapshot](middleDataInJs) match {
       case Right(r)=>

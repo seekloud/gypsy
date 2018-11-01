@@ -6,7 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent._
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -547,7 +548,7 @@ trait Grid {
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
-    WsMsgProtocol.GridDataSync(
+    GypsyGameEvent.GridDataSync(
       frameCount,
       playerDetails,
 //      foodDetails,
@@ -557,7 +558,7 @@ trait Grid {
       scale
     )
   }
-  def getAllGridData: WsMsgProtocol.GridDataSync
+  def getAllGridData: GypsyGameEvent.GridDataSync
 
   def getActionEventMap(frame:Long):List[UserActionEvent]
 

@@ -66,11 +66,12 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[ptcl.WsMsgServer] = {
-      import io.circe.generic.auto._
-      import io.circe.parser._
+    implicit def parseJsonString2WsMsgFront(s:String): Option[GypsyGameEvent.WsMsgSource] = {
+
       try {
-        val wsMsg = decode[ptcl.WsMsgServer](s).right.get
+              import io.circe.generic.auto._
+              import io.circe.parser._
+        val wsMsg = decode[GypsyGameEvent.WsMsgSource](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -83,7 +84,7 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[ptcl.WsMsgServer](buffer) match {
+          bytesDecode[GypsyGameEvent.WsMsgSource](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
