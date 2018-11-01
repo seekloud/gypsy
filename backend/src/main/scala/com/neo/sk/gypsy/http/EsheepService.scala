@@ -47,7 +47,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def AuthUserErrorRsp(msg: String) = ErrorRsp(10001001, msg)
 
-  private def playGame = (path("playGame") & get) {
+  private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
       'playerId.as[String],
       'playerName.as[String],
@@ -60,7 +60,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         import io.circe.syntax._
         import io.circe._
         verifyAccessCodeFutureRst.map{ rsp =>
-          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+          if(rsp.errCode == 0){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, nickName, ""), System.currentTimeMillis()).toSessionMap
             val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomIdOpt.getOrElse(1000001),nickName,userId,false,_))
             dealFutureResult(
@@ -93,7 +93,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         import io.circe.syntax._
         import io.circe._
         verifyAccessCodeFutureRst.map{ rsp =>
-          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+          if(rsp.errCode == 0){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, userId.toString, ""), System.currentTimeMillis()).toSessionMap
             val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId.toString,userId,true,_))
             dealFutureResult(
@@ -132,7 +132,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
-  val esheepRoutes: Route = path("api"){
+  val esheepRoutes: Route = pathPrefix("api"){
       playGame ~ watchGame ~ watchRecord
     }
 }
