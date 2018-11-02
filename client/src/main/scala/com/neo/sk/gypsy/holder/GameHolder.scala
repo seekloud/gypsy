@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.holder
 
+import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
@@ -9,6 +9,11 @@ import javafx.util.Duration
 
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.scene.GameScene
+import com.neo.sk.gypsy.ClientBoot.gameClient
+import com.neo.sk.gypsy.actor.GameClient.ControllerInitial
+
 /**
   * @author zhaoyin
   * @date 2018/10/29  5:13 PM
@@ -36,8 +41,19 @@ object GameHolder {
   )
 
 }
-class GameHolder() {
+class GameHolder(
+                  stageCtx: StageContext,
+                 gameScene: GameScene,
+                ) {
   import GameHolder._
+
+  def connectToGameServer(gameHolder:GameHolder) = {
+    ClientBoot.addToPlatform{
+      stageCtx.showScene(gameScene.scene,"Gaming")
+      gameClient ! ControllerInitial(gameHolder)
+      start()
+    }
+  }
 
   def start()={
     println("start---")

@@ -18,16 +18,32 @@ object GameClient {
   private[this] var grid: GridOnClient = _
 
 
+  case class ControllerInitial(holder: GameHolder) extends GameClientMessage
+
+
   def create(): Behavior[ptcl.WsMsgSource] = {
     Behaviors.setup[ptcl.WsMsgSource]{ ctx =>
       implicit val stashBuffer: StashBuffer[ptcl.WsMsgSource] = StashBuffer[ptcl.WsMsgSource](Int.MaxValue)
-      grid = GameHolder.grid
-      switchBehavior(ctx, "running", running("", -1L))
+      switchBehavior(ctx, "waitting", waitting("", -1L))
     }
   }
 
+  private def waitting(playerId: String, roomId: Long)
+                      (implicit stashBuffer: StashBuffer[ptcl.WsMsgSource]): Behavior[ptcl.WsMsgSource]= {
+    Behaviors.receive{(ctx,msg) =>
+      msg match {
+        case ControllerInitial(gameHolder) =>
+          grid = GameHolder.grid
+          switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
+          Behaviors.same
+      }
 
-  private def running(id:String,roomId:Long)
+    }
+
+  }
+
+
+  private def running(id:String,roomId:Long,gameHolder: GameHolder)
                      (implicit stashBuffer: StashBuffer[ptcl.WsMsgSource]):Behavior[ptcl.WsMsgSource]={
     Behaviors.receive[ptcl.WsMsgSource]{(ctx,msg) =>
       msg match {
@@ -38,8 +54,8 @@ object GameClient {
           Behavior.same
 
         //todo 接收后台传来的消息 同frontend里的gameHolder一样
-        case
-
+        case x=>
+          Behaviors.same
       }
     }
   }

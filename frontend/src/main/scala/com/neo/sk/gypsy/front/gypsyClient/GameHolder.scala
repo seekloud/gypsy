@@ -167,7 +167,6 @@ class GameHolder(replay:Boolean = false) {
                  ):Unit = {
     myId = playerId
     val url = ApiRoute.getwrWebSocketUri(recordId,playerId,frame,accessCode)
-    //todo maxscore应该是多少？
     webSocketClient.setUp(url,0)
     start()
   }
