@@ -85,7 +85,7 @@ class GameScene {
         gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
         gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
         gameCanvasCtx.restore()
-//        renderFps(topCanvas,NetDelay.latency)
+ //       renderFps(topCanvas,NetDelay.latency)
         //todo 解决返回值问题
         val paraBack = gameView.drawKill(myId,grid,isDead,killList)
         killList=paraBack._1
