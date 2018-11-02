@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
 import javafx.util.Duration
 
+import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 /**
   * @author zhaoyin
@@ -43,7 +44,7 @@ class GameHolder() {
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //todo 游戏渲染
-        gameScene.draw()
+        GameScene.draw()
       }
     }
     val timeline = new Timeline()
