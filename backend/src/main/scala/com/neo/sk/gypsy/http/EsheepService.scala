@@ -124,7 +124,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     ){ (recordId, playerId, frame, accessCode) =>
       authPlatUser(accessCode){player =>
         //TODO
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,player.playerId,recordId,frame,_))
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,playerId,recordId,frame,_))
         dealFutureResult(
           flowFuture.map(t => handleWebSocketMessages(t))
         )

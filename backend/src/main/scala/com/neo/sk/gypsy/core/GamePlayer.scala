@@ -102,8 +102,8 @@ object GamePlayer {
   }
 
   def work(fileReader: FrameInputStream,
-           metaData:String,
-           initState:Protocol.GameEvent,
+           metaData:Protocol.GameInformation,
+           initState:Protocol.GameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[WsMsgSource]]= None
