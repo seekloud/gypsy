@@ -28,7 +28,6 @@ class WatchRecord(recordId:Long,playerId:String,frame:Int,accessCode:String) ext
     val gameHolder = new GameHolder(true)
     gameHolder.init()
     //直接建立websocket连接
-    //TODO maxScore
     gameHolder.watchRecord(recordId,playerId, frame, accessCode)
   }
 

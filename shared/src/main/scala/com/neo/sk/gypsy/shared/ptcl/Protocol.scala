@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.shared.ptcl
 
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-
+import com.neo.sk.gypsy.shared.ptcl.GameConfig
 
 object Protocol {
 
@@ -14,11 +14,11 @@ object Protocol {
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
-                           //                           foodDetails: List[Food],
+                           //foodDetails: List[Food],
                            massDetails: List[Mass],
-                           //                           virusDetails: List[Virus],
+                           //virusDetails: List[Virus],
                            virusDetails: Map[Long,Virus],
-                           scale:Double, //缩放比例
+                           scale: Double, //缩放比例
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
@@ -99,53 +99,60 @@ object Protocol {
   /**
     * replay-frame-msg
     */
-   case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
-   case class InitReplayError(msg:String) extends GameMessage
-   case class ReplayFinish() extends GameMessage
+  case class DecodeEvent(data:SyncGameAllState) extends GameMessage
+  case class DecodeEvents(data:EventData) extends GameMessage
+  case class DecodeEventError(data:DecodeError) extends GameMessage
+  case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
+  case class InitReplayError(msg:String) extends GameMessage
+  case class ReplayFinish() extends GameMessage
 
   /**
     * replay in front
     * */
-   case class DecodeError() extends GameEvent
-   case class EventData(list:List[GameEvent]) extends GameEvent
-   case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
+  case class DecodeError() extends GameEvent
+  case class EventData(list:List[GameEvent]) extends GameEvent
+  case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
 
-   case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
-   case class UserLeftRoom(userId:String,userName:String,roomId:Long, override val frame:Long) extends GameEvent
-   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
-   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
+  case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
+  case class UserLeftRoom(userId:String,userName:String,roomId:Long, override val frame:Long) extends GameEvent
+  case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
+  case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
 
-   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-   case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
-   case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
-   case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
-   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent
-   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
+  case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+  case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+  case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+  case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+  case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
+  case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent
+  case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
   case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
   case class ShowScale( override val frame:Long,scale:Double) extends GameEvent
+
+  sealed trait GameSnapshot
+
   case class GypsyGameSnapshot(
                                       state:GypsyGameSnapInfo
-                                    ) extends GameEvent
+
+                                    ) extends GameSnapshot
 
   case class GypsyGameSnapInfo(
                                       frameCount: Long,
                                       playerDetails: List[Player],
                                       foodDetails: List[Food],
                                       massDetails: List[Mass],
-                                      //    virusDetails: List[Virus],
+                                      //virusDetails: List[Virus],
                                       virusDetails: Map[Long,Virus]
                                     )
 
-  case class GameInformation(
-                                    gameStartTime:Long,
-                                    gypsyConfig: GypsyGameConfigImpl
+  final case class GameInformation(
+                                    gameStartTime:Long
+//                                    gypsyConfig: GypsyGameConfigImpl
                                   )
 
   //配置数据以后补上
-  case class GypsyGameConfigImpl(
+  final case class GypsyGameConfigImpl(
                                   x:Int = 100,
                                   y:Int = 200
                                   //     boundary: ,
