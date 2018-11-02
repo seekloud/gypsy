@@ -251,7 +251,6 @@ object RoomActor {
           ctx.unwatch(childRef)
           Behaviors.same
 
-
         case TimeOut=>
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
@@ -419,10 +418,10 @@ object RoomActor {
       val curTime = System.currentTimeMillis()
       val fileName = s"gypsyGame_${curTime}"
 //      val gameInformation = TankGameEvent.GameInformation(curTime,AppSettings.tankGameConfig.getTankGameConfigImpl())
-//      val gameInformation = GameInformation(curTime,GypsyGameConfigImpl())
-      val gameInformation = ""
+      val gameInformation = GameInformation(curTime)
+//      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
-      val actor = ctx.spawn(GameRecorder.create(fileName,curTime,initStateOpt,roomId),childName)
+      val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[GameRecorder.Command]
