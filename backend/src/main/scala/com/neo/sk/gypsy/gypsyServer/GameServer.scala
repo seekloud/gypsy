@@ -64,7 +64,6 @@ class GameServer(override val boundary: Point) extends Grid {
     roomId = id
   }
 
-
   var VirusId = new AtomicLong(1000L)
 
   private[this] def genWaitingStar() = {
@@ -405,7 +404,7 @@ class GameServer(override val boundary: Point) extends Grid {
     AddGameEvent(event)
   }
 
- override def checkVirusMassCrash(): Unit = {
+  override def checkVirusMassCrash(): Unit = {
    var removeMass = List.empty[Mass]
    var newVirus = Map.empty[Long,Virus]
    //TODO 这边病毒的运动有待商榷
@@ -532,7 +531,7 @@ class GameServer(override val boundary: Point) extends Grid {
     )
   }
 
-//获取快照
+  //获取快照
   def getSnapShot()={
 
     val playerDetails =  playerMap.map{
@@ -552,8 +551,8 @@ class GameServer(override val boundary: Point) extends Grid {
     )
   }
 
-//  获取事件
-  def getEvents()={
+  //获取事件
+  def getEvents()= {
     (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
       .filter(_.isInstanceOf[GameEvent]).map(_.asInstanceOf[GameEvent])
   }
@@ -566,10 +565,10 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   def getNewApples = newFoods
+
   def cleanNewApple = {
     newFoods = Map.empty
   }
-
 
   def randomEmptyPoint(): Point = {
     val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
@@ -583,7 +582,6 @@ class GameServer(override val boundary: Point) extends Grid {
   def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]]) ={
     subscriber=subscribersMap
   }
-
 
   override def getActionEventMap(frame:Long): List[GameEvent] = {
     ActionEventMap.getOrElse(frame,List.empty)
