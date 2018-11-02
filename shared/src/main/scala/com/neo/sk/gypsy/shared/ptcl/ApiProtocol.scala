@@ -53,6 +53,14 @@ object ApiProtocol {
                         msg:String ="ok"
                         )
 
+  case class getRoomReq(
+                       playerId:String
+                       )
+
+  case class getPlayerReq(
+                         roomId:Long
+                         )
+
   case class AllVideoRecordReq(
                          lastRecordId:Long,
                          count:Int

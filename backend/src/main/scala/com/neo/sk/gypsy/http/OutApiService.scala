@@ -31,8 +31,8 @@ trait OutApiService extends ServiceUtils with SessionBase{
   private val log = LoggerFactory.getLogger(this.getClass)
 
   private val getRoomId = (path("getRoomId") & post & pathEndOrSingleSlash){
-    dealPostReq[String]{ playerId =>
-      val msgFuture:Future[RoomIdRsp]= roomManager ? (RoomManager.GetRoomId(playerId , _))
+    dealPostReq[getRoomReq]{ req =>
+      val msgFuture:Future[RoomIdRsp]= roomManager ? (RoomManager.GetRoomId(req.playerId , _))
       msgFuture.map{
           msg => complete(msg)
         }
@@ -40,8 +40,8 @@ trait OutApiService extends ServiceUtils with SessionBase{
   }
 
   private val getGamePlayerList = (path("getGamePlayerList") & post & pathEndOrSingleSlash){
-    dealPostReq[Long] { RoomId =>
-      val msgFuture:Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(RoomId,_))
+    dealPostReq[getPlayerReq] { req =>
+      val msgFuture:Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(req.roomId,_))
       msgFuture.map{
         msg => complete(msg)
       }
@@ -49,7 +49,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
   }
 
   private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash){
-    dealPostReq[String] { _ =>
+    dealGetReq {
       val msgFuture:Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
       msgFuture.map{
         msg => complete(msg)
