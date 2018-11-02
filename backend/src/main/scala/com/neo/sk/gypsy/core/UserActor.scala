@@ -99,6 +99,15 @@ object UserActor {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
           switchBehavior(ctx,"idle", idle(uId,frontActor))
+
+        case UserLeft(actor) =>
+          ctx.unwatch(actor)
+          Behaviors.stopped
+
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
+          //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
       }
 
     }
@@ -116,6 +125,10 @@ object UserActor {
         case StartReply(recordId,playerId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
+
+        case unKnowMsg =>
+          stashBuffer.stash(unKnowMsg)
+          Behavior.same
       }
     }
 

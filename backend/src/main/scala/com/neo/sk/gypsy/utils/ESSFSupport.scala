@@ -33,7 +33,7 @@ object ESSFSupport {
     * 存储
     * @author hongruying on 2018/8/14
     * */
-  def initFileRecorder(fileName:String,index:Int,gameInformation: String,initStateOpt:Option[Protocol.GameEvent] = None)
+  def initFileRecorder(fileName:String,index:Int,gameInformation: GameInformation,initStateOpt:Option[Protocol.GameSnapshot] = None)
     (implicit middleBuffer: MiddleBufferInJvm):FrameOutputStream = {
     val dir = new File(AppSettings.gameDataDirectoryPath)
     if(!dir.exists()){
@@ -44,7 +44,7 @@ object ESSFSupport {
     val version = "0.1"
     val gameInformationBytes = gameInformation.fillMiddleBuffer(middleBuffer).result()
     val initStateBytes = initStateOpt.map{
-      case t:Protocol.GameEvent =>
+      t:Protocol.GameSnapshot =>
         t.fillMiddleBuffer(middleBuffer).result()
     }.getOrElse(Array[Byte]())
     val recorder = new FrameOutputStream(file)
@@ -65,13 +65,13 @@ object ESSFSupport {
 
   def metaDataDecode(a:Array[Byte])={
     val buffer = new MiddleBufferInJvm(a)
-//    bytesDecode[GameInformation](buffer)
-    bytesDecode[String](buffer)
+    bytesDecode[GameInformation](buffer)
+//    bytesDecode[String](buffer)
   }
 
   def initStateDecode(a:Array[Byte]) ={
     val buffer = new MiddleBufferInJvm(a)
-    bytesDecode[Protocol.GypsyGameSnapshot](buffer)
+    bytesDecode[Protocol.GameSnapshot](buffer)
   }
 
   def userMapDecode(a:Array[Byte])={

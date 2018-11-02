@@ -10,7 +10,7 @@ import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
 import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
@@ -150,7 +150,6 @@ class GameHolder(replay:Boolean = false) {
   }
 
   def gameRender(): Double => Unit = { d =>
-//    println("gameRender-gameRender")
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != "") {
@@ -168,7 +167,6 @@ class GameHolder(replay:Boolean = false) {
                  ):Unit = {
     myId = playerId
     val url = ApiRoute.getwrWebSocketUri(recordId,playerId,frame,accessCode)
-    //todo maxscore应该是多少？
     webSocketClient.setUp(url)
     start()
   }
@@ -183,7 +181,6 @@ class GameHolder(replay:Boolean = false) {
     usertype = userType
     val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
-    println("url:   "+url)
     webSocketClient.setUp(url)
     //gameloop + gamerender
     start()
@@ -331,6 +328,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.Ranks(current, history) =>
         grid.currentRank = current
         grid.historyRank = history
+
       case Protocol.FeedApples(foods) =>
 //        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
@@ -399,31 +397,20 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
-      case Protocol.MatchRoomError()=>
-        drawClockView.cleanClock()
-        JsFunc.alert("超过等待时间请重新选择")
+//      case Protocol.MatchRoomError()=>
+//        drawClockView.cleanClock()
+//        JsFunc.alert("超过等待时间请重新选择")
         //todo
 //        LoginPage.homePage()
 
-//      case Protocol.ReplayFrameData(frameIndex, eventsData, stateData) =>
-//        eventsData match {
-//          case EventData(events) =>
-//            events.foreach (event => replayMessageHandler(event, frameIndex))
-//          case Protocol.DecodeError() =>
-//          //            println("events decode error")
-//          case _ =>
-//        }
-//        if(stateData.nonEmpty) {
-//          stateData.get match {
-//            case msg: Snapshot =>
-//              //              println(s"snapshot get")
-//              //              println(s"snapshot:$msg")
-//              replayMessageHandler(msg, frameIndex)
-//            case Protocol.DecodeError() =>
-//            //              println("state decode error")
-//            case _ =>
-//          }
-//        }
+      case Protocol.DecodeEvent(data)=>
+        replayMessageHandler(data)
+
+      case Protocol.DecodeEvents(data)=>
+        data.list.foreach(item => replayMessageHandler(item))
+
+      case Protocol.DecodeEventError(data) =>
+        replayMessageHandler(data)
 
       case msg@_ =>
         println(s"unknown $msg")
@@ -433,37 +420,28 @@ class GameHolder(replay:Boolean = false) {
 
   private def replayMessageHandler(data:Protocol.GameEvent):Unit = {
     data match {
-      case e:Protocol.EventData =>
-        e.list.foreach(r=>replayMessageHandler(r))
+      case e:Protocol.SyncGameAllState =>
+        println(s"回放全量数据，grid frame=${grid.frameCount}, sync state frame=${e.gState.frameCount}")
+        val data = e.gState
+        syncGridData = Some(GridDataSync(data.frameCount,
+          data.playerDetails,data.massDetails,
+          data.virusDetails,0.toDouble,Nil,Nil))
+        justSynced = true
 
-//      case e:GypsyGameEvent.SyncGameAllState =>
-//        //todo 拿到全量数据改怎么办
-//        val data = e.gState
-//        syncGridData = GridDataSync(data.frameCount,
-//          data.playerDetails,data.foodDetails,
-//          data.massDetails,data.virusDetails)
-//        justSynced = true
-//
-//      case e:GypsyGameEvent.UserActionEvent =>
-//        e match {
-//          case g: GypsyGameEvent.MouseMove =>
-//            grid.addMouseActionWithFrame(g.userId,MousePosition(g.userId,g.direct._1,g.direct._2,g.frame,g.serialNum))
-//          case g: GypsyGameEvent.KeyPress =>
-//            //todo
-//            grid.addActionWithFrame(g.userId,)
-//        }
+      case e: Protocol.KeyPress =>
+        grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
-//      case e:GypsyGameEvent.GameEvent =>
-//        e match {
-//          case g: GypsyGameEvent.UserJoinRoom =>
-//            grid.playerMap += g.playState.id -> g.playState
-//          case g: GypsyGameEvent.UserLeftRoom =>
-//            grid.removePlayer(g.userId)
-//          case g: GypsyGameEvent.GenerateApples =>
-//            grid.food ++= g.apples.map(a => Point(a.x, a.y) -> a.color)
-//          case g: GypsyGameEvent.GenerateVirus =>
-//            grid.virus ++= g.virus
-//        }
+      case e: Protocol.MouseMove =>
+        grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
+
+      case e: Protocol.GenerateApples =>
+        grid.food ++= e.apples.map(a => a._1 -> a._2)
+
+      case e: Protocol.UserJoinRoom =>
+        grid.playerMap += e.playState.id -> e.playState
+
+      case e: Protocol.UserLeftRoom =>
+        grid.removePlayer(e.userId)
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
@@ -473,12 +451,16 @@ class GameHolder(replay:Boolean = false) {
 
       case e:Protocol.DecodeError =>
         //todo closeHolder
+        closeHolder
 
       case e:Protocol.InitReplayError =>
         //todo closeHolder
         closeHolder
 
-      case _ => println("unknow msg")
+      case _ =>
+        println(s"unknow msg: $data")
+
+        //todo 玩家融合事件未处理
     }
   }
 

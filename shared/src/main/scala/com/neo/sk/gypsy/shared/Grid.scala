@@ -126,7 +126,6 @@ trait Grid {
     updatePlayer()
     actionMap -= (frameCount-5)
     mouseActionMap -= (frameCount-5)
-
     ActionEventMap -= (frameCount-5)
     GameEventMap -= (frameCount-5)
     frameCount += 1
@@ -149,35 +148,35 @@ trait Grid {
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
 
-    //先移动到指定位置，同时进行质量衰减
     tick = tick+1
 
+    //先移动到指定位置，同时进行质量衰减
     playerMap = if(tick%10==1){
-      tick =1
+      tick = 1
       playerMap.values.map(updatePlayerMap(_,mouseAct,true)).map(s=>(s.id,s)).toMap
-      //      massDecrease()
     }else{
       playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
     }
-//    碰撞检测
+    //碰撞检测
     checkCrash(keyAct,mouseAct)
     val event = PlayerInfoChange(playerMap,frameCount)
     AddGameEvent(event)
   }
 
-//  碰撞检测
+    //碰撞检测
   def checkCrash(keyAct: Map[String,KeyCode], mouseAct: Map[String, MousePosition])={
     checkPlayerFoodCrash()
     checkPlayerMassCrash()
     checkPlayer2PlayerCrash()
+    checkVirusMassCrash()
     val mergeInFlame=checkCellMerge()
     checkPlayerVirusCrash(mergeInFlame)
     checkPlayerShotMass(keyAct,mouseAct)
-    checkVirusMassCrash()
     checkPlayerSplit(keyAct,mouseAct)
   }
 
 
+  //更新病毒的位置
   def updateVirus() :Unit ={
     val NewVirus = virusMap.map{vi=>
       val v =vi._2
@@ -249,13 +248,12 @@ trait Grid {
 
     mass.copy(x = newX, y = newY, speed = newSpeed)
   }
-
-//病毒更新
+  //更新病毒位置
   updateVirus()
 
-  feedApple(foodPool + playerMap.size * 3 - food.size) //增添食物
-//  addVirus(virusNum - virus.size) //增添病毒
-  addVirus(virusNum - virusMap.size) //增添病毒
+  feedApple(foodPool + playerMap.size * 3 - food.size)//增添食物（后端增添，前端不添）
+    //addVirus(virusNum - virus.size) //增添病毒
+  addVirus(virusNum - virusMap.size) //增添病毒(后端增添，前端不添）
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
@@ -514,7 +512,7 @@ trait Grid {
     val newCells=player.cells.map{cell=>
       var newMass = cell.mass
       if(cell.mass > decreaseLimit)
-        newMass = cell.mass*decreaseRate
+        newMass = cell.mass * decreaseRate
       cell.copy(mass = newMass)
     }
     player.copy(cells = newCells)
@@ -558,6 +556,7 @@ trait Grid {
       scale
     )
   }
+
   def getAllGridData: Protocol.GridDataSync
 
   def getActionEventMap(frame:Long):List[GameEvent]
