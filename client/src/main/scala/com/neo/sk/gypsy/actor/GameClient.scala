@@ -18,7 +18,8 @@ object GameClient {
   private[this] var grid: GridOnClient = _
 
 
-  case class ControllerInitial(holder: GameHolder) extends GameClientMessage
+  sealed trait Command
+  case class ControllerInitial(holder: GameHolder) extends Command
 
 
   def create(): Behavior[ptcl.WsMsgSource] = {
