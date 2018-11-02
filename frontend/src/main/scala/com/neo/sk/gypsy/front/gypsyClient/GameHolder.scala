@@ -397,9 +397,9 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap=grid.playerMap - id + (id->player)
         }
 
-      case Protocol.MatchRoomError()=>
-        drawClockView.cleanClock()
-        JsFunc.alert("超过等待时间请重新选择")
+//      case Protocol.MatchRoomError()=>
+//        drawClockView.cleanClock()
+//        JsFunc.alert("超过等待时间请重新选择")
         //todo
 //        LoginPage.homePage()
 
@@ -430,6 +430,7 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.KeyPress =>
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
+
       case e: Protocol.MouseMove =>
         grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
@@ -457,7 +458,7 @@ class GameHolder(replay:Boolean = false) {
         closeHolder
 
       case _ =>
-//        println(s"unknow msg 啦啦啦啦啦 $data")
+        println(s"unknow msg: $data")
 
         //todo 玩家融合事件未处理
     }

@@ -124,11 +124,10 @@ trait Grid {
   def update() = {
     updateSpots()
     updatePlayer()
-    actionMap -= frameCount
-    mouseActionMap -= frameCount
-
-    ActionEventMap -= frameCount
-
+    actionMap -= (frameCount-5)
+    mouseActionMap -= (frameCount-5)
+    ActionEventMap -= (frameCount-5)
+    GameEventMap -= (frameCount-5)
     frameCount += 1
   }
 
