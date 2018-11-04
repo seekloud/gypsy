@@ -11,6 +11,8 @@ object Protocol {
 
   sealed trait GameMessage extends WsMsgSource
 
+  case class ControllerInitial() extends GameMessage
+
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
