@@ -10,6 +10,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 /**
   * @author zhaoyin
   * @date 2018/10/30  11:44 AM
@@ -24,18 +25,18 @@ object GameClient {
 
 
 
-  def create(): Behavior[GameMessage] = {
+  def create(): Behavior[WsMsgSource] = {
     Behaviors.setup[GameMessage]{ ctx =>
-      implicit val stashBuffer: StashBuffer[GameMessage] = StashBuffer[GameMessage](Int.MaxValue)
+      implicit val stashBuffer: StashBuffer[WsMsgSource] = StashBuffer[WsMsgSource](Int.MaxValue)
       switchBehavior(ctx, "waitting", waitting("", -1L))
     }
   }
 
   private def waitting(playerId: String, roomId: Long)
-                      (implicit stashBuffer: StashBuffer[Command]): Behavior[Command]= {
+                      (implicit stashBuffer: StashBuffer[WsMsgSource]): Behavior[WsMsgSource]= {
     Behaviors.receive{(ctx,msg) =>
       msg match {
-        case ControllerInitial(gameHolder) =>
+        case ControllerInitial() =>
           grid = GameHolder.grid
           switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
           Behaviors.same
@@ -47,7 +48,7 @@ object GameClient {
 
 
   private def running(id:String,roomId:Long,gameHolder: GameHolder)
-                     (implicit stashBuffer: StashBuffer[ptcl.WsMsgSource]):Behavior[ptcl.WsMsgSource]={
+                     (implicit stashBuffer: StashBuffer[WsMsgSource]):Behavior[WsMsgSource]={
     Behaviors.receive[GameMessage]{ (ctx, msg) =>
       msg match {
         case Protocol.Id(id) =>

@@ -13,6 +13,8 @@ object Protocol {
 
   case class ControllerInitial() extends GameMessage
 
+  case class ErrorWsMsgFront(msg:String) extends GameMessage
+
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
