@@ -7,6 +7,7 @@ import javafx.scene.text.Font
 
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 
 /**
   * @author zhaoyin
@@ -49,7 +50,7 @@ class GameScene {
   val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
   val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
-  def draw(myId:String,data:WsMsgProtocol.GridDataSync,offsetTime:Long)={
+  def draw(myId:String,data:GridDataSync,offsetTime:Long)={
     var zoom = (30.0, 30.0)
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>

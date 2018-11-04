@@ -17,10 +17,10 @@ import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import io.circe.parser.decode
 import io.circe.generic.auto._
 
@@ -38,7 +38,7 @@ object WsClient {
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
   case object Stop extends WsCommand
 
-  def create(gameClient: ActorRef[ptcl.WsMsgSource],
+  def create(gameClient: ActorRef[GameMessage],
              stageCtx: StageContext,
              _system: ActorSystem,
              _materializer: Materializer,
@@ -53,7 +53,7 @@ object WsClient {
 
 
 
-  private def working(gameClient: ActorRef[ptcl.WsMsgSource],
+  private def working(gameClient: ActorRef[GameMessage],
                       stageCtx: StageContext
                      )(
     implicit timer:TimerScheduler[WsCommand],
@@ -95,19 +95,19 @@ object WsClient {
     }
   }
   //客户端发消息给后台
-  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[ptcl.WsSendMsg](
+  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[WsSendMsg](
     completionMatcher = {
-      case ptcl.WsSendComplete =>
+      case WsSendComplete =>
         log.info("Websocket Complete")
         wsClient ! Stop
     },
     failureMatcher = {
-      case ptcl.WsSendFailed(ex)  ⇒ ex
+      case WsSendFailed(ex)  ⇒ ex
     },
     bufferSize = 8,
     overflowStrategy = OverflowStrategy.fail
   ).collect{
-    case message: ptcl.UserAction =>
+    case message: UserAction =>
       val sendBuffer = new MiddleBufferInJvm(409600)
       BinaryMessage.Strict(ByteString(
         message.fillMiddleBuffer(sendBuffer).result()
@@ -115,23 +115,23 @@ object WsClient {
   }
 
   //收到后台发给前端的消息
-  def getSink(actor: ActorRef[ptcl.WsMsgSource]) =
+  def getSink(actor: ActorRef[WsMsgSource]) =
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
         log.debug(s"msg from websocket: $msg")
-        ErrorWsMsgFront
+        ErrorWsMsgFront(msg)
 
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[ptcl.WsMsgSource](buffer) match {
+          bytesDecode[GameMessage](buffer) match {
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
-              ErrorWsMsgFront
+              ErrorWsMsgFront(e.message)
           }
         msg
-    }.to(ActorSink.actorRef[ptcl.WsMsgSource](actor,ptcl.CompleteMsgServer(), ptcl.FailMsgServer))
+    }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer(), FailMsgServer))
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
