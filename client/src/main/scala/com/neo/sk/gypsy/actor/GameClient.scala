@@ -6,6 +6,7 @@ import com.neo.sk.gypsy.holder.GameHolder
 import com.neo.sk.gypsy.shared.ptcl
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
@@ -23,13 +24,9 @@ object GameClient {
 
 
 
-  sealed trait Command
-  case class ControllerInitial(holder: GameHolder) extends Command
-
-
-  def create(): Behavior[Command] = {
-    Behaviors.setup[Command]{ ctx =>
-      implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
+  def create(): Behavior[GameMessage] = {
+    Behaviors.setup[GameMessage]{ ctx =>
+      implicit val stashBuffer: StashBuffer[GameMessage] = StashBuffer[GameMessage](Int.MaxValue)
       switchBehavior(ctx, "waitting", waitting("", -1L))
     }
   }
