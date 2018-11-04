@@ -14,13 +14,11 @@ import scala.concurrent.duration._
 import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer}
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer}
 import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import io.circe.{Decoder, Encoder}
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
@@ -34,6 +32,8 @@ import scala.collection.mutable
   * Time: 11:09
   */
 object RoomManager {
+  import org.seekloud.byteobject.MiddleBufferInJvm
+
 
   private val log=LoggerFactory.getLogger(this.getClass)
   sealed trait Command
@@ -69,9 +69,9 @@ object RoomManager {
         msg match {
           case msg:JoinGame=>
             if(msg.roomId.toString.startsWith("1")){
-              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
-            }else{
               msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,false),msg.sender,msg.id,msg.watchGame)
+            }else{
+              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
             }
             Behaviors.same
 
@@ -131,8 +131,7 @@ object RoomManager {
 
   def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: String, watchgame: Boolean): Flow[Message, Message, Any] ={
     import scala.language.implicitConversions
-    import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-    import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+    import org.seekloud.byteobject.ByteObject._
     import io.circe.generic.auto._
     import io.circe.parser._
 
@@ -140,15 +139,15 @@ object RoomManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[ptcl.WsMsgServer](buffer) match {
+          bytesDecode[Protocol.UserAction](buffer) match {
             case Right(req) => req
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
-              ErrorWsMsgServer
+              Protocol.TextInfo(e.message)
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          ErrorWsMsgServer
+          Protocol.TextInfo(msg)
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
@@ -157,7 +156,7 @@ object RoomManager {
       }
       .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
       .map {
-      case t:ptcl.WsMsgFront =>
+      case t:Protocol.GameMessage =>
         val sendBuffer = new MiddleBufferInJvm(409600)
         BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
       case x =>

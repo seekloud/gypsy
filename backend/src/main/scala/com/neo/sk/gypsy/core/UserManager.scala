@@ -7,11 +7,9 @@ import akka.stream.scaladsl.Flow
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.ActorAttributes
 import akka.util.ByteString
-import com.neo.sk.gypsy.shared.ptcl
-import com.neo.sk.gypsy.utils.byteObject.ByteObject.bytesDecode
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
 
 /**
@@ -19,6 +17,9 @@ import akka.stream.{ActorAttributes, Supervision}
   * @date 2018/10/25  下午9:10
   */
 object UserManager {
+
+  import org.seekloud.byteobject.MiddleBufferInJvm
+
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
@@ -65,11 +66,12 @@ object UserManager {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
-    implicit def parseJsonString2WsMsgFront(s:String): Option[ptcl.WsMsgServer] = {
-      import io.circe.generic.auto._
-      import io.circe.parser._
+    implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.UserAction] = {
+
       try {
-        val wsMsg = decode[ptcl.WsMsgServer](s).right.get
+              import io.circe.generic.auto._
+              import io.circe.parser._
+        val wsMsg = decode[Protocol.UserAction](s).right.get
         Some(wsMsg)
       }catch {
         case e: Exception =>
@@ -82,7 +84,7 @@ object UserManager {
       .collect {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-          bytesDecode[ptcl.WsMsgServer](buffer) match {
+          bytesDecode[Protocol.UserAction](buffer) match {
             case Right(req) => UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
@@ -90,7 +92,7 @@ object UserManager {
           }
         case TextMessage.Strict(msg) =>
           log.debug(s"msg from webSocket: $msg")
-          UserActor.WebSocketMsg(msg)
+          UserActor.WebSocketMsg(None)
 
         // unpack incoming WS text messages...
         // This will lose (ignore) messages not received in one chunk (which is
@@ -98,7 +100,7 @@ object UserManager {
         // FIXME: We need to handle TextMessage.Streamed as well.
       }.via(UserActor.flow(userActor))
       .map{
-        case t: GypsyGameEvent.ReplayFrameData =>
+        case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
 
         case x =>

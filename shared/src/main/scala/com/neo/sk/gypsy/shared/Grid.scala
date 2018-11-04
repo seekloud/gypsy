@@ -4,9 +4,10 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameEvent, KeyPress, MouseMove, UserActionEvent}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
@@ -14,6 +15,7 @@ import com.neo.sk.gypsy.shared.util.utils
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 
 /**
@@ -35,48 +37,17 @@ trait Grid {
 
   val cellIdgenerator = new AtomicInteger(1000000)
 
-  val historyRankLength = 5
-
-  val slowBase = 10
-  val initMassLog = utils.logSlowDown(10,slowBase)
-  val acceleration  = 2
-//质量转半径率
-  val mass2rRate = 6
-  //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
-  val coverRate = 0
   var frameCount = 0l
-//合并时间间隔
-  val mergeInterval = 18 * 1000
-  //分裂时间间隔
-  val splitInterval = 2 * 1000
-//最小分裂大小
-  val splitLimit = 30
-  //分裂初始速度
-  val splitBaseSpeed = 40
-  //食物质量
-  val foodMass = 1
   //食物列表
   var food = Map[Point, Int]()
-  //食物池
-  var foodPool = 300
   //病毒列表
   var virus = List[Virus]()
-  //病毒数量
-  var virusNum:Int = 8
-  //病毒质量上限
-  var virusMassLimit:Int = 200
+  //病毒map (ID->Virus)
+  var virusMap = Map.empty[Long,Virus]
   //玩家列表
   var playerMap = Map.empty[String,Player]
   //喷出小球列表
   var massList = List[Mass]()
-  val shotMass = 10
-  val shotSpeed = 100
-  //最大分裂个数
-  val maxCellNum = 16
-  //质量衰减下限
-  val decreaseLimit = 200
-  //衰减率
-  val decreaseRate = 0.995
   //衰减周期计数
   var tick = 0
   //操作列表  帧数->(用户ID->操作)
@@ -84,7 +55,7 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
 
-  val ActionEventMap = mutable.HashMap[Long,List[UserActionEvent]]() //frame -> List[UserActionEvent]
+  val ActionEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
 
   val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
 
@@ -120,21 +91,21 @@ trait Grid {
     AddActionEvent(action)
   }
 
-  def removeActionWithFrame(id: String, gameAction: GameAction, frame: Long) = {
-    gameAction match {
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Long) = {
+    userAction match {
       case k:KeyCode=>
         val map = actionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        val actionQueue = map.filterNot(t => t._1 == id && k.serialNum == t._2.serialNum)
         actionMap += (frame->actionQueue)
       case m:MousePosition=>
         val map = mouseActionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && gameAction.serialNum == t._2.serialNum)
+        val actionQueue = map.filterNot(t => t._1 == id && m.serialNum == t._2.serialNum)
         mouseActionMap += (frame->actionQueue)
     }
   }
 
 
-  def AddActionEvent(action:UserActionEvent):Unit ={
+  def AddActionEvent(action: GameEvent):Unit ={
     ActionEventMap.get(action.frame) match {
       case Some(actionEvents) => ActionEventMap.put(action.frame,action :: actionEvents)
       case None => ActionEventMap.put(action.frame,List(action))
@@ -151,13 +122,12 @@ trait Grid {
 
 
   def update() = {
-    updatePlayer()
     updateSpots()
-    actionMap -= frameCount
-    mouseActionMap -= frameCount
-
-    ActionEventMap -= frameCount
-
+    updatePlayer()
+    actionMap -= (frameCount-5)
+    mouseActionMap -= (frameCount-5)
+    ActionEventMap -= (frameCount-5)
+    GameEventMap -= (frameCount-5)
     frameCount += 1
   }
 
@@ -167,26 +137,89 @@ trait Grid {
 
   def updatePlayer()={
 
+    def updatePlayerMap(player: Player, mouseActMap: Map[String, MousePosition],decrease:Boolean)={
+      if(decrease){
+        updatePlayerMove(massDecrease(player),mouseActMap)
+      }else{
+        updatePlayerMove(player,mouseActMap)
+      }
+    }
+    //TODO 确认下是不是frameCount
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
 
-    //先移动到指定位置
-//    println(playerMap.values)
-    playerMap=playerMap.values.map(updatePlayerMove(_, mouseAct)).map(s=>(s.id,s)).toMap
+    tick = tick+1
 
+    //先移动到指定位置，同时进行质量衰减
+    playerMap = if(tick%10==1){
+      tick = 1
+      playerMap.values.map(updatePlayerMap(_,mouseAct,true)).map(s=>(s.id,s)).toMap
+    }else{
+      playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
+    }
+    //碰撞检测
+    checkCrash(keyAct,mouseAct)
+    val event = PlayerInfoChange(playerMap,frameCount)
+    AddGameEvent(event)
+  }
+
+    //碰撞检测
+  def checkCrash(keyAct: Map[String,KeyCode], mouseAct: Map[String, MousePosition])={
     checkPlayerFoodCrash()
     checkPlayerMassCrash()
     checkPlayer2PlayerCrash()
+    checkVirusMassCrash()
     val mergeInFlame=checkCellMerge()
     checkPlayerVirusCrash(mergeInFlame)
     checkPlayerShotMass(keyAct,mouseAct)
-    checkVirusMassCrash()
     checkPlayerSplit(keyAct,mouseAct)
-    tick = tick+1
-    if(tick%10==1){
-      tick =1
-      massDecrease()
+  }
+
+
+  //更新病毒的位置
+  def updateVirus() :Unit ={
+    val NewVirus = virusMap.map{vi=>
+      val v =vi._2
+      val (nx,ny)= normalization(v.targetX,v.targetY)
+      var newX = v.x
+      var newY = v.y
+      var newSpeed = v.speed
+      //      var newMass = v.mass
+//      var newRadius = v.radius
+//      var newSpeed = v.speed
+//      var newTargetX = v.targetX
+//      var newTargetY = v.targetY
+      if(v.speed!=0){
+        newX = v.x + (nx*v.speed).toInt
+        newY = v.y + (ny*v.speed).toInt
+        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0 else v.speed-virusSpeedDecayRate
+        val newPoint =ExamBoundary(newX,newY)
+        newX = newPoint._1
+        newY = newPoint._2
+      }
+      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed)
     }
+    virusMap ++= NewVirus
+  }
+
+//边界超越校验
+  def ExamBoundary(newX:Int,newY:Int)={
+    val x = if(newX>boundary.x){
+      boundary.x
+    } else if(newX<0){
+      0
+    }else{
+      newX
+    }
+    val y = if(newY>boundary.y){
+      boundary.y
+    } else if(newY<0){
+      0
+    }else{
+      newY
+    }
+
+    (x,y)
   }
 
   //食物更新
@@ -200,7 +233,7 @@ trait Grid {
     var newSpeed = mass.speed
     var newX = mass.x
     var newY = mass.y
-    newSpeed -= 25
+    newSpeed -= massSpeedDecayRate
     if (newSpeed < 0) newSpeed = 0
     if (!(deltaY).isNaN) newY += deltaY.toInt
     if (!(deltaX).isNaN) newX += deltaX.toInt
@@ -215,8 +248,12 @@ trait Grid {
 
     mass.copy(x = newX, y = newY, speed = newSpeed)
   }
-  feedApple(foodPool + playerMap.size * 3 - food.size) //增添食物
-  addVirus(virusNum - virus.size) //增添病毒
+  //更新病毒位置
+  updateVirus()
+
+  feedApple(foodPool + playerMap.size * 3 - food.size)//增添食物（后端增添，前端不添）
+    //addVirus(virusNum - virus.size) //增添病毒
+  addVirus(virusNum - virusMap.size) //增添病毒(后端增添，前端不添）
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
@@ -357,7 +394,9 @@ trait Grid {
 
   //发射小球
   def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
-    val newPlayerMap = playerMap.values.map {
+    //TODO 这里写下有哪些是分裂的
+
+    var newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
         val shot = actMap.get(player.id) match {
@@ -372,14 +411,20 @@ trait Grid {
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
+            var newMassList =  List.empty[Mass]
             if (shot && newMass > shotMass * 3) {
               newMass -= shotMass
               newRadius = 4 + sqrt(newMass) * 6
               val massRadius = 4 + sqrt(shotMass) * 6
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+//              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
+            massList :::=newMassList
+//            生成mass事件
+            val event = GenerateMass(newMassList,frameCount)
+            AddGameEvent(event)
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
@@ -391,8 +436,9 @@ trait Grid {
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
-    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-
+    playerMap ++= newPlayerMap.map(s => (s.id, s)).toList
+//    val event = PlayerInfoChange(playerMap,frameCount)
+//    AddGameEvent(event)
   }
 
   //分裂检测
@@ -442,11 +488,13 @@ trait Grid {
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+//    val event = PlayerInfoChange(playerMap,frameCount)
+//    AddGameEvent(event)
   }
 
 
 //超过200的cell质量衰减
-  def massDecrease():Unit={
+/*  def massDecrease():Unit={
     val newPlayerMap = playerMap.values.map{player=>
       val newCells=player.cells.map{cell=>
         var newMass = cell.mass
@@ -458,7 +506,20 @@ trait Grid {
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
+  }*/
+
+  def massDecrease(player:Player)={
+    val newCells=player.cells.map{cell=>
+      var newMass = cell.mass
+      if(cell.mass > decreaseLimit)
+        newMass = cell.mass * decreaseRate
+      cell.copy(mass = newMass)
+    }
+    player.copy(cells = newCells)
   }
+
+
+
 
   def updateAndGetGridData() = {
     update()
@@ -474,29 +535,31 @@ trait Grid {
     val width = Window.w/scale/2
     val height = Window.h/scale/2
 
-    var foodDetails: List[Food] = Nil
+//    var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-    food.foreach{
+/*    food.foreach{
       case (p,mass) =>
         foodDetails ::= Food(mass, p.x, p.y)
-    }
+    }*/
     playerMap.foreach{
       case (id,player) =>
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
-    WsMsgProtocol.GridDataSync(
+    Protocol.GridDataSync(
       frameCount,
       playerDetails,
-      foodDetails,
+//      foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+//      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       scale
     )
   }
-  def getAllGridData: WsMsgProtocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[UserActionEvent]
+  def getAllGridData: Protocol.GridDataSync
+
+  def getActionEventMap(frame:Long):List[GameEvent]
 
   def getGameEventMap(frame:Long):List[GameEvent]
 

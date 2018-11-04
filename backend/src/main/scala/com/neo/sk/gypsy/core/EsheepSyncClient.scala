@@ -90,7 +90,7 @@ object EsheepSyncClient {
             }
             switchBehavior(ctx, "busy", busy(), GetTokenTime, TimeOut("Get Token"))
           } else{
-            switchBehavior(ctx, "work", work(EsheepProtocol.GameServerKey2TokenInfo("",System.currentTimeMillis() + 2.days.toMillis)))
+            switchBehavior(ctx, "work", work(EsheepProtocol.GameServerKey2TokenInfo("",System.currentTimeMillis() + 2.hours.toMillis)))
           }
 
 
@@ -136,10 +136,10 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case VerifyAccessCode(accessCode, rsp) =>
-          EsheepClient.verifyAccessCode(accessCode, tokenInfo.gsToken).onComplete{
+          EsheepClient.verifyAccessCode(accessCode, tokenInfo.token).onComplete{
             case Success(rst) =>
               rst match {
-                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(Some(value))
+                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(value.playerInfo)
                 case Left(error) => handleErrorRsp(ctx, msg, error)(() => rsp ! error)
               }
             case Failure(exception) =>
@@ -153,7 +153,7 @@ object EsheepSyncClient {
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
 
         case r:InputRecord =>
-          EsheepClient.inputRecoder(tokenInfo.gsToken,r.playerId,r.nickname,r.killing,r.killed,r.score,"",r.startTime,r.endTime).onComplete{
+          EsheepClient.inputRecoder(tokenInfo.token,r.playerId,r.nickname,r.killing,r.killed,r.score,"",r.startTime,r.endTime).onComplete{
             case Success(rst) =>
               rst match {
                 case Right(value) =>
@@ -176,7 +176,7 @@ object EsheepSyncClient {
     }
   }
 
-  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(None, errorRsp.errCode, errorRsp.msg)
+  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(EsheepProtocol.PlayerInfo("",""), errorRsp.errCode, errorRsp.msg)
 
   private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
     errorRsp.errCode match {
@@ -188,17 +188,4 @@ object EsheepSyncClient {
     }
 
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
