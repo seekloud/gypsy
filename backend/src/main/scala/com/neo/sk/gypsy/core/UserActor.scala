@@ -3,10 +3,11 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.stream.OverflowStrategy
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
@@ -26,7 +27,7 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[ptcl.WsMsgServer]) extends Command
+  case class WebSocketMsg(reqOpt: Option[Protocol.UserAction]) extends Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
@@ -34,7 +35,7 @@ object UserActor {
   /**
     * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
     * */
-  case class UserFrontActor(actor: ActorRef[ptcl.WsMsgSource]) extends Command
+  case class UserFrontActor(actor: ActorRef[WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
@@ -61,15 +62,15 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, ptcl.WsMsgSource,Any] = {
+  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgSource,Any] = {
     val in = Flow[WebSocketMsg].to(sink(actor))
     val out =
-      ActorSource.actorRef[ptcl.WsMsgSource](
+      ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
-          case ptcl.CompleteMsgServer() ⇒
+          case CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case ptcl.FailMsgServer(e)  ⇒ e
+          case FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -98,13 +99,22 @@ object UserActor {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
           switchBehavior(ctx,"idle", idle(uId,frontActor))
+
+        case UserLeft(actor) =>
+          ctx.unwatch(actor)
+          Behaviors.stopped
+
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
+          //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
       }
 
     }
 
   private def idle(
                     uId: String,
-                    frontActor: ActorRef[ptcl.WsMsgSource]
+                    frontActor: ActorRef[WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
@@ -115,6 +125,10 @@ object UserActor {
         case StartReply(recordId,playerId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
+
+        case unKnowMsg =>
+          stashBuffer.stash(unKnowMsg)
+          Behavior.same
       }
     }
 

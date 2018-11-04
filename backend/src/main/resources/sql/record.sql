@@ -17,3 +17,5 @@ record_id BIGINT NOT NULL ,
 user_id BIGINT NOT NULL ,
 room_id BIGINT NOT NULL
 );
+
+ALTER TABLE user_record_map ALTER COLUMN user_id TYPE TEXT;

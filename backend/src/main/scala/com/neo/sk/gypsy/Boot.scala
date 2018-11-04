@@ -28,7 +28,7 @@ object Boot extends HttpService {
   override implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
   override implicit val materializer = ActorMaterializer()
 
-  override val timeout = Timeout(20 seconds) // for actor asks
+  override implicit val timeout = Timeout(20 seconds) // for actor asks
 
   override implicit val scheduler = system.scheduler
 
