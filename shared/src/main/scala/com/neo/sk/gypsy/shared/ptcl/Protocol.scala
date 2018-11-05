@@ -36,6 +36,8 @@ object Protocol {
 
   case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
 
+  case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
+
   case class KillMessage(killerId:String,deadPlayer:Player) extends GameMessage
 
   case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
