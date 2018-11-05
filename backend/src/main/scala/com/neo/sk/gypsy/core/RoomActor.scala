@@ -215,6 +215,7 @@ object RoomActor {
           val feedapples = newApples.map(p=>Food(p._2,p._1.x,p._1.y)).toList
           val gridData = grid.getAllGridData
           val eventList = grid.getEvents()
+//          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
             getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
           }

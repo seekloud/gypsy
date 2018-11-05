@@ -432,6 +432,7 @@ class GameHolder(replay:Boolean = false) {
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
+//        println(s"now${grid.frameCount}  e'fra ${e.frame} posi${e.direct}  ")
         grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
