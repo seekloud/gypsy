@@ -6,11 +6,11 @@ import akka.stream.OverflowStrategy
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import com.neo.sk.gypsy.models.GypsyUserInfo
-
+import com.neo.sk.gypsy.Boot.roomManager
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -27,9 +27,14 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[GypsyGameEvent.WsMsgServer]) extends Command
+  case class WebSocketMsg(reqOpt: Option[Protocol.GameMessage]) extends Command
+
+  case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
 
   case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None) extends Command with RoomManager.Command
+
+
+  case class JoinRoomSuccess(tank:TankServerImpl,config:TankGameConfigImpl,uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
@@ -37,7 +42,7 @@ object UserActor {
   /**
     * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
     * */
-  case class UserFrontActor(actor: ActorRef[GypsyGameEvent.WsMsgSource]) extends Command
+  case class UserFrontActor(actor: ActorRef[WsMsgProtocol.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
@@ -68,15 +73,15 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, GypsyGameEvent.WsMsgSource,Any] = {
+  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
     val in = Flow[WebSocketMsg].to(sink(actor))
     val out =
-      ActorSource.actorRef[GypsyGameEvent.WsMsgSource](
+      ActorSource.actorRef[WsMsgProtocol.WsMsgSource](
         completionMatcher = {
-          case GypsyGameEvent.CompleteMsgServe ⇒
+          case WsMsgProtocol.CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case GypsyGameEvent.FailMsgServer(e)  ⇒ e
+          case WsMsgProtocol.FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -104,7 +109,7 @@ object UserActor {
       msg match {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
-          switchBehavior(ctx,"idle", idle(uId,userInfo,frontActor))
+          switchBehavior(ctx,"idle", idle(uId,userInfo,System.currentTimeMillis(),frontActor))
       }
 
     }
@@ -112,7 +117,8 @@ object UserActor {
   private def idle(
                     uId: String,
                     userInfo:GypsyUserInfo,
-                    frontActor: ActorRef[GypsyGameEvent.WsMsgSource]
+                    startTime:Long,
+                    frontActor: ActorRef[WsMsgProtocol.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
@@ -126,6 +132,7 @@ object UserActor {
 
         case StartGame(roomIdOp) =>
 
+          roomManager ! JoinRoom(uId,None,userInfo.userName,startTime,ctx.self)
           Behaviors.same
 
 
