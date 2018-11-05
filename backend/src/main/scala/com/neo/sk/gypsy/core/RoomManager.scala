@@ -16,7 +16,7 @@ import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.UserActor.JoinRoom
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, WsMsgServer}
+
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, GameState}
 import io.circe.{Decoder, Encoder}
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
@@ -78,32 +78,32 @@ object RoomManager {
 //            }
 //            Behaviors.same
 
-          case JoinRoom(uid,gameStateOpt,name,startTime,userActor, roomIdOpt) =>
+          case JoinRoom(uid,gameStateOpt,name,startTime,userActor, roomIdOpt,watchGame) =>
             roomIdOpt match{
               case Some(roomId) =>
                 roomInUse.get(roomId) match{
                   case Some(ls) => roomInUse.put(roomId,(uid,name) :: ls)
                   case None => roomInUse.put(roomId,List((uid,name)))
                 }
-                getRoomActor(ctx,roomId,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,roomId)
+                getRoomActor(ctx,roomId,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,roomId,watchGame)
                 //TODO  match room need to be headled in the futrue
               case None =>
                 gameStateOpt match{
                   case Some(GameState.relive) =>
                     roomInUse.find(_._2.exists(_._1 == uid)) match{
-                      case Some(t) =>getRoomActor(ctx,t._1,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,t._1)
+                      case Some(t) =>getRoomActor(ctx,t._1,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,t._1,watchGame)
                       case None =>log.debug(s"${ctx.self.path} error:tank relives, but find no room")
                     }
                   case _ =>
                     roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(_._1).headOption match{
                       case Some(t) =>
                         roomInUse.put(t._1,(uid,name) :: t._2)
-                        getRoomActor(ctx,t._1,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,t._1)
+                        getRoomActor(ctx,t._1,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,t._1,watchGame)
                       case None =>
                         var roomId = roomIdGenerator.getAndIncrement()
                         while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
                         roomInUse.put(roomId,List((uid,name)))
-                        getRoomActor(ctx,roomId,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,roomId)
+                        getRoomActor(ctx,roomId,false) ! RoomActor.JoinRoom(uid,name,startTime,userActor,roomId,watchGame)
                     }
                 }
             }

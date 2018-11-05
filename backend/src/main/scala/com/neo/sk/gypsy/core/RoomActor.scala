@@ -43,9 +43,11 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
+ // private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
 
   case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long,watchgame:Boolean) extends Command
+
+  case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
   private case class ChangeWatch(id: String, watchId: String) extends Command
 
