@@ -10,7 +10,9 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
+import com.neo.sk.gypsy.core.GamePlayer.StopReplay
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
+
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -29,7 +31,10 @@ object UserActor {
 
   case class WebSocketMsg(reqOpt: Option[Protocol.UserAction]) extends Command
 
+  case class StopReplay(recordId:Long) extends Command
+
   case object CompleteMsgFront extends Command
+
   case class FailMsgFront(ex: Throwable) extends Command
 
   /**
@@ -38,6 +43,7 @@ object UserActor {
   case class UserFrontActor(actor: ActorRef[WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
+
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
@@ -56,14 +62,14 @@ object UserActor {
     stashBuffer.unstashAll(ctx,behavior)
   }
 
-  private def sink(actor: ActorRef[Command]) = ActorSink.actorRef[Command](
+  private def sink(actor: ActorRef[Command],recordId:Long) = ActorSink.actorRef[Command](
     ref = actor,
-    onCompleteMessage = CompleteMsgFront,
+    onCompleteMessage = StopReplay(recordId),
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgSource,Any] = {
-    val in = Flow[WebSocketMsg].to(sink(actor))
+  def flow(actor:ActorRef[Command],recordId:Long):Flow[WebSocketMsg, WsMsgSource,Any] = {
+    val in = Flow[WebSocketMsg].to(sink(actor,recordId))
     val out =
       ActorSource.actorRef[WsMsgSource](
         completionMatcher = {
@@ -125,6 +131,11 @@ object UserActor {
         case StartReply(recordId,playerId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
+
+        case StopReplay(recordId) =>
+          getGameReply(ctx,recordId) ! GamePlayer.StopReplay()
+          Behaviors.same
+
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
