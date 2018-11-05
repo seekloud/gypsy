@@ -48,7 +48,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,"","",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
-                  ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
+                  ctx.redirect("/gypsy",StatusCodes.SeeOther)
               }
           }
         }~ path("playGame") {
@@ -71,7 +71,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
             'accessCode.as[String]
           ){
             case (recordId, playerId,frame,accessCode) =>
-              redirect(s"/gyspy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
+              redirect(s"/gypsy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
                 StatusCodes.SeeOther)
           }
         } ~ resourceRoutes ~ userRoutes ~ esheepRoutes ~ apiRoutes

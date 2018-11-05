@@ -115,7 +115,7 @@ case class WebSocketClient(
     if(a.byteLength > 0){
       bytesDecode[List[Protocol.GameEvent]](middleDataInJs) match{
         case Right(r)=>
-          println(s"事件数据解析成功！！！$r")
+//          println(s"事件数据解析成功！！！$r")
           DecodeEvents(Protocol.EventData(r))
         case Left(e) =>
           replayStateDecode(a)
