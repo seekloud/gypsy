@@ -432,6 +432,7 @@ class GameHolder(replay:Boolean = false) {
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
+        println("前端帧号：  "+ grid.frameCount + "mouseMove:   "+e.frame)
         grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
@@ -458,8 +459,7 @@ class GameHolder(replay:Boolean = false) {
         closeHolder
 
       case _ =>
-        println(s"unknow msg: $data")
-
+//        println(s"unknow msg: $data")
         //todo 玩家融合事件未处理
     }
   }
