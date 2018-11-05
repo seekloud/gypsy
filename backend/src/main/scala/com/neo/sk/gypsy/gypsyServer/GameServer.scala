@@ -281,7 +281,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
-//    var removeVirus = List.empty[Virus]
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
@@ -552,17 +551,14 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   //获取事件
-//  def getEvents()= {
-//    (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
-//      .filter(_.isInstanceOf[GameEvent]).map(_.asInstanceOf[GameEvent])
-//  }
   def getEvents()= {
     //    val temp = List.empty[GameEvent]
     val ge = GameEventMap.getOrElse(frameCount-1,List.empty)
     val ae = ActionEventMap.getOrElse(frameCount-1,List.empty)
     //    (GameEventMap.getOrElse(frameCount-1,Nil) ::: ActionEventMap.getOrElse(frameCount-1,Nil))
     //      .filter(_.isInstanceOf[GameEvent]).map(_.asInstanceOf[GameEvent])
-    ge:::ae
+    (ge:::ae).filter(_.isInstanceOf[GameEvent]).map(_.asInstanceOf[GameEvent])
+
   }
 
 
