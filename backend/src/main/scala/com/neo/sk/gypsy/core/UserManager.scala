@@ -50,7 +50,7 @@ object UserManager {
           //TODO getUserActorOpt
           val userActor = getUserActor(ctx, playerId)
           //开始创建flow
-          replyTo ! getWebSocketFlow(userActor)
+          replyTo ! getWebSocketFlow(userActor,recordId)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
 
@@ -62,7 +62,7 @@ object UserManager {
     }
   }
 
-  private def getWebSocketFlow(userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
+  private def getWebSocketFlow(userActor: ActorRef[UserActor.Command],recordId:Long):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
@@ -98,7 +98,7 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(userActor))
+      }.via(UserActor.flow(userActor,recordId))
       .map{
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
