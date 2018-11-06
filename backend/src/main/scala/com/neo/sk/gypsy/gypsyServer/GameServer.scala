@@ -45,7 +45,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //  private[this] var feededApples: List[Food] = Nil
   private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
-  private[this] var addedVirus:List[Virus] = Nil
+//  private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgSource]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
@@ -128,23 +128,26 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   override def addVirus(v: Int): Unit = {
-    addedVirus = Nil
+//    addedVirus = Nil
     var virusNeeded = v
-    var addVirus = Map.empty[Long,Virus]
+    var addNewVirus = Map.empty[Long,Virus]
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
       val mass = 50 + random.nextInt(50)
       val radius = 4 + sqrt(mass) * mass2rRate
       val vid = VirusId.getAndIncrement()
       val newVirus = Virus(vid,p.x,p.y,mass,radius)
-      addVirus += (vid->newVirus)
-      addedVirus ::= newVirus
+      addNewVirus += (vid->newVirus)
+//      addedVirus ::= newVirus
 //      virus ::= newVirus
       virusNeeded -= 1
     }
-    virusMap ++= addVirus
-    val event = GenerateVirus(addVirus,frameCount)
-    AddGameEvent(event)
+    virusMap ++= addNewVirus
+    if(addNewVirus.keySet.nonEmpty){
+      dispatch(subscriber,AddVirus(addNewVirus))
+      val event = GenerateVirus(addNewVirus,frameCount)
+      AddGameEvent(event)
+    }
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {
@@ -326,8 +329,8 @@ class GameServer(override val boundary: Point) extends Grid {
       //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
 
-    val event = RemoveVirus(removeVirus,frameCount)
-    AddGameEvent(event)
+//    val event = RemoveVirus(removeVirus,frameCount)
+//    AddGameEvent(event)
     virusMap --= removeVirus.keySet.toList
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -399,8 +402,9 @@ class GameServer(override val boundary: Point) extends Grid {
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    val event = RemoveMass(removeMass,frameCount)
-    AddGameEvent(event)
+    //前端也做
+//    val event = RemoveMass(removeMass,frameCount)
+//    AddGameEvent(event)
   }
 
   override def checkVirusMassCrash(): Unit = {
@@ -426,12 +430,12 @@ class GameServer(override val boundary: Point) extends Grid {
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
 
-            newX += vx.toInt
-            newY += vy.toInt
+//            newX += vx.toInt
+//            newY += vy.toInt
             hasMoved =true
-            val newPoint =ExamBoundary(newX,newY)
-            newX = newPoint._1
-            newY = newPoint._2
+//            val newPoint =ExamBoundary(newX,newY)
+//            newX = newPoint._1
+//            newY = newPoint._2
            /* val borderCalc = 0
             if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
             if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
@@ -483,6 +487,8 @@ class GameServer(override val boundary: Point) extends Grid {
      AddGameEvent(event)
    }
    if(newVirus.nonEmpty){
+     //生成病毒发送给前端
+     dispatch(subscriber,AddVirus(newVirus))
      val event = GenerateVirus(newVirus,frameCount)
 //     dispatch(subscriber,event)
      AddGameEvent(event)

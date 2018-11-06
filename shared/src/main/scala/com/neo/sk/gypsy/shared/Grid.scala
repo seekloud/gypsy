@@ -40,8 +40,8 @@ trait Grid {
   var frameCount = 0l
   //食物列表
   var food = Map[Point, Int]()
-  //病毒列表
-  var virus = List[Virus]()
+//  //病毒列表
+//  var virus = List[Virus]()
   //病毒map (ID->Virus)
   var virusMap = Map.empty[Long,Virus]
   //玩家列表
@@ -378,21 +378,28 @@ trait Grid {
     player.copy(x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
   }
 
+  //TODO 前后
   //食物检测
   def checkPlayerFoodCrash(): Unit
-  //mass检测
+  //TODO 前后
+  //mass检测(前后端一样)
   def checkPlayerMassCrash(): Unit
+  //TODO 前后
   //mass检测
   def checkVirusMassCrash(): Unit
+  //TODO 只后台！！
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit
 
+  //TODO 前端做排次后台判断
   //返回在这一帧是否融合过
   def checkCellMerge(): Boolean
 
+  //TODO 只后台！！
   //病毒碰撞检测
   def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit
 
+  //TODO 前后
   //发射小球
   def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     //TODO 这里写下有哪些是分裂的
@@ -424,8 +431,10 @@ trait Grid {
             }
             massList :::=newMassList
 //            生成mass事件
-            val event = GenerateMass(newMassList,frameCount)
-            AddGameEvent(event)
+            if(newMassList.nonEmpty){
+              val event = GenerateMass(newMassList,frameCount)
+              AddGameEvent(event)
+            }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
@@ -442,6 +451,7 @@ trait Grid {
 //    AddGameEvent(event)
   }
 
+  //TODO 暂时前后
   //分裂检测
   def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
