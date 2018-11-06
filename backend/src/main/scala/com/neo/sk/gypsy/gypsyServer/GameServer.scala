@@ -490,6 +490,7 @@ class GameServer(override val boundary: Point) extends Grid {
      //生成病毒发送给前端
      dispatch(subscriber,AddVirus(newVirus))
      val event = GenerateVirus(newVirus,frameCount)
+//     dispatch(subscriber,event)
      AddGameEvent(event)
    }
 

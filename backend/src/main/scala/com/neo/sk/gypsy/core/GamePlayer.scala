@@ -39,6 +39,8 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
+  case class StopReplay() extends Command
+
 
   final case class SwitchBehavior(
                                  name: String,
@@ -154,6 +156,10 @@ object GamePlayer {
             Behaviors.same
           }
         case msg:TimeOut=>
+          Behaviors.stopped
+
+
+        case StopReplay() =>
           Behaviors.stopped
 
         case unKnowMsg =>
