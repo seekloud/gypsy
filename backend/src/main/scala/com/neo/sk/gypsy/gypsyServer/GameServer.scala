@@ -45,7 +45,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //  private[this] var feededApples: List[Food] = Nil
   private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
-  private[this] var addedVirus:List[Virus] = Nil
+//  private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgSource]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
@@ -128,23 +128,24 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   override def addVirus(v: Int): Unit = {
-    addedVirus = Nil
+//    addedVirus = Nil
     var virusNeeded = v
-    var addVirus = Map.empty[Long,Virus]
+    var addNewVirus = Map.empty[Long,Virus]
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
       val mass = 50 + random.nextInt(50)
       val radius = 4 + sqrt(mass) * mass2rRate
       val vid = VirusId.getAndIncrement()
       val newVirus = Virus(vid,p.x,p.y,mass,radius)
-      addVirus += (vid->newVirus)
-      addedVirus ::= newVirus
+      addNewVirus += (vid->newVirus)
+//      addedVirus ::= newVirus
 //      virus ::= newVirus
       virusNeeded -= 1
     }
-    virusMap ++= addVirus
-    if(addVirus.keySet.nonEmpty){
-      val event = GenerateVirus(addVirus,frameCount)
+    virusMap ++= addNewVirus
+    if(addNewVirus.keySet.nonEmpty){
+      dispatch(subscriber,AddVirus(addNewVirus))
+      val event = GenerateVirus(addNewVirus,frameCount)
       AddGameEvent(event)
     }
   }
@@ -482,12 +483,13 @@ class GameServer(override val boundary: Point) extends Grid {
     virusMap ++= virus1
    if(removeMass.nonEmpty){
      val event = RemoveMass(removeMass,frameCount)
-     dispatch(subscriber,event)
+//     dispatch(subscriber,event)
      AddGameEvent(event)
    }
    if(newVirus.nonEmpty){
+     //生成病毒发送给前端
+     dispatch(subscriber,AddVirus(newVirus))
      val event = GenerateVirus(newVirus,frameCount)
-     dispatch(subscriber,event)
      AddGameEvent(event)
    }
 
