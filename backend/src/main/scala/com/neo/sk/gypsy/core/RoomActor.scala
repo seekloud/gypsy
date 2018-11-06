@@ -31,7 +31,7 @@ import scala.concurrent.duration._
 object RoomActor {
   val log = LoggerFactory.getLogger(this.getClass)
 
-  sealed trait Command
+  trait Command
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
 
@@ -109,42 +109,6 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-//        case CheckName(name,replyTo)=>
-//          log.info(s"$name check name")
-//          if(userMap.exists(_._2==name)){
-//           replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-//          }else{
-//            UserDao.getUserByName(name).map{
-//              case Some(_)=>
-//                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-//              case None=>
-//                replyTo ! CheckNameRsp(roomId)
-//            }
-//          }
-//          Behavior.same
-
-//        case Join(id, name, subscriber,watchgame) =>
-//          log.info(s"got $msg")
-//          if(watchgame){
-//            val x = (new util.Random).nextInt(userList.length)
-//            userList(x).shareList.append(id)
-//            ctx.watchWith(subscriber,Left(id,name))
-//            subscribersMap.put(id,subscriber)
-//            //观察者前端的id是其观察对象的id
-//            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(userList(x).id),userList)
-//            dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
-//          }else{
-//            userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
-//            userMap.put(id,name)
-//            ctx.watchWith(subscriber,Left(id,name))
-//            subscribersMap.put(id,subscriber)
-//            grid.addSnake(id, name)
-//            dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
-//            dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
-//          }
-////          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
-////          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
-//          Behaviors.same
 
 
         case JoinRoom(id, name, startTime,subscriber,roomId,watchgame) =>
