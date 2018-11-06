@@ -108,6 +108,7 @@ class GameHolder(replay:Boolean = false) {
       //不同步
       if (!justSynced) {
         update()
+        println(s"当前帧号fra now is ${grid.frameCount} ")
       } else {
 //        println("back")
         if (syncGridData.nonEmpty) {
@@ -220,7 +221,8 @@ class GameHolder(replay:Boolean = false) {
     }
     var FormerDegree = 0D
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+//      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
@@ -432,7 +434,6 @@ class GameHolder(replay:Boolean = false) {
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
-//        println(s"now${grid.frameCount}  e'fra ${e.frame} posi${e.direct}  ")
         grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
@@ -446,8 +447,10 @@ class GameHolder(replay:Boolean = false) {
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
-        dom.window.cancelAnimationFrame(nextFrame)
         //todo closeHolder
+        println(s"播放结束！！！")
+//        dom.window.alert("播放结束，谢谢观看！")
+//        dom.window.cancelAnimationFrame(nextFrame)
         closeHolder
 
       case e:Protocol.DecodeError =>
@@ -457,6 +460,9 @@ class GameHolder(replay:Boolean = false) {
       case e:Protocol.InitReplayError =>
         //todo closeHolder
         closeHolder
+
+
+
 
       case _ =>
         println(s"unknow msg: $data")

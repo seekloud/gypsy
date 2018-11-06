@@ -86,7 +86,7 @@ trait Grid {
     val map = mouseActionMap.getOrElse(mp.frame, Map.empty)
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
-    val direct = normalization(mp.clientX,mp.clientY)
+    val direct = (mp.clientX,mp.clientY)
     val action = MouseMove(mp.id,direct,mp.frame,mp.serialNum)
     AddActionEvent(action)
   }
@@ -379,7 +379,7 @@ trait Grid {
 
   //食物检测
   def checkPlayerFoodCrash(): Unit
-  //mass检测
+  //mass检测(前后端一样)
   def checkPlayerMassCrash(): Unit
   //mass检测
   def checkVirusMassCrash(): Unit
@@ -423,8 +423,10 @@ trait Grid {
             }
             massList :::=newMassList
 //            生成mass事件
-            val event = GenerateMass(newMassList,frameCount)
-            AddGameEvent(event)
+            if(newMassList.nonEmpty){
+              val event = GenerateMass(newMassList,frameCount)
+              AddGameEvent(event)
+            }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
