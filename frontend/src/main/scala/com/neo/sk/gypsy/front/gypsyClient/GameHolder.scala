@@ -400,7 +400,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
-          grid.playerMap=grid.playerMap - id + (id->player)
+          grid.playerMap = grid.playerMap - id + (id->player)
         }
 
 //      case Protocol.MatchRoomError()=>
@@ -465,13 +465,13 @@ class GameHolder(replay:Boolean = false) {
         //todo closeHolder
         closeHolder
 
-
-
+      case e:Protocol.UserMerge =>
+        if(grid.playerMap.get(e.id).nonEmpty){
+          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
+        }
 
       case _ =>
         println(s"unknow msg: $data")
-
-        //todo 玩家融合事件未处理
     }
   }
 

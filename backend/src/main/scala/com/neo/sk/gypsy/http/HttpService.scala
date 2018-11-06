@@ -48,7 +48,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,"","",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
-                  ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
+                  ctx.redirect("/gypsy",StatusCodes.SeeOther)
               }
           }
         }~ path("playGame") {

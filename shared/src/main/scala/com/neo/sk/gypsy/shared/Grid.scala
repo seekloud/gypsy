@@ -124,8 +124,8 @@ trait Grid {
   def update() = {
     updateSpots()
     updatePlayer()
-    actionMap -= (frameCount-5)
-    mouseActionMap -= (frameCount-5)
+    actionMap -= frameCount
+    mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
     GameEventMap -= (frameCount-5)
     frameCount += 1
@@ -145,8 +145,10 @@ trait Grid {
       }
     }
     //TODO 确认下是不是frameCount
+
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
+
 
     tick = tick+1
 
@@ -373,7 +375,6 @@ trait Grid {
     val bottom = newCells.map(a => a.y - a.radius).min
     val top = newCells.map(a => a.y + a.radius).max
 
-//    println(newCells)
     player.copy(x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
   }
 
