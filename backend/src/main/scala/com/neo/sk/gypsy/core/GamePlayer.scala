@@ -147,9 +147,10 @@ object GamePlayer {
             )
             Behaviors.same
           }else{
-            userOpt.foreach(u=>
-              dispatchTo(u,Protocol.ReplayFinish())
-            )
+            println(s"replay finish!")
+            userOpt.foreach { u =>
+              dispatchTo(u, Protocol.ReplayFinish())
+            }
             timer.cancel(GameLoopKey)
             timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.same
