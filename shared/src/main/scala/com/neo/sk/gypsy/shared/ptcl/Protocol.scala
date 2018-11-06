@@ -46,6 +46,9 @@ object Protocol {
 
   case class Pong(timestamp: Long)extends GameMessage
 
+  case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
+
+
   /**
     * 前端发送的数据
     * */

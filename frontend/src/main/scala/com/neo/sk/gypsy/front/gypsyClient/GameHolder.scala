@@ -335,6 +335,10 @@ class GameHolder(replay:Boolean = false) {
 //        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
+      case Protocol.AddVirus(virus) =>
+        println(s"接收新病毒 new Virus ${virus}")
+        grid.virusMap ++= virus
+
       case data: Protocol.GridDataSync =>
         //TODO here should be better code.
         println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
