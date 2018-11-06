@@ -149,8 +149,6 @@ trait Grid {
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
 
-    println("mouseAct:    "+mouseAct)
-
 
     tick = tick+1
 
