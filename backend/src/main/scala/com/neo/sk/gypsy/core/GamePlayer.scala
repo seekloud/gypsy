@@ -124,7 +124,7 @@ object GamePlayer {
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               if(fileReader.hasMoreFrame){
-                timer.startPeriodicTimer(GameLoopKey, GameLoop, 100.millis)
+                timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
                 timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
@@ -145,9 +145,10 @@ object GamePlayer {
             )
             Behaviors.same
           }else{
-            userOpt.foreach(u=>
-              dispatchTo(u,Protocol.ReplayFinish())
-            )
+            println(s"replay finish!")
+            userOpt.foreach { u =>
+              dispatchTo(u, Protocol.ReplayFinish())
+            }
             timer.cancel(GameLoopKey)
             timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.same

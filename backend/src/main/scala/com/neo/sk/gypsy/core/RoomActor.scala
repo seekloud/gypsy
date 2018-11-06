@@ -422,7 +422,8 @@ object RoomActor {
       val gameInformation = GameInformation(curTime)
 //      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
-      val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initStateOpt,roomId),childName)
+      val initFrame = grid.frameCount
+      val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[GameRecorder.Command]

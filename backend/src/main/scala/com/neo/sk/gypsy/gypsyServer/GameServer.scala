@@ -143,8 +143,10 @@ class GameServer(override val boundary: Point) extends Grid {
       virusNeeded -= 1
     }
     virusMap ++= addVirus
-    val event = GenerateVirus(addVirus,frameCount)
-    AddGameEvent(event)
+    if(addVirus.keySet.nonEmpty){
+      val event = GenerateVirus(addVirus,frameCount)
+      AddGameEvent(event)
+    }
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {
@@ -326,8 +328,8 @@ class GameServer(override val boundary: Point) extends Grid {
       //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
 
-    val event = RemoveVirus(removeVirus,frameCount)
-    AddGameEvent(event)
+//    val event = RemoveVirus(removeVirus,frameCount)
+//    AddGameEvent(event)
     virusMap --= removeVirus.keySet.toList
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -399,8 +401,9 @@ class GameServer(override val boundary: Point) extends Grid {
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    val event = RemoveMass(removeMass,frameCount)
-    AddGameEvent(event)
+    //前端也做
+//    val event = RemoveMass(removeMass,frameCount)
+//    AddGameEvent(event)
   }
 
   override def checkVirusMassCrash(): Unit = {

@@ -385,12 +385,12 @@ class GameClient (override val boundary: Point) extends Grid {
     massList = data.massDetails
 //    virus = data.virusDetails
     virusMap ++= data.virusDetails
-    val myCell=playerMap.find(_._1==myId)
+/*    val myCell=playerMap.find(_._1==myId)
     if(myCell.isDefined){
       for(i<- advanceFrame to 1 by -1){
         update()
       }
-    }
+    }*/
   }
 
   //从第frame开始回滚到现在
