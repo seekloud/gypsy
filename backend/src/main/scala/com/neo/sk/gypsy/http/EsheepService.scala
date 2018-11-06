@@ -135,6 +135,23 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
+//  private def watchRecord = (path("watchRecord") & get){
+//    parameter(
+//      'recordId.as[Long],
+//      'playerId.as[String],
+//      'frame.as[Int],
+//      'accessCode.as[String]
+//    ){ (recordId, playerId, frame, accessCode) =>
+//      authPlatUser(accessCode){player =>
+//        //TODO
+//        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(playerId,recordId,frame,_))
+//        dealFutureResult(
+//          flowFuture.map(t => handleWebSocketMessages(t))
+//        )
+//      }
+//    }
+//  }
+
   private def watchRecord = (path("watchRecord") & get){
     parameter(
       'recordId.as[Long],
@@ -142,15 +159,13 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       'frame.as[Int],
       'accessCode.as[String]
     ){ (recordId, playerId, frame, accessCode) =>
-      authPlatUser(accessCode){player =>
-        //TODO
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,playerId,recordId,frame,_))
-        dealFutureResult(
-          flowFuture.map(t => handleWebSocketMessages(t))
-        )
-      }
+      val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(playerId,recordId,frame,_))
+      dealFutureResult(
+        flowFuture.map(t => handleWebSocketMessages(t))
+      )
     }
   }
+
 
   val esheepRoutes: Route = pathPrefix("api"){
       playGame ~ watchGame ~ watchRecord

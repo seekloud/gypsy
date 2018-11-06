@@ -27,7 +27,7 @@ object UserManager {
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
 
-  final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  final case class GetReplaySocketFlow(playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -46,7 +46,7 @@ object UserManager {
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-        case GetReplaySocketFlow(playerName,playerId,recordId,frame,replyTo) =>
+        case GetReplaySocketFlow(playerId,recordId,frame,replyTo) =>
           //TODO getUserActorOpt
           val userActor = getUserActor(ctx, playerId)
           //开始创建flow
