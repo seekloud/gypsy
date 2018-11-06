@@ -36,8 +36,21 @@ object UserActor {
   case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None,watch:Boolean) extends Command with RoomManager.Command
 
 
-  case class JoinRoomSuccess(tank:TankServerImpl,uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
+  private case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
+
+  private case class Left(id: String, name: String) extends Command with RoomActor.Command
+
+  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
+
+  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
+
+  private case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
+
+  final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
+
+  private case object UnKnowAction extends Command
   case object CompleteMsgFront extends Command
   case class FailMsgFront(ex: Throwable) extends Command
 
@@ -78,12 +91,12 @@ object UserActor {
   def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
         val in = Flow[Protocol.UserAction]
           .map {
-            case KeyCode(i,keyCode,f,n)=>
+            case KeyCode(id,keyCode,f,n)=>
               log.debug(s"键盘事件$keyCode")
               Key(id,keyCode,f,n)
-            case MousePosition(i,clientX,clientY,f,n)=>
+            case MousePosition(id,clientX,clientY,f,n)=>
               Mouse(id,clientX,clientY,f,n)
-            case UserLeft()=>
+            case Left(id,name)=>
               Left(id,name)
             case Ping(timestamp)=>
               NetTest(id,timestamp)
@@ -174,36 +187,26 @@ object UserActor {
                   ): Behavior[Command] =
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case WebSocketMsg(reqOpt) =>
-          reqOpt match {
-            case Some(t:Protocol.UserAction) =>
-              //分发数据给roomActor
-              roomActor ! RoomActor.WebSocketMsg(uId,tank.tankId,t)
-            case Some(t:TankGameEvent.PingPackage) =>
-
-              frontActor !TankGameEvent.Wrap(t.asInstanceOf[TankGameEvent.WsMsgServer].fillMiddleBuffer(sendBuffer).result())
-
-            case _ =>
-
-          }
+        case ChangeWatch(id, watchId) =>
+          log.info(s"get $msg")
+          roomActor ! ChangeWatch(id, watchId)
           Behaviors.same
 
-        case DispatchMsg(m) =>
-          if(m.asInstanceOf[TankGameEvent.Wrap].isKillMsg) {
-            frontActor ! m
-            println(s"${ctx.self.path} tank 当前生命值${tank.getTankState().lives}")
-            if (tank.lives > 1){
-              //玩家进入复活状态
-              roomManager ! RoomActor.LeftRoomByKilled(uId,tank.tankId,tank.getTankState().lives,userInfo.name)
-              switchBehavior(ctx,"waitRestartWhenPlay",waitRestartWhenPlay(uId,userInfo,startTime,frontActor, tank))
-            } else {
-              roomManager ! RoomActor.LeftRoomByKilled(uId,tank.tankId,tank.getTankState().lives,userInfo.name)
-              switchBehavior(ctx,"idle",idle(uId,userInfo,startTime,frontActor))
-            }
-          }else{
-            frontActor ! m
-            Behaviors.same
-          }
+        case Left(id, name) =>
+          log.info(s"got $msg")
+          roomActor ! Left(id, name)
+          Behaviors.same
+
+        case Key(id, keyCode,frame,n) =>
+          log.debug(s"got $msg")
+          roomActor ! Key(id, keyCode,frame,n)
+          Behaviors.same
+
+        case Mouse(id,x,y,frame,n) =>
+          log.debug(s"gor $msg")
+          roomActor !  Mouse(id,x,y,frame,n)
+          Behaviors.same
+
 
         case ChangeBehaviorToInit=>
           frontActor ! TankGameEvent.Wrap(TankGameEvent.RebuildWebSocket.asInstanceOf[TankGameEvent.WsMsgServer].fillMiddleBuffer(sendBuffer).result())
@@ -216,14 +219,14 @@ object UserActor {
           roomManager ! RoomManager.LeftRoom(uId,tank.tankId,userInfo.name,Some(uId))
           Behaviors.stopped
 
-        case k:InputRecordByDead =>
-          log.debug(s"input record by dead msg")
-          if(tank.lives -1 <= 0 && !uId.contains(Constants.TankGameUserIdPrefix)){
-            val endTime = System.currentTimeMillis()
-            log.debug(s"input record ${EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)}")
-            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
-          }
-          Behaviors.same
+//        case k:InputRecordByDead =>
+//          log.debug(s"input record by dead msg")
+//          if(tank.lives -1 <= 0 && !uId.contains(Constants.TankGameUserIdPrefix)){
+//            val endTime = System.currentTimeMillis()
+//            log.debug(s"input record ${EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)}")
+//            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
+//          }
+//          Behaviors.same
 
         case unknowMsg =>
           //          log.warn(s"got unknown msg: $unknowMsg")
