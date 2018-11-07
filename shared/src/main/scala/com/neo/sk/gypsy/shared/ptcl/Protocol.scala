@@ -50,6 +50,8 @@ object Protocol {
 
   case class ReduceVirus(virus: Map[Long,Virus]) extends GameMessage
 
+  case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
+
 
   /**
     * 前端发送的数据

@@ -119,7 +119,7 @@ class GameServer(override val boundary: Point) extends Grid {
       val p = randomEmptyPoint()
       val color = random.nextInt(7)
 //      feededApples ::= Food(color,p.x,p.y)
-      newFoods+=(p->color)
+      newFoods += (p->color)
       food += (p->color)
       appleNeeded -= 1
     }
@@ -331,15 +331,16 @@ class GameServer(override val boundary: Point) extends Grid {
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
-    val event = RemoveVirus(removeVirus,frameCount)
-    AddGameEvent(event)
     virusMap --= removeVirus.keySet.toList
-    if(removeVirus.nonEmpty){
-      dispatch(subscriber,ReduceVirus(virusMap))
-    }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    val events = PlayerInfoChange(playerMap,frameCount)
-    AddGameEvent(events)
+//    val event1 = RemoveVirus(removeVirus,frameCount)
+//    AddGameEvent(event1)
+    val event2 = PlayerInfoChange(playerMap,frameCount)
+    AddGameEvent(event2)
+    if(removeVirus.nonEmpty){
+//      dispatch(subscriber,ReduceVirus(virusMap))
+      dispatch(subscriber,PlayerSpilt(playerMap))
+    }
   }
 
   override def checkPlayerFoodCrash(): Unit = {
