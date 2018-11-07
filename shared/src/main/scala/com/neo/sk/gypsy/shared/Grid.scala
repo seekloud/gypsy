@@ -161,9 +161,6 @@ trait Grid {
     }
     //碰撞检测
     checkCrash(keyAct,mouseAct)
-
-//    val event = PlayerInfoChange(playerMap,frameCount)
-//    AddGameEvent(event)
   }
 
     //碰撞检测
@@ -173,7 +170,7 @@ trait Grid {
     checkPlayer2PlayerCrash() //已看  只后台
     checkVirusMassCrash()  //已看  前后端都有  但后台跟前端不同
     val mergeInFlame=checkCellMerge() //已看  前后端都有  同时后台还发送数据避免前后端不一致
-    checkPlayerVirusCrash(mergeInFlame) //已看
+    checkPlayerVirusCrash(mergeInFlame) //已看 只后台
     checkPlayerShotMass(keyAct,mouseAct)
     checkPlayerSplit(keyAct,mouseAct)
   }
@@ -394,7 +391,7 @@ trait Grid {
   //返回在这一帧是否融合过
   def checkCellMerge(): Boolean
 
-  //TODO 只后台！！
+  //TODO 前端后台
   //病毒碰撞检测
   def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit
 

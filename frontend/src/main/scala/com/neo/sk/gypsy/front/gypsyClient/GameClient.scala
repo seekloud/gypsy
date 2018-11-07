@@ -93,56 +93,59 @@ class GameClient (override val boundary: Point) extends Grid {
     mergeInFlame
   }
 
-//  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
-//    var removeVirus = Map.empty[Long,Virus]
-//    val newPlayerMap = playerMap.values.map {
-//      player =>
-//        var newSplitTime = player.lastSplit
-//        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-//          cell =>
-//            var vSplitCells = List[Cell]()
-//            var newMass = cell.mass
-//            var newRadius = cell.radius
-//            //病毒碰撞检测
-//            virusMap.foreach { vi =>
-//              val v = vi._2
-//              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
-////                virus = virus.filterNot(_ == v)
-//                removeVirus += (vi._1->vi._2)
-//                val cellMass = (newMass / (v.splitNumber + 1)).toInt
-//                val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-//                newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
-//                newRadius = 4 + sqrt(newMass) * mass2rRate
-//                newSplitTime = System.currentTimeMillis()
-//                val baseAngle = 2 * Pi / v.splitNumber
-//                for (i <- 0 until v.splitNumber) {
-//                  val degX = cos(baseAngle * i)
-//                  val degY = sin(baseAngle * i)
-//                  val startLen = (newRadius + cellRadius) * 1.2*3
-//                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
-//                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-//                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-//                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
-//                }
-//              }
-//            }
-//            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
-//        }
-//
-//        val length = newCells.length
-//        val newX = newCells.map(_.x).sum / length
-//        val newY = newCells.map(_.y).sum / length
-//        val left = newCells.map(a => a.x - a.radius).min
-//        val right = newCells.map(a => a.x + a.radius).max
-//        val bottom = newCells.map(a => a.y - a.radius).min
-//        val top = newCells.map(a => a.y + a.radius).max
-//        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-//      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
-//    }
-//    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-//    virusMap --= removeVirus.keySet.toList
-//  }
+//  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {}
 
+  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
+    var removeVirus = Map.empty[Long,Virus]
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var newSplitTime = player.lastSplit
+        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
+          cell =>
+            var vSplitCells = List[Cell]()
+            var newMass = cell.mass
+            var newRadius = cell.radius
+            //病毒碰撞检测
+            virusMap.foreach { vi =>
+              val v = vi._2
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+//                virus = virus.filterNot(_ == v)
+                removeVirus += (vi._1->vi._2)
+                val cellMass = (newMass / (v.splitNumber + 1)).toInt
+                val cellRadius = 4 + sqrt(cellMass) * mass2rRate
+                newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
+                newRadius = 4 + sqrt(newMass) * mass2rRate
+                newSplitTime = System.currentTimeMillis()
+                val baseAngle = 2 * Pi / v.splitNumber
+                for (i <- 0 until v.splitNumber) {
+                  val degX = cos(baseAngle * i)
+                  val degY = sin(baseAngle * i)
+                  val startLen = (newRadius + cellRadius) * 1.2*3
+                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
+                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
+                }
+              }
+            }
+            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+        }
+
+        val length = newCells.length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
+        val left = newCells.map(a => a.x - a.radius).min
+        val right = newCells.map(a => a.x + a.radius).max
+        val bottom = newCells.map(a => a.y - a.radius).min
+        val top = newCells.map(a => a.y + a.radius).max
+        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+    virusMap --= removeVirus.keySet.toList
+  }
+
+  override def checkPlayer2PlayerCrash(): Unit = {}
   //TODO 只后台！！
 //  override def checkPlayer2PlayerCrash(): Unit = {
 //    val newPlayerMap = playerMap.values.map {
