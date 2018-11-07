@@ -339,6 +339,9 @@ class GameHolder(replay:Boolean = false) {
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
+      case Protocol.ReduceVirus(virus) =>
+        grid.virusMap = virus
+
       case data: Protocol.GridDataSync =>
         //TODO here should be better code.
         println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
@@ -374,9 +377,9 @@ class GameHolder(replay:Boolean = false) {
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
-        if(deadPlayer.id!=myId){
+        if(deadPlayer.id != myId){
           if(!isDead){
-            isDead=true
+            isDead = true
             killList :+=(200,killerId,deadPlayer)
           }else{
             killList :+=(200,killerId,deadPlayer)
@@ -384,7 +387,7 @@ class GameHolder(replay:Boolean = false) {
         }else{
           Shortcut.playMusic("shutdownM")
         }
-        if(killerId==myId){
+        if(killerId == myId){
           grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
             case 1 => Shortcut.playMusic("1Blood")
             case 2 => Shortcut.playMusic("2Kill")
@@ -396,7 +399,6 @@ class GameHolder(replay:Boolean = false) {
             case _ => Shortcut.playMusic("unstop")
           }
         }
-
 
       case Protocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
@@ -443,11 +445,20 @@ class GameHolder(replay:Boolean = false) {
       case e: Protocol.GenerateApples =>
         grid.food ++= e.apples.map(a => a._1 -> a._2)
 
+      case e: Protocol.GenerateVirus =>
+        grid.virusMap ++= e.virus
+
+      case e: Protocol.RemoveVirus =>
+
+
       case e: Protocol.UserJoinRoom =>
         grid.playerMap += e.playState.id -> e.playState
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
+
+      case e: Protocol.PlayerInfoChange =>
+        grid.playerMap = e.player
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束

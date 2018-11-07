@@ -275,9 +275,6 @@ case class DrawGame(
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-//      println("kk"+killerId)
-//      println("dd"+deadPlayer)
-//      println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val killImg = if (deadPlayer.kill > 3) shutdown
