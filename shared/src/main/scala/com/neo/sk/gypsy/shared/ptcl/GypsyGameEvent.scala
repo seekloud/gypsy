@@ -57,7 +57,7 @@ object GypsyGameEvent {
                                     state:GypsyGameSnapInfo
                                   ) extends GameSnapshot
 
-  final case class GypsyGameSnapInfo(
+  case class GypsyGameSnapInfo(
     frameCount: Long,
     playerDetails: List[Player],
     foodDetails: List[Food],
