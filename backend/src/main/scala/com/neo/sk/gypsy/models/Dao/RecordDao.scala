@@ -86,5 +86,10 @@ object RecordDao {
   def getRecordById(id:Long)={
     db.run(tGameRecord.filter(_.recordId === id).result.headOption)
   }
+
+  def getFilePath(recordId:Long) = {
+    val q = tGameRecord.filter(_.recordId === recordId).map(_.filePath).result
+    db.run(q)
+  }
 }
 

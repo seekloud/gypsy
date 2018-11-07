@@ -79,6 +79,15 @@ object ApiProtocol {
                                  count:Int
                                  )
 
+  case class DownloadRecordReq(
+                                recordId:Long
+                              )
+
+  case class GetUserInRecordReq(
+                                 recordId:Long,
+                                 playerId:String
+                               )
+
   case class RecordListRsp(
                           data:RecordsInfo,
                           errCode:Int=0,
