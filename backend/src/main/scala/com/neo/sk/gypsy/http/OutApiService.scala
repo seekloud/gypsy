@@ -16,9 +16,10 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.stream.scaladsl.FileIO
 import akka.util.Timeout
-import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
+import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout, userManager}
 import com.neo.sk.gypsy.models.Dao.RecordDao
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.{CommonRsp, ErrorRsp}
 import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -161,9 +162,42 @@ trait OutApiService extends ServiceUtils with SessionBase {
     }
   }
 
+  private val getRecordPlayerList=(path("getRecordPlayerList") & post){
+    dealPostReq[GetUserInRecordReq]{req=>
+      val flowFuture:Future[CommonRsp]= userManager ? (GetUserInRecordMsg(req.recordId,req.playerId,_))
+      flowFuture.map {
+        case r: userInRecordRsp =>
+          complete(r)
+        case _=>
+          complete(ErrorRsp(10001,"init error"))
+      }.recover{
+        case e:Exception =>
+          log.debug(s"获取游戏录像失败，recover error:$e")
+          complete(ErrorRsp(10001,"init error"))
+      }
+    }
+  }
+
+  private val getRecordFrame=(path("getRecordFrame") & post) {
+    dealPostReq[GetRecordFrameReq] { req =>
+      val flowFuture: Future[CommonRsp] = userManager ? (GetRecordFrameMsg(req.recordId, req.playerId, _))
+      flowFuture.map {
+        case r: GetRecordFrameRsp =>
+          complete(r)
+        case _ =>
+          complete(ErrorRsp(10001, "init error"))
+      }.recover {
+        case e: Exception =>
+          log.debug(s"获取游戏录像失败，recover error:$e")
+          complete(ErrorRsp(10001, "init error"))
+      }
+    }
+  }
+
 
 
 
   val apiRoutes:Route=
-    getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer~downloadRecord
+    getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer~
+      downloadRecord~getRecordPlayerList~getRecordFrame
 }

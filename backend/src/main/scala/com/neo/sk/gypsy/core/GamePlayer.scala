@@ -10,14 +10,16 @@ import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
-import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey}
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl._
 import org.seekloud.essf.io.{EpisodeInfo, FrameData, FrameInputStream}
 
 import scala.concurrent.duration.FiniteDuration
 import com.neo.sk.gypsy.utils.ESSFSupport._
 import org.seekloud.essf.io.FrameInputStream
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, ReplayFrameData}
+import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, ReplayFrameData,GameSnapshot}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.implicitConversions
@@ -101,7 +103,7 @@ object GamePlayer {
 
   def work(fileReader: FrameInputStream,
            metaData:String,
-           initState:GypsyGameEvent.GameSnapshot,
+           initState:GypsyGameEvent.GypsyGameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[GypsyGameEvent.WsMsgSource]]= None
@@ -150,6 +152,19 @@ object GamePlayer {
             timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.same
           }
+
+        case msg:GetRecordFrameMsg=>
+          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount))
+          Behaviors.same
+
+        case msg:GetUserInRecordMsg=>
+          val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
+            val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
+            PlayerInRecordInfo(r._1._1,r._1._2,fList)
+          }.toList
+          msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
+          Behaviors.same
+
         case msg:TimeOut=>
           Behaviors.stopped
 

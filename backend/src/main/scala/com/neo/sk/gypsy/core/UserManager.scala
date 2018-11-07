@@ -13,6 +13,8 @@ import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import akka.stream.{ActorAttributes, Supervision}
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
 
 /**
   * @author zhaoyin
@@ -51,6 +53,14 @@ object UserManager {
           //开始创建flow
           replyTo ! getWebSocketFlow(userActor)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
+          Behaviors.same
+
+        case msg:GetUserInRecordMsg=>
+          getUserActor(ctx,msg.watchId) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getUserActor(ctx,msg.watchId) ! msg
           Behaviors.same
 
         case unknow =>

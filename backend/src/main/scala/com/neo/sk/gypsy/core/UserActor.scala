@@ -9,6 +9,9 @@ import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
+
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -97,6 +100,14 @@ object UserActor {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
           switchBehavior(ctx,"idle", idle(uId,frontActor))
+
+        case msg:GetUserInRecordMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
       }
 
     }
@@ -113,6 +124,14 @@ object UserActor {
       msg match {
         case StartReply(recordId,playerId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
+          Behaviors.same
+
+        case msg:GetUserInRecordMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
       }
     }
