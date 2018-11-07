@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.http
 
+import java.io.File
+
 import org.slf4j.LoggerFactory
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.LoggingAdapter
@@ -11,6 +13,8 @@ import akka.stream.Materializer
 import com.neo.sk.gypsy.core.RoomManager
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
+import akka.stream.scaladsl.FileIO
 import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
 import com.neo.sk.gypsy.models.Dao.RecordDao
@@ -22,7 +26,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe._
 
-trait OutApiService extends ServiceUtils with SessionBase{
+trait OutApiService extends ServiceUtils with SessionBase {
 
   implicit val timeout: Timeout
 
@@ -30,28 +34,30 @@ trait OutApiService extends ServiceUtils with SessionBase{
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
-  private val getRoomId = (path("getRoomId") & post & pathEndOrSingleSlash){
-    dealPostReq[getRoomReq]{ req =>
-      val msgFuture:Future[RoomIdRsp]= roomManager ? (RoomManager.GetRoomId(req.playerId , _))
-      msgFuture.map{
-          msg => complete(msg)
-        }
-     }
-  }
+  private def getGameRecErrorRsp(msg: String) = ErrorRsp(1000, msg)
 
-  private val getGamePlayerList = (path("getGamePlayerList") & post & pathEndOrSingleSlash){
-    dealPostReq[getPlayerReq] { req =>
-      val msgFuture:Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(req.roomId,_))
-      msgFuture.map{
+  private val getRoomId = (path("getRoomId") & post & pathEndOrSingleSlash) {
+    dealPostReq[getRoomReq] { req =>
+      val msgFuture: Future[RoomIdRsp] = roomManager ? (RoomManager.GetRoomId(req.playerId, _))
+      msgFuture.map {
         msg => complete(msg)
       }
     }
   }
 
-  private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash){
+  private val getGamePlayerList = (path("getGamePlayerList") & post & pathEndOrSingleSlash) {
+    dealPostReq[getPlayerReq] { req =>
+      val msgFuture: Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(req.roomId, _))
+      msgFuture.map {
+        msg => complete(msg)
+      }
+    }
+  }
+
+  private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash) {
     dealGetReq {
-      val msgFuture:Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
-      msgFuture.map{
+      val msgFuture: Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
+      msgFuture.map {
         msg => complete(msg)
       }
     }
@@ -59,11 +65,11 @@ trait OutApiService extends ServiceUtils with SessionBase{
 
   private val getVideoList = (path("getRecordList") & post & pathEndOrSingleSlash) {
     dealPostReq[AllVideoRecordReq] { j =>
-      RecordDao.getAllRecord(j.lastRecordId,j.count).map{
+      RecordDao.getAllRecord(j.lastRecordId, j.count).map {
         i =>
-          val userListMap=i._2.groupBy(_.recordId)
-          val record=i._1.map(i=>
-            ( i.recordId,
+          val userListMap = i._2.groupBy(_.recordId)
+          val record = i._1.map(i =>
+            (i.recordId,
               i.roomId,
               i.startTime,
               i.endTime,
@@ -71,10 +77,10 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).map(_.userId)
             )
           ).toList
-          val data=RecordsInfo(record.map{i=>
-            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          val data = RecordsInfo(record.map { i =>
+            RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
           })
-        complete(RecordListRsp(data))
+          complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
           log.info(s"getAllVideoRecord exception.." + e.getMessage)
@@ -83,13 +89,13 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
-  private val getVideoByTime = (path("getRecordListByTime")&post&pathEndOrSingleSlash) {
-    dealPostReq[TimeVideoRecordReq] { j=>
-      RecordDao.getRecordByTime(j.lastRecordId,j.count,j.startTime,j.endTime).map{
+  private val getVideoByTime = (path("getRecordListByTime") & post & pathEndOrSingleSlash) {
+    dealPostReq[TimeVideoRecordReq] { j =>
+      RecordDao.getRecordByTime(j.lastRecordId, j.count, j.startTime, j.endTime).map {
         i =>
-          val userListMap=i._2.groupBy(_.recordId)
-          val record=i._1.map(i=>
-            ( i.recordId,
+          val userListMap = i._2.groupBy(_.recordId)
+          val record = i._1.map(i =>
+            (i.recordId,
               i.roomId,
               i.startTime,
               i.endTime,
@@ -97,8 +103,8 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).map(_.userId)
             )
           ).toList
-          val data=RecordsInfo(record.map{i=>
-            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          val data = RecordsInfo(record.map { i =>
+            RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
           })
           complete(RecordListRsp(data))
       }.recover {
@@ -109,13 +115,13 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
-  private val getVideoByPlayer = (path("getRecordListByPlayer")&post&pathEndOrSingleSlash){
-    dealPostReq[PlayerVideoRecordReq] { j=>
-      RecordDao.getRecordByPlayer(j.lastRecordId,j.count,j.playerId).map{
-        i=>
-          val userListMap=i._2.groupBy(_.recordId)
-          val record=i._1.map(i=>
-            ( i.recordId,
+  private val getVideoByPlayer = (path("getRecordListByPlayer") & post & pathEndOrSingleSlash) {
+    dealPostReq[PlayerVideoRecordReq] { j =>
+      RecordDao.getRecordByPlayer(j.lastRecordId, j.count, j.playerId).map {
+        i =>
+          val userListMap = i._2.groupBy(_.recordId)
+          val record = i._1.map(i =>
+            (i.recordId,
               i.roomId,
               i.startTime,
               i.endTime,
@@ -123,8 +129,8 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).map(_.userId)
             )
           ).toList
-          val data=RecordsInfo(record.map{i=>
-            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          val data = RecordsInfo(record.map { i =>
+            RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
           })
           complete(RecordListRsp(data))
       }.recover {
@@ -135,7 +141,29 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
+  private val downloadRecord = (path("downloadRecord") & post) {
+    dealPostReq[DownloadRecordReq] { req =>
+      RecordDao.getFilePath(req.recordId).map { r =>
+        val fileName = r.head
+        val f = new File(fileName)
+        if (f.exists()) {
+          val responseEntity = HttpEntity(
+            ContentTypes.`application/octet-stream`,
+            f.length,
+            FileIO.fromPath(f.toPath, chunkSize = 262144))
+          complete(responseEntity)
+        } else complete(getGameRecErrorRsp("file not exist"))
+      }.recover {
+        case e: Exception =>
+          log.debug(s"获取游戏录像失败，recover error:$e")
+          complete(getGameRecErrorRsp(s"获取游戏录像失败，recover error:$e"))
+      }
+    }
+  }
+
+
+
 
   val apiRoutes:Route=
-    getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer
+    getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer~downloadRecord
 }
