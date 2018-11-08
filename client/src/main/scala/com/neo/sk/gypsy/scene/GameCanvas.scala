@@ -8,7 +8,7 @@ import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
 
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
 import org.scalajs.dom
@@ -305,10 +305,10 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foods:Map[Point,Int],offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
-    val foods = data.foodDetails
+    val foods = foods.
     val masses = data.massDetails
     val virus = data.virusDetails
 
