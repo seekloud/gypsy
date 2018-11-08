@@ -44,7 +44,7 @@ object RoomActor {
 
  // private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
 
-  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long,watchgame:Boolean) extends Command
+  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],watchId:Option[String],watchgame:Boolean) extends Command
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
@@ -108,9 +108,7 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-
-
-        case JoinRoom(id, name, startTime,subscriber,roomId,watchgame) =>
+        case JoinRoom(id, name, startTime,subscriber,watchIdOpt,watchgame) =>
           log.info(s"got $msg")
           if(watchgame){
             val x = (new util.Random).nextInt(userList.length)

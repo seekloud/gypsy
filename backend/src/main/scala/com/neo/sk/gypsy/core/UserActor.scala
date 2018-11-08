@@ -15,6 +15,7 @@ import com.neo.sk.gypsy.Boot.roomManager
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 import scala.concurrent.duration._
 import scala.language.implicitConversions
@@ -36,8 +37,7 @@ object UserActor {
 
   case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
 
-  case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None,watch:Boolean) extends Command with RoomManager.Command
-
+  case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None,watch:Boolean,watchId:Option[String]) extends Command with RoomManager.Command
 
   case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
@@ -73,7 +73,7 @@ object UserActor {
 
   case object ChangeBehaviorToInit extends Command
 
-  case class StartGame(roomId:Option[Long],watch:Boolean) extends Command
+  case class StartGame(roomId:Option[Long],watchId:Option[String],watch:Boolean) extends Command
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -133,19 +133,18 @@ object UserActor {
     Flow.fromSinkAndSource(in, out)
   }
 
-  def create(uId:String,userInfo:GypsyUserInfo):Behavior[Command] = {
+  def create(userInfo:PlayerInfo):Behavior[Command] = {
     Behaviors.setup[Command]{ctx =>
       log.debug(s"${ctx.self.path} is starting...")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers[Command]{ implicit timer =>
         implicit val sendBuffer = new MiddleBufferInJvm(8192)
-//        switchBehavior(ctx,"init",init(uId),InitTime,TimeOut("init"))
-        init(uId,userInfo)
+        switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
       }
     }
   }
 
-  private def init(uId: String,userInfo:GypsyUserInfo)(
+  private def init(userInfo:PlayerInfo)(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
     timer:TimerScheduler[Command]
@@ -154,7 +153,7 @@ object UserActor {
       msg match {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
-          switchBehavior(ctx,"idle", idle(uId,userInfo,System.currentTimeMillis(),frontActor))
+          switchBehavior(ctx,"idle", idle(userInfo,System.currentTimeMillis(),frontActor))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
@@ -172,8 +171,7 @@ object UserActor {
     }
 
   private def idle(
-                    uId: String,
-                    userInfo:GypsyUserInfo,
+                    userInfo:PlayerInfo,
                     startTime:Long,
                     frontActor: ActorRef[WsMsgProtocol.WsMsgSource]
                   )(
@@ -187,17 +185,15 @@ object UserActor {
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
 
-        case StartGame(roomIdOp,watch) =>
-
-          roomManager ! UserActor.JoinRoom(uId,None,userInfo.userName,startTime,ctx.self,roomIdOp,watch)
+        case StartGame(roomIdOp,watchId,watch) =>
+          roomManager ! UserActor.JoinRoom(userInfo.playerId,None,userInfo.nickname,startTime,ctx.self,roomIdOp,watch,watchId)
           Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          switchBehavior(ctx,"init",init(uId),InitTime,TimeOut("init"))
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case JoinRoomSuccess(uid,roomActor)=>
-
           switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
 
 
@@ -208,7 +204,7 @@ object UserActor {
 
   private def play(
                     uId:String,
-                    userInfo:GypsyUserInfo,
+                    userInfo:PlayerInfo,
                     startTime:Long,
                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
                     roomActor: ActorRef[RoomActor.Command])(
