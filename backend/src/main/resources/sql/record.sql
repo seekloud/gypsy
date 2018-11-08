@@ -19,3 +19,9 @@ room_id BIGINT NOT NULL
 );
 
 ALTER TABLE user_record_map ALTER COLUMN user_id TYPE TEXT;
+
+ALTER TABLE user_record_map ADD startFrame BIGINT DEFAULT 0;
+ALTER TABLE user_record_map ADD endFrame BIGINT DEFAULT -1;
+-- ALTER TABLE game_record ADD totalFrame BIGINT DEFAULT 0;
+ALTER TABLE user_record_map DROP COLUMN startFrame;
+ALTER TABLE user_record_map DROP COLUMN endFrame;

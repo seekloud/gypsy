@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.http
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
@@ -109,7 +109,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, userId.toString, ""), System.currentTimeMillis()).toSessionMap
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId.toString,userId,true,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId,userId,true,_))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {

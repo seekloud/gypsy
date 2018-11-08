@@ -26,6 +26,8 @@ import io.circe.parser._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 
+import java.util.concurrent.atomic.AtomicLong
+
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.language.postfixOps
@@ -74,13 +76,16 @@ object RoomActor {
 
   val bounds = Point(Boundary.w, Boundary.h)
 
+  val ballId = new AtomicLong(100000)
+
+
   def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[WsMsgSource]]()
-            val userMap = mutable.HashMap[String, String]()
+            val userMap = mutable.HashMap[String, (String,Long)]()
             val userList = mutable.ListBuffer[UserInfo]()
 //            implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
@@ -102,7 +107,7 @@ object RoomActor {
   def idle(
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
-            userMap:mutable.HashMap[String,String],
+            userMap:mutable.HashMap[String,(String,Long)],   //id =>(name,ballId)
             subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]],
             grid:GameServer,
             tickCount:Long
@@ -137,11 +142,14 @@ object RoomActor {
             dispatchTo(subscribersMap,id, Protocol.Id(userList(x).id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(userList(x).id),userList)
           }else{
+            val createBallId = ballId.incrementAndGet()
             userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
-            userMap.put(id,name)
+            userMap.put(id,(name,createBallId))
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
             grid.addSnake(id, name)
+            val event = UserWsJoin(roomId,id,name,createBallId,grid.frameCount)
+            grid.AddGameEvent(event)
             dispatchTo(subscribersMap,id, Protocol.Id(id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           }
@@ -170,7 +178,19 @@ object RoomActor {
           log.info(s"got $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
-         // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+          dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+
+          try{
+            val ballId = userMap(id)._2
+            //添加离开信息
+            val event = UserLeftRoom(id,name,ballId,roomId,grid.frameCount)
+            grid.AddGameEvent(event)
+          }catch{
+            case e:Exception =>
+              log.error(s"Had something wrong in add Left event!! Caused by:${e.getMessage}")
+          }
+
+          //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
           for(i<-0 until userList.length){
@@ -192,7 +212,7 @@ object RoomActor {
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
+            grid.addSnake(id, userMap.getOrElse(id, ("Unknown",0l))._1)
             dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
           } else {
             grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
@@ -262,7 +282,7 @@ object RoomActor {
           Behaviors.stopped
 
         case getGamePlayerList(_ ,replyTo) =>
-          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2)}.toList
+          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2._1)}.toList
           if(playerList!=null){
             replyTo ! RoomPlayerInfoRsp(players(playerList),0,"ok")
           }
@@ -291,7 +311,7 @@ object RoomActor {
   def wait(
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
-            userMap:mutable.HashMap[String,String],
+            userMap:mutable.HashMap[String,(String,Long)],
             subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]],
             grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
@@ -312,7 +332,8 @@ object RoomActor {
 
         case Join(id, name, subscriber,watchgame) =>
           log.info(s"got $msg")
-          userMap.put(id,name)
+          //匹配模式随便写的ballId
+          userMap.put(id,(name,0l))
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
           grid.addSnake(id, name)
