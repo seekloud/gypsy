@@ -33,7 +33,7 @@ object UserManager {
 
   final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
-  final case class GetWebSocketFlow(name:String,replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None) extends Command
+  final case class GetWebSocketFlow(name:String,replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
     Behaviors.setup[Command]{
@@ -62,12 +62,12 @@ object UserManager {
           }
           val userActor = getUserActor(ctx, playerId,GypsyUserInfo(playerId,playerName,true))
           //开始创建flow
-          replyTo ! getWebSocketFlow(userActor)
+          replyTo ! getWebSocketFlow(playerId,playerName,userActor)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
 
 
-        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt) =>
+        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt,watch) =>
 
           val userInfo = userInfoOpt.getOrElse(GypsyUserInfo("gypsyGuest" + s"-${uidGenerator.getAndIncrement()}",name,false))
           getUserActorOpt(ctx, userInfo.userId) match {
@@ -75,9 +75,10 @@ object UserManager {
               userActor ! UserActor.ChangeBehaviorToInit
             case None =>
           }
+          println("come11111")
           val userActor = getUserActor(ctx, userInfo.userId,userInfo)
-          replyTo ! getWebSocketFlow(userActor)
-          userActor ! UserActor.StartGame(roomIdOpt)
+          replyTo ! getWebSocketFlow(userInfo.userId,userInfo.userName,userActor)
+          userActor ! UserActor.StartGame(roomIdOpt,watch)
           Behaviors.same
 
 
@@ -89,7 +90,7 @@ object UserManager {
     }
   }
 
-  private def getWebSocketFlow(userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
+  private def getWebSocketFlow(id:String,name:String,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
@@ -112,7 +113,7 @@ object UserManager {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
           bytesDecode[Protocol.UserAction](buffer) match {
-            case Right(req) => UserActor.WebSocketMsg(Some(req))
+            case Right(req) =>  UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
               UserActor.WebSocketMsg(None)
@@ -125,7 +126,7 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(userActor))
+      }.via(UserActor.flow(id,name,userActor))
       .map{
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))

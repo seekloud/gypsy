@@ -4,7 +4,7 @@ import com.neo.sk.gypsy.models.SlickTables
 import com.neo.sk.gypsy.utils.DBUtil.db
 import slick.jdbc.PostgresProfile.api._
 import com.neo.sk.gypsy.models.SlickTables._
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object RecordDao {

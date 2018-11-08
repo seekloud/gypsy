@@ -41,7 +41,7 @@ object RoomManager {
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(20000)
   case class JoinGame(roomId:Option[Long],sender:String,id:String,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
-
+  case class LeftRoom(uid:String,name:String) extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
   case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
@@ -155,6 +155,17 @@ object RoomManager {
           case msg:GetRoomList =>
             val RoomList=roomInUse.keys.toList
             msg.replyTo ! RoomListRsp(roomListInfo(RoomList),0,"ok")
+            Behaviors.same
+
+          case LeftRoom(uid,name) =>
+            roomInUse.find(_._2.exists(_._1 == uid)) match{
+              case Some(t) =>
+                roomInUse.put(t._1,t._2.filterNot(_._1 == uid))
+                getRoomActor(ctx,t._1,false) ! UserActor.Left(uid,name)
+                if(roomInUse(t._1).isEmpty && t._1 > 1l)roomInUse.remove(t._1)
+                log.debug(s"玩家：${uid}--$name remember to come back!!!$roomInUse")
+              case None => log.debug(s"该玩家不在任何房间")
+            }
             Behaviors.same
 
 

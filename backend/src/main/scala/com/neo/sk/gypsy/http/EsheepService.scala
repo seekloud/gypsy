@@ -12,6 +12,7 @@ import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervisio
 import akka.util.{ByteString, Timeout}
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
+import com.neo.sk.gypsy.models.GypsyUserInfo
 //import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
@@ -62,7 +63,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, nickName, ""), System.currentTimeMillis()).toSessionMap
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomIdOpt.getOrElse(1000001),nickName,userId,false,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(nickName,_,Some(GypsyUserInfo(userId,nickName,true)),roomIdOpt,false))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {
@@ -95,7 +96,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         verifyAccessCodeFutureRst.map{ rsp =>
           if(rsp.errCode == 0 && rsp.data.nonEmpty){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, userId.toString, ""), System.currentTimeMillis()).toSessionMap
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId.toString,userId,true,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(userId,_,Some(GypsyUserInfo(userId,userId,true)),Some(roomId),true))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {
