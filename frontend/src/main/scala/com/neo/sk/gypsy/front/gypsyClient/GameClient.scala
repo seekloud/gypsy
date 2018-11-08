@@ -424,7 +424,7 @@ override def checkVirusMassCrash(): Unit = {
     /*if(data.foodDetails.nonEmpty){
       food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     }*/
-    if(food.nonEmpty&&data.eatenFoodDetails.nonEmpty){
+    if(food.nonEmpty && data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{
         f=>
           food-=Point(f.x,f.y)

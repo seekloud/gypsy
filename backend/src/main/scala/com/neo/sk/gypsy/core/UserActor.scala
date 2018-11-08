@@ -90,7 +90,7 @@ object UserActor {
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers[Command]{ implicit timer =>
         implicit val sendBuffer = new MiddleBufferInJvm(8192)
-        init(uId)
+        switchBehavior(ctx,"init",init(uId),InitTime,TimeOut("init"))
       }
     }
   }
@@ -110,9 +110,12 @@ object UserActor {
           ctx.unwatch(actor)
           Behaviors.stopped
 
+        case TimeOut(m) =>
+          log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
+          Behaviors.stopped
+
         case unknowMsg =>
           stashBuffer.stash(unknowMsg)
-          //          log.warn(s"got unknown msg: $unknowMsg")
           Behavior.same
       }
 
@@ -136,6 +139,9 @@ object UserActor {
           getGameReply(ctx,recordId) ! GamePlayer.StopReplay()
           Behaviors.same
 
+        case UserLeft(actor) =>
+          ctx.unwatch(actor)
+          switchBehavior(ctx,"init",init(uId),InitTime,TimeOut("init"))
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
