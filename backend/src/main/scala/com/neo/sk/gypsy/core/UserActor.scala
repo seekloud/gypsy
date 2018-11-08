@@ -67,7 +67,7 @@ object UserActor {
 
   case class TimeOut(msg: String) extends Command
 
-  case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
+  case class StartReply(recordId:Long, watchId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
 
@@ -181,8 +181,8 @@ object UserActor {
   ):Behavior[Command] =
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
-        case StartReply(recordId,playerId,frame) =>
-          getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
+        case StartReply(recordId,watchId,frame) =>
+          getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
           Behaviors.same
 
         case StartGame(roomIdOp,watchId,watch) =>
@@ -195,9 +195,6 @@ object UserActor {
 
         case JoinRoomSuccess(uid,roomActor)=>
           switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
-
-
-
       }
     }
 
@@ -221,7 +218,7 @@ object UserActor {
 
         case Left(id, name) =>
           log.info(s"got $msg")
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
           Behaviors.stopped
 
         case Key(id, keyCode,frame,n) =>
@@ -239,17 +236,15 @@ object UserActor {
           frontActor ! m
           Behaviors.same
 
-
-
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
           ctx.unwatch(frontActor)
-          switchBehavior(ctx,"init",init(uId, userInfo),InitTime,TimeOut("init"))
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
           Behaviors.stopped
 
 //        case k:InputRecordByDead =>
@@ -271,7 +266,7 @@ object UserActor {
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          switchBehavior(ctx,"init",init(uId),InitTime,TimeOut("init"))
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
