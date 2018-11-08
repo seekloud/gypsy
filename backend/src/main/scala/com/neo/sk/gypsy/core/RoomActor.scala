@@ -44,7 +44,7 @@ object RoomActor {
 
  // private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
 
-  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],watchId:Option[String],watchgame:Boolean) extends Command
+  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long,watchgame:Boolean,watchId:Option[String]) extends Command
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
@@ -108,18 +108,31 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case JoinRoom(id, name, startTime,subscriber,watchIdOpt,watchgame) =>
+        case JoinRoom(id, name, startTime,subscriber,roomId,watchgame,watchId) =>
           log.info(s"got $msg")
           if(watchgame){
-            val x = (new util.Random).nextInt(userList.length)
-            userList(x).shareList.append(id)
+            //观战
             ctx.watchWith(subscriber,UserActor.Left(id,name))
             subscribersMap.put(id,subscriber)
             subscriber ! JoinRoomSuccess(id,ctx.self)
-            //观察者前端的id是其观察对象的id
-            dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
-            dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
+            watchId match{
+              case Some(wid) =>
+                for(i<- 0 until userList.length){
+                  if(userList(i).id == wid && !userList(i).shareList.contains(id)){
+                    userList(i).shareList.append(id)
+                  }
+                }
+                dispatchTo(subscribersMap)(id,Protocol.Id(wid))
+                dispatchTo(subscribersMap)(id,grid.getGridData(wid))
+              case None =>
+                val x = (new util.Random).nextInt(userList.length)
+                userList(x).shareList.append(id)
+                //观察者前端的id是其观察对象的id
+                dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
+                dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
+            }
           }else{
+            //玩游戏
             userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
             userMap.put(id,name)
             ctx.watchWith(subscriber,UserActor.Left(id,name))
@@ -359,7 +372,6 @@ object RoomActor {
   }
 
   def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])(id:String,msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
-
     val isKillMsg = msg.isInstanceOf[Protocol.UserDeadMessage]
     subscribers.get(id).foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
 

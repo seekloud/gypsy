@@ -14,6 +14,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
 import com.neo.sk.gypsy.models.GypsyUserInfo
+import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
 
 
@@ -59,31 +60,31 @@ object UserManager {
 //        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt,watch) =>
         case GetWebSocketFlow(playerInfoOpt,watchIdOpt,roomIdOpt,watch,replyTo) =>
           //TODO 之后可以优化这部分
-          val userInfo = playerInfoOpt.get
-          getUserActorOpt(ctx, userInfo.playerId) match {
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx, playerInfo.playerId) match {
             case Some(userActor) =>
               userActor ! UserActor.ChangeBehaviorToInit
             case None =>
           }
 //          println("come11111")
-          val userActor = getUserActor(ctx,userInfo)
-          replyTo ! getWebSocketFlow(userInfo.playerId,userInfo.nickname,0L,userActor)
+          val userActor = getUserActor(ctx,playerInfo)
+          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,0L,userActor)
           userActor ! UserActor.StartGame(roomIdOpt,watchIdOpt,watch)
           Behaviors.same
 
 //        case GetReplaySocketFlow(watchId,playerName,recordId,frame,replyTo) =>
-        case GetReplaySocketFlow(watchId,playerName,recordId,frame,replyTo) =>
+        case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
           //TODO getUserActorOpt
-
-          getUserActorOpt(ctx,watchId) match{
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx,playerInfo.playerId) match{
             case Some(userActor)=>
               userActor ! UserActor.ChangeBehaviorToInit
             case None =>
           }
-          val userActor = getUserActor(ctx, watchId, GypsyUserInfo(playerId,playerName,true))
+          val userActor = getUserActor(ctx,playerInfo)
           //开始创建flow
-          replyTo ! getWebSocketFlow(playerId,playerName,recordId,userActor)
-          userActor ! UserActor.StartReply(recordId,playerId,frame)
+          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,recordId,userActor)
+          userActor ! UserActor.StartReply(recordId,watchId,frame)
           Behaviors.same
 
         case unknow =>

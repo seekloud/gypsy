@@ -26,7 +26,6 @@ import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import org.seekloud.byteobject.MiddleBufferInJvm
 
-
 /**
   * User: Taoz
   * Date: 9/3/2016
