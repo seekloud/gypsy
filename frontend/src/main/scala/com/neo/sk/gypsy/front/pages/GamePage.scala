@@ -8,8 +8,6 @@ import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.{UserProtocol, _}
 import com.neo.sk.gypsy.front.utils.Shortcut
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.circe.generic.auto._
-import io.circe.syntax._
 
 import scala.xml.Elem
 /**
@@ -29,8 +27,7 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
     val gameHolder = new GameHolder
     gameHolder.init()
     //直接建立websocket连接
-    //TODO maxScore
-    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0,0)
+    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0)
   }
 
   override def render: Elem = {

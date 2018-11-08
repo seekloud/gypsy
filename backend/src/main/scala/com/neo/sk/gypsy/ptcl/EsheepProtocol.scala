@@ -4,25 +4,29 @@ import com.neo.sk.gypsy.shared.ptcl.CommonRsp
 
 object EsheepProtocol {
 
+  case class VerifyAccCode(
+                          gameId:Long,
+                          accessCode:String
+                          )
   case class GameServerKey2TokenReq(
                                 gameId:Long,
                                 gsKey:String
                                 )
 
   case class GameServerKey2TokenInfo(
-                                      gsToken:String,
+                                      token:String,
                                       expireTime:Long
                                     )
 
   case class GameServerKey2TokenRsp(
-                                     data: Option[GameServerKey2TokenInfo],
+                                     data: GameServerKey2TokenInfo,
                                      errCode: Int = 0,
                                      msg: String = "ok"
                                    ) extends CommonRsp
 
 
   case class PlayerInfo(
-                         playerId:Long,
+                         playerId:String,
                          nickname:String
                        )
 
@@ -31,7 +35,7 @@ object EsheepProtocol {
                                  )
 
   case class VerifyAccessCodeRsp(
-                                  data: Option[VerifyAccessCodeInfo],
+                                  data: PlayerInfo,
                                   errCode: Int = 0,
                                   msg: String = "ok"
                                 ) extends CommonRsp

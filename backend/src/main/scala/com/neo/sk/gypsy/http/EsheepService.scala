@@ -12,14 +12,14 @@ import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervisio
 import akka.util.{ByteString, Timeout}
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
-import com.neo.sk.gypsy.models.Dao.UserDao
+//import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode, WsMsgServer}
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
+import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.Boot.{esheepClient, executor, roomManager, timeout, userManager}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -30,9 +30,7 @@ import com.neo.sk.gypsy.ptcl.EsheepProtocol
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
-  import io.circe.generic.auto._
-  import io.circe.syntax._
-  import io.circe._
+
 
   implicit val system: ActorSystem
 
@@ -49,17 +47,20 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def AuthUserErrorRsp(msg: String) = ErrorRsp(10001001, msg)
 
-  private def playGame = (path("playGame") & get) {
+  private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
-      'playerId.as[Long],
+      'playerId.as[String],
       'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
     ){ case ( userId, nickName, accessCode, roomIdOpt) =>
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
+        import io.circe.generic.auto._
+        import io.circe.syntax._
+        import io.circe._
         verifyAccessCodeFutureRst.map{ rsp =>
-          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+          if(rsp.errCode == 0){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, nickName, ""), System.currentTimeMillis()).toSessionMap
             val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomIdOpt.getOrElse(1000001),nickName,userId,false,_))
             dealFutureResult(
@@ -82,14 +83,17 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   }
   private def watchGame = (path("watchGame") & get) {
     parameter(
-      'userId.as[Long],
+      'userId.as[String],
       'accessCode.as[String],
       'roomId.as[Long]
     ){ case ( userId,  accessCode, roomId) =>
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
+        import io.circe.generic.auto._
+        import io.circe.syntax._
+        import io.circe._
         verifyAccessCodeFutureRst.map{ rsp =>
-          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+          if(rsp.errCode == 0){
             val session = GypsySession(BaseUserInfo(UserRolesType.guest, userId, userId.toString, ""), System.currentTimeMillis()).toSessionMap
             val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(roomId,userId.toString,userId,true,_))
             dealFutureResult(
@@ -114,13 +118,13 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   private def watchRecord = (path("watchRecord") & get){
     parameter(
       'recordId.as[Long],
-      'playerId.as[Long],
+      'playerId.as[String],
       'frame.as[Int],
       'accessCode.as[String]
     ){ (recordId, playerId, frame, accessCode) =>
       authPlatUser(accessCode){player =>
         //TODO
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,player.playerId,recordId,frame,_))
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(player.nickname,playerId,recordId,frame,_))
         dealFutureResult(
           flowFuture.map(t => handleWebSocketMessages(t))
         )
@@ -128,6 +132,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
-  val esheepRoutes: Route =
-    playGame ~ watchGame ~ watchRecord
+  val esheepRoutes: Route = pathPrefix("api"){
+      playGame ~ watchGame ~ watchRecord
+    }
 }

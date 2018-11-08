@@ -39,10 +39,12 @@ object EsheepClient extends HttpUtil {
 
     postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
+        log.info("000000000000000003 ")
         decode[EsheepProtocol.GameServerKey2TokenRsp](jsonStr) match {
           case Right(rsp) =>
-            if(rsp.errCode == 0 && rsp.data.nonEmpty){
-              Right(rsp.data.get)
+            if(rsp.errCode == 0){
+              log.info("000000000000000003 "+ rsp.data)
+              Right(rsp.data)
             }else{
               log.debug(s"${methodName} failed,error:${rsp.msg}")
               Left(ErrorRsp(rsp.errCode, rsp.msg))
@@ -61,20 +63,15 @@ object EsheepClient extends HttpUtil {
     val methodName = s"verifyAccessCode"
     val url = s"${baseUrl}/esheep/api/gameServer/verifyAccessCode?token=$token"
 
-    val data = Json.obj(
-      ("accessCode",accessCode.asJson)
-    ).noSpaces
+    val data = EsheepProtocol.VerifyAccCode(gameId, accessCode).asJson.noSpaces
 
-    val sn = appId + System.currentTimeMillis().toString
-    val (timestamp, noce, signature) = SecureUtil.generateSignatureParameters(List(appId, sn, data), secureKey)
-    val postData = PostEnvelope(appId,sn,timestamp,noce,data,signature).asJson.noSpaces
 
-    postJsonRequestSend(methodName,url,Nil,postData).map{
+    postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
         decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
           case Right(rsp) =>
-            if(rsp.errCode == 0 && rsp.data.nonEmpty){
-              Right(rsp.data.get)
+            if(rsp.errCode == 0){
+              Right(EsheepProtocol.VerifyAccessCodeInfo(rsp.data))
             }else{
               log.debug(s"${methodName} failed,error:${rsp.msg}")
               Left(ErrorRsp(rsp.errCode, rsp.msg))

@@ -157,13 +157,13 @@ trait SlickTables {
 
   /** Entity class storing rows of table tUserRecordMap
     *  @param recordId Database column record_id SqlType(int8)
-    *  @param userId Database column user_id SqlType(int8)
+    *  @param userId Database column user_id SqlType(text)
     *  @param roomId Database column room_id SqlType(int8) */
-  case class rUserRecordMap(recordId: Long, userId: Long, roomId: Long)
+  case class rUserRecordMap(recordId: Long, userId: String, roomId: Long)
   /** GetResult implicit for fetching rUserRecordMap objects using plain SQL queries */
-  implicit def GetResultrUserRecordMap(implicit e0: GR[Long]): GR[rUserRecordMap] = GR{
+  implicit def GetResultrUserRecordMap(implicit e0: GR[Long], e1: GR[String]): GR[rUserRecordMap] = GR{
     prs => import prs._
-      rUserRecordMap.tupled((<<[Long], <<[Long], <<[Long]))
+      rUserRecordMap.tupled((<<[Long], <<[String], <<[Long]))
   }
   /** Table description of table user_record_map. Objects of this class serve as prototypes for rows in queries. */
   class tUserRecordMap(_tableTag: Tag) extends profile.api.Table[rUserRecordMap](_tableTag, "user_record_map") {
@@ -173,8 +173,8 @@ trait SlickTables {
 
     /** Database column record_id SqlType(int8) */
     val recordId: Rep[Long] = column[Long]("record_id")
-    /** Database column user_id SqlType(int8) */
-    val userId: Rep[Long] = column[Long]("user_id")
+    /** Database column user_id SqlType(text) */
+    val userId: Rep[String] = column[String]("user_id")
     /** Database column room_id SqlType(int8) */
     val roomId: Rep[Long] = column[Long]("room_id")
   }
