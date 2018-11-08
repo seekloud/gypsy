@@ -305,10 +305,10 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawGrid(uid: String, data: GridDataSync,foods:Map[Point,Int],offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
-    val foods = foods.
+    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
     val masses = data.massDetails
     val virus = data.virusDetails
 
