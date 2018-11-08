@@ -22,6 +22,19 @@ object ApiProtocol {
                      roomList:List[Long]
                      )
 
+  case class RecordInfo(
+                       recordId:Long,
+                       roomId:Long,
+                       startTime:Long,
+                       endTime:Long,
+                       userCounts:Int,
+                       userList:Seq[String]
+                       )
+
+  case class RecordsInfo(
+                       recordList:List[RecordInfo]
+                       )
+
   case class RoomPlayerInfoRsp(
                            data:players,
                            errCode: Int =0,
@@ -39,4 +52,28 @@ object ApiProtocol {
                         errCode: Int=0,
                         msg:String ="ok"
                         )
+
+  case class AllVideoRecordReq(
+                         lastRecordId:Long,
+                         count:Int
+                         )
+
+  case class TimeVideoRecordReq(
+                          startTime:Long,
+                          endTime:Long,
+                          lastRecordId:Long,
+                          count:Int
+                          )
+
+  case class PlayerVideoRecordReq(
+                                 playerId:String,
+                                 lastRecordId:Long,
+                                 count:Int
+                                 )
+
+  case class RecordListRsp(
+                          data:RecordsInfo,
+                          errCode:Int=0,
+                          msg:String="ok"
+                          )
 }

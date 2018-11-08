@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Elem
 /**
   * @author zhaoyin
-  * @date 2018/10/24  下午2:02
+  * 2018/10/24  下午2:02
   */
 class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:String,userType:Int) extends Page{
 

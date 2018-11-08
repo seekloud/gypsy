@@ -335,6 +335,8 @@ class GameHolder(replay:Boolean = false) {
 //        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
+        println(s"食物个数${foods.size}帧号${grid.frameCount}")
+
       case Protocol.AddVirus(virus) =>
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus

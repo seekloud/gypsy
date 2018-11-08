@@ -45,4 +45,13 @@ object UserProtocol {
                      accessCode:String
                      )
 
+
+  object GameState{
+    val firstCome = 1
+    val play = 2
+    val stop = 3
+    val loadingPlay = 4
+    val relive = 5
+  }
+
 }
