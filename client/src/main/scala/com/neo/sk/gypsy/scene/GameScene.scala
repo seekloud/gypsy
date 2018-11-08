@@ -78,8 +78,8 @@ class GameScene {
         val offx = sumX /p.cells.length
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
-
-        gameView.drawGrid(myId,data,offsetTime,firstCome,offCanvas,basePoint,zoom)
+        val foods=grid.food
+        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,offCanvas,basePoint,zoom)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font("34px Helvetica"))
