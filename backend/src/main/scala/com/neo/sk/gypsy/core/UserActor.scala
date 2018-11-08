@@ -41,15 +41,15 @@ object UserActor {
 
   case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
-  private case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
+  case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
 
   case class Left(id: String, name: String) extends Command with RoomActor.Command
 
-  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
+  case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
 
-  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
+  case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
 
-  private case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
+  case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
@@ -230,29 +230,6 @@ object UserActor {
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
 
-//        case m:KeyCode=>
-//          frontActor ! m
-//          Behaviors.same
-//
-//        case m:MousePosition=>
-//          frontActor ! m
-//          Behaviors.same
-//
-//        case m:Pong=>
-//          frontActor ! m
-//          Behaviors.same
-//
-//        case m:Protocol.Ranks=>
-//          frontActor ! m
-//          Behaviors.same
-//
-//        case m:Protocol.FeedApples=>
-//          frontActor ! m
-//          Behaviors.same
-//
-//        case m:Protocol.GridDataSync=>
-//          frontActor ! m
-//          Behaviors.same
 
         case DispatchMsg(m)=>
           frontActor ! m
