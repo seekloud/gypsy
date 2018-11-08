@@ -40,7 +40,7 @@ object RoomManager {
   case object TimeKey
   case object TimeOut extends Command
   val roomIdGenerator = new AtomicInteger(20000)
-  case class JoinGame(roomId:Long,sender:String,id:String,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
+  case class JoinGame(roomId:Long,sender:String,id:String, watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
   case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
@@ -154,7 +154,7 @@ object RoomManager {
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
       }
-      .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
+      .via(RoomActor.joinGame(actor,id, sender, watchgame)) // ... and route them through the chatFlow ...
       .map {
       case t:Protocol.GameMessage =>
         val sendBuffer = new MiddleBufferInJvm(409600)

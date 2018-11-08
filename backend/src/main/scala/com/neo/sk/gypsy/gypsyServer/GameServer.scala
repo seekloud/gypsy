@@ -56,7 +56,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
-  def addSnake(id: String, name: String) = waitingJoin += (id -> name)
+  def addPlayer(id: String, name: String) = waitingJoin += (id -> name)
 
   private var roomId = 0l
 

@@ -74,6 +74,17 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
               redirect(s"/gypsy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
                 StatusCodes.SeeOther)
           }
+        } ~ path("watchGame"){
+          parameter(
+            'roomId.as[Long],
+            'playerId.as[String].?,
+            'accessCode.as[String]
+          ){
+            case (roomId,playerIdOpt,accessCode) =>
+              redirect(s"/gypsy#/watchGame/${roomId}/${accessCode}/${playerIdOpt.getOrElse("")}",
+                StatusCodes.SeeOther
+              )
+          }
         } ~ resourceRoutes ~ userRoutes ~ esheepRoutes ~ apiRoutes
 
       }

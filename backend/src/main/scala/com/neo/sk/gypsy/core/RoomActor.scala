@@ -126,9 +126,14 @@ object RoomActor {
 //          }
 //          Behavior.same
 
-        case Join(id, name, subscriber,watchgame) =>
+        case Join(id, name, subscriber, watchgame) =>
           log.info(s"got $msg")
           if(watchgame){
+            if(id != ""){
+
+            } else {
+
+            }
             val x = (new util.Random).nextInt(userList.length)
             userList(x).shareList.append(id)
             ctx.watchWith(subscriber,Left(id,name))
@@ -141,7 +146,7 @@ object RoomActor {
             userMap.put(id,name)
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
-            grid.addSnake(id, name)
+            grid.addPlayer(id, name)
             dispatchTo(subscribersMap,id, Protocol.Id(id),userList)
             dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           }
@@ -192,7 +197,7 @@ object RoomActor {
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addSnake(id, userMap.getOrElse(id, "Unknown"))
+            grid.addPlayer(id, userMap.getOrElse(id, "Unknown"))
             dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
           } else {
             grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
@@ -213,7 +218,7 @@ object RoomActor {
           grid.update()
           val newApples = grid.getNewApples
           val feedapples = newApples.map(p=>Food(p._2,p._1.x,p._1.y)).toList
-          val gridData = grid.getAllGridData
+//          val gridData = grid.getAllGridData
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
@@ -222,7 +227,7 @@ object RoomActor {
 
           if (tickCount % 20 == 5) {
             //remind 此处传输全局数据-同步数据
-//            val gridData = grid.getAllGridData
+            val gridData = grid.getAllGridData
             dispatch(subscribersMap,gridData)
           } else {
             if (newApples.nonEmpty) {
@@ -235,8 +240,8 @@ object RoomActor {
             dispatch(subscribersMap,Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           if(tickCount==0){
-//            dispatch(subscribersMap,grid.getAllGridData)
-            dispatch(subscribersMap,gridData)
+            dispatch(subscribersMap,grid.getAllGridData)
+//            dispatch(subscribersMap,gridData)
           }
           idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
 
@@ -246,7 +251,7 @@ object RoomActor {
           dispatchTo(subscribersMap,id, Protocol.Pong(createTime),userList)
           Behaviors.same
 
-//          不明其意
+          //actor gameRecorder 死亡
         case ChildDead(name, childRef) =>
           log.debug(s"${ctx.self.path} recv a msg:${msg}")
           ctx.unwatch(childRef)
@@ -315,7 +320,7 @@ object RoomActor {
           userMap.put(id,name)
           ctx.watchWith(subscriber,Left(id,name))
           subscribersMap.put(id,subscriber)
-          grid.addSnake(id, name)
+          grid.addPlayer(id, name)
           if(userMap.size>1){
             timer.cancel(TimeOutKey)
             timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
