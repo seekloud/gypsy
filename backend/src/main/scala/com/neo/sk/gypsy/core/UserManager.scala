@@ -31,7 +31,7 @@ object UserManager {
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
 
-  final case class GetReplaySocketFlow(playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  final case class GetReplaySocketFlow(playerId: String, playerName:String,recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   final case class GetWebSocketFlow(name:String,replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
   def create(): Behavior[Command] = {
@@ -62,7 +62,7 @@ object UserManager {
           }
           val userActor = getUserActor(ctx, playerId,GypsyUserInfo(playerId,playerName,true))
           //开始创建flow
-          replyTo ! getWebSocketFlow(playerId,playerName,userActor,recordId)
+          replyTo ! getWebSocketFlow(playerId,playerName,recordId,userActor)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
 
@@ -77,7 +77,7 @@ object UserManager {
           }
           println("come11111")
           val userActor = getUserActor(ctx, userInfo.userId,userInfo)
-          replyTo ! getWebSocketFlow(userInfo.userId,userInfo.userName,userActor)
+          replyTo ! getWebSocketFlow(userInfo.userId,userInfo.userName,0L,userActor)
           userActor ! UserActor.StartGame(roomIdOpt,watch)
           Behaviors.same
 
@@ -90,7 +90,7 @@ object UserManager {
     }
   }
 
-  private def getWebSocketFlow(id:String,name:String,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
+  private def getWebSocketFlow(id:String,name:String,recordId:Long,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
@@ -126,8 +126,10 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(id,name,userActor,recordId))
+      }.via(UserActor.flow(id,name,recordId,userActor))
       .map{
+        case t:Protocol.Wrap =>
+          BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
 

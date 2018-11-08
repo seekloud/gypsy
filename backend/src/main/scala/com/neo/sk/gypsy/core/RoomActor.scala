@@ -48,16 +48,16 @@ object RoomActor {
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
-  private case class ChangeWatch(id: String, watchId: String) extends Command
+//  private case class ChangeWatch(id: String, watchId: String) extends Command
 
-  private case class Left(id: String, name: String) extends Command
-
-  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
-
-  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
-
-  private case class NetTest(id: String, createTime: Long) extends Command
-
+//  private case class Left(id: String, name: String) extends Command
+//
+//  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
+//
+//  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
+//
+//  private case class NetTest(id: String, createTime: Long) extends Command
+//
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
   private case object UnKnowAction extends Command
@@ -115,7 +115,7 @@ object RoomActor {
           if(watchgame){
             val x = (new util.Random).nextInt(userList.length)
             userList(x).shareList.append(id)
-            ctx.watchWith(subscriber,Left(id,name))
+            ctx.watchWith(subscriber,UserActor.Left(id,name))
             subscribersMap.put(id,subscriber)
             subscriber ! JoinRoomSuccess(id,ctx.self)
             //观察者前端的id是其观察对象的id
@@ -124,7 +124,7 @@ object RoomActor {
           }else{
             userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
             userMap.put(id,name)
-            ctx.watchWith(subscriber,Left(id,name))
+            ctx.watchWith(subscriber,UserActor.Left(id,name))
             subscribersMap.put(id,subscriber)
             grid.addSnake(id, name)
             subscriber ! JoinRoomSuccess(id,ctx.self)
@@ -135,7 +135,7 @@ object RoomActor {
           //          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
           Behaviors.same
 
-        case ChangeWatch(id, watchId) =>
+        case UserActor.ChangeWatch(id, watchId) =>
           log.info(s"get $msg")
           for(i<- 0 until userList.length){
             for(j<-0 until userList(i).shareList.length){
@@ -152,7 +152,7 @@ object RoomActor {
           }
           Behaviors.same
 
-        case Left(id, name) =>
+        case UserActor.Left(id, name) =>
           log.info(s"got $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
@@ -174,7 +174,7 @@ object RoomActor {
           subscribersMap.remove(id)
           Behaviors.same
 
-        case Key(id, keyCode,frame,n) =>
+        case UserActor.Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
@@ -186,7 +186,7 @@ object RoomActor {
           }
           Behaviors.same
 
-        case Mouse(id,x,y,frame,n) =>
+        case UserActor.Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
           grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
@@ -196,9 +196,10 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap)
           grid.getUserList(userList)
           grid.update()
-          val newApples = grid.getNewApples
-          val feedapples = newApples.map(p=>Food(p._2,p._1.x,p._1.y)).toList
+
           val gridData = grid.getAllGridData
+
+          val feedapples = gridData.newFoodDetails
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
@@ -210,7 +211,7 @@ object RoomActor {
 //            val gridData = grid.getAllGridData
             dispatch(subscribersMap)(gridData)
           } else {
-            if (newApples.nonEmpty) {
+            if (feedapples.nonEmpty) {
 //              dispatch(subscribersMap,WsMsgProtocol.FeedApples(newApples))
               dispatch(subscribersMap)(Protocol.FeedApples(feedapples))
               grid.cleanNewApple
@@ -225,14 +226,14 @@ object RoomActor {
           }
           idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
 
-        case NetTest(id, createTime) =>
+        case UserActor.NetTest(id, createTime) =>
           //log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
           Behaviors.same
 
 //          不明其意
-        case ChildDead(name, childRef) =>
+        case UserActor.ChildDead(name, childRef) =>
           log.debug(s"${ctx.self.path} recv a msg:${msg}")
           ctx.unwatch(childRef)
           Behaviors.same
