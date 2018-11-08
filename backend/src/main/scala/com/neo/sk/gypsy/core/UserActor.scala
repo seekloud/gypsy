@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.stream.OverflowStrategy
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
@@ -11,7 +11,9 @@ import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.Boot.roomManager
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, Ping, WatchChange}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import org.seekloud.byteobject.ByteObject._
+import org.seekloud.byteobject.MiddleBufferInJvm
 
 import scala.concurrent.duration._
 import scala.language.implicitConversions
@@ -29,7 +31,7 @@ object UserActor {
 
   trait Command
 
-  case class WebSocketMsg(reqOpt: Option[Protocol.GameMessage]) extends Command
+  case class WebSocketMsg(reqOpt: Option[Protocol.UserAction]) extends Command
 
   case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
 
@@ -40,7 +42,7 @@ object UserActor {
 
   private case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
 
-  private case class Left(id: String, name: String) extends Command with RoomActor.Command
+  case class Left(id: String, name: String) extends Command with RoomActor.Command
 
   private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
 
@@ -66,7 +68,7 @@ object UserActor {
 
   case object ChangeBehaviorToInit extends Command
 
-  case class StartGame(roomId:Option[Long]) extends Command
+  case class StartGame(roomId:Option[Long],watch:Boolean) extends Command
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -88,23 +90,27 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
-        val in = Flow[Protocol.UserAction]
-          .map {
-            case KeyCode(id,keyCode,f,n)=>
-              log.debug(s"键盘事件$keyCode")
-              Key(id,keyCode,f,n)
-            case MousePosition(id,clientX,clientY,f,n)=>
-              Mouse(id,clientX,clientY,f,n)
-            case Left(id,name)=>
-              Left(id,name)
-            case Ping(timestamp)=>
-              NetTest(id,timestamp)
-            case WatchChange(id, watchId) =>
-              log.debug(s"切换观察者: $watchId")
-              ChangeWatch(id, watchId)
-            case _=>
-              UnKnowAction
+  def flow(id:String,name:String,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
+        val in = Flow[UserActor.WebSocketMsg]
+          .map {a=>
+            val req = a.reqOpt.get
+                 req match{
+                   case KeyCode(id,keyCode,f,n)=>
+                     log.debug(s"键盘事件$keyCode")
+                     Key(id,keyCode,f,n)
+                   case MousePosition(id,clientX,clientY,f,n)=>
+                     Mouse(id,clientX,clientY,f,n)
+                   case Protocol.UserLeft()=>
+                     Left(id,name)
+                   case Ping(timestamp)=>
+                     NetTest(id,timestamp)
+                   case WatchChange(id, watchId) =>
+                     log.debug(s"切换观察者: $watchId")
+                     ChangeWatch(id, watchId)
+                   case _=>
+                     UnKnowAction
+                 }
+
           }
           .to(sink(actor))
     val out =
@@ -162,13 +168,15 @@ object UserActor {
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,playerId,frame)
           Behaviors.same
 
-        case StartGame(roomIdOp) =>
+        case StartGame(roomIdOp,watch) =>
 
-          roomManager ! UserActor.JoinRoom(uId,None,userInfo.userName,startTime,ctx.self,roomIdOp,false)
+          roomManager ! UserActor.JoinRoom(uId,None,userInfo.userName,startTime,ctx.self,roomIdOp,watch)
           Behaviors.same
 
-        case JoinRoomSuccess(player,uid,roomActor)
-          switchBehavior(ctx,"play",play(uId, userInfo,tank,startTime,frontActor,roomActor))
+        case JoinRoomSuccess(uid,roomActor)=>
+
+          switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
+
 
 
       }
@@ -194,8 +202,8 @@ object UserActor {
 
         case Left(id, name) =>
           log.info(s"got $msg")
-          roomActor ! Left(id, name)
-          Behaviors.same
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
+          Behaviors.stopped
 
         case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
@@ -207,16 +215,45 @@ object UserActor {
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
 
+//        case m:KeyCode=>
+//          frontActor ! m
+//          Behaviors.same
+//
+//        case m:MousePosition=>
+//          frontActor ! m
+//          Behaviors.same
+//
+//        case m:Pong=>
+//          frontActor ! m
+//          Behaviors.same
+//
+//        case m:Protocol.Ranks=>
+//          frontActor ! m
+//          Behaviors.same
+//
+//        case m:Protocol.FeedApples=>
+//          frontActor ! m
+//          Behaviors.same
+//
+//        case m:Protocol.GridDataSync=>
+//          frontActor ! m
+//          Behaviors.same
+
+        case DispatchMsg(m)=>
+          frontActor ! m
+          Behaviors.same
+
+
 
         case ChangeBehaviorToInit=>
-          frontActor ! TankGameEvent.Wrap(TankGameEvent.RebuildWebSocket.asInstanceOf[TankGameEvent.WsMsgServer].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(uId,tank.tankId,userInfo.name,Some(uId))
+          frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(uId, userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(uId,tank.tankId,userInfo.name,Some(uId))
+          roomManager ! RoomManager.LeftRoom(uId,userInfo.userName)
           Behaviors.stopped
 
 //        case k:InputRecordByDead =>

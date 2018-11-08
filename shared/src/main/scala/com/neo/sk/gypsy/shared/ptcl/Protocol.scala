@@ -97,6 +97,9 @@ object Protocol {
 //    val userId:String
 //    val serialNum:Int
 //  }
+  /**异地登录消息
+    * WebSocket连接重新建立*/
+  final case object RebuildWebSocket extends GameMessage
 
   /**
     * replay-frame-msg

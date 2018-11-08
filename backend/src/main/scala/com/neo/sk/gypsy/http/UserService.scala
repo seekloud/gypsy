@@ -10,8 +10,11 @@ import akka.http.scaladsl.marshalling
 import akka.stream.scaladsl.Flow
 import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervision}
 import akka.util.{ByteString, Timeout}
+import com.neo.sk.gypsy.Boot.userManager
 import com.neo.sk.gypsy.common.Constant.UserRolesType
+import com.neo.sk.gypsy.core.UserManager
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
+import com.neo.sk.gypsy.models.GypsyUserInfo
 //import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
@@ -94,7 +97,7 @@ trait UserService extends ServiceUtils with SessionBase {
             val watcherId = "watcher" + idGenerator.getAndIncrement()
             val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, name, ""), System.currentTimeMillis()).toSessionMap
             //随机分配一个视角给前端
-            val flowFuture:Future[Flow[Message,Message,Any]]=roomManager ? (RoomManager.JoinGame(room,name,watcherId,true,_))
+            val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(name,_,Some(GypsyUserInfo(name,name,true)),Some(room),true))
             dealFutureResult(
               flowFuture.map(r=>
                 addSession(session) {

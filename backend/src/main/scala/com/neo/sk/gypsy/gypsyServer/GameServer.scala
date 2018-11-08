@@ -24,6 +24,7 @@ import com.neo.sk.gypsy.Boot.esheepClient
 
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import org.seekloud.byteobject.MiddleBufferInJvm
 
 
 /**
@@ -66,6 +67,8 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   var VirusId = new AtomicLong(1000L)
+
+  implicit val sendBuffer = new MiddleBufferInJvm(81920)
 
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>

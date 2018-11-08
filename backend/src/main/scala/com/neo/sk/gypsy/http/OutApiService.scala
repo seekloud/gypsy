@@ -13,6 +13,8 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
+import com.neo.sk.gypsy.models.Dao.RecordDao
+import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
 import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}

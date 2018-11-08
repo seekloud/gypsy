@@ -4,12 +4,11 @@ import java.awt.event.KeyEvent
 
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.testkit.TestActor.Watch
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomManager.{JoinGame, RemoveRoom}
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
+import com.neo.sk.gypsy.core.UserActor.JoinRoomSuccess
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -79,7 +78,7 @@ object RoomActor {
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
             val userMap = mutable.HashMap[String, String]()
             val userList = mutable.ListBuffer[UserInfo]()
-//            implicit val sendBuffer = new MiddleBufferInJvm(81920)
+            implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
 //            if(matchRoom){
@@ -104,8 +103,8 @@ object RoomActor {
             grid:GameServer,
             tickCount:Long
           )(
-            implicit timer:TimerScheduler[Command]
-//            sendBuffer:MiddleBufferInJvm
+            implicit timer:TimerScheduler[Command],
+            sendBuffer:MiddleBufferInJvm
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
@@ -118,6 +117,7 @@ object RoomActor {
             userList(x).shareList.append(id)
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
+            subscriber ! JoinRoomSuccess(id,ctx.self)
             //观察者前端的id是其观察对象的id
             dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
             dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
@@ -127,6 +127,7 @@ object RoomActor {
             ctx.watchWith(subscriber,Left(id,name))
             subscribersMap.put(id,subscriber)
             grid.addSnake(id, name)
+            subscriber ! JoinRoomSuccess(id,ctx.self)
             dispatchTo(subscribersMap)(id, Protocol.Id(id))
             dispatchTo(subscribersMap)(id,grid.getGridData(id))
           }
@@ -187,7 +188,6 @@ object RoomActor {
 
         case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          //为什么一个动作要插入两次？
           grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
@@ -354,12 +354,12 @@ object RoomActor {
 //      subscribers.get(shareId).foreach( _ ! msg)
 //    )
 
-  def dispatch(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])( msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
+  def dispatch(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])(msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
     val isKillMsg = msg.isInstanceOf[Protocol.UserDeadMessage]
     subscribers.values.foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
   }
 
-  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])( id:String,msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
+  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])(id:String,msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
 
     val isKillMsg = msg.isInstanceOf[Protocol.UserDeadMessage]
     subscribers.get(id).foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
