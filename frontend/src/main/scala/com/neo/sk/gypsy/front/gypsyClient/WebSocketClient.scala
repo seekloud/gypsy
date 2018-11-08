@@ -55,7 +55,6 @@ case class WebSocketClient(
       }
 
       webSocketOpt.get.onmessage = { event: MessageEvent =>
-        //        println(s"recv msg:${event.data.toString}")
         event.data match {
           case blobMsg:Blob =>
             val fr = new FileReader()
@@ -63,18 +62,19 @@ case class WebSocketClient(
             fr.onloadend = { _: Event =>
               val buf = fr.result.asInstanceOf[ArrayBuffer]
               if(replay) {
-//                messageHandler(replayEventDecode(buf))
+                messageHandler(replayEventDecode(buf))
               }else{
                 val middleDataInJs = new MiddleBufferInJs(buf)
                 val data = bytesDecode[Protocol.GameMessage](middleDataInJs).right.get
                 messageHandler(data)
               }
             }
-          case jsonStringMsg:String =>
-            import io.circe.generic.auto._
-            import io.circe.parser._
-            val data = decode[Protocol.GameMessage](jsonStringMsg).right.get
-            messageHandler(data)
+//          case jsonStringMsg:String =>
+//            import io.circe.generic.auto._
+//            import io.circe.parser._
+//            val data = decode[Protocol.GameMessage](jsonStringMsg).right.get
+//            messageHandler(data)
+
           case unknow =>  println(s"recv unknow msg:${unknow}")
         }
 
@@ -96,29 +96,29 @@ case class WebSocketClient(
 
   import org.seekloud.byteobject.ByteObject._
 
-  private def replayEventDecode(a:ArrayBuffer):Protocol.GameEvent= {
+  private def replayEventDecode(a:ArrayBuffer):Protocol.GameMessage= {
     val middleDataInJs = new MiddleBufferInJs(a)
     if(a.byteLength > 0){
       bytesDecode[List[Protocol.GameEvent]](middleDataInJs) match{
         case Right(r)=>
-          Protocol.EventData(r)
+//          println(s"事件数据解析成功！！！$r")
+          DecodeEvents(Protocol.EventData(r))
         case Left(e) =>
-          println(e.message)
           replayStateDecode(a)
       }
     }else{
-      Protocol.DecodeError()
+      DecodeEventError(Protocol.DecodeError())
     }
   }
 
-  private def replayStateDecode(a: ArrayBuffer):Protocol.GameEvent={
+  private def replayStateDecode(a: ArrayBuffer):Protocol.GameMessage={
     val middleDataInJs = new MiddleBufferInJs(a)
-    bytesDecode[Protocol.GameEvent](middleDataInJs) match {
+    bytesDecode[Protocol.GameSnapshot](middleDataInJs) match {
       case Right(r)=>
-        Protocol.SyncGameAllState(r.asInstanceOf[Protocol.GypsyGameSnapshot].state)
+        DecodeEvent(Protocol.SyncGameAllState(r.asInstanceOf[Protocol.GypsyGameSnapshot].state))
       case Left(e) =>
-        println(e.message)
-        Protocol.DecodeError()
+        println("全量数据解析错误： "+ e.message)
+        DecodeEventError(Protocol.DecodeError())
     }
   }
 

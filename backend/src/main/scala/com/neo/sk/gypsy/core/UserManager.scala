@@ -31,7 +31,7 @@ object UserManager {
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
 
-  final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  final case class GetReplaySocketFlow(playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   final case class GetWebSocketFlow(name:String,replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
   def create(): Behavior[Command] = {
@@ -52,7 +52,7 @@ object UserManager {
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-        case GetReplaySocketFlow(playerName,playerId,recordId,frame,replyTo) =>
+        case GetReplaySocketFlow(playerId,playerName,recordId,frame,replyTo) =>
           //TODO getUserActorOpt
 
           getUserActorOpt(ctx,playerId) match{
@@ -62,7 +62,7 @@ object UserManager {
           }
           val userActor = getUserActor(ctx, playerId,GypsyUserInfo(playerId,playerName,true))
           //开始创建flow
-          replyTo ! getWebSocketFlow(playerId,playerName,userActor)
+          replyTo ! getWebSocketFlow(playerId,playerName,userActor,recordId)
           userActor ! UserActor.StartReply(recordId,playerId,frame)
           Behaviors.same
 
@@ -126,7 +126,7 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(id,name,userActor))
+      }.via(UserActor.flow(id,name,userActor,recordId))
       .map{
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
