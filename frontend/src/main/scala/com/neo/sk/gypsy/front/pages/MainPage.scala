@@ -13,6 +13,7 @@ import scala.xml.Elem
   */
 object MainPage extends PageSwitcher{
 
+
   private val currentPage: Rx[Elem] = currentHashVar.map{
     case "playGame" :: playerId :: playerName :: roomId :: accessCode :: Nil => new GamePage(playerId, playerName, roomId.toLong, accessCode).render
     case "watchGame" :: roomId :: accessCode :: Nil=> <div>WatchGame Page</div>//TODO new WatchGame().render
@@ -24,6 +25,7 @@ object MainPage extends PageSwitcher{
   }
 
   def show():Cancelable = {
+    switchPageByHash()
     val page =
       <div>
         {currentPage}
