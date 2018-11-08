@@ -200,6 +200,7 @@ object RoomActor {
           val feedapples = newApples.map(p=>Food(p._2,p._1.x,p._1.y)).toList
           val gridData = grid.getAllGridData
           val eventList = grid.getEvents()
+//          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
             getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
           }
@@ -235,7 +236,6 @@ object RoomActor {
           log.debug(s"${ctx.self.path} recv a msg:${msg}")
           ctx.unwatch(childRef)
           Behaviors.same
-
 
         case TimeOut=>
           val overTime=System.currentTimeMillis()
@@ -415,10 +415,11 @@ object RoomActor {
       val curTime = System.currentTimeMillis()
       val fileName = s"gypsyGame_${curTime}"
 //      val gameInformation = TankGameEvent.GameInformation(curTime,AppSettings.tankGameConfig.getTankGameConfigImpl())
-//      val gameInformation = GameInformation(curTime,GypsyGameConfigImpl())
-      val gameInformation = ""
+      val gameInformation = GameInformation(curTime)
+//      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
-      val actor = ctx.spawn(GameRecorder.create(fileName,curTime,initStateOpt,roomId),childName)
+      val initFrame = grid.frameCount
+      val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[GameRecorder.Command]

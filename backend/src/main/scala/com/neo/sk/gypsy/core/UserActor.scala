@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
+import com.neo.sk.gypsy.core.GamePlayer.StopReplay
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.Boot.roomManager
@@ -53,7 +54,10 @@ object UserActor {
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
   private case object UnKnowAction extends Command
+  case class StopReplay(recordId:Long) extends Command
+
   case object CompleteMsgFront extends Command
+
   case class FailMsgFront(ex: Throwable) extends Command
 
   /**
@@ -62,6 +66,7 @@ object UserActor {
   case class UserFrontActor(actor: ActorRef[WsMsgProtocol.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
+
   case class StartReply(recordId:Long, playerId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
@@ -84,13 +89,13 @@ object UserActor {
     stashBuffer.unstashAll(ctx,behavior)
   }
 
-  private def sink(actor: ActorRef[Command]) = ActorSink.actorRef[Command](
+  private def sink(actor: ActorRef[Command],recordId:Long) = ActorSink.actorRef[Command](
     ref = actor,
-    onCompleteMessage = CompleteMsgFront,
+    onCompleteMessage = StopReplay(recordId),
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(id:String,name:String,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
+  def flow(id:String,name:String,recordId:Long,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
         val in = Flow[UserActor.WebSocketMsg]
           .map {a=>
             val req = a.reqOpt.get
@@ -112,7 +117,8 @@ object UserActor {
                  }
 
           }
-          .to(sink(actor))
+          .to(sink(actor,recordId))
+
     val out =
       ActorSource.actorRef[WsMsgProtocol.WsMsgSource](
         completionMatcher = {
@@ -148,6 +154,15 @@ object UserActor {
         case UserFrontActor(frontActor) =>
           ctx.watchWith(frontActor,UserLeft(frontActor))
           switchBehavior(ctx,"idle", idle(uId,userInfo,System.currentTimeMillis(),frontActor))
+
+        case UserLeft(actor) =>
+          ctx.unwatch(actor)
+          Behaviors.stopped
+
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
+          //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
       }
 
     }
@@ -267,6 +282,15 @@ object UserActor {
 
         case unknowMsg =>
           //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
+
+        case StopReplay(recordId) =>
+          getGameReply(ctx,recordId) ! GamePlayer.StopReplay()
+          Behaviors.same
+
+
+        case unKnowMsg =>
+          stashBuffer.stash(unKnowMsg)
           Behavior.same
       }
     }

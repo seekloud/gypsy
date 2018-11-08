@@ -40,8 +40,8 @@ trait Grid {
   var frameCount = 0l
   //食物列表
   var food = Map[Point, Int]()
-  //病毒列表
-  var virus = List[Virus]()
+//  //病毒列表
+//  var virus = List[Virus]()
   //病毒map (ID->Virus)
   var virusMap = Map.empty[Long,Virus]
   //玩家列表
@@ -86,7 +86,7 @@ trait Grid {
     val map = mouseActionMap.getOrElse(mp.frame, Map.empty)
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
-    val direct = normalization(mp.clientX,mp.clientY)
+    val direct = (mp.clientX,mp.clientY)
     val action = MouseMove(mp.id,direct,mp.frame,mp.serialNum)
     AddActionEvent(action)
   }
@@ -126,9 +126,8 @@ trait Grid {
     updatePlayer()
     actionMap -= frameCount
     mouseActionMap -= frameCount
-
-    ActionEventMap -= frameCount
-
+    ActionEventMap -= (frameCount-5)
+    GameEventMap -= (frameCount-5)
     frameCount += 1
   }
 
@@ -146,40 +145,40 @@ trait Grid {
       }
     }
     //TODO 确认下是不是frameCount
+
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MousePosition])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KeyCode])
 
-    //先移动到指定位置，同时进行质量衰减
+
     tick = tick+1
 
+    //先移动到指定位置，同时进行质量衰减
     playerMap = if(tick%10==1){
-      tick =1
+      tick = 1
       playerMap.values.map(updatePlayerMap(_,mouseAct,true)).map(s=>(s.id,s)).toMap
-      //      massDecrease()
     }else{
       playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
     }
-//    碰撞检测
+    //碰撞检测
     checkCrash(keyAct,mouseAct)
-    val event = PlayerInfoChange(playerMap,frameCount)
-    AddGameEvent(event)
   }
 
-//  碰撞检测
+    //碰撞检测
   def checkCrash(keyAct: Map[String,KeyCode], mouseAct: Map[String, MousePosition])={
-    checkPlayerFoodCrash()
-    checkPlayerMassCrash()
-    checkPlayer2PlayerCrash()
-    val mergeInFlame=checkCellMerge()
-    checkPlayerVirusCrash(mergeInFlame)
+    checkPlayerFoodCrash() //已看 前后端都有
+    checkPlayerMassCrash()  //已看  前后端都有
+    checkPlayer2PlayerCrash() //已看  只后台
+    checkVirusMassCrash()  //已看  前后端都有  但后台跟前端不同
+    val mergeInFlame=checkCellMerge() //已看  前后端都有  同时后台还发送数据避免前后端不一致
+    checkPlayerVirusCrash(mergeInFlame) //已看 只后台
     checkPlayerShotMass(keyAct,mouseAct)
-    checkVirusMassCrash()
     checkPlayerSplit(keyAct,mouseAct)
   }
 
 
+  //更新病毒的位置
   def updateVirus() :Unit ={
-    val NewVirus = virusMap.map{vi=>
+    val NewVirus = virusMap.map{ vi=>
       val v =vi._2
       val (nx,ny)= normalization(v.targetX,v.targetY)
       var newX = v.x
@@ -249,13 +248,10 @@ trait Grid {
 
     mass.copy(x = newX, y = newY, speed = newSpeed)
   }
-
-//病毒更新
+  //更新病毒位置
   updateVirus()
-
-  feedApple(foodPool + playerMap.size * 3 - food.size) //增添食物
-//  addVirus(virusNum - virus.size) //增添病毒
-  addVirus(virusNum - virusMap.size) //增添病毒
+  feedApple(foodPool + playerMap.size * 3 - food.size)//增添食物（后端增添，前端不添）
+  addVirus(virusNum - virusMap.size) //增添病毒(后端增添，前端不添）
 }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
@@ -375,29 +371,34 @@ trait Grid {
     val bottom = newCells.map(a => a.y - a.radius).min
     val top = newCells.map(a => a.y + a.radius).max
 
-//    println(newCells)
     player.copy(x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
   }
 
+  //TODO 前后
   //食物检测
   def checkPlayerFoodCrash(): Unit
-  //mass检测
+  //TODO 前后
+  //mass检测(前后端一样)
   def checkPlayerMassCrash(): Unit
+  //TODO 前后
   //mass检测
   def checkVirusMassCrash(): Unit
+  //TODO 只后台！！
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit
 
+  //TODO 前端做排斥后台判断
   //返回在这一帧是否融合过
   def checkCellMerge(): Boolean
 
+  //TODO 前端后台
   //病毒碰撞检测
   def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit
 
+  //TODO 前后
   //发射小球
   def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     //TODO 这里写下有哪些是分裂的
-
     var newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
@@ -425,8 +426,10 @@ trait Grid {
             }
             massList :::=newMassList
 //            生成mass事件
-            val event = GenerateMass(newMassList,frameCount)
-            AddGameEvent(event)
+            if(newMassList.nonEmpty){
+              val event = GenerateMass(newMassList,frameCount)
+              AddGameEvent(event)
+            }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
@@ -439,10 +442,9 @@ trait Grid {
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap ++= newPlayerMap.map(s => (s.id, s)).toList
-//    val event = PlayerInfoChange(playerMap,frameCount)
-//    AddGameEvent(event)
   }
 
+  //TODO 暂时前后
   //分裂检测
   def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -490,8 +492,6 @@ trait Grid {
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-//    val event = PlayerInfoChange(playerMap,frameCount)
-//    AddGameEvent(event)
   }
 
 
@@ -514,7 +514,7 @@ trait Grid {
     val newCells=player.cells.map{cell=>
       var newMass = cell.mass
       if(cell.mass > decreaseLimit)
-        newMass = cell.mass*decreaseRate
+        newMass = cell.mass * decreaseRate
       cell.copy(mass = newMass)
     }
     player.copy(cells = newCells)
@@ -558,6 +558,7 @@ trait Grid {
       scale
     )
   }
+
   def getAllGridData: Protocol.GridDataSync
 
   def getActionEventMap(frame:Long):List[GameEvent]

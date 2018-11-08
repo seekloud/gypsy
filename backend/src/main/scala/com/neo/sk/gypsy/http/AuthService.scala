@@ -35,8 +35,8 @@ trait AuthService extends ServiceUtils{
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp=>
-          if(rsp.errCode == 0 && rsp.data.nonEmpty){
-            f(rsp.data.get.playerInfo)
+          if(rsp.errCode == 0){
+            f(rsp.data)
           } else{
             complete(AuthUserErrorRsp(rsp.msg))
           }

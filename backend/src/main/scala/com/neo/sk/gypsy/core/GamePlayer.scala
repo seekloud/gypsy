@@ -39,6 +39,8 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
+  case class StopReplay() extends Command
+
 
   final case class SwitchBehavior(
                                  name: String,
@@ -102,8 +104,8 @@ object GamePlayer {
   }
 
   def work(fileReader: FrameInputStream,
-           metaData:String,
-           initState:Protocol.GameEvent,
+           metaData:Protocol.GameInformation,
+           initState:Protocol.GameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[WsMsgSource]]= None
@@ -124,7 +126,7 @@ object GamePlayer {
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               if(fileReader.hasMoreFrame){
-                timer.startPeriodicTimer(GameLoopKey, GameLoop, 100.millis)
+                timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
                 timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
@@ -145,14 +147,19 @@ object GamePlayer {
             )
             Behaviors.same
           }else{
-            userOpt.foreach(u=>
-              dispatchTo(u,Protocol.ReplayFinish())
-            )
+            println(s"replay finish!")
+            userOpt.foreach { u =>
+              dispatchTo(u, Protocol.ReplayFinish())
+            }
             timer.cancel(GameLoopKey)
             timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.same
           }
         case msg:TimeOut=>
+          Behaviors.stopped
+
+
+        case StopReplay() =>
           Behaviors.stopped
 
         case unKnowMsg =>
