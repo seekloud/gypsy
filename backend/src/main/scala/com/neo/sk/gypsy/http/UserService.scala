@@ -46,6 +46,7 @@ trait UserService extends ServiceUtils with SessionBase {
   implicit val timeout: Timeout
 
   val idGenerator = new AtomicInteger(1000000)
+
   val secretKey = "dsacsodaux84fsdcs4wc32xm"
 
   private[this] val log = LoggerFactory.getLogger(getClass)
@@ -86,33 +87,33 @@ trait UserService extends ServiceUtils with SessionBase {
     }
   }
 
-  private val watcherJoin = (path("watcherJoin") & get){
-    loggingAction {
-      _ =>
-        //todo 这里要改
-        parameter(
-          'room.as[Long],
-          'name.as[String]) {
-          (room,name) =>
-            val watcherId = "watcher" + idGenerator.getAndIncrement()
-            val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, name, ""), System.currentTimeMillis()).toSessionMap
-            //随机分配一个视角给前端
-            val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(name,_,Some(GypsyUserInfo(name,name,true)),Some(room),true))
-            dealFutureResult(
-              flowFuture.map(r=>
-                addSession(session) {
-                  handleWebSocketMessages(r)
-                }
-              )
-            )
-        }
-    }
-  }
+//  private val watcherJoin = (path("watcherJoin") & get){
+//    loggingAction {
+//      _ =>
+//        //todo 这里要改
+//        parameter(
+//          'room.as[Long],
+//          'name.as[String]) {
+//          (room,name) =>
+//            val watcherId = "watcher" + idGenerator.getAndIncrement()
+//            val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, name, ""), System.currentTimeMillis()).toSessionMap
+//            //随机分配一个视角给前端
+//            val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(name,_,Some(GypsyUserInfo(name,name,true)),Some(room),true))
+//            dealFutureResult(
+//              flowFuture.map(r=>
+//                addSession(session) {
+//                  handleWebSocketMessages(r)
+//                }
+//              )
+//            )
+//        }
+//    }
+//  }
 
 
   val userRoutes: Route =
     pathPrefix("user") {
-       checkName ~ watcherJoin
+       checkName
     }
 
 
