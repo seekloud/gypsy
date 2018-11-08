@@ -13,6 +13,8 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout}
+import com.neo.sk.gypsy.models.Dao.RecordDao
+import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
 import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -57,6 +59,85 @@ trait OutApiService extends ServiceUtils with SessionBase{
     }
   }
 
-  val apiRoutes :Route=
-    getRoomId~getGamePlayerList~getGameRoomList
+  private val getVideoList = (path("getRecordList") & post & pathEndOrSingleSlash) {
+    dealPostReq[AllVideoRecordReq] { j =>
+      RecordDao.getAllRecord(j.lastRecordId,j.count).map{
+        i =>
+          val userListMap=i._2.groupBy(_.recordId)
+          val record=i._1.map(i=>
+            ( i.recordId,
+              i.roomId,
+              i.startTime,
+              i.endTime,
+              userListMap(i.recordId).length,
+              userListMap(i.recordId).map(_.userId)
+            )
+          ).toList
+          val data=RecordsInfo(record.map{i=>
+            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          })
+        complete(RecordListRsp(data))
+      }.recover {
+        case e: Exception =>
+          log.info(s"getAllVideoRecord exception.." + e.getMessage)
+          complete(ErrorRsp(100000, "error occured."))
+      }
+    }
+  }
+
+  private val getVideoByTime = (path("getRecordListByTime")&post&pathEndOrSingleSlash) {
+    dealPostReq[TimeVideoRecordReq] { j=>
+      RecordDao.getRecordByTime(j.lastRecordId,j.count,j.startTime,j.endTime).map{
+        i =>
+          val userListMap=i._2.groupBy(_.recordId)
+          val record=i._1.map(i=>
+            ( i.recordId,
+              i.roomId,
+              i.startTime,
+              i.endTime,
+              userListMap(i.recordId).length,
+              userListMap(i.recordId).map(_.userId)
+            )
+          ).toList
+          val data=RecordsInfo(record.map{i=>
+            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          })
+          complete(RecordListRsp(data))
+      }.recover {
+        case e: Exception =>
+          log.info(s"getVideoRecordByTime exception.." + e.getMessage)
+          complete(ErrorRsp(100001, "error occured."))
+      }
+    }
+  }
+
+  private val getVideoByPlayer = (path("getRecordListByPlayer")&post&pathEndOrSingleSlash){
+    dealPostReq[PlayerVideoRecordReq] { j=>
+      RecordDao.getRecordByPlayer(j.lastRecordId,j.count,j.playerId).map{
+        i=>
+          val userListMap=i._2.groupBy(_.recordId)
+          val record=i._1.map(i=>
+            ( i.recordId,
+              i.roomId,
+              i.startTime,
+              i.endTime,
+              userListMap(i.recordId).length,
+              userListMap(i.recordId).map(_.userId)
+            )
+          ).toList
+          val data=RecordsInfo(record.map{i=>
+            RecordInfo(i._1,i._2,i._3,i._4,i._5,i._6)
+          })
+          complete(RecordListRsp(data))
+      }.recover {
+        case e: Exception =>
+          log.info(s"getVideoRecordByPlayer exception.." + e.getMessage)
+          complete(ErrorRsp(100002, "error occured."))
+      }
+    }
+  }
+
+
+  val apiRoutes:Route=
+    getRoomId~getGamePlayerList~getGameRoomList~getVideoList~getVideoByTime~getVideoByPlayer
 }

@@ -17,13 +17,14 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
-import com.neo.sk.gypsy.core.EsheepSyncClient
+import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
 import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.Boot.esheepClient
 
 import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import org.seekloud.byteobject.MiddleBufferInJvm
 
 
 /**
@@ -45,8 +46,9 @@ class GameServer(override val boundary: Point) extends Grid {
 //  private[this] var feededApples: List[Food] = Nil
   private[this] var newFoods = Map[Point, Int]() // p -> color
   private[this] var eatenFoods = Map[Point, Int]()
+  private[this] var addedVirus:List[Virus] = Nil
+  private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
 //  private[this] var addedVirus:List[Virus] = Nil
-  private [this] var subscriber=mutable.HashMap[String,ActorRef[WsMsgSource]]()
   private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
@@ -64,7 +66,10 @@ class GameServer(override val boundary: Point) extends Grid {
     roomId = id
   }
 
+
   var VirusId = new AtomicLong(1000L)
+
+  implicit val sendBuffer = new MiddleBufferInJvm(81920)
 
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
@@ -81,9 +86,9 @@ class GameServer(override val boundary: Point) extends Grid {
   implicit val scoreOrdering = new Ordering[Score] {
     override def compare(x: Score, y: Score): Int = {
       var r = (y.score - x.score).toInt
-//      if (r == 0) {
-//        r = y.id
-//      }
+      if (r == 0) {
+        r = (y.k - x.k).toInt
+      }
       r
     }
   }
@@ -144,7 +149,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     virusMap ++= addNewVirus
     if(addNewVirus.keySet.nonEmpty){
-      dispatch(subscriber,AddVirus(addNewVirus))
+      dispatch(subscriber)(AddVirus(addNewVirus))
       val event = GenerateVirus(addNewVirus,frameCount)
       AddGameEvent(event)
     }
@@ -181,12 +186,13 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
-          dispatch(subscriber,Protocol.KillMessage(killer,player))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber)(Protocol.KillMessage(killer,player))
           //添加死亡信息
           val event = UserLeftRoom(player.id,player.name,roomId,frameCount)
           AddGameEvent(event)
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
+
           Left(killer)
         } else {
           val length = newCells.length
@@ -274,7 +280,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge){
-          dispatch(subscriber,UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
         }
 
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
@@ -339,7 +345,7 @@ class GameServer(override val boundary: Point) extends Grid {
     AddGameEvent(event2)
     if(removeVirus.nonEmpty){
 //      dispatch(subscriber,ReduceVirus(virusMap))
-      dispatch(subscriber,PlayerSpilt(playerMap))
+      dispatch(subscriber)(PlayerSpilt(playerMap))
     }
   }
 
@@ -475,7 +481,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //   }
    if(newVirus.nonEmpty){
      //生成病毒发送给前端（仅发送前端无法生成的v2）
-     dispatch(subscriber,AddVirus(newVirus))
+     dispatch(subscriber)(AddVirus(newVirus))
      val event = GenerateVirus(newVirus,frameCount)
      AddGameEvent(event)
    }
@@ -574,7 +580,8 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]]) ={
+
     subscriber=subscribersMap
   }
 
