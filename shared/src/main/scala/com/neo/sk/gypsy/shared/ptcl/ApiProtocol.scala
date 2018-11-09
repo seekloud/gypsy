@@ -35,6 +35,12 @@ object ApiProtocol {
                        recordList:List[RecordInfo]
                        )
 
+  case class RecordListRsp(
+                            data:RecordsInfo,
+                            errCode:Int=0,
+                            msg:String="ok"
+                          )
+
   case class RoomPlayerInfoRsp(
                            data:players,
                            errCode: Int =0,
@@ -52,6 +58,14 @@ object ApiProtocol {
                         errCode: Int=0,
                         msg:String ="ok"
                         )
+
+  case class getRoomReq(
+                       playerId:String
+                       )
+
+  case class getPlayerReq(
+                         roomId:Long
+                         )
 
   case class AllVideoRecordReq(
                          lastRecordId:Long,
@@ -71,9 +85,51 @@ object ApiProtocol {
                                  count:Int
                                  )
 
-  case class RecordListRsp(
-                          data:RecordsInfo,
-                          errCode:Int=0,
-                          msg:String="ok"
+  case class DownloadRecordReq(
+                                recordId:Long
+                              )
+
+  case class GetUserInRecordReq(
+                                 recordId:Long,
+                                 playerId:String
+                               )
+
+  case class ExistTimeInfo(
+                            startFrame:Long,
+                            endFrame:Long
                           )
+
+  case class PlayerInRecordInfo(
+                                 playerId:String,
+                                 nickname:String,
+                                 existTime:List[ExistTimeInfo]
+                               )
+
+  case class PlayerList(
+                         totalFrame:Int,
+                         playerList:List[PlayerInRecordInfo]
+                        )
+
+  case class userInRecordRsp(
+                              data:PlayerList,
+                              errCode: Int = 0,
+                              msg: String = "ok"
+                            ) extends CommonRsp
+
+  case class GetRecordFrameReq(
+                                recordId:Long,
+                                playerId:String  //观看者
+                              )
+
+  case class GetRecordFrameRsp(
+                                data:RecordFrameInfo,
+                                errCode: Int = 0,
+                                msg: String = "ok"
+                              ) extends CommonRsp
+
+  case class RecordFrameInfo(
+                              frame:Int,
+                              frameNum:Long
+                            )
+
 }

@@ -5,6 +5,7 @@ import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ValidationRejection
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import com.neo.sk.gypsy.utils.{CirceSupport, SecureUtil}
 import com.sun.xml.internal.ws.encoding.soap.DeserializationException
@@ -41,6 +42,8 @@ object ServiceUtils {
 trait ServiceUtils extends CirceSupport {
 
   import ServiceUtils._
+
+  def parseJsonError =ErrorRsp(1000103,"parse json error")
 
   def htmlResponse(html: String): HttpResponse = {
     HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
@@ -92,16 +95,24 @@ trait ServiceUtils extends CirceSupport {
   def dealPostReq[A](f: A => Future[server.Route])(implicit decoder: Decoder[A]): server.Route = {
     entity(as[Either[Error, PostEnvelope]]) {
       case Right(envelope) =>
-        ensurePostEnvelope(envelope) {
-          decode[A](envelope.data) match {
-            case Right(req) =>
-              f(req)
-
-            case Left(e) =>
-              log.error(s"json parse detail type error: $e")
-              Future.successful(complete(JsonParseError))
-          }
+//        ensurePostEnvelope(envelope) {
+//          decode[A](envelope.data) match {
+//            case Right(req) =>
+//              f(req)
+//
+//            case Left(e) =>
+//              log.error(s"json parse detail type error: $e")
+//              Future.successful(complete(JsonParseError))
+//          }
+      dealFutureResult {
+        decode[A](envelope.data) match {
+          case Right(req) =>
+            f(req)
+          case Left(e) =>
+            log.error(s"json parse detail type,data=${envelope.data} error: $e")
+            Future.successful(complete(parseJsonError))
         }
+    }
 
       case Left(e) =>
         log.error(s"json parse PostEnvelope error: $e")

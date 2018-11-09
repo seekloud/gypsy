@@ -4,7 +4,8 @@ import com.neo.sk.gypsy.models.SlickTables
 import com.neo.sk.gypsy.utils.DBUtil.db
 import slick.jdbc.PostgresProfile.api._
 import com.neo.sk.gypsy.models.SlickTables._
-import scala.concurrent.ExecutionContext.Implicits.global
+//import scala.concurrent.ExecutionContext.Implicits.global
+import com.neo.sk.gypsy.Boot.executor
 import scala.concurrent.Future
 
 object RecordDao {
@@ -84,6 +85,11 @@ object RecordDao {
 
   def getRecordById(id:Long)={
     db.run(tGameRecord.filter(_.recordId === id).result.headOption)
+  }
+
+  def getFilePath(recordId:Long) = {
+    val q = tGameRecord.filter(_.recordId === recordId).map(_.filePath).result
+    db.run(q)
   }
 }
 
