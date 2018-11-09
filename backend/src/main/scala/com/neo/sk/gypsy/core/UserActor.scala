@@ -107,8 +107,8 @@ object UserActor {
                      Mouse(id,clientX,clientY,f,n)
                    case Protocol.UserLeft()=>
                      Left(id,name)
-//                   case Ping(timestamp)=>
-//                     NetTest(id,timestamp)
+                   case Ping(timestamp)=>
+                     NetTest(id,timestamp)
                    case WatchChange(id, watchId) =>
                      log.debug(s"切换观察者: $watchId")
                      ChangeWatch(id, watchId)
@@ -165,8 +165,8 @@ object UserActor {
         case UnKnowAction =>
           Behavior.same
 
-        case _ =>
-          stashBuffer.stash(UnKnowAction)
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
           Behavior.same
       }
 
@@ -266,6 +266,10 @@ object UserActor {
 //            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
 //          }
 //          Behaviors.same
+
+        case e: NetTest=>
+          roomActor ! e
+          Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
