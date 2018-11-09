@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
+//import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -86,7 +86,7 @@ object GamePlayer {
                 work(
                   replay,
                   metaDataDecode(info.simulatorMetadata).right.get,
-                  initStateDecode(info.simulatorInitState).right.get,
+                  initStateDecode(info.simulatorInitState).right.get.asInstanceOf[Protocol.GypsyGameSnapshot],
                   info.frameCount,
                   userMapDecode(replay.getMutableInfo(AppSettings.essfMapKeyName).getOrElse(Array[Byte]())).right.get.m,
                 ))
@@ -106,7 +106,7 @@ object GamePlayer {
 
   def work(fileReader: FrameInputStream,
            metaData:Protocol.GameInformation,
-           initState:Protocol.GameSnapshot,
+           initState:Protocol.GypsyGameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[WsMsgSource]]= None
@@ -194,6 +194,7 @@ object GamePlayer {
   }
 
   import org.seekloud.byteobject.ByteObject._
+
   def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
