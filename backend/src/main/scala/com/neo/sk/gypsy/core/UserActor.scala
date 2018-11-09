@@ -16,6 +16,8 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
 
 import scala.concurrent.duration._
 import scala.language.implicitConversions
@@ -168,6 +170,14 @@ object UserActor {
         case unknowMsg =>
           stashBuffer.stash(unknowMsg)
           Behavior.same
+
+        case msg:GetUserInRecordMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
       }
 
     }
@@ -202,6 +212,14 @@ object UserActor {
           //          stashBuffer.stash(unknowMsg)
           //          log.warn(s"got unknown msg: $unknowMsg")
           Behavior.same
+
+        case msg:GetUserInRecordMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getGameReply(ctx,msg.recordId) ! msg
+          Behaviors.same
 
         case unknowMsg=>
           stashBuffer.stash(unknowMsg)

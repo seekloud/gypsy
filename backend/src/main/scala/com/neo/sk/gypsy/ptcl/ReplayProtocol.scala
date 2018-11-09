@@ -1,5 +1,9 @@
 package com.neo.sk.gypsy.ptcl
 
+import akka.actor.typed.ActorRef
+import com.neo.sk.gypsy.core.{GamePlayer, UserActor, UserManager}
+import com.neo.sk.gypsy.shared.ptcl.CommonRsp
+
 /**
   * User: sky
   * Date: 2018/10/18
@@ -16,4 +20,7 @@ object ReplayProtocol {
                                         leftF: Long
                                       )
   final case class EssfMapInfo(m:List[(EssfMapKey,EssfMapJoinLeftInfo)])
+
+  final case class GetUserInRecordMsg(recordId:Long, watchId:String, replyTo:ActorRef[CommonRsp]) extends UserManager.Command with UserActor.Command with GamePlayer.Command
+  final case class GetRecordFrameMsg(recordId:Long, watchId:String, replyTo:ActorRef[CommonRsp]) extends UserManager.Command with UserActor.Command with GamePlayer.Command
 }
