@@ -207,9 +207,7 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap)
           grid.getUserList(userList)
           grid.update()
-
           val gridData = grid.getAllGridData
-
           val feedapples = gridData.newFoodDetails
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
