@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.model
 
 import com.neo.sk.gypsy.shared._
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.UserActionEvent
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
@@ -27,8 +27,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,GameAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
-  override def getAllGridData: WsMsgProtocol.GridDataSync={
-    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
+  override def getAllGridData: GridDataSync={
+    GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
   }
 
   override def checkCellMerge: Boolean = {

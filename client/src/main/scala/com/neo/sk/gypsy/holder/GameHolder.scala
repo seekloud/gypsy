@@ -12,6 +12,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
+import com.neo.sk.gypsy.actor.GameClient.myId
 
 /**
   * @author zhaoyin
@@ -59,7 +60,8 @@ class GameHolder(
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //todo 游戏渲染
-        GameScene.draw()
+        val data=grid.getGridData(myId)
+        gameScene.draw(myId,data,)
       }
     }
     val timeline = new Timeline()
@@ -71,6 +73,28 @@ class GameHolder(
     timeline.getKeyFrames.add(keyFrame)
     animationTimer.start()
     timeline.play()
+  }
+
+  def gameLoop: Unit = {
+  //  NetDelay.ping(webSocketClient)
+    logicFrameTime = System.currentTimeMillis()
+      //差不多每三秒同步一次
+      //不同步
+      if (!justSynced) {
+        update()
+      } else {
+        //        println("back")
+        if (syncGridData.nonEmpty) {
+          //同步
+          grid.setSyncGridData(syncGridData.get)
+          syncGridData = None
+        }
+        justSynced = false
+      }
+  }
+
+  def update(): Unit = {
+    grid.update()
   }
 
 }
