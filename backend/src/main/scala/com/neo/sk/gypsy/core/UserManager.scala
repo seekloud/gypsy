@@ -89,11 +89,11 @@ object UserManager {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          getUserActor(ctx,msg.watchId) ! msg
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
         case msg:GetRecordFrameMsg=>
-          getUserActor(ctx,msg.watchId) ! msg
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
         case unknow =>

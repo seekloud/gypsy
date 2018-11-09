@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.GamePlayer.StopReplay
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
 import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.Boot.roomManager
