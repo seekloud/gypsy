@@ -128,6 +128,7 @@ object RoomActor {
                 val x = (new util.Random).nextInt(userList.length)
                 userList(x).shareList.append(id)
                 //观察者前端的id是其观察对象的id
+                //TODO userMap和userLists可以合并
                 dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
                 dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
             }
