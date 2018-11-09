@@ -491,17 +491,20 @@ class GameServer(override val boundary: Point) extends Grid {
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
-
-    if(frameCount<100){
-      food.foreach{
-        case (p,mass) =>
-          newFoodDetails ::= Food(mass, p.x, p.y)
-      }
-    }else{
-      newFoods.foreach{
-        case (p,mass) =>
-          newFoodDetails ::= Food(mass, p.x, p.y)
-      }
+//    if(frameCount<100){
+//      food.foreach{
+//        case (p,mass) =>
+//          newFoodDetails ::= Food(mass, p.x, p.y)
+//      }
+//    }else{
+//      newFoods.foreach{
+//        case (p,mass) =>
+//          newFoodDetails ::= Food(mass, p.x, p.y)
+//      }
+//    }
+    newFoods.foreach{
+      case (p,mass) =>
+        newFoodDetails ::= Food(mass, p.x, p.y)
     }
     playerMap.foreach{
       case (id,player) =>
@@ -564,6 +567,8 @@ class GameServer(override val boundary: Point) extends Grid {
     updateRanks()  //排名
   }
 
+  def getApples = food
+
   def getNewApples = newFoods
 
   def cleanNewApple = {
@@ -580,7 +585,6 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]]) ={
-
     subscriber=subscribersMap
   }
 

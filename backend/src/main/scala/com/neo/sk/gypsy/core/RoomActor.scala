@@ -90,7 +90,6 @@ object RoomActor {
               }
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
               idle(roomId,userList,userMap,subscribersMap,grid,0l)
-
         }
     }
   }
@@ -143,8 +142,8 @@ object RoomActor {
             dispatchTo(subscribersMap)(id, Protocol.Id(id))
             dispatchTo(subscribersMap)(id,grid.getGridData(id))
           }
-          //          dispatchTo(subscribersMap,id, WsMsgProtocol.Id(id),userList)
-          //          dispatchTo(subscribersMap,id,grid.getGridData(id),userList)
+          val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
+          dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
           Behaviors.same
 
         case UserActor.ChangeWatch(id, watchId) =>
@@ -208,8 +207,7 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap)
           grid.getUserList(userList)
           grid.update()
-          val gridData = grid.getAllGridData
-          val feedapples = gridData.newFoodDetails
+          val feedapples = grid.getNewApples
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
@@ -218,12 +216,13 @@ object RoomActor {
 
           if (tickCount % 20 == 5) {
             //remind 此处传输全局数据-同步数据
-//            val gridData = grid.getAllGridData
+            val gridData = grid.getAllGridData
             dispatch(subscribersMap)(gridData)
           } else {
             if (feedapples.nonEmpty) {
 //              dispatch(subscribersMap,WsMsgProtocol.FeedApples(newApples))
-              dispatch(subscribersMap)(Protocol.FeedApples(feedapples))
+              val foodlists = feedapples.map(s=>Food(s._2,s._1.x,s._1.y)).toList
+              dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
               grid.cleanNewApple
             }
           }
@@ -231,8 +230,11 @@ object RoomActor {
             dispatch(subscribersMap)(Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           if(tickCount==0){
-//            dispatch(subscribersMap,grid.getAllGridData)
+            val gridData = grid.getAllGridData
+            //            dispatch(subscribersMap,grid.getAllGridData)
             dispatch(subscribersMap)(gridData)
+            val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
+            dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
           idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
 
