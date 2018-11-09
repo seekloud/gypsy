@@ -33,7 +33,8 @@ import org.seekloud.byteobject.MiddleBufferInJs
   * Time: 11:23
   *
   */
-case class WebSocketClient(
+case class
+WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
                             messageHandler:Protocol.GameMessage => Unit,
