@@ -121,6 +121,7 @@ object GamePlayer {
           //停止之前的重放
           timer.cancel(GameLoopKey)
           fileReader.mutableInfoIterable
+          log.info(s"-------$msg  $userMap---------")
           userMap.find(_._1.userId == msg.userId) match {
             case Some(u) =>
               log.info(s"set replay from frame=${msg.frame}")
@@ -156,10 +157,6 @@ object GamePlayer {
             Behaviors.same
           }
         case msg:TimeOut=>
-          Behaviors.stopped
-
-
-        case StopReplay() =>
           Behaviors.stopped
 
         case unKnowMsg =>

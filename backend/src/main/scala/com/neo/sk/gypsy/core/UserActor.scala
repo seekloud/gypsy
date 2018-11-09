@@ -91,7 +91,7 @@ object UserActor {
 
   private def sink(actor: ActorRef[Command],recordId:Long) = ActorSink.actorRef[Command](
     ref = actor,
-    onCompleteMessage = StopReplay(recordId),
+    onCompleteMessage = CompleteMsgFront,
     onFailureMessage = FailMsgFront.apply
   )
 
@@ -115,7 +115,6 @@ object UserActor {
                    case _=>
                      UnKnowAction
                  }
-
           }
           .to(sink(actor,recordId))
 
@@ -163,8 +162,11 @@ object UserActor {
           log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
           Behaviors.stopped
 
-        case unknowMsg =>
-          stashBuffer.stash(unknowMsg)
+        case UnKnowAction =>
+          Behavior.same
+
+        case _ =>
+          stashBuffer.stash(UnKnowAction)
           Behavior.same
       }
 
@@ -196,14 +198,19 @@ object UserActor {
         case JoinRoomSuccess(uid,roomActor)=>
           switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
 
-        case unknowMsg =>
+        case UnKnowAction =>
           //          stashBuffer.stash(unknowMsg)
           //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
+
+        case unknowMsg=>
+          stashBuffer.stash(unknowMsg)
           Behavior.same
       }
     }
 
 
+  //玩游戏+观战
   private def play(
                     uId:String,
                     userInfo:PlayerInfo,
@@ -259,10 +266,6 @@ object UserActor {
 //            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
 //          }
 //          Behaviors.same
-
-        case StopReplay(recordId) =>
-          getGameReply(ctx,recordId) ! GamePlayer.StopReplay()
-          Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
