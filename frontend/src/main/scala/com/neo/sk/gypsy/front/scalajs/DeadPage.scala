@@ -4,8 +4,9 @@ import com.neo.sk.gypsy.front.common.Routes.UserRoute
 import com.neo.sk.gypsy.front.gypsyClient.{GameHolder, WebSocketClient}
 import com.neo.sk.gypsy.front.utils.{Http, JsFunc, LayuiJs, Shortcut}
 import com.neo.sk.gypsy.front.utils.LayuiJs.layer
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{UserLeft}
-import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{UserLeft}
+import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
@@ -21,9 +22,10 @@ import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 import scalatags.JsDom.all._
 import scalatags.JsDom.short.*
+
 object DeadPage {
 
-  def deadModel(game:GameHolder,id:String,killerName:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def deadModel(game:GameHolder,id:String,killerName:String,killNum:Int,score:Int,survivalTime:Long)={
     Shortcut.pauseMusic("bg")
     game.isDead=true
     LayuiJs.layer.open(new LayuiJs.open {
@@ -41,7 +43,7 @@ object DeadPage {
       override def yes() = {
         println(KeyCode.Space.toString)
         game.isDead=false
-        game.webSocketClient.sendMsg(WsMsgProtocol.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
+        game.webSocketClient.sendMsg(Protocol.KeyCode(game.myId,KeyCode.Space,game.grid.frameCount,game.getActionSerialNum))
         layer.closeAll()
       } .asInstanceOf[js.Function0[Any]]
 
@@ -59,10 +61,10 @@ object DeadPage {
             span(*.id:="statsText",`class`:="user-food-score",s"分数:$score")
            // span(*.id:="statsSubtext","分数")
             ),
-          div(*.id:="user-max-score",
-            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore")
-           // span(*.id:="statsSubtext","历史最高分")
-            ),
+//          div(*.id:="user-max-score",
+//            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore")
+//           // span(*.id:="statsSubtext","历史最高分")
+//            ),
           div(*.id:="user-kill-num",
             span(*.id:="statsText",`class`:="user-kill",s"干掉小球数:$killNum")
             //span(*.id:="statsSubtext","干掉小球数")
@@ -79,23 +81,22 @@ object DeadPage {
 
       //override def btn2: UndefOr[js.Function2[Any, Any, Any]] =
     })
-    //todo id<1000000
-    if(score>maxScore){
-      val bodyStr=UserMaxScore(id,score).asJson.noSpaces
-      Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
-        case Left(e) =>
-          println(s"parse error in login $e ")
-          LayuiJs.msg(e.toString, 5, 2000)
-        case Right(rsp)=>
-          if(rsp.errCode!=0){
-            LayuiJs.msg(rsp.msg, 5, 2000)
-          }
-      }
-    }
+//    if(score>maxScore){
+//      val bodyStr=UserMaxScore(id,score).asJson.noSpaces
+//      Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
+//        case Left(e) =>
+//          println(s"parse error in login $e ")
+//          LayuiJs.msg(e.toString, 5, 2000)
+//        case Right(rsp)=>
+//          if(rsp.errCode!=0){
+//            LayuiJs.msg(rsp.msg, 5, 2000)
+//          }
+//      }
+//    }
 
   }
 
-  def gameOverModel(game:GameHolder,id:String,killNum:Int,score:Int,survivalTime:Long,maxScore:Int)={
+  def gameOverModel(game:GameHolder,id:String,killNum:Int,score:Int,survivalTime:Long)={
     Shortcut.stopMusic("bg")
     LayuiJs.layer.open(new LayuiJs.open {
       override val `type`: UndefOr[Int] = 1
@@ -123,10 +124,10 @@ object DeadPage {
             span(*.id:="statsText",`class`:="user-food-score",s"分数:$score")
             // span(*.id:="statsSubtext","分数")
           ),
-          div(*.id:="user-max-score",
-            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore")
-            // span(*.id:="statsSubtext","历史最高分")
-          ),
+//          div(*.id:="user-max-score",
+//            span(*.id:="statsText",`class`:="user-highest-score",s"历史最高分:$maxScore")
+//            // span(*.id:="statsSubtext","历史最高分")
+//          ),
           div(*.id:="user-kill-num",
             span(*.id:="statsText",`class`:="user-kill",s"干掉小球数:$killNum")
             //span(*.id:="statsSubtext","干掉小球数")
@@ -137,19 +138,18 @@ object DeadPage {
           ))
       ).toString().asInstanceOf[HTMLElement]
     })
-    //todo id<1000000
-    if(score>maxScore){
-      val bodyStr=UserMaxScore(id,score).asJson.noSpaces
-      Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
-        case Left(e) =>
-          println(s"parse error in login $e ")
-          LayuiJs.msg(e.toString, 5, 2000)
-        case Right(rsp)=>
-          if(rsp.errCode!=0){
-            LayuiJs.msg(rsp.msg, 5, 2000)
-          }
-      }
-    }
+//    if(score>maxScore){
+//      val bodyStr=UserMaxScore(id,score).asJson.noSpaces
+//      Http.postJsonAndParse[SuccessRsp](UserRoute.updateUserScore,bodyStr).map{
+//        case Left(e) =>
+//          println(s"parse error in login $e ")
+//          LayuiJs.msg(e.toString, 5, 2000)
+//        case Right(rsp)=>
+//          if(rsp.errCode!=0){
+//            LayuiJs.msg(rsp.msg, 5, 2000)
+//          }
+//      }
+//    }
 
   }
 
