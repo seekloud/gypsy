@@ -48,7 +48,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def AuthUserErrorRsp(msg: String) = ErrorRsp(10001001, msg)
 
-  val idGenerator = new AtomicInteger(1)
+  private[this] val idGenerator = new AtomicInteger(1)
 
   private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(

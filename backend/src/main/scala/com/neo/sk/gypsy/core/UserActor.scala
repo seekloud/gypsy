@@ -107,8 +107,8 @@ object UserActor {
                      Mouse(id,clientX,clientY,f,n)
                    case Protocol.UserLeft()=>
                      Left(id,name)
-                   case Ping(timestamp)=>
-                     NetTest(id,timestamp)
+//                   case Ping(timestamp)=>
+//                     NetTest(id,timestamp)
                    case WatchChange(id, watchId) =>
                      log.debug(s"切换观察者: $watchId")
                      ChangeWatch(id, watchId)
@@ -195,6 +195,11 @@ object UserActor {
 
         case JoinRoomSuccess(uid,roomActor)=>
           switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
+
+        case unknowMsg =>
+          //          stashBuffer.stash(unknowMsg)
+          //          log.warn(s"got unknown msg: $unknowMsg")
+          Behavior.same
       }
     }
 
@@ -231,7 +236,6 @@ object UserActor {
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
 
-
         case DispatchMsg(m)=>
           frontActor ! m
           Behaviors.same
@@ -255,10 +259,6 @@ object UserActor {
 //            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
 //          }
 //          Behaviors.same
-
-        case unknowMsg =>
-          //          log.warn(s"got unknown msg: $unknowMsg")
-          Behavior.same
 
         case StopReplay(recordId) =>
           getGameReply(ctx,recordId) ! GamePlayer.StopReplay()

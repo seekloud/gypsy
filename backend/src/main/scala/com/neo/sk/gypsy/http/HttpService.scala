@@ -81,7 +81,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
             'accessCode.as[String]
           ){
             case (roomId,playerIdOpt,accessCode) =>
-              redirect(s"/gypsy#/watchGame/${roomId}/${accessCode}/${playerIdOpt.getOrElse("")}",
+              redirect(s"/gypsy#/watchGame/${roomId}/${playerIdOpt.getOrElse("")}/${accessCode}",
                 StatusCodes.SeeOther
               )
           }

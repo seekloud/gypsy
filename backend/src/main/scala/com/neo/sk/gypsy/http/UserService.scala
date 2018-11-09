@@ -45,7 +45,7 @@ trait UserService extends ServiceUtils with SessionBase {
 
   implicit val timeout: Timeout
 
-  val idGenerator = new AtomicInteger(1000000)
+  private[this] val idGenerator = new AtomicInteger(1000000)
 
   val secretKey = "dsacsodaux84fsdcs4wc32xm"
 
