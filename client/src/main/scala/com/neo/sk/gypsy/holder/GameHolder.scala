@@ -2,17 +2,22 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
+
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
 import javafx.util.Duration
 
 import com.neo.sk.gypsy.scene.GameScene
-import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.myId
+import org.scalajs.dom
+import org.scalajs.dom.ext.KeyCode
+
+import scala.math.atan2
 
 /**
   * @author zhaoyin
@@ -61,13 +66,15 @@ class GameHolder(
       override def handle(now: Long): Unit = {
         //todo 游戏渲染
         val data=grid.getGridData(myId)
-        gameScene.draw(myId,data,)
+        val offsetTime=System.currentTimeMillis()-logicFrameTime
+        gameScene.draw(myId,data,offsetTime)
       }
     }
     val timeline = new Timeline()
     timeline.setCycleCount(Animation.INDEFINITE)
     val keyFrame = new KeyFrame(Duration.millis(100),{ _ =>
       //todo 游戏循环
+      addActionListenEvent
       gameLoop()
     })
     timeline.getKeyFrames.add(keyFrame)
@@ -75,7 +82,7 @@ class GameHolder(
     timeline.play()
   }
 
-  def gameLoop: Unit = {
+  def gameLoop(): Unit = {
   //  NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次
@@ -95,6 +102,45 @@ class GameHolder(
 
   def update(): Unit = {
     grid.update()
+  }
+
+  def addActionListenEvent = {
+    gameScene.topCanvas.requestFocus()
+    //在画布上监听键盘事件
+    gameScene.topCanvas.setOnKeyPressed{ event => {
+        val key=event.getCode
+        if (key == KeyCode.ESCAPE && !isDead) {
+          gameClose
+        } else if (watchKeys.contains(e.keyCode)) {
+          println(s"key down: [${e.keyCode}]")
+          if (e.keyCode == KeyCode.Space) {
+            println(s"down+${e.keyCode.toString}")
+          } else {
+            println(s"down+${e.keyCode.toString}")
+            val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+            webSocketClient.sendMsg(keyCode)
+          }
+          e.preventDefault()
+        }
+      }
+    }
+    //在画布上监听鼠标事件
+    def getDegree(x:Double,y:Double)={
+      atan2(y - 48 -window.y/2,x  -window.x/2 )
+    }
+    var FormerDegree = 0D
+    canvas3.onmousemove = { (e: dom.MouseEvent) => {
+      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+        FormerDegree = getDegree(e.pageX,e.pageY)
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+        webSocketClient.sendMsg(mp)
+      }
+    }
+    }
   }
 
 }
