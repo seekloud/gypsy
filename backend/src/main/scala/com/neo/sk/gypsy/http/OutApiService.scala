@@ -21,11 +21,17 @@ import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.{CommonRsp, ErrorRsp}
 import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
+import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe._
+
+
+trait OutApiService extends ServiceUtils with SessionBase{
+
+  import io.circe.generic.auto._
+  import io.circe.syntax._
+  import io.circe._
 
 trait OutApiService extends ServiceUtils with SessionBase {
 

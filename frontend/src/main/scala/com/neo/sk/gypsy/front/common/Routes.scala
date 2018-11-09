@@ -31,12 +31,19 @@ object Routes {
                          playerName:String,
                          roomId:Long,
                          accessCode:String
-                        ) = if(roomId == 0)
+                        ) = if(roomId == 0l)
       baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
     else
       baseUrl + s"/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode&roomId=$roomId"
 
-    val watchGame = baseUrl + "/watchGame"
+    private def watchGame(
+                         playerId:String,
+                         roomId:Long,
+                         accessCode:String
+                         ) = if(playerId=="")
+      baseUrl + s"/watchGame?roomId=$roomId&accessCode=$accessCode"
+    else
+      baseUrl + s"/watchGame?roomId=$roomId&accessCode=$accessCode&playerId=$playerId"
 
     def getpgWebSocketUri(document: Document,
                         playerId:String,
@@ -45,7 +52,7 @@ object Routes {
                         accessCode:String,
                         userType:Int):String = {
       val wsProtocol = if (dom.document.location.protocol == "https:") "wss" else "ws"
-      val wsUrl = if(userType == 0) playGame(playerId,playerName,roomId,accessCode)
+      val wsUrl = if(userType == 0) playGame(playerId,playerName,roomId,accessCode) else if(userType == -1) watchGame(playerId,roomId,accessCode)
       s"$wsProtocol://${dom.document.location.host}$wsUrl"
     }
 

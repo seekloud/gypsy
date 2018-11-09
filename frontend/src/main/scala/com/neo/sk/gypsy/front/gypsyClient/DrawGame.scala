@@ -1,7 +1,8 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
@@ -274,9 +275,6 @@ case class DrawGame(
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-//      println("kk"+killerId)
-//      println("dd"+deadPlayer)
-//      println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val killImg = if (deadPlayer.kill > 3) shutdown
@@ -311,10 +309,10 @@ case class DrawGame(
     }
   }
 
-  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
-    val foods = data.foodDetails
+    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
     val masses = data.massDetails
     val virus = data.virusDetails
 
@@ -425,7 +423,7 @@ case class DrawGame(
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y

@@ -8,15 +8,13 @@ import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.{UserProtocol, _}
 import com.neo.sk.gypsy.front.utils.Shortcut
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.circe.generic.auto._
-import io.circe.syntax._
 
 import scala.xml.Elem
 /**
   * @author zhaoyin
-  * @date 2018/10/24  下午2:02
+  * 2018/10/24  下午2:02
   */
-class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:String) extends Page{
+class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:String,userType:Int) extends Page{
 
   private val gameView = <canvas id ="GameView" tabindex="1"></canvas>
   private val middleView = <canvas id="MiddleView" tabindex="2" ></canvas>
@@ -29,8 +27,7 @@ class GamePage(playerId:String, playerName:String, roomId:Long, accessCode:Strin
     val gameHolder = new GameHolder
     gameHolder.init()
     //直接建立websocket连接
-    //TODO maxScore
-    gameHolder.joinGame(playerId,playerName, roomId, accessCode,0,0)
+    gameHolder.joinGame(playerId,playerName, roomId, accessCode,userType)
   }
 
   override def render: Elem = {

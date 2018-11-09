@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -18,12 +17,15 @@ import org.seekloud.essf.io.{EpisodeInfo, FrameData, FrameInputStream}
 import scala.concurrent.duration.FiniteDuration
 import com.neo.sk.gypsy.utils.ESSFSupport._
 import org.seekloud.essf.io.FrameInputStream
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent
-import com.neo.sk.gypsy.shared.ptcl.GypsyGameEvent.{GameInformation, ReplayFrameData,GameSnapshot}
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GameInformation, GameMessage, ReplayFrameData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.implicitConversions
 import scala.concurrent.duration._
+import org.seekloud.byteobject._
 
 
 /**
@@ -39,6 +41,8 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
+  case class StopReplay() extends Command
+
 
   final case class SwitchBehavior(
                                  name: String,
@@ -65,7 +69,7 @@ object GamePlayer {
   }
 
   /**来自UserActor的消息**/
-  case class InitReplay(userActor: ActorRef[GypsyGameEvent.WsMsgSource], userId: String,frame:Int) extends Command
+  case class InitReplay(userActor: ActorRef[WsMsgSource], userId: String, frame:Int) extends Command
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
@@ -102,11 +106,11 @@ object GamePlayer {
   }
 
   def work(fileReader: FrameInputStream,
-           metaData:String,
-           initState:GypsyGameEvent.GypsyGameSnapshot,
+           metaData:Protocol.GameInformation,
+           initState:Protocol.GameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
-           userOpt:Option[ActorRef[GypsyGameEvent.WsMsgSource]]= None
+           userOpt:Option[ActorRef[WsMsgSource]]= None
           )(
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command],
@@ -119,19 +123,20 @@ object GamePlayer {
           //停止之前的重放
           timer.cancel(GameLoopKey)
           fileReader.mutableInfoIterable
+          log.info(s"-------$msg  $userMap---------")
           userMap.find(_._1.userId == msg.userId) match {
             case Some(u) =>
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               if(fileReader.hasMoreFrame){
-                timer.startPeriodicTimer(GameLoopKey, GameLoop, 100.millis)
+                timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
                 timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
                 Behaviors.same
               }
             case None=>
-              dispatchTo(msg.userActor,GypsyGameEvent.InitReplayError("本局游戏中不存在该用户"))
+              dispatchTo(msg.userActor,Protocol.InitReplayError("本局游戏中不存在该用户"))
               timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
               Behaviors.same
           }
@@ -145,9 +150,10 @@ object GamePlayer {
             )
             Behaviors.same
           }else{
-            userOpt.foreach(u=>
-              dispatchTo(u,GypsyGameEvent.ReplayFinish())
-            )
+            println(s"replay finish!")
+            userOpt.foreach { u =>
+              dispatchTo(u, Protocol.ReplayFinish())
+            }
             timer.cancel(GameLoopKey)
             timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.same
@@ -182,18 +188,18 @@ object GamePlayer {
     Behaviors.receive[Command]{(ctx,msg)=>
       msg match {
         case msg:InitReplay =>
-          dispatchTo(msg.userActor,GypsyGameEvent.InitReplayError("游戏文件不存在或者已损坏！！"))
+          dispatchTo(msg.userActor,Protocol.InitReplayError("游戏文件不存在或者已损坏！！"))
           Behaviors.stopped
       }
     }
   }
 
   import org.seekloud.byteobject.ByteObject._
-  def dispatchTo(subscribe: ActorRef[GypsyGameEvent.WsMsgSource],msg:GypsyGameEvent.WsMsgServer)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 
-  def dispatchByteTo(subscribe:ActorRef[GypsyGameEvent.WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchByteTo(subscribe:ActorRef[WsMsgSource], msg:FrameData)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(msg.eventsData)
     // foreach和map都可以去掉Option
     msg.stateData.foreach(s => subscribe ! ReplayFrameData(s))
