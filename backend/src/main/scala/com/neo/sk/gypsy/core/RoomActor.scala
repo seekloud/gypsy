@@ -165,7 +165,7 @@ object RoomActor {
           Behaviors.same
 
         case UserActor.Left(id, name) =>
-          log.info(s"got $msg")
+          log.info(s"got------------- $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
          // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
