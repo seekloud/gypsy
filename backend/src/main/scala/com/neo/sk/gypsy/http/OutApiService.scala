@@ -26,12 +26,9 @@ import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-
-trait OutApiService extends ServiceUtils with SessionBase{
-
-  import io.circe.generic.auto._
-  import io.circe.syntax._
-  import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import io.circe._
 
 trait OutApiService extends ServiceUtils with SessionBase {
 
