@@ -8,6 +8,7 @@ import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
 import javafx.util.Duration
 
+import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
 import com.neo.sk.gypsy.common.StageContext
@@ -34,6 +35,15 @@ object GameHolder {
   var syncGridData: scala.Option[GridDataSync] = None
   var killList = List.empty[(Int,String,Player)]
 
+
+}
+class GameHolder(
+                  stageCtx: StageContext,
+                  gameScene: GameScene,
+                  serverActor: ActorRef[Protocol.WsSendMsg]
+                ) {
+  import GameHolder._
+
   private[this] val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
@@ -44,13 +54,6 @@ object GameHolder {
     KeyCode.DOWN,
     KeyCode.ESCAPE
   )
-
-}
-class GameHolder(
-                  stageCtx: StageContext,
-                 gameScene: GameScene,
-                ) {
-  import GameHolder._
 
   def connectToGameServer(gameHolder:GameHolder) = {
     ClientBoot.addToPlatform{
@@ -107,20 +110,19 @@ class GameHolder(
   def addActionListenEvent = {
     gameScene.topCanvas.requestFocus()
     //在画布上监听键盘事件
-    gameScene.topCanvas.setOnKeyPressed{ event => {
-        val key=event.getCode
+    gameScene.topCanvas.setOnKeyPressed{ e => {
+        val key=e.getCode
         if (key == KeyCode.ESCAPE && !isDead) {
           gameClose
-        } else if (watchKeys.contains(e.keyCode)) {
-          println(s"key down: [${e.keyCode}]")
-          if (e.keyCode == KeyCode.Space) {
-            println(s"down+${e.keyCode.toString}")
+        } else if (watchKeys.contains(e.getCode)) {
+          if (e.getCode == KeyCode.SPACE) {
+            println(s"down+${e.getCode.toString}")
           } else {
-            println(s"down+${e.keyCode.toString}")
-            val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+            println(s"down+${e.getCode.toString}")
+            val keyCode = Protocol.KeyCode(myId, e.getCode.toString.toInt, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
             grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
             grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
-            webSocketClient.sendMsg(keyCode)
+            serverActor ! keyCode
           }
           e.preventDefault()
         }
@@ -131,7 +133,7 @@ class GameHolder(
       atan2(y - 48 -window.y/2,x  -window.x/2 )
     }
     var FormerDegree = 0D
-    canvas3.onmousemove = { (e: dom.MouseEvent) => {
+    gameScene.topCanvas.setOnMouseMoved{ e => {
       val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
