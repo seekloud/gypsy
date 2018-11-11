@@ -53,8 +53,16 @@ case class DrawGame(
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
-  this.canvas.width=this.size.x
-  this.canvas.height=this.size.y
+  this.canvas.width= size.x
+  this.canvas.height= size.y
+  var screeScale = 1.0
+
+  def updateCanvasSize(newWidth:Double,newHeight:Double)={
+    screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
+    println(newWidth+ "   " + newHeight + "  "+ screeScale)
+    this.canvas.width = newWidth.toInt
+    this.canvas.height = newHeight.toInt
+  }
 
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
@@ -84,15 +92,15 @@ case class DrawGame(
   //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
 
   }
  //绘制转圈动画
   var p =  ArrayBuffer()
   var particle = ArrayBuffer[Particle]()
   var angle = Math.PI/4
-  var width = canvas.width
-  var height = canvas.height
+  var width = this.canvas.width
+  var height = this.canvas.height
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
   }
@@ -168,7 +176,7 @@ case class DrawGame(
   }
   def clock(time:Int):Unit={
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 19, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("正在等待玩家进入", 640, 100)
@@ -187,7 +195,7 @@ case class DrawGame(
   //欢迎文字
   def drawGameWelcome(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Welcome.", 150, 180)
@@ -196,7 +204,7 @@ case class DrawGame(
   //等待文字
   def drawGameWait(firstCome:Boolean): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     if(firstCome) {
       ctx.fillStyle = "rgba(99, 99, 99, 1)"
       ctx.font = "36px Helvetica"
@@ -212,7 +220,7 @@ case class DrawGame(
   //离线提示文字
   def drawGameLost: Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Ops, connection lost....", 350, 250)
@@ -221,20 +229,20 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    ctx.drawImage(background1,0,0,size.x,size.y)
+    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
     ctx.strokeStyle = MyColors.stripe
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x ,l )
+      ctx.lineTo(bounds.x,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y)
+      ctx.lineTo(l ,bounds.y)
       ctx.stroke()
     }
   }
@@ -243,7 +251,7 @@ case class DrawGame(
   def drawRankMap():Unit = {
     //绘制当前排行
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(size.x-200,20,150,250)
+    ctx.fillRect(this.canvas.width-200,20,150,250)
 
     //绘制小地图
     ctx.font = "12px Helvetica"
@@ -275,9 +283,6 @@ case class DrawGame(
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-//      println("kk"+killerId)
-//      println("dd"+deadPlayer)
-//      println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val killImg = if (deadPlayer.kill > 3) shutdown
@@ -319,18 +324,19 @@ case class DrawGame(
     val masses = data.massDetails
     val virus = data.virusDetails
 
-    val offx= size.x/2 - basePoint._1
-    val offy =size.y/2 - basePoint._2
+    val offx= this.canvas.width/2 - basePoint._1
+    val offy =this.canvas.height/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2)
+    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
+
+//    println(scale + "   " + screeScale)
     //var scale = data.scale
 
     //绘制背景
-    //    ctx.fillStyle = MyColors.background
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
-    ctx.fillRect(0,0,size.x,size.y)
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
     ctx.save()
-    centerScale(scale,size.x/2,size.y/2)
+    centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
     //TODO /2
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
@@ -350,7 +356,7 @@ case class DrawGame(
       }
       a._2.foreach{ case Food(color, x, y)=>
         ctx.beginPath()
-        ctx.arc(x +offx,y +offy,10,0,2*Math.PI)
+        ctx.arc(x + offx,y + offy,10,0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -378,7 +384,7 @@ case class DrawGame(
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc( xfix+offx ,yfix+offy ,r,0,2*Math.PI)
+        ctx.arc( xfix + offx ,yfix + offy ,r,0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -401,14 +407,15 @@ case class DrawGame(
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-
+//        println("width: "+ this.canvas.width + "x:    "+ (xfix +offx-cell.radius-6))
+//        println("height: "+ this.canvas.height + "y:    "+ (yfix+offy-cell.radius-6))
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
+          ctx.arc(xfix + offx,yfix + offy, cell.radius + 15,0,2*Math.PI)
           ctx.fill()
         }
 
@@ -450,14 +457,14 @@ case class DrawGame(
   //ctx3
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
-    ctx.clearRect(0,0,size.x,size.y)
+    ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.font = "12px Helvetica"
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
     var index = 0
     ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", size.x-200, index, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
       val drawColor = index match {
@@ -473,11 +480,11 @@ case class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, size.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", size.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index, currentRankBaseLine)
     }
     //绘制小地图
 

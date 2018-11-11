@@ -36,7 +36,7 @@ import scala.collection.mutable
 class GameHolder(replay:Boolean = false) {
 
   val bounds = Point(Boundary.w, Boundary.h)
-  val window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
+  var window = Point(dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
   private[this] val canvas1 = dom.document.getElementById("GameView").asInstanceOf[Canvas]
   private[this] val ctx = canvas1.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas2 = dom.document.getElementById("MiddleView").asInstanceOf[Canvas]
@@ -99,8 +99,24 @@ class GameHolder(replay:Boolean = false) {
 
   def getActionSerialNum=actionSerialNumGenerator.getAndIncrement()
 
+  protected def checkScreenSize = {
+    val newWidth=dom.window.innerWidth.toInt
+    val newHeight=dom.window.innerHeight.toInt
+    if(newWidth!=window.x || newHeight!= window.y){
+      //屏幕适配
+      window =  Point(newWidth, newHeight)
+      drawGameView.updateCanvasSize(newWidth,newHeight)
+//      drawOffScreen.updateCanvasSize(newWidth,newHeight)
+      drawMiddleView.updateCanvasSize(newWidth,newHeight)
+      drawTopView.updateCanvasSize(newWidth,newHeight)
+      drawClockView.updateCanvasSize(newWidth,newHeight)
+      init()
+    }
+  }
+
   //不同步就更新，同步就设置为不同步
   def gameLoop: Unit = {
+    checkScreenSize
     NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
     if (webSocketClient.getWsState) {
@@ -109,7 +125,6 @@ class GameHolder(replay:Boolean = false) {
       if (!justSynced) {
         update()
       } else {
-//        println("back")
         if (syncGridData.nonEmpty) {
           //同步
           grid.setSyncGridData(syncGridData.get)
@@ -118,7 +133,6 @@ class GameHolder(replay:Boolean = false) {
         justSynced = false
       }
     }
-
   }
 
   def update(): Unit = {
@@ -215,12 +229,12 @@ class GameHolder(replay:Boolean = false) {
       }
     }
     //在画布上监听鼠标事件
-    def getDegree(x:Double,y:Double)={
-      atan2(y - 48 -window.y/2,x  -window.x/2 )
+    def getDegree(x:Double,y:Double)= {
+      atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
     var FormerDegree = 0D
     canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
@@ -234,7 +248,7 @@ class GameHolder(replay:Boolean = false) {
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
-      val data=grid.getGridData(myId)
+      val data=grid.getGridData(myId, window.x, window.y)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
           firstCome=false
@@ -244,7 +258,6 @@ class GameHolder(replay:Boolean = false) {
           var xMin = 10000.0
           var yMin = 10000.0
           var yMax = 0.0
-          //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
           p.cells.foreach { cell =>
             val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
             val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
@@ -262,6 +275,7 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
+          //TODO 食物没有做是否在屏幕中的判断？
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
@@ -330,8 +344,16 @@ class GameHolder(replay:Boolean = false) {
         grid.historyRank = history
 
       case Protocol.FeedApples(foods) =>
-//        grid.food ++= foods
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+
+        println(s"食物个数${foods.size}帧号${grid.frameCount}")
+
+      case Protocol.AddVirus(virus) =>
+        println(s"接收新病毒 new Virus ${virus}")
+        grid.virusMap ++= virus
+
+      case Protocol.ReduceVirus(virus) =>
+        grid.virusMap = virus
 
       case data: Protocol.GridDataSync =>
         //TODO here should be better code.
@@ -368,9 +390,9 @@ class GameHolder(replay:Boolean = false) {
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
-        if(deadPlayer.id!=myId){
+        if(deadPlayer.id != myId){
           if(!isDead){
-            isDead=true
+            isDead = true
             killList :+=(200,killerId,deadPlayer)
           }else{
             killList :+=(200,killerId,deadPlayer)
@@ -378,7 +400,7 @@ class GameHolder(replay:Boolean = false) {
         }else{
           Shortcut.playMusic("shutdownM")
         }
-        if(killerId==myId){
+        if(killerId == myId){
           grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
             case 1 => Shortcut.playMusic("1Blood")
             case 2 => Shortcut.playMusic("2Kill")
@@ -391,10 +413,9 @@ class GameHolder(replay:Boolean = false) {
           }
         }
 
-
       case Protocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
-          grid.playerMap=grid.playerMap - id + (id->player)
+          grid.playerMap = grid.playerMap - id + (id->player)
         }
 
 //      case Protocol.MatchRoomError()=>
@@ -437,16 +458,27 @@ class GameHolder(replay:Boolean = false) {
       case e: Protocol.GenerateApples =>
         grid.food ++= e.apples.map(a => a._1 -> a._2)
 
+      case e: Protocol.GenerateVirus =>
+        grid.virusMap ++= e.virus
+
+      case e: Protocol.RemoveVirus =>
+
+
       case e: Protocol.UserJoinRoom =>
         grid.playerMap += e.playState.id -> e.playState
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
 
+      case e: Protocol.PlayerInfoChange =>
+        grid.playerMap = e.player
+
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
-        dom.window.cancelAnimationFrame(nextFrame)
         //todo closeHolder
+        println(s"播放结束！！！")
+//        dom.window.alert("播放结束，谢谢观看！")
+//        dom.window.cancelAnimationFrame(nextFrame)
         closeHolder
 
       case e:Protocol.DecodeError =>
@@ -457,10 +489,13 @@ class GameHolder(replay:Boolean = false) {
         //todo closeHolder
         closeHolder
 
+      case e:Protocol.UserMerge =>
+        if(grid.playerMap.get(e.id).nonEmpty){
+          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
+        }
+
       case _ =>
         println(s"unknow msg: $data")
-
-        //todo 玩家融合事件未处理
     }
   }
 

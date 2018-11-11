@@ -12,7 +12,7 @@ import akka.util.Timeout
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-
+import java.net.URLEncoder
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -48,7 +48,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
               log.info("guest comeIn withOut session")
               addSession( GypsySession(BaseUserInfo(UserRolesType.guest,"","",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
-                  ctx.redirect("/gypsy/game",StatusCodes.SeeOther)
+                  ctx.redirect("/gypsy",StatusCodes.SeeOther)
               }
           }
         }~ path("playGame") {
@@ -59,7 +59,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
             'roomId.as[Long].?
           ){
             case (playerId, playerName, accessCode,roomIdOpt) =>
-              redirect(s"/gypsy#/playGame/${playerId}/${playerName}/${roomIdOpt.getOrElse(0l)}/${accessCode}",
+              redirect(s"/gypsy#/playGame/${playerId}/${URLEncoder.encode(playerName,"utf-8")}/${roomIdOpt.getOrElse(0l)}/${accessCode}",
                 StatusCodes.SeeOther
               )
           }
@@ -71,8 +71,19 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
             'accessCode.as[String]
           ){
             case (recordId, playerId,frame,accessCode) =>
-              redirect(s"/gyspy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
+              redirect(s"/gypsy#/watchRecord/${recordId}/${playerId}/${frame}/${accessCode}",
                 StatusCodes.SeeOther)
+          }
+        } ~ path("watchGame"){
+          parameter(
+            'roomId.as[Long],
+            'playerId.as[String].?,
+            'accessCode.as[String]
+          ){
+            case (roomId,playerIdOpt,accessCode) =>
+              redirect(s"/gypsy#/watchGame/${roomId}/${playerIdOpt.getOrElse("")}/${accessCode}",
+                StatusCodes.SeeOther
+              )
           }
         } ~ resourceRoutes ~ userRoutes ~ esheepRoutes ~ apiRoutes
 
