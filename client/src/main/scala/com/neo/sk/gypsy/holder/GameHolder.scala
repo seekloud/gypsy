@@ -68,7 +68,7 @@ class GameHolder(
     println("start---")
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
-        //todo 游戏渲染
+        //游戏渲染
         val data=grid.getGridData(myId,gameScene.window.x,gameScene.window.y)
         val offsetTime=System.currentTimeMillis()-logicFrameTime
         gameScene.draw(myId,data,offsetTime)
@@ -77,7 +77,7 @@ class GameHolder(
     val timeline = new Timeline()
     timeline.setCycleCount(Animation.INDEFINITE)
     val keyFrame = new KeyFrame(Duration.millis(100),{ _ =>
-      //todo 游戏循环
+      //游戏循环
       addActionListenEvent
       gameLoop()
     })
