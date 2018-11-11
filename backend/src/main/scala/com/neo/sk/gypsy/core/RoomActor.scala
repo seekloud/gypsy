@@ -122,14 +122,14 @@ object RoomActor {
                   }
                 }
                 dispatchTo(subscribersMap)(id,Protocol.Id(wid))
-                dispatchTo(subscribersMap)(id,grid.getGridData(wid))
+                dispatchTo(subscribersMap)(id,grid.getAllGridData)
               case None =>
                 val x = (new util.Random).nextInt(userList.length)
                 userList(x).shareList.append(id)
                 //观察者前端的id是其观察对象的id
                 //TODO userMap和userLists可以合并
                 dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
-                dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
+                dispatchTo(subscribersMap)(id,grid.getAllGridData)
             }
           }else{
             //玩游戏
@@ -140,12 +140,13 @@ object RoomActor {
             grid.addPlayer(id, name)
             subscriber ! JoinRoomSuccess(id,ctx.self)
             dispatchTo(subscribersMap)(id, Protocol.Id(id))
-            dispatchTo(subscribersMap)(id,grid.getGridData(id))
+            dispatchTo(subscribersMap)(id,grid.getAllGridData)
           }
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
           Behaviors.same
 
+          //TODO 切换视角
         case UserActor.ChangeWatch(id, watchId) =>
           log.info(s"get $msg")
           for(i<- 0 until userList.length){
@@ -158,7 +159,7 @@ object RoomActor {
               userList(i).shareList.append(id)
               //切换视角
               dispatchTo(subscribersMap)(id, Protocol.Id(watchId))
-              dispatchTo(subscribersMap)(id,grid.getGridData(watchId))
+              dispatchTo(subscribersMap)(id,grid.getAllGridData)
             }
           }
           Behaviors.same

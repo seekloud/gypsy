@@ -17,12 +17,10 @@ import scala.math._
 import scala.util.Random
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
-
 /**
   * User: Taoz
   * Date: 9/1/2016
   * Time: 5:34 PM
-  * 背景网格
   */
 trait Grid {
 
@@ -520,21 +518,22 @@ trait Grid {
     player.copy(cells = newCells)
   }
 
+//  def updateAndGetGridData() = {
+//    update()
+//    getGridData(myId)
+//  }
 
-
-
-  def updateAndGetGridData() = {
-    update()
-    getGridData(myId)
-  }
-
-  def getGridData(id:String) = {
+  /**
+    * method: getGridData
+    * describe: 获取自己视角中的全量数据
+    */
+  def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
-    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-    val scale = getZoomRate(zoom._1,zoom._2)
-    val width = Window.w/scale/2
-    val height = Window.h/scale/2
+    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+    val width = winWidth / scale / 2
+    val height = winHeight / scale / 2
 
 //    var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil

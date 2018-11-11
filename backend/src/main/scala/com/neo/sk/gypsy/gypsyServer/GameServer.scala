@@ -486,6 +486,10 @@ class GameServer(override val boundary: Point) extends Grid {
    }
   }
 
+  /**
+    * method: getAllGridData
+    * describe: 获取全量数据
+    */
   override def getAllGridData: Protocol.GridDataSync = {
 //    val foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
