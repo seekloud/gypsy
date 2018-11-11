@@ -44,7 +44,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 1.minute
+  private final val saveTime = 30.minute
 
   final case class SwitchBehavior(
                                   name: String,

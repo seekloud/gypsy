@@ -1,7 +1,8 @@
 package com.neo.sk.gypsy.utils
 
 import com.neo.sk.gypsy.common.AppSettings
-
+import com.neo.sk.gypsy.ptcl.EsheepProtocol
+import com.neo.sk.gypsy.ptcl.EsheepProtocol.{PlayerInfo, VerifyAccessCodeInfo}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import org.slf4j.LoggerFactory

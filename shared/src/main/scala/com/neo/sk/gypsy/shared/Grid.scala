@@ -161,18 +161,16 @@ trait Grid {
     }
     //碰撞检测
     checkCrash(keyAct,mouseAct)
-    val event = PlayerInfoChange(playerMap,frameCount)
-    AddGameEvent(event)
   }
 
     //碰撞检测
   def checkCrash(keyAct: Map[String,KeyCode], mouseAct: Map[String, MousePosition])={
-    checkPlayerFoodCrash()
-    checkPlayerMassCrash()
-    checkPlayer2PlayerCrash()
-    checkVirusMassCrash()
-    val mergeInFlame=checkCellMerge()
-    checkPlayerVirusCrash(mergeInFlame)
+    checkPlayerFoodCrash() //已看 前后端都有
+    checkPlayerMassCrash()  //已看  前后端都有
+    checkPlayer2PlayerCrash() //已看  只后台
+    checkVirusMassCrash()  //已看  前后端都有  但后台跟前端不同
+    val mergeInFlame=checkCellMerge() //已看  前后端都有  同时后台还发送数据避免前后端不一致
+    checkPlayerVirusCrash(mergeInFlame) //已看 只后台
     checkPlayerShotMass(keyAct,mouseAct)
     checkPlayerSplit(keyAct,mouseAct)
   }
@@ -180,7 +178,7 @@ trait Grid {
 
   //更新病毒的位置
   def updateVirus() :Unit ={
-    val NewVirus = virusMap.map{vi=>
+    val NewVirus = virusMap.map{ vi=>
       val v =vi._2
       val (nx,ny)= normalization(v.targetX,v.targetY)
       var newX = v.x
@@ -252,9 +250,7 @@ trait Grid {
   }
   //更新病毒位置
   updateVirus()
-
   feedApple(foodPool + playerMap.size * 3 - food.size)//增添食物（后端增添，前端不添）
-    //addVirus(virusNum - virus.size) //增添病毒
   addVirus(virusNum - virusMap.size) //增添病毒(后端增添，前端不添）
 }
 
@@ -391,11 +387,11 @@ trait Grid {
   //与用户检测
   def checkPlayer2PlayerCrash(): Unit
 
-  //TODO 前端做排次后台判断
+  //TODO 前端做排斥后台判断
   //返回在这一帧是否融合过
   def checkCellMerge(): Boolean
 
-  //TODO 只后台！！
+  //TODO 前端后台
   //病毒碰撞检测
   def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit
 
@@ -403,7 +399,6 @@ trait Grid {
   //发射小球
   def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     //TODO 这里写下有哪些是分裂的
-
     var newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
@@ -447,8 +442,6 @@ trait Grid {
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap ++= newPlayerMap.map(s => (s.id, s)).toList
-//    val event = PlayerInfoChange(playerMap,frameCount)
-//    AddGameEvent(event)
   }
 
   //TODO 暂时前后
@@ -499,8 +492,6 @@ trait Grid {
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-//    val event = PlayerInfoChange(playerMap,frameCount)
-//    AddGameEvent(event)
   }
 
 
@@ -541,7 +532,6 @@ trait Grid {
     myId = id
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-//    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2)
     val width = Window.w/scale/2
     val height = Window.h/scale/2
