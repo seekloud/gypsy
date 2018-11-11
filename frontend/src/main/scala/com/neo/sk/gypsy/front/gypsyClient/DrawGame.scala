@@ -53,14 +53,15 @@ case class DrawGame(
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
-  this.canvas.width= this.size.x
-  this.canvas.height= this.size.y
+  this.canvas.width= size.x
+  this.canvas.height= size.y
   var screeScale = 1.0
 
-  def updateCanvasSize(newWidth:Int,newHeight:Int)={
-    screeScale = if(newWidth/this.canvas.width > newHeight/this.canvas.height) newHeight/this.canvas.height else newWidth/this.canvas.width
-    this.canvas.width = newWidth
-    this.canvas.height = newHeight
+  def updateCanvasSize(newWidth:Double,newHeight:Double)={
+    screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
+    println(newWidth+ "   " + newHeight + "  "+ screeScale)
+    this.canvas.width = newWidth.toInt
+    this.canvas.height = newHeight.toInt
   }
 
   case object MyColors {
@@ -98,8 +99,8 @@ case class DrawGame(
   var p =  ArrayBuffer()
   var particle = ArrayBuffer[Particle]()
   var angle = Math.PI/4
-  var width = canvas.width
-  var height = canvas.height
+  var width = this.canvas.width
+  var height = this.canvas.height
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
   }
@@ -228,20 +229,20 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    ctx.drawImage(background1,0,0, this.canvas.width , this.canvas.height)
+    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
     ctx.strokeStyle = MyColors.stripe
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(this.canvas.width ,l )
+      ctx.lineTo(bounds.x,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,this.canvas.height)
+      ctx.lineTo(l ,bounds.y)
       ctx.stroke()
     }
   }
@@ -327,6 +328,8 @@ case class DrawGame(
     val offy =this.canvas.height/2 - basePoint._2
     //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
+
+//    println(scale + "   " + screeScale)
     //var scale = data.scale
 
     //绘制背景

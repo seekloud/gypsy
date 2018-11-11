@@ -106,10 +106,11 @@ class GameHolder(replay:Boolean = false) {
       //屏幕适配
       window =  Point(newWidth, newHeight)
       drawGameView.updateCanvasSize(newWidth,newHeight)
-      drawOffScreen.updateCanvasSize(newWidth,newHeight)
+//      drawOffScreen.updateCanvasSize(newWidth,newHeight)
       drawMiddleView.updateCanvasSize(newWidth,newHeight)
       drawTopView.updateCanvasSize(newWidth,newHeight)
       drawClockView.updateCanvasSize(newWidth,newHeight)
+      init()
     }
   }
 
