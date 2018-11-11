@@ -29,7 +29,7 @@ class GameClient (override val boundary: Point) extends Grid {
   var currentRank = List.empty[Score]
   //fixme 此处变量未有实际用途
   var historyRank = List.empty[Score]
-//序列号->(frame,Id,GameAction)
+  //序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
@@ -146,42 +146,6 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {}
-  //TODO 只后台！！
-//  override def checkPlayer2PlayerCrash(): Unit = {
-//    val newPlayerMap = playerMap.values.map {
-//      player =>
-//        var killer = ""
-//        val newCells = player.cells.sortBy(_.radius).reverse.map {
-//          cell =>
-//            var newMass = cell.mass
-//            var newRadius = cell.radius
-//            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
-//              p._2.cells.foreach { otherCell =>
-//                if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
-//                  //被吃了
-//                  newMass = 0
-//                  killer = p._1
-//                } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
-//                  //吃掉别人了
-//                  newMass += otherCell.mass
-//                  newRadius = 4 + sqrt(newMass) * 6
-//                }
-//              }
-//            }
-//            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
-//        }.filterNot(_.mass <= 0)
-//        val length = newCells.length
-//        val newX = newCells.map(_.x).sum / length
-//        val newY = newCells.map(_.y).sum / length
-//        val left = newCells.map(a => a.x - a.radius).min
-//        val right = newCells.map(a => a.x + a.radius).max
-//        val bottom = newCells.map(a => a.y - a.radius).min
-//        val top = newCells.map(a => a.y + a.radius).max
-//        player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
-//
-//    }
-//    playerMap = newPlayerMap.map { s=>(s.id,s)}.toMap
-//  }
 
   override def checkPlayerFoodCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
