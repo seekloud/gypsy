@@ -43,9 +43,9 @@ class GameClient (override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
-        var mergeCells = List[Cell]()
+//        var mergeCells = List[Cell]()
         //已经被本体其他cell融合的cell
-        var deleteCells = List[Cell]()
+//        var deleteCells = List[Cell]()
         //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -63,19 +63,19 @@ class GameClient (override val boundary: Point) extends Grid {
                   if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
                   else if (cell.y > cell2.y) cellY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
                 }
-                 else if (distance < radiusTotal / 2) {
-                  if (cell.radius > cell2.radius) {
-                    //被融合的细胞不能再被其他细胞融合
-                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
-                      mergeInFlame = true
-                      mergeCells = cell2 :: mergeCells
-                    }
-                  }
-                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
-                    mergeInFlame = true
-                    deleteCells = cell :: deleteCells
-                  }
-                }
+//                 else if (distance < radiusTotal / 2) {
+//                  if (cell.radius > cell2.radius) {
+//                    //被融合的细胞不能再被其他细胞融合
+//                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
+//                      mergeInFlame = true
+//                      mergeCells = cell2 :: mergeCells
+//                    }
+//                  }
+//                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
+//                    mergeInFlame = true
+//                    deleteCells = cell :: deleteCells
+//                  }
+//                }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
@@ -92,6 +92,8 @@ class GameClient (override val boundary: Point) extends Grid {
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     mergeInFlame
   }
+
+//  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {}
 
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
@@ -143,8 +145,9 @@ class GameClient (override val boundary: Point) extends Grid {
     virusMap --= removeVirus.keySet.toList
   }
 
+  override def checkPlayer2PlayerCrash(): Unit = {}
   //TODO 只后台！！
-  override def checkPlayer2PlayerCrash(): Unit = {
+//  override def checkPlayer2PlayerCrash(): Unit = {
 //    val newPlayerMap = playerMap.values.map {
 //      player =>
 //        var killer = ""
@@ -178,8 +181,7 @@ class GameClient (override val boundary: Point) extends Grid {
 //
 //    }
 //    playerMap = newPlayerMap.map { s=>(s.id,s)}.toMap
-
-  }
+//  }
 
   override def checkPlayerFoodCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
@@ -326,21 +328,9 @@ override def checkVirusMassCrash(): Unit = {
       case p: Mass =>
         if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
           val (mx,my)=normalization(p.targetX,p.targetY)
-          // println(s"mx$mx,my$my")
           val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
           val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
-
-          //            newX += vx.toInt
-          //            newY += vy.toInt
           hasMoved =true
-          //            val newPoint =ExamBoundary(newX,newY)
-          //            newX = newPoint._1
-          //            newY = newPoint._2
-          /* val borderCalc = 0
-           if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
-           if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
-           if (newX < borderCalc) newX = borderCalc
-           if (newY < borderCalc) newY = borderCalc*/
           newMass += p.mass
           newRadius = 4 + sqrt(newMass) * mass2rRate
           newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
@@ -349,17 +339,6 @@ override def checkVirusMassCrash(): Unit = {
           massList = massList.filterNot(l => l == p)
         }
     }
-    //      newSpeed -= virusSpeedDecayRate
-    //      if(newSpeed<0) newSpeed=0
-    //      if(hasMoved==false && newSpeed!=0){
-    //        newX += (nx*newSpeed).toInt
-    //        newY += (ny*newSpeed).toInt
-    //        val borderCalc = 0
-    //        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
-    //        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
-    //        if (newX < borderCalc) newX = borderCalc
-    //        if (newY < borderCalc) newY = borderCalc
-    //      }
     if(newMass>virusMassLimit){
       newMass = newMass/2
       newRadius = 4 + sqrt(newMass) * mass2rRate
@@ -378,9 +357,7 @@ override def checkVirusMassCrash(): Unit = {
       List(v1)
     }
   }
-  //    virus = virus1
   virusMap ++= virus1
-
 }
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Long) = {
@@ -447,7 +424,7 @@ override def checkVirusMassCrash(): Unit = {
     /*if(data.foodDetails.nonEmpty){
       food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     }*/
-    if(food.nonEmpty&&data.eatenFoodDetails.nonEmpty){
+    if(food.nonEmpty && data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{
         f=>
           food-=Point(f.x,f.y)

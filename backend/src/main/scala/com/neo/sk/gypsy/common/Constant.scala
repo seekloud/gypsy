@@ -11,5 +11,6 @@ object Constant {
     val comMember = "ROLE_ENT"  //会员
     val guest = "ROLE_GUEST"
     val watcher = "WATCHER" //观战者
+    val replayer = "REPLAYER" //看回放
   }
 }

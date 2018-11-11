@@ -1,28 +1,14 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
-import java.util.concurrent.atomic.AtomicInteger
 
-import com.neo.sk.gypsy.front.common.Routes.UserRoute
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.front.scalajs.FpsComponent._
+
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl
-import scalatags.JsDom.all._
-import scala.scalajs.js.JSApp
-import org.scalajs.dom
-import org.scalajs.dom.ext.{Color, KeyCode}
+
 import org.scalajs.dom.raw._
 
-import scala.math._
-import com.neo.sk.gypsy.shared.util.utils.getZoomRate
-import org.scalajs.dom.html
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
-import scala.collection.mutable
 
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJs
