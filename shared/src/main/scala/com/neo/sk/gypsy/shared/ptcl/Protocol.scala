@@ -40,6 +40,8 @@ object Protocol {
 
   case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
 
+  case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
+
   case class KillMessage(killerId:String,deadPlayer:Player) extends GameMessage
 
   case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
@@ -49,6 +51,13 @@ object Protocol {
   case class UserMerge(id:String,player: Player)extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage
+
+  case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
+
+  case class ReduceVirus(virus: Map[Long,Virus]) extends GameMessage
+
+  case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
+
 
   /**
     * 前端发送的数据
@@ -99,6 +108,9 @@ object Protocol {
 //    val userId:String
 //    val serialNum:Int
 //  }
+  /**异地登录消息
+    * WebSocket连接重新建立*/
+  final case object RebuildWebSocket extends GameMessage
 
   /**
     * replay-frame-msg
@@ -122,14 +134,15 @@ object Protocol {
   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
 
-  case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-  case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-  case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
-  case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
-  case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
-  case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent
-  case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
-  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
+   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+   case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
+   case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
+   case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
+//  只有Virus和Mass碰撞，Player和Mass前后端都有不记
+//   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent with WsMsgSource
+//   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
+//  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
   case class ShowScale( override val frame:Long,scale:Double) extends GameEvent

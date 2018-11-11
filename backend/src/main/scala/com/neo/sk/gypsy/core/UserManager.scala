@@ -1,6 +1,8 @@
 package com.neo.sk.gypsy.core
 
 
+import java.util.concurrent.atomic.AtomicLong
+
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.stream.scaladsl.Flow
@@ -11,10 +13,15 @@ import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
+import com.neo.sk.gypsy.models.GypsyUserInfo
+import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午9:10
+  * 2018/10/25  下午9:10
   */
 object UserManager {
 
@@ -26,8 +33,13 @@ object UserManager {
   trait Command
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
+  //回放
+  final case class GetReplaySocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, recordId:Long,frame:Int,watchId:String,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+//  final case class GetReplaySocketFlow(watchId: String, playerName:String,recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  //玩游戏+观战
+//  final case class GetWebSocketFlow(name:String, replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
+  final case class GetWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, watchId: Option[String], roomId:Option[Long] = None,watch:Boolean,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
-  final case class GetReplaySocketFlow(playerName: String,playerId: String, recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -35,23 +47,53 @@ object UserManager {
       ctx =>
         Behaviors.withTimers[Command]{
           implicit timer =>
-            //todo 自增计时器
-            idle()
+            val uidGenerator = new AtomicLong(1L)
+            idle(uidGenerator)
         }
     }
   }
 
-  private def idle()(
+  private def idle(uidGenerator: AtomicLong)(
                   implicit timer: TimerScheduler[Command]
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-        case GetReplaySocketFlow(playerName,playerId,recordId,frame,replyTo) =>
+//        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt,watch) =>
+        case GetWebSocketFlow(playerInfoOpt,watchIdOpt,roomIdOpt,watch,replyTo) =>
+          //TODO 之后可以优化这部分
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx, playerInfo.playerId) match {
+            case Some(userActor) =>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+//          println("come11111")
+          val userActor = getUserActor(ctx,playerInfo)
+          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,0L,userActor)
+          userActor ! UserActor.StartGame(roomIdOpt,watchIdOpt,watch)
+          Behaviors.same
+
+//        case GetReplaySocketFlow(watchId,playerName,recordId,frame,replyTo) =>
+        case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
           //TODO getUserActorOpt
-          val userActor = getUserActor(ctx, playerId)
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx,playerInfo.playerId) match{
+            case Some(userActor)=>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+          val userActor = getUserActor(ctx,playerInfo)
           //开始创建flow
-          replyTo ! getWebSocketFlow(userActor)
-          userActor ! UserActor.StartReply(recordId,playerId,frame)
+          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,recordId,userActor)
+          userActor ! UserActor.StartReply(recordId,watchId,frame)
+          Behaviors.same
+
+        case msg:GetUserInRecordMsg=>
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
         case unknow =>
@@ -62,7 +104,8 @@ object UserManager {
     }
   }
 
-  private def getWebSocketFlow(userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
+  //共用
+  private def getWebSocketFlow(id:String,name:String,recordId:Long,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
@@ -85,7 +128,7 @@ object UserManager {
         case BinaryMessage.Strict(msg)=>
           val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
           bytesDecode[Protocol.UserAction](buffer) match {
-            case Right(req) => UserActor.WebSocketMsg(Some(req))
+            case Right(req) =>  UserActor.WebSocketMsg(Some(req))
             case Left(e) =>
               log.error(s"decode binaryMessage failed,error:${e.message}")
               UserActor.WebSocketMsg(None)
@@ -98,8 +141,10 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(userActor))
+      }.via(UserActor.flow(id,name,recordId,userActor))
       .map{
+        case t:Protocol.Wrap =>
+          BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))
 
@@ -117,13 +162,17 @@ object UserManager {
   }
 
 
-  private def getUserActor(ctx: ActorContext[Command], id: String):ActorRef[UserActor.Command] = {
-    val childName = s"UserActor-${id}"
+  private def getUserActor(ctx: ActorContext[Command],userInfo:ApiProtocol.PlayerInfo):ActorRef[UserActor.Command] = {
+    val childName = s"UserActor-${userInfo.playerId}"
     ctx.child(childName).getOrElse{
-      val actor = ctx.spawn(UserActor.create(id),childName)
+      val actor = ctx.spawn(UserActor.create(userInfo),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
       actor
     }.upcast[UserActor.Command]
+  }
+  private def getUserActorOpt(ctx: ActorContext[Command],id:String):Option[ActorRef[UserActor.Command]] = {
+    val childName = s"UserActor-${id}"
+    ctx.child(childName).map(_.upcast[UserActor.Command])
   }
 
 

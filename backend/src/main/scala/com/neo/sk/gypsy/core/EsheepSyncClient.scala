@@ -50,7 +50,7 @@ object EsheepSyncClient {
     log.debug(s"${ctx.self.path} becomes $behaviorName behavior.")
     timer.cancel(BehaviorChangeKey)
     durationOpt.foreach(timer.startSingleTimer(BehaviorChangeKey,timeOut,_))
-    stashBuffer.unstashAll(ctx,behavior)
+    stashBuffer.unstashAll(ctx,behavior) //到这个behavior处理buffer里的所有消息（处理能处理的）
   }
 
 
@@ -91,7 +91,7 @@ object EsheepSyncClient {
             }
             switchBehavior(ctx, "busy", busy(), GetTokenTime, TimeOut("Get Token"))
           } else{
-            switchBehavior(ctx, "work", work(EsheepProtocol.GameServerKey2TokenInfo("",System.currentTimeMillis() + 2.hours.toMillis)))
+            switchBehavior(ctx, "work", work(EsheepProtocol.GameServerKey2TokenInfo("",System.currentTimeMillis() + 2.days.toMillis)))
           }
 
 
@@ -148,7 +148,7 @@ object EsheepSyncClient {
           }
           Behaviors.same
 
-        case RefreshToken =>
+        case RefreshToken =>  //发消息给自己和转换状态哪个先？
           ctx.self ! RefreshToken
           timer.cancel(RefreshTokenKey)
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
