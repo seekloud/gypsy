@@ -7,22 +7,21 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
 import javafx.util.Duration
-
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.scene.GameScene
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MousePosition}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.myId
 import org.scalajs.dom
-import org.scalajs.dom.ext.KeyCode
 
 import scala.math.atan2
 
 /**
   * @author zhaoyin
-  * @date 2018/10/29  5:13 PM
+  * 2018/10/29  5:13 PM
   */
 object GameHolder {
 
@@ -54,6 +53,8 @@ class GameHolder(
     KeyCode.DOWN,
     KeyCode.ESCAPE
   )
+
+  def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
   def connectToGameServer(gameHolder:GameHolder) = {
     ClientBoot.addToPlatform{
@@ -113,7 +114,7 @@ class GameHolder(
     gameScene.topCanvas.setOnKeyPressed{ e => {
         val key=e.getCode
         if (key == KeyCode.ESCAPE && !isDead) {
-          gameClose
+         // gameClose
         } else if (watchKeys.contains(e.getCode)) {
           if (e.getCode == KeyCode.SPACE) {
             println(s"down+${e.getCode.toString}")
@@ -124,22 +125,21 @@ class GameHolder(
             grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
             serverActor ! keyCode
           }
-          e.preventDefault()
         }
       }
     }
     //在画布上监听鼠标事件
     def getDegree(x:Double,y:Double)={
-      atan2(y - 48 -window.y/2,x  -window.x/2 )
+      atan2(y - 48 -gameScene.window.y/2,x - gameScene.window.x/2 )
     }
     var FormerDegree = 0D
     gameScene.topCanvas.setOnMouseMoved{ e => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2, e.pageY - 48 - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-        FormerDegree = getDegree(e.pageX,e.pageY)
+      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - 48 - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
+        FormerDegree = getDegree(e.getX,e.getY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-        webSocketClient.sendMsg(mp)
+        serverActor ! mp
       }
     }
     }

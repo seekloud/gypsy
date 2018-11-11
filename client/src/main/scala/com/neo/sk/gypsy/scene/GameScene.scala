@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.scene
 
+import java.util.concurrent.atomic.AtomicInteger
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.KeyCode
@@ -11,7 +12,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 
 /**
   * @author zhaoyin
-  * @date 2018/10/30  2:25 PM
+  * 2018/10/30  2:25 PM
   */
 object GameScene {
   trait GameSceneListener {
@@ -36,6 +37,7 @@ class GameScene {
   val clockCanvasCtx=clockCanvas.getGraphicsContext2D
   val offCanvas = new Canvas(canvasWidth,canvasHeight)
   val offCanvasCtx= offCanvas.getGraphicsContext2D
+  val actionSerialNumGenerator = new AtomicInteger(0)
 
   val scene = new Scene(group)
   group.getChildren.add(gameCanvas)
