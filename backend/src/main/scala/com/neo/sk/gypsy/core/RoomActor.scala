@@ -146,23 +146,23 @@ object RoomActor {
           dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
           Behaviors.same
 
-          //TODO 切换视角
-        case UserActor.ChangeWatch(id, watchId) =>
-          log.info(s"get $msg")
-          for(i<- 0 until userList.length){
-            for(j<-0 until userList(i).shareList.length){
-              if(userList(i).shareList(j) == id){
-                userList(i).shareList.remove(j)
-              }
-            }
-            if(userList(i).id == watchId){
-              userList(i).shareList.append(id)
-              //切换视角
-              dispatchTo(subscribersMap)(id, Protocol.Id(watchId))
-              dispatchTo(subscribersMap)(id,grid.getAllGridData)
-            }
-          }
-          Behaviors.same
+//          //TODO 切换视角
+//        case UserActor.ChangeWatch(id, watchId) =>
+//          log.info(s"get $msg")
+//          for(i<- 0 until userList.length){
+//            for(j<-0 until userList(i).shareList.length){
+//              if(userList(i).shareList(j) == id){
+//                userList(i).shareList.remove(j)
+//              }
+//            }
+//            if(userList(i).id == watchId){
+//              userList(i).shareList.append(id)
+//              //切换视角
+//              dispatchTo(subscribersMap)(id, Protocol.Id(watchId))
+//              dispatchTo(subscribersMap)(id,grid.getAllGridData)
+//            }
+//          }
+//          Behaviors.same
 
         case UserActor.Left(id, name) =>
           log.info(s"got------------- $msg")

@@ -58,7 +58,6 @@ object UserManager {
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-//        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt,watch) =>
         case GetWebSocketFlow(playerInfoOpt,watchIdOpt,roomIdOpt,watch,replyTo) =>
           //TODO 之后可以优化这部分
           val playerInfo = playerInfoOpt.get
@@ -67,13 +66,12 @@ object UserManager {
               userActor ! UserActor.ChangeBehaviorToInit
             case None =>
           }
-//          println("come11111")
           val userActor = getUserActor(ctx,playerInfo)
           replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,0L,userActor)
           userActor ! UserActor.StartGame(roomIdOpt,watchIdOpt,watch)
           Behaviors.same
 
-//        case GetReplaySocketFlow(watchId,playerName,recordId,frame,replyTo) =>
+
         case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
           //TODO getUserActorOpt
           val playerInfo = playerInfoOpt.get
