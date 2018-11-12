@@ -215,6 +215,7 @@ object RoomActor {
           //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
+          println(s"userlist$userList")
           for(i<-0 until userList.length){
             //观战者离开
             for(j<-0 until userList(i).shareList.length){
