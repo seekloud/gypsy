@@ -134,21 +134,24 @@ object RoomActor {
                 dispatchTo(subscribersMap)(id,grid.getAllGridData)
             }
           }else{
-//            if()
-            val createBallId = ballId.incrementAndGet()
-            //TODO 讨论
-            println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
-            userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
-            userMap.put(id,(name,createBallId))
-            ctx.watchWith(subscriber,UserActor.Left(id,name))
-            subscribersMap.put(id,subscriber)
-            grid.addPlayer(id, name)
-            val event = UserWsJoin(roomId,id,name,createBallId,grid.frameCount)
-            grid.AddGameEvent(event)
+//            if (!userMap.contains(id)) {
+              val createBallId = ballId.incrementAndGet()
+              //TODO 讨论
+              println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
+              userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
+              userMap.put(id, (name, createBallId))
+              ctx.watchWith(subscriber, UserActor.Left(id, name))
+              subscribersMap.put(id, subscriber)
+              grid.addPlayer(id, name)
+              val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount)
+              grid.AddGameEvent(event)
 
-            subscriber ! JoinRoomSuccess(id,ctx.self)
-            dispatchTo(subscribersMap)(id, Protocol.Id(id))
-            dispatchTo(subscribersMap)(id,grid.getAllGridData)
+              subscriber ! JoinRoomSuccess(id, ctx.self)
+              dispatchTo(subscribersMap)(id, Protocol.Id(id))
+              dispatchTo(subscribersMap)(id, grid.getAllGridData)
+//            }else{
+//              println("ID重了")
+//            }
           }
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
