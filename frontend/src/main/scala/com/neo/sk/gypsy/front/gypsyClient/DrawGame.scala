@@ -55,7 +55,7 @@ case class DrawGame(
   val bounds = Point(Boundary.w, Boundary.h)
   this.canvas.width= size.x
   this.canvas.height= size.y
-  var screeScale = 1.0
+  var screeScale = if(this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h).toDouble else (this.canvas.width/Window.w).toDouble
 
   def updateCanvasSize(newWidth:Double,newHeight:Double)={
     screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}

@@ -27,10 +27,10 @@ object utils {
 //计算缩放比例
   def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
     var scale = 1.0
-    if(width < newCWidth/2 && height < newCWidth/2){
+    if(width < newCWidth/2 && height < newCHeight/2){
 
     }else{
-      scale = if(newCWidth/2/height>newCWidth/2/width){newCWidth/2/width}else{newCWidth/2/height}
+      scale = if(newCWidth/2/width>newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
 //      scale = List(300.0/height,600.0/width).min
     }
     scale
