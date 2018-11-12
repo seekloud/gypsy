@@ -457,6 +457,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.PlayerLeft(id,name) =>
         //TODO 广播
         grid.removePlayer(id)
+        gameClose
 
       case Protocol.DecodeEvent(data)=>
         replayMessageHandler(data)
