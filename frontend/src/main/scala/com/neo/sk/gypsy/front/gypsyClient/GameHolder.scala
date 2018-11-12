@@ -116,6 +116,7 @@ class GameHolder(replay:Boolean = false) {
       drawMiddleView.updateCanvasSize(newWidth,newHeight)
       drawTopView.updateCanvasSize(newWidth,newHeight)
       drawClockView.updateCanvasSize(newWidth,newHeight)
+      drawMiddleView.drawRankMap()
     }
   }
 
