@@ -31,7 +31,7 @@ import org.seekloud.byteobject._
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午12:54
+  * 2018/10/25  下午12:54
   */
 object GamePlayer {
 
@@ -159,7 +159,7 @@ object GamePlayer {
           }
 
         case msg:GetRecordFrameMsg=>
-          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount))
+          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
@@ -188,6 +188,14 @@ object GamePlayer {
       msg match {
         case msg:InitReplay =>
           dispatchTo(msg.userActor,Protocol.InitReplayError("游戏文件不存在或者已损坏！！"))
+          Behaviors.stopped
+
+        case msg:GetRecordFrameMsg=>
+          msg.replyTo ! ErrorRsp(10001,"init error")
+          Behaviors.stopped
+
+        case msg:GetUserInRecordMsg=>
+          msg.replyTo ! ErrorRsp(10001,"init error")
           Behaviors.stopped
       }
     }
