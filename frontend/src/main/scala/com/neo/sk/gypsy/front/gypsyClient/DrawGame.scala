@@ -1,6 +1,8 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
+
+import scalatags.JsDom.short.{*, img, s}
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
@@ -25,7 +27,7 @@ case class DrawGame(
               size:Point
               ) {
 
-  private[this] val  img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
   private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
   private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
@@ -50,6 +52,8 @@ case class DrawGame(
   silverImg.setAttribute("src", "/gypsy/static/img/silver.png")
   private val bronzeImg = dom.document.createElement("img").asInstanceOf[html.Image]
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
+//  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
+  private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
@@ -104,6 +108,11 @@ case class DrawGame(
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
   }
+
+  def cleanCtx()={
+    ctx.clearRect(0,0,size.x,size.y)
+  }
+
   class Particle(x1:Double,y1:Double){
     var x= x1
     var y = y1
@@ -445,7 +454,7 @@ case class DrawGame(
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
 
-      ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
+      ctx.drawImage(virusImg,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
     ctx.restore()
@@ -498,6 +507,35 @@ case class DrawGame(
       // println(s"${basePoint._1},  ${basePoint._2}")
     }
   }
+
+
+  def drawWhenDead(msg:Protocol.UserDeadMessage)={
+//    ctx.fillStyle = "#ccc"//Color.Black.toString()
+    ctx.fillStyle = "#000"//Color.Black.toString()
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
+    ctx.font = "50px Helvetica"
+    ctx.fillStyle = "#CD3700"
+    ctx.fillText(s"You Dead!", Window.w*0.5, Window.h*0.3)
+//    ctx.strokeRect(Window.w*0.3,Window.h*0.28,Window.w/2,Window.h/2)
+//    drawRoundRect(window.x*0.3,window.y*0.28,window.x/3,window.y/4,30)
+//    ctx.drawImage(dead,window.x*0.65,window.y*0.37,window.x*0.1,window.x*0.1)
+    ctx.font = s"${Window.w*0.02}px Comic Sans MS"
+//    ctx.fillStyle="#EE9A00"
+    var DrawLeft = Window.w*0.32+Window.w*0.12
+    var DrawHeight = Window.h*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight+Window.h*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight+Window.h*0.07*2)
+//    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight+Window.h*0.07*3)
+    ctx.fillStyle=Color.White.toString()
+    DrawLeft = Window.w*0.56+Window.w*0.12
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight+Window.h*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight+Window.h*0.07*2)
+//    ctx.fillText(s"${msg.lifeTime}", DrawLeft,DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight+Window.h*0.07*3)
+  }
+
 
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)

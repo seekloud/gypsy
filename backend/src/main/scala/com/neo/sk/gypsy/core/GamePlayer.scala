@@ -127,6 +127,7 @@ object GamePlayer {
             case Some(u)=>
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
+              log.info(s"replay from frame=${fileReader.getFramePosition}")
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))

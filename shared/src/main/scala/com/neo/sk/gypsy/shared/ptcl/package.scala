@@ -135,4 +135,13 @@ package object ptcl {
                        clientX:Double,
                        clientY:Double
                      )
+
+
+  object GameState{
+    val waiting:Int = 0
+    val play:Int = 1
+    val dead:Int = 2
+  }
+
+
 }

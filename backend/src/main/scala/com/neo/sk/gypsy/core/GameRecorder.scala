@@ -44,7 +44,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 30.minute
+  private final val saveTime = 2.minute
 
   final case class SwitchBehavior(
                                   name: String,
@@ -117,7 +117,6 @@ object GameRecorder {
           //log.info(s"${ctx.self.path} work get msg gameRecord")
           val wsMsg = t.event._1
           wsMsg.foreach{
-            //            case UserJoinRoom(roomId ,player,frame) =>
             case r@UserWsJoin(roomId ,userId,userName,ballId,frame) =>
               println(s"record: ${r}")
               userAllMap.put(userId,(roomId,userName,ballId))
@@ -137,7 +136,6 @@ object GameRecorder {
             case _ =>
 
           }
-
           gameRecordBuffer = t :: gameRecordBuffer
           val newEndF = t.event._2.get match {
             case syncdata:GypsyGameSnapshot =>
@@ -326,6 +324,10 @@ object GameRecorder {
               newUserAllMap.put(user._1, user._2)
           }
           switchBehavior(ctx,"work",work(newGameRecorderData, newEssfMap, newUserAllMap, userMap, startF, -1L))
+
+        case StopRecord=>
+          log.info(s"${ctx.self.path} room close, stop record ")
+          Behaviors.stopped
 
         case unknow =>
           log.warn(s"${ctx} initRecorder got unknow msg ${unknow}")

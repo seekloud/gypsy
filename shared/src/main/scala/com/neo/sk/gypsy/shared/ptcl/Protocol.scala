@@ -32,7 +32,7 @@ object Protocol {
 
   case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
 
-  case class SnakeRestart(id:String) extends GameMessage
+  case class PlayerRestart(id:String) extends GameMessage
 
   case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
 
@@ -56,6 +56,8 @@ object Protocol {
 
   case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
 
+
+  case class PlayerJoin(id:String,player:Player) extends GameMessage
 
   /**
     * 前端发送的数据
@@ -89,6 +91,8 @@ object Protocol {
 //  case object ErrorWsMsgServer extends UserAction
 
   case class Ping(timestamp: Long) extends UserAction
+
+  case class ReLive(id:String) extends UserAction
 
 
   /**
