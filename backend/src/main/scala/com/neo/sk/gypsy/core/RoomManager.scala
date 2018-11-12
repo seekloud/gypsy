@@ -140,7 +140,8 @@ object RoomManager {
           case msg:GetGamePlayerList =>
             if(msg.roomId.toString.startsWith("1"))
             {
-              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+              getRoomActor(ctx,msg.roomId,false) ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+//              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
             }
             Behaviors.same
 
