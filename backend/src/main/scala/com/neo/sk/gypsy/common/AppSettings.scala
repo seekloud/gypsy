@@ -77,6 +77,7 @@ object AppSettings {
   val matchTime=gameConfig.getInt("matchTime")
   val gameTime=gameConfig.getInt("gameTime")
   val limitCount=gameConfig.getInt("limitCount")
+  val reliveTime = gameConfig.getInt("reliveTime")
 
   val esheepConfig = appConfig.getConfig("esheep")
   val esheepAppId = esheepConfig.getString("appId")
