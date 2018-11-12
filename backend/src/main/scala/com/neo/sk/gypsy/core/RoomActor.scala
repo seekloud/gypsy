@@ -6,19 +6,16 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.actor.typed.{ActorRef, Behavior}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Food, Point, Protocol, WsMsgProtocol, _}
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.core.UserActor.JoinRoomSuccess
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
-
 import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.mutable
@@ -137,8 +134,10 @@ object RoomActor {
                 dispatchTo(subscribersMap)(id,grid.getGridData(userList(x).id))
             }
           }else{
+//            if()
             val createBallId = ballId.incrementAndGet()
             //TODO 讨论
+            println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
             userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
             userMap.put(id,(name,createBallId))
             ctx.watchWith(subscriber,UserActor.Left(id,name))
@@ -176,12 +175,13 @@ object RoomActor {
           log.info(s"got------------- $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
-          dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+          dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
 
           try{
-            val ballId = userMap(id)._2
+            val leftballId = userMap(id)._2
             //添加离开信息
-            val event = UserLeftRoom(id,name,ballId,roomId,grid.frameCount)
+            println(s"user left fra ${grid.frameCount}  ${leftballId} ")
+            val event = UserLeftRoom(id,name,leftballId,roomId,grid.frameCount)
             grid.AddGameEvent(event)
           }catch{
             case e:Exception =>
@@ -210,7 +210,7 @@ object RoomActor {
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addPlayer(id, userMap.getOrElse(id, "Unknown"))
+            grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.SnakeRestart(id))
 //            grid.addSnake(id, userMap.getOrElse(id, ("Unknown",0l))._1)
 //            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
