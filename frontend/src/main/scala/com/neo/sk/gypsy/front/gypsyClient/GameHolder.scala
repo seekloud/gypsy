@@ -500,6 +500,7 @@ class GameHolder(replay:Boolean = false) {
 
 
       case e: Protocol.UserJoinRoom =>
+        gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
 
       case e: Protocol.UserLeftRoom =>
@@ -532,7 +533,12 @@ class GameHolder(replay:Boolean = false) {
             }
           }
         }else{
-          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.deadPlayer.startTime)
+          deadInfo = Some(deadMsg)
+          gameState = GameState.dead
+          //TODO 商榷
+          grid.removePlayer(myId)
+//          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           Shortcut.playMusic("shutdownM")
         }
 
