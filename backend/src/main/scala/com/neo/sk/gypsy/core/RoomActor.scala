@@ -90,13 +90,10 @@ object RoomActor {
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
-//            if(matchRoom){
-//              timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
-//              wait(roomId,userList,userMap,subscribersMap,grid)
-//            }else{
-              if(AppSettings.gameRecordIsWork){
-               getGameRecorder(ctx,grid,roomId.toInt)
-              }
+
+//              if(AppSettings.gameRecordIsWork){
+//               getGameRecorder(ctx,grid,roomId.toInt)
+//              }
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
               idle(roomId,userList,userMap,subscribersMap,grid,0l)
         }
@@ -262,7 +259,9 @@ object RoomActor {
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
-            getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+            if(tickCount % 20 == 1){
+              getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+            }
           }
 
           if (tickCount % 20 == 5) {
@@ -481,6 +480,7 @@ object RoomActor {
       val gameInformation = GameInformation(curTime)
 //      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
+      println(s"beginSnapShot  $initStateOpt   ")
       val initFrame = grid.frameCount
       val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
