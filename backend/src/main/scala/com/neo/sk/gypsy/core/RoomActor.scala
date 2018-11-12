@@ -90,13 +90,10 @@ object RoomActor {
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
-//            if(matchRoom){
-//              timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.matchTime.seconds)
-//              wait(roomId,userList,userMap,subscribersMap,grid)
-//            }else{
-              if(AppSettings.gameRecordIsWork){
-               getGameRecorder(ctx,grid,roomId.toInt)
-              }
+
+//              if(AppSettings.gameRecordIsWork){
+//               getGameRecorder(ctx,grid,roomId.toInt)
+//              }
               timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
               idle(roomId,userList,userMap,subscribersMap,grid,0l)
         }
@@ -200,22 +197,21 @@ object RoomActor {
 
 
         case UserActor.Left(id, name) =>
-          log.info(s"got------------- $msg")
+          log.info(s"got-------------RoomActor $msg")
 //          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
-
           try{
+            log.info("userMap:   "+userMap)
             val leftballId = userMap(id)._2
             //添加离开信息
-            println(s"user left fra ${grid.frameCount}  ${leftballId} ")
+            log.info(s"user left fra ${grid.frameCount}  ${leftballId} ")
             val event = UserLeftRoom(id,name,leftballId,roomId,grid.frameCount)
             grid.AddGameEvent(event)
           }catch{
             case e:Exception =>
               log.error(s"Had something wrong in add Left event!! Caused by:${e.getMessage}")
           }
-
           //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
@@ -262,7 +258,9 @@ object RoomActor {
           val eventList = grid.getEvents()
 //          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
-            getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+            if(tickCount % 20 == 1){
+              getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+            }
           }
 
           if (tickCount % 20 == 5) {
@@ -481,6 +479,7 @@ object RoomActor {
       val gameInformation = GameInformation(curTime)
 //      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
+      println(s"beginSnapShot  $initStateOpt   ")
       val initFrame = grid.frameCount
       val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))

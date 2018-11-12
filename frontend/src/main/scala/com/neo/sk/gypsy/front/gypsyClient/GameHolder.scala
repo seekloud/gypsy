@@ -579,7 +579,6 @@ class GameHolder(replay:Boolean = false) {
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
     Shortcut.stopMusic("bg")
-    //todo
-//    LoginPage.homePage()
   }
+
 }
