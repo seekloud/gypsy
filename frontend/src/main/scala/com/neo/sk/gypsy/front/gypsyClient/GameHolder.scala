@@ -377,15 +377,19 @@ class GameHolder(replay:Boolean = false) {
         Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
+        //只针对某个死亡玩家发送的死亡消息
       case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
           DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+
           grid.removePlayer(id)
         }
 
-      case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
-        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
+//        //匹配模式胜利用的(目前不用)
+//      case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
+//        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
 
+      //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
@@ -423,6 +427,11 @@ class GameHolder(replay:Boolean = false) {
 //        JsFunc.alert("超过等待时间请重新选择")
         //todo
 //        LoginPage.homePage()
+
+        //某个用户离开
+      case Protocol.PlayerLeft(id,name) =>
+        //TODO 广播
+        grid.removePlayer(id)
 
       case Protocol.DecodeEvent(data)=>
         replayMessageHandler(data)
@@ -472,6 +481,18 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.PlayerInfoChange =>
         grid.playerMap = e.player
+
+      case killMsg:Protocol.KillMsg =>
+        killMsg.result.foreach{case (killer,victim)=>
+          grid.removePlayer(victim)
+          try{
+            val killerPlayer = grid.playerMap(killer)
+            grid.playerMap +=(killer -> killerPlayer.copy(kill= killerPlayer.kill+1))
+          }catch{
+            case e:Exception=>
+              println(s"receive killMsg fail ${e.getMessage}")
+          }
+        }
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
