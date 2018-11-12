@@ -58,6 +58,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
 
   private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash) {
     dealGetReq {
+      println("11111111111111111111111")
       val msgFuture: Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
       msgFuture.map {
         msg => complete(msg)
