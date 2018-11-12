@@ -1,9 +1,6 @@
 package com.neo.sk.gypsy.http
 
-import java.util.concurrent.atomic.AtomicLong
-import akka.actor.{ActorSystem, Scheduler}
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.ws.Message
+
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server
 import akka.stream.Materializer
@@ -35,8 +32,8 @@ trait AuthService extends ServiceUtils{
       val verifyAccessCodeFutureRst: Future[EsheepProtocol.VerifyAccessCodeRsp] = esheepClient ? (e => EsheepSyncClient.VerifyAccessCode(accessCode, e))
       dealFutureResult{
         verifyAccessCodeFutureRst.map{ rsp=>
-          if(rsp.errCode == 0){
-            f(rsp.data)
+          if(rsp.errCode == 0 && rsp.data.nonEmpty){
+            f(rsp.data.get)
           } else{
             complete(AuthUserErrorRsp(rsp.msg))
           }
