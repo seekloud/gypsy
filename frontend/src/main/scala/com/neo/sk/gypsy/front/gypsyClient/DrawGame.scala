@@ -416,8 +416,8 @@ case class DrawGame(
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-//        println("width: "+ this.canvas.width + "x:    "+ (xfix +offx-cell.radius-6))
-//        println("height: "+ this.canvas.height + "y:    "+ (yfix+offy-cell.radius-6))
+        println("width: "+ this.canvas.width + "x:    "+ (xfix +offx-cell.radius-6))
+        println("height: "+ this.canvas.height + "y:    "+ (yfix+offy-cell.radius-6))
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
