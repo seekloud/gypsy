@@ -216,17 +216,29 @@ object RoomActor {
           userMap.remove(id)
           //玩家离开or观战者离开
           println(s"userlist$userList")
+
+
+          var list=List[Int2]()
+          var user = -1
           for(i<-0 until userList.length){
             //观战者离开
+            println(s"i=$i,u(i)=${userList(i)} ")
             for(j<-0 until userList(i).shareList.length){
               if(userList(i).shareList(j) == id){
-                userList(i).shareList.remove(j)
+                println(s"share    i=$i,u(i)=${userList(i)} j=$j ")
+                list :::= List(Int2(i,j))
               }
             }
             //玩家离开
             if(userList(i).id == id){
-              userList.remove(i)
+              user = i
             }
+          }
+          list.map{l=>
+            userList(l.i).shareList.remove(l.j)
+          }
+          if(user != -1){
+            userList.remove(user)
           }
           subscribersMap.remove(id)
           Behaviors.same
