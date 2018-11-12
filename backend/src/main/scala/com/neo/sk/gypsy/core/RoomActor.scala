@@ -181,6 +181,7 @@ object RoomActor {
 //            }
 //          }
 //          Behaviors.same
+
         case UserActor.UserReLive(id) =>
           println(s"RoomActor Relive ")
           //TODO 这里加一些watch的处理
@@ -200,7 +201,7 @@ object RoomActor {
 
         case UserActor.Left(id, name) =>
           log.info(s"got------------- $msg")
-          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
+//          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
 
