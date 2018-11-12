@@ -6,18 +6,17 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.actor.typed.{ActorRef, Behavior}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.{Boundary, Food, Point, Protocol, WsMsgProtocol, _}
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.core.UserActor.JoinRoomSuccess
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Point, WsMsgProtocol}
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.mutable
 import scala.language.postfixOps
@@ -70,13 +69,16 @@ object RoomActor {
 
   val bounds = Point(Boundary.w, Boundary.h)
 
+  val ballId = new AtomicLong(100000)
+
+
   def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
-            val userMap = mutable.HashMap[String, String]()
+            val userMap = mutable.HashMap[String, (String,Long)]()
             val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
@@ -97,7 +99,7 @@ object RoomActor {
   def idle(
             roomId:Long,
             userList:mutable.ListBuffer[UserInfo],
-            userMap:mutable.HashMap[String,String],
+            userMap:mutable.HashMap[String,(String,Long)],
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
             grid:GameServer,
             tickCount:Long
@@ -132,15 +134,24 @@ object RoomActor {
                 dispatchTo(subscribersMap)(id,grid.getAllGridData)
             }
           }else{
-            //玩游戏
-            userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
-            userMap.put(id,name)
-            ctx.watchWith(subscriber,UserActor.Left(id,name))
-            subscribersMap.put(id,subscriber)
-            grid.addPlayer(id, name)
-            subscriber ! JoinRoomSuccess(id,ctx.self)
-            dispatchTo(subscribersMap)(id, Protocol.Id(id))
-            dispatchTo(subscribersMap)(id,grid.getAllGridData)
+//            if (!userMap.contains(id)) {
+              val createBallId = ballId.incrementAndGet()
+              //TODO 讨论
+              println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
+              userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
+              userMap.put(id, (name, createBallId))
+              ctx.watchWith(subscriber, UserActor.Left(id, name))
+              subscribersMap.put(id, subscriber)
+              grid.addPlayer(id, name)
+              val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount)
+              grid.AddGameEvent(event)
+
+              subscriber ! JoinRoomSuccess(id, ctx.self)
+              dispatchTo(subscribersMap)(id, Protocol.Id(id))
+              dispatchTo(subscribersMap)(id, grid.getAllGridData)
+//            }else{
+//              println("ID重了")
+//            }
           }
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
@@ -168,7 +179,20 @@ object RoomActor {
           log.info(s"got------------- $msg")
           subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
-         // dispatch(subscribersMap,Protocol.PlayerLeft(id, name))
+          dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
+
+          try{
+            val leftballId = userMap(id)._2
+            //添加离开信息
+            println(s"user left fra ${grid.frameCount}  ${leftballId} ")
+            val event = UserLeftRoom(id,name,leftballId,roomId,grid.frameCount)
+            grid.AddGameEvent(event)
+          }catch{
+            case e:Exception =>
+              log.error(s"Had something wrong in add Left event!! Caused by:${e.getMessage}")
+          }
+
+          //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
           for(i<-0 until userList.length){
@@ -190,8 +214,10 @@ object RoomActor {
           log.debug(s"got $msg")
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addPlayer(id, userMap.getOrElse(id, "Unknown"))
+            grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.SnakeRestart(id))
+//            grid.addSnake(id, userMap.getOrElse(id, ("Unknown",0l))._1)
+//            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
           } else {
             grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
             dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
@@ -261,7 +287,7 @@ object RoomActor {
           Behaviors.stopped
 
         case getGamePlayerList(_ ,replyTo) =>
-          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2)}.toList
+          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2._1)}.toList
           if(playerList!=null){
             replyTo ! RoomPlayerInfoRsp(players(playerList),0,"ok")
           }
