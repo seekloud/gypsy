@@ -117,7 +117,6 @@ object GameRecorder {
           //log.info(s"${ctx.self.path} work get msg gameRecord")
           val wsMsg = t.event._1
           wsMsg.foreach{
-            //            case UserJoinRoom(roomId ,player,frame) =>
             case r@UserWsJoin(roomId ,userId,userName,ballId,frame) =>
               println(s"record: ${r}")
               userAllMap.put(userId,(roomId,userName,ballId))
@@ -126,8 +125,9 @@ object GameRecorder {
 
             case r@UserLeftRoom(userId, name,ballId,roomId,frame) =>
               println(s"left ${r}  ")
-              println(s"ESSFMAP： $essfMap ")
-              userMap.remove(userId)
+              if (userMap.contains(userId)){
+                userMap.remove(userId)
+              }
               val startF = essfMap(EssfMapKey(roomId, userId, name,ballId)).joinF
               essfMap.put(EssfMapKey(roomId, userId,name,ballId), EssfMapJoinLeftInfo(startF,frame))
 

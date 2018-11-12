@@ -120,7 +120,7 @@ object RoomActor {
           log.info(s"got $msg")
           if(watchgame){
             //观战
-            ctx.watchWith(subscriber,UserActor.Left(id,name))
+//            ctx.watchWith(subscriber,UserActor.Left(id,name))
             subscribersMap.put(id,subscriber)
             subscriber ! JoinRoomSuccess(id,ctx.self)
             watchId match{
@@ -147,8 +147,7 @@ object RoomActor {
               println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
               userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
               userMap.put(id, (name, createBallId))
-              println(s"")
-              ctx.watchWith(subscriber, UserActor.Left(id, name))
+//              ctx.watchWith(subscriber, UserActor.Left(id, name))
               subscribersMap.put(id, subscriber)
               grid.addPlayer(id, name)
               val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount)

@@ -443,6 +443,9 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerMap.get(id).nonEmpty){
           grid.playerMap = grid.playerMap - id + (id->player)
         }
+      case Protocol.RebuildWebSocket =>
+        println("存在异地登录")
+        closeHolder
 
 //      case Protocol.MatchRoomError()=>
 //        drawClockView.cleanClock()
@@ -478,6 +481,7 @@ class GameHolder(replay:Boolean = false) {
         syncGridData = Some(GridDataSync(data.frameCount,
           data.playerDetails,data.massDetails,
           data.virusDetails,0.toDouble,Nil,Nil))
+        grid.currentRank = e.gState.currentRank
         justSynced = true
 
       case e: Protocol.KeyPress =>
@@ -505,15 +509,31 @@ class GameHolder(replay:Boolean = false) {
         grid.playerMap = e.player
 
       case killMsg:Protocol.KillMsg =>
-        killMsg.result.foreach{case (killer,victim)=>
-          grid.removePlayer(victim)
-          try{
-            val killerPlayer = grid.playerMap(killer)
-            grid.playerMap +=(killer -> killerPlayer.copy(kill= killerPlayer.kill+1))
-          }catch{
-            case e:Exception=>
-              println(s"receive killMsg fail ${e.getMessage}")
+        grid.removePlayer(killMsg.deadPlayer.id)
+        val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        grid.playerMap += (killMsg.killerId -> a.copy(kill = a.kill + 1))
+        if(killMsg.deadPlayer.id != myId){
+          if(!isDead){
+            isDead = true
+            killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
+          }else{
+            killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
           }
+          if(killMsg.killerId == myId){
+            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+              case 1 => Shortcut.playMusic("1Blood")
+              case 2 => Shortcut.playMusic("2Kill")
+              case 3 => Shortcut.playMusic("3Kill")
+              case 4 => Shortcut.playMusic("4Kill")
+              case 5 => Shortcut.playMusic("5Kill")
+              case 6 => Shortcut.playMusic("godlikeM")
+              case 7 => Shortcut.playMusic("legendaryM")
+              case _ => Shortcut.playMusic("unstop")
+            }
+          }
+        }else{
+          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          Shortcut.playMusic("shutdownM")
         }
 
       case e:Protocol.ReplayFinish=>
