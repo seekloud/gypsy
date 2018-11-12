@@ -218,6 +218,7 @@ object RoomActor {
           println(s"userlist$userList")
           for(i<-0 until userList.length){
             //观战者离开
+            println(s"i=$i,u(i)=${userList(i)} ")
             for(j<-0 until userList(i).shareList.length){
               if(userList(i).shareList(j) == id){
                 userList(i).shareList.remove(j)
