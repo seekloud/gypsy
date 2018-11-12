@@ -139,7 +139,7 @@ object EsheepSyncClient {
           EsheepClient.verifyAccessCode(accessCode, tokenInfo.token).onComplete{
             case Success(rst) =>
               rst match {
-                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(value.playerInfo)
+                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(Some(value))
                 case Left(error) => handleErrorRsp(ctx, msg, error)(() => rsp ! error)
               }
             case Failure(exception) =>
@@ -176,7 +176,7 @@ object EsheepSyncClient {
     }
   }
 
-  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(EsheepProtocol.PlayerInfo("",""), errorRsp.errCode, errorRsp.msg)
+  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(Some(EsheepProtocol.PlayerInfo("","")), errorRsp.errCode, errorRsp.msg)
 
   private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
     errorRsp.errCode match {
