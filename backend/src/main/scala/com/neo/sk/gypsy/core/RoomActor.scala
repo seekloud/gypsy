@@ -39,6 +39,8 @@ object RoomActor {
 
   private case object TimeOutKey
 
+  private case object ReliveTimeOutKey
+
   private case object TimeOut extends Command
 
  // private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
@@ -47,6 +49,11 @@ object RoomActor {
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
+//  private case class UserReLive(id: String) extends Command
+
+  private case class ReStart(id: String) extends Command
+
+//  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
 //  private case class ChangeWatch(id: String, watchId: String) extends Command
 
 //  private case class Left(id: String, name: String) extends Command
@@ -140,6 +147,7 @@ object RoomActor {
               println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
               userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
               userMap.put(id, (name, createBallId))
+              println(s"")
               ctx.watchWith(subscriber, UserActor.Left(id, name))
               subscribersMap.put(id, subscriber)
               grid.addPlayer(id, name)
@@ -174,6 +182,22 @@ object RoomActor {
 //            }
 //          }
 //          Behaviors.same
+        case UserActor.UserReLive(id) =>
+          println(s"RoomActor Relive ")
+          //TODO 这里加一些watch的处理
+          timer.startSingleTimer(ReliveTimeOutKey,ReStart(id),AppSettings.reliveTime.seconds)
+          Behavior.same
+
+        case ReStart(id) =>
+          println(s"RoomActor Restart Send!")
+          timer.cancel(ReliveTimeOutKey)
+          grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
+          //只是重播音乐真正是在addPlayer里面发送加入消息
+          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
+          //复活时发送全量消息
+          dispatchTo(subscribersMap)(id,grid.getAllGridData)
+          Behavior.same
+
 
         case UserActor.Left(id, name) =>
           log.info(s"got------------- $msg")
@@ -215,7 +239,7 @@ object RoomActor {
           //dispatch(Protocol.TextMsg(s"Aha! $id click [$keyCode]")) //just for test
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
-            dispatchTo(subscribersMap)(id,Protocol.SnakeRestart(id))
+            dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
 //            grid.addSnake(id, userMap.getOrElse(id, ("Unknown",0l))._1)
 //            dispatchTo(subscribersMap,id,Protocol.SnakeRestart(id),userList)
           } else {
