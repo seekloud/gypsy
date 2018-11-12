@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.http
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
