@@ -94,6 +94,10 @@ object UserManager {
           getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
+        case ChildDead(child, childRef) =>
+          ctx.unwatch(childRef)
+          Behaviors.same
+
         case unknow =>
           log.error(s"${ctx.self.path} recv a unknow msg when idle:${unknow}")
           Behaviors.same
