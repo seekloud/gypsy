@@ -42,7 +42,7 @@ object UserActor {
 
   case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
-  case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
+//  case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
 
   case class Left(id: String, name: String) extends Command with RoomActor.Command
 
@@ -110,9 +110,9 @@ object UserActor {
                      Left(id,name)
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-                   case WatchChange(id, watchId) =>
-                     log.debug(s"切换观察者: $watchId")
-                     ChangeWatch(id, watchId)
+//                   case WatchChange(id, watchId) =>
+//                     log.debug(s"切换观察者: $watchId")
+//                     ChangeWatch(id, watchId)
                    case _=>
                      UnKnowAction
                  }
@@ -166,10 +166,6 @@ object UserActor {
         case UnKnowAction =>
           Behavior.same
 
-        case unknowMsg =>
-          stashBuffer.stash(unknowMsg)
-          Behavior.same
-
         case msg:GetUserInRecordMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
@@ -177,6 +173,10 @@ object UserActor {
         case msg:GetRecordFrameMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
+
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
+          Behavior.same
       }
 
     }
@@ -240,10 +240,10 @@ object UserActor {
                   ): Behavior[Command] =
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case ChangeWatch(id, watchId) =>
-          log.info(s"get $msg")
-          roomActor ! ChangeWatch(id, watchId)
-          Behaviors.same
+//        case ChangeWatch(id, watchId) =>
+//          log.info(s"get $msg")
+//          roomActor ! ChangeWatch(id, watchId)
+//          Behaviors.same
 
         case Left(id, name) =>
           log.info(s"got $msg")

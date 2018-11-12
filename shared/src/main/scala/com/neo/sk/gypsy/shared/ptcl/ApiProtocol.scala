@@ -31,12 +31,9 @@ object ApiProtocol {
                        userList:Seq[String]
                        )
 
-  case class RecordsInfo(
-                       recordList:List[RecordInfo]
-                       )
 
   case class RecordListRsp(
-                            data:RecordsInfo,
+                            data:List[RecordInfo],
                             errCode:Int=0,
                             msg:String="ok"
                           )

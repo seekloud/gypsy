@@ -78,10 +78,10 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).length,
               userListMap(i.recordId).map(_.userId)
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
@@ -104,10 +104,10 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).length,
               userListMap(i.recordId).map(_.userId)
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
@@ -130,10 +130,10 @@ trait OutApiService extends ServiceUtils with SessionBase{
               userListMap(i.recordId).length,
               userListMap(i.recordId).map(_.userId)
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
