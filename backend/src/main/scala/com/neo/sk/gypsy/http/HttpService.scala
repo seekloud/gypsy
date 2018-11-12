@@ -12,7 +12,7 @@ import akka.util.Timeout
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-
+import java.net.URLEncoder
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -59,7 +59,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
             'roomId.as[Long].?
           ){
             case (playerId, playerName, accessCode,roomIdOpt) =>
-              redirect(s"/gypsy#/playGame/${playerId}/${playerName}/${roomIdOpt.getOrElse(0l)}/${accessCode}",
+              redirect(s"/gypsy#/playGame/${playerId}/${URLEncoder.encode(playerName,"utf-8")}/${roomIdOpt.getOrElse(0l)}/${accessCode}",
                 StatusCodes.SeeOther
               )
           }

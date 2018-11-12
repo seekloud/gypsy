@@ -114,8 +114,8 @@ package object ptcl {
   }
 
   object Window{
-    val w = 1200
-    val h = 600
+    val w = 1200 //1200
+    val h = 600 //600
   }
 
 
