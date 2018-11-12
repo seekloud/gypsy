@@ -526,14 +526,14 @@ case class DrawGame(
     var DrawHeight = Window.h*0.3
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight+Window.h*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight+Window.h*0.07*2)
-    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight+Window.h*0.07*4)
+//    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight+Window.h*0.07*3)
     ctx.fillStyle=Color.White.toString()
     DrawLeft = Window.w*0.56+Window.w*0.12
     ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight+Window.h*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight+Window.h*0.07*2)
-    ctx.fillText(s"${msg.lifeTime}", DrawLeft,DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight+Window.h*0.07*4)
+//    ctx.fillText(s"${msg.lifeTime}", DrawLeft,DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight+Window.h*0.07*3)
   }
 
 
