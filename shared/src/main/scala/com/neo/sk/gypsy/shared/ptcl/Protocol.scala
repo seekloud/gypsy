@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.shared.ptcl
 
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.GameConfig
+import com.neo.sk.gypsy.shared.ptcl._
 
 object Protocol {
 
@@ -142,7 +142,7 @@ object Protocol {
 //   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent with WsMsgSource
 //   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
 //  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
-  case class KillMsg(result:List[(String,String)], override val frame: Long) extends GameEvent
+  case class KillMsg(killerId:String,deadPlayer:Player,score:Int,lifeTime:Long, override val frame: Long) extends GameEvent
 
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
@@ -161,7 +161,8 @@ object Protocol {
                                       foodDetails: List[Food],
                                       massDetails: List[Mass],
                                       //virusDetails: List[Virus],
-                                      virusDetails: Map[Long,Virus]
+                                      virusDetails: Map[Long,Virus],
+                                      currentRank:List[Score]
                                     )
 
   final case class GameInformation(
