@@ -13,7 +13,8 @@ object ReplayProtocol {
   final case class EssfMapKey(
                                roomId:Long,
                                userId: String,
-                               name:String
+                               name:String,
+                               ballId:Long
                              )
   final case class EssfMapJoinLeftInfo(
                                         joinF: Long,

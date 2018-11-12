@@ -50,6 +50,8 @@ object Protocol {
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
+  //只有用户离开房间时候发送
+  case class PlayerLeft(id: String, name: String) extends GameMessage
   case class ReduceVirus(virus: Map[Long,Virus]) extends GameMessage
 
   case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
@@ -126,7 +128,8 @@ object Protocol {
   case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
 
   case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
-  case class UserLeftRoom(userId:String,userName:String,roomId:Long, override val frame:Long) extends GameEvent
+  case class UserLeftRoom(userId:String,userName:String,ballId:Long,roomId:Long, override val frame:Long) extends GameEvent
+  case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
 
@@ -139,6 +142,8 @@ object Protocol {
 //   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent with WsMsgSource
 //   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
 //  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
+  case class KillMsg(result:List[(String,String)], override val frame: Long) extends GameEvent
+
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
   case class ShowScale( override val frame:Long,scale:Double) extends GameEvent
