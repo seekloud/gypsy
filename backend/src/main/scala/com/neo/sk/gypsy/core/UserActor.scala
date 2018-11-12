@@ -298,10 +298,6 @@ object UserActor {
           roomActor ! e
           Behaviors.same
 
-        case UserLeft(actor) =>
-          ctx.unwatch(actor)
-          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
-
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
           Behavior.same

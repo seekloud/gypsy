@@ -73,7 +73,6 @@ object UserManager {
 
 
         case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
-          //TODO getUserActorOpt
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx,playerInfo.playerId) match{
             case Some(userActor)=>
@@ -94,6 +93,10 @@ object UserManager {
           getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
+        case ChildDead(child, childRef) =>
+          ctx.unwatch(childRef)
+          Behaviors.same
+
         case unknow =>
           log.error(s"${ctx.self.path} recv a unknow msg when idle:${unknow}")
           Behaviors.same
@@ -110,7 +113,7 @@ object UserManager {
     implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.UserAction] = {
 
       try {
-              import io.circe.generic.auto._
+        import io.circe.generic.auto._
               import io.circe.parser._
         val wsMsg = decode[Protocol.UserAction](s).right.get
         Some(wsMsg)

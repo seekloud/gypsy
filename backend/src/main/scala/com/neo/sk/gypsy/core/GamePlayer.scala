@@ -121,25 +121,24 @@ object GamePlayer {
           log.info("start new replay !")
           //停止之前的重放
           timer.cancel(GameLoopKey)
-          fileReader.mutableInfoIterable
+//          fileReader.mutableInfoIterable
           log.info(s"-------$msg  $userMap---------")
-          userMap.find(_._1.userId == msg.userId) match {
-            case Some(u) =>
+          userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
+            case Some(u)=>
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
-                timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
-                Behaviors.same
+//                timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
+                Behaviors.stopped
               }
-            case None=>
+            case None =>
               dispatchTo(msg.userActor,Protocol.InitReplayError("本局游戏中不存在该用户"))
-              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
+//              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
               Behaviors.same
           }
-
         case GameLoop=>
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
@@ -154,8 +153,8 @@ object GamePlayer {
               dispatchTo(u, Protocol.ReplayFinish())
             }
             timer.cancel(GameLoopKey)
-            timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
-            Behaviors.same
+//            timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
+            Behaviors.stopped
           }
 
         case msg:GetRecordFrameMsg=>
@@ -170,8 +169,8 @@ object GamePlayer {
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 
-        case msg:TimeOut=>
-          Behaviors.stopped
+//        case msg:TimeOut=>
+//          Behaviors.stopped
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)

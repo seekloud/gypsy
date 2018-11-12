@@ -109,13 +109,11 @@ class GameServer(override val boundary: Point) extends Grid {
         case _ => //do nothing.
       }
     }
-
     if (historyChange) {
       historyRankList = historyRankMap.values.toList.sorted.take(historyRankLength)
       historyRankThreshold = historyRankList.lastOption.map(_.score.toInt).getOrElse(-1)
       historyRankMap = historyRankList.map(s => s.id -> s).toMap
     }
-
   }
 
   override def feedApple(appleCount: Int): Unit = {
@@ -162,7 +160,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var killer = ""
-        val score=player.cells.map(_.mass).sum
+        val score = player.cells.map(_.mass).sum
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
             var newMass = cell.mass
@@ -192,9 +190,9 @@ class GameServer(override val boundary: Point) extends Grid {
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
           Result ::=(killer,player.id)
-
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-
+          val event = KillMsg(killer,player,score.toInt,System.currentTimeMillis()-player.startTime,frameCount)
+          AddGameEvent(event)
           Left(killer)
         } else {
           val length = newCells.length
@@ -207,8 +205,7 @@ class GameServer(override val boundary: Point) extends Grid {
           Right(player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells))
         }
     }
-    val event2 = KillMsg(Result,frameCount)
-    AddGameEvent(event2)
+
 //    AddGameEvent(event)
 
     playerMap = newPlayerMap.map {
@@ -542,7 +539,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
   //获取快照
   def getSnapShot()={
-
     val playerDetails =  playerMap.map{
       case (id,player) => player
     }.toList
@@ -556,7 +552,8 @@ class GameServer(override val boundary: Point) extends Grid {
       playerDetails,
       foodDetails,
       massList,
-      virusMap
+      virusMap,
+      currentRank
     )
   }
 
