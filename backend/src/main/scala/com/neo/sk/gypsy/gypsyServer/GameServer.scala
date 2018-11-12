@@ -186,8 +186,8 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-          dispatchTo(subscriber,player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime),userLists)
-          dispatch(subscriber,Protocol.KillMessage(killer,player))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber)(Protocol.KillMessage(killer,player))
           Result ::=(killer,player.id)
 
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
@@ -204,8 +204,9 @@ class GameServer(override val boundary: Point) extends Grid {
           Right(player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells))
         }
     }
-    val event = KillMsg(Result,frameCount)
-    AddGameEvent(event)
+    val event2 = KillMsg(Result,frameCount)
+    AddGameEvent(event2)
+//    AddGameEvent(event)
 
     playerMap = newPlayerMap.map {
       case Right(s) => (s.id, s)
