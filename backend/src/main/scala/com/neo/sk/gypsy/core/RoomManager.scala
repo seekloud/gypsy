@@ -154,6 +154,7 @@ object RoomManager {
 
           case msg:GetRoomList =>
             val RoomList=roomInUse.keys.toList
+            println(s"roomlist$RoomList")
             msg.replyTo ! RoomListRsp(roomListInfo(RoomList),0,"ok")
             Behaviors.same
 
