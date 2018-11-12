@@ -125,7 +125,9 @@ object GameRecorder {
 
             case r@UserLeftRoom(userId, name,ballId,roomId,frame) =>
               println(s"left ${r}  ")
-              userMap.remove(userId)
+              if (userMap.contains(userId)){
+                userMap.remove(userId)
+              }
               val startF = essfMap(EssfMapKey(roomId, userId, name,ballId)).joinF
               essfMap.put(EssfMapKey(roomId, userId,name,ballId), EssfMapJoinLeftInfo(startF,frame))
 
