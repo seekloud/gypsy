@@ -192,6 +192,7 @@ object GameRecorder {
               essf
             }
         }
+        log.info("bugbug^^^^^^^^^^^^^^^^^^^^")
         recorder.putMutableInfo(AppSettings.essfMapKeyName,userMapEncode(mapInfo))
         recorder.finish()
         val endTime = System.currentTimeMillis()
