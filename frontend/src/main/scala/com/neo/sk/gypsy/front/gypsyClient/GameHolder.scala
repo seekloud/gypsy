@@ -457,7 +457,9 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.PlayerLeft(id,name) =>
         //TODO 广播
         grid.removePlayer(id)
-        gameClose
+        if(id == myId){
+          gameClose
+        }
 
       case Protocol.DecodeEvent(data)=>
         replayMessageHandler(data)
@@ -506,6 +508,9 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
+        if(e.userId == myId){
+          gameClose
+        }
 
       case e: Protocol.PlayerInfoChange =>
         grid.playerMap = e.player
