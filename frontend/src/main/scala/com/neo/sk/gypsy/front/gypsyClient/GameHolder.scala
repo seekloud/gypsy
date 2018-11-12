@@ -421,6 +421,9 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerMap.get(id).nonEmpty){
           grid.playerMap = grid.playerMap - id + (id->player)
         }
+      case Protocol.RebuildWebSocket =>
+        println("存在异地登录")
+        closeHolder
 
 //      case Protocol.MatchRoomError()=>
 //        drawClockView.cleanClock()
