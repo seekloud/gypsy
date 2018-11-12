@@ -86,7 +86,7 @@ object Protocol {
 
   case class WatchChange(id:String, watchId: String) extends UserAction
 
-  case class UserLeft() extends UserAction
+//  case class UserLeft() extends UserAction
 
 //  case object ErrorWsMsgServer extends UserAction
 

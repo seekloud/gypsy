@@ -94,8 +94,6 @@ class GameHolder(replay:Boolean = false) {
     KeyCode.Escape
   )
 
-
-
   def init(): Unit = {
     drawGameView.drawGameWelcome()
     drawOffScreen.drawBackground()
@@ -164,10 +162,6 @@ class GameHolder(replay:Boolean = false) {
     if(myId == ""){
       dom.window.requestAnimationFrame(animate())
     }
-  }
-
-  def closeHolder = {
-    dom.window.cancelAnimationFrame(nextFrame)
   }
 
   def gameRender(): Double => Unit = { d =>
@@ -403,7 +397,6 @@ class GameHolder(replay:Boolean = false) {
           gameState = GameState.dead
           webSocketClient.sendMsg(ReLive(id))
           grid.removePlayer(id)
-
         }
 
 //        //匹配模式胜利用的(目前不用)
@@ -442,9 +435,10 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerMap.get(id).nonEmpty){
           grid.playerMap = grid.playerMap - id + (id->player)
         }
+
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
-        closeHolder
+        gameClose
 
 //      case Protocol.MatchRoomError()=>
 //        drawClockView.cleanClock()
@@ -553,15 +547,15 @@ class GameHolder(replay:Boolean = false) {
         println(s"播放结束！！！")
 //        dom.window.alert("播放结束，谢谢观看！")
 //        dom.window.cancelAnimationFrame(nextFrame)
-        closeHolder
+        gameClose
 
       case e:Protocol.DecodeError =>
         //todo closeHolder
-        closeHolder
+        gameClose
 
       case e:Protocol.InitReplayError =>
         //todo closeHolder
-        closeHolder
+        gameClose
 
       case e:Protocol.UserMerge =>
         if(grid.playerMap.get(e.id).nonEmpty){

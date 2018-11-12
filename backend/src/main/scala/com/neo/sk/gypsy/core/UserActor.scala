@@ -108,8 +108,8 @@ object UserActor {
                      Key(id,keyCode,f,n)
                    case MousePosition(id,clientX,clientY,f,n)=>
                      Mouse(id,clientX,clientY,f,n)
-                   case Protocol.UserLeft()=>
-                     Left(id,name)
+//                   case Protocol.UserLeft()=>
+//                     Left(id,name)
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
 //                   case WatchChange(id, watchId) =>
@@ -170,6 +170,9 @@ object UserActor {
 
         case UnKnowAction =>
           Behavior.same
+
+        case ChangeBehaviorToInit=>
+          Behaviors.same
 
         case msg:GetUserInRecordMsg=>
           getGameReply(ctx,msg.recordId) ! msg
@@ -250,10 +253,10 @@ object UserActor {
 //          roomActor ! ChangeWatch(id, watchId)
 //          Behaviors.same
 
-        case Left(id, name) =>
-          log.info(s"got $msg")
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
-          Behaviors.stopped
+//        case Left(id, name) =>
+//          log.info(s"got $msg")
+//          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
+//          Behaviors.stopped
 
         case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
