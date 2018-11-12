@@ -52,6 +52,8 @@ object UserActor {
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
 
+  case class UserReLive(id: String) extends Command with RoomActor.Command
+
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
   private case object UnKnowAction extends Command
@@ -113,6 +115,9 @@ object UserActor {
 //                   case WatchChange(id, watchId) =>
 //                     log.debug(s"切换观察者: $watchId")
 //                     ChangeWatch(id, watchId)
+                   case ReLive(id) =>
+                     UserReLive(id)
+
                    case _=>
                      UnKnowAction
                  }
@@ -259,6 +264,11 @@ object UserActor {
           log.debug(s"gor $msg")
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
+
+        case UserReLive(id) =>
+          println(s"UserActor got $id relive ")
+          roomActor ! UserReLive(id)
+          Behavior.same
 
         case DispatchMsg(m)=>
           frontActor ! m
