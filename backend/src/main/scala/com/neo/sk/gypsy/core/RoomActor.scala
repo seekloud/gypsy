@@ -200,7 +200,7 @@ object RoomActor {
 
 
         case UserActor.Left(id, name) =>
-          log.info(s"got------------- $msg")
+          log.info(s"got-------------RoomActor $msg")
 //          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
@@ -208,7 +208,7 @@ object RoomActor {
           try{
             val leftballId = userMap(id)._2
             //添加离开信息
-            println(s"user left fra ${grid.frameCount}  ${leftballId} ")
+            log.info(s"user left fra ${grid.frameCount}  ${leftballId} ")
             val event = UserLeftRoom(id,name,leftballId,roomId,grid.frameCount)
             grid.AddGameEvent(event)
           }catch{
