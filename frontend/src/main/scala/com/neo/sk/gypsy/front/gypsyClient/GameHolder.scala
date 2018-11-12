@@ -116,7 +116,6 @@ class GameHolder(replay:Boolean = false) {
       drawMiddleView.updateCanvasSize(newWidth,newHeight)
       drawTopView.updateCanvasSize(newWidth,newHeight)
       drawClockView.updateCanvasSize(newWidth,newHeight)
-      init()
     }
   }
 
@@ -173,7 +172,6 @@ class GameHolder(replay:Boolean = false) {
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-
     if(myId != "" && gameState == GameState.play) {
       drawClockView.cleanClock()
       draw(offsetTime)

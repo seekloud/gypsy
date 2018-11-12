@@ -202,7 +202,7 @@ object RoomActor {
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
           try{
-            log.info("userMap:   "+userMap)
+            log.info("userMap:   "+ userMap)
             val leftballId = userMap(id)._2
             //添加离开信息
             log.info(s"user left fra ${grid.frameCount}  ${leftballId} ")
