@@ -108,6 +108,10 @@ package object ptcl {
                   targetY:Double = 0.0,
                   speed:Double = 0
                   )
+  case class Int2(
+                 i:Int,
+                 j:Int
+                 )
   object Boundary{
     val w = 4800
     val h = 2400
