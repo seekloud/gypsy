@@ -204,8 +204,8 @@ object RoomActor {
 //          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
-
           try{
+            log.info("userMap:   "+userMap)
             val leftballId = userMap(id)._2
             //添加离开信息
             log.info(s"user left fra ${grid.frameCount}  ${leftballId} ")
@@ -215,7 +215,6 @@ object RoomActor {
             case e:Exception =>
               log.error(s"Had something wrong in add Left event!! Caused by:${e.getMessage}")
           }
-
           //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
