@@ -219,7 +219,7 @@ object RoomActor {
 
 
           var list=List[Int2]()
-          var user = 0
+          var user = -1
           for(i<-0 until userList.length){
             //观战者离开
             println(s"i=$i,u(i)=${userList(i)} ")
@@ -237,7 +237,9 @@ object RoomActor {
           list.map{l=>
             userList(l.i).shareList.remove(l.j)
           }
-          userList.remove(user)
+          if(user != -1){
+            userList.remove(user)
+          }
           subscribersMap.remove(id)
           Behaviors.same
 
