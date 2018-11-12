@@ -52,6 +52,8 @@ object UserActor {
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
 
+  case class UserReLive(id: String) extends Command with RoomActor.Command
+
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
   private case object UnKnowAction extends Command
@@ -113,6 +115,9 @@ object UserActor {
 //                   case WatchChange(id, watchId) =>
 //                     log.debug(s"切换观察者: $watchId")
 //                     ChangeWatch(id, watchId)
+                   case ReLive(id) =>
+                     UserReLive(id)
+
                    case _=>
                      UnKnowAction
                  }
@@ -260,6 +265,11 @@ object UserActor {
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
 
+        case UserReLive(id) =>
+          println(s"UserActor got $id relive ")
+          roomActor ! UserReLive(id)
+          Behavior.same
+
         case DispatchMsg(m)=>
           frontActor ! m
           Behaviors.same
@@ -287,10 +297,6 @@ object UserActor {
         case e: NetTest=>
           roomActor ! e
           Behaviors.same
-
-        case UserLeft(actor) =>
-          ctx.unwatch(actor)
-          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)

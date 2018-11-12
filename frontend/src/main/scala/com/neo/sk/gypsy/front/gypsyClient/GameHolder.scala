@@ -77,6 +77,12 @@ class GameHolder(replay:Boolean = false) {
 
   val grid = new GameClient(bounds)
 
+  //游戏状态
+  private[this] var gameState = GameState.play
+  var deadInfo :Option[Protocol.UserDeadMessage] = None
+//  private[this] var gameState = GameState.dead
+//  private[this] var deadInfo :Option[Protocol.UserDeadMessage] = Some(new UserDeadMessage("123","456","killer",2,2017,1999l))
+
   private[this] val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
@@ -124,6 +130,7 @@ class GameHolder(replay:Boolean = false) {
       //不同步
       if (!justSynced) {
         update()
+//        println(s"当前帧号fra now is ${grid.frameCount} ")
       } else {
         if (syncGridData.nonEmpty) {
           //同步
@@ -166,9 +173,12 @@ class GameHolder(replay:Boolean = false) {
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != "") {
+
+    if(myId != "" && gameState == GameState.play) {
       drawClockView.cleanClock()
       draw(offsetTime)
+    }else if(gameState == GameState.dead && deadInfo.isDefined){
+      drawTopView.drawWhenDead(deadInfo.get)
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
@@ -357,7 +367,7 @@ class GameHolder(replay:Boolean = false) {
 
       case data: Protocol.GridDataSync =>
         //TODO here should be better code.
-        println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
+//        println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
         /*if(data.frameCount<grid.frameCount){
           println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
         }else if(data.frameCount>grid.frameCount){
@@ -373,16 +383,28 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
 
-      case Protocol.SnakeRestart(id) =>
+      case Protocol.PlayerRestart(id) =>
         Shortcut.playMusic("bg")
       //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
+      case Protocol.PlayerJoin(id,player) =>
+        println(s"${id}  加入游戏 ${grid.frameCount}")
+        if(myId == id){
+          gameState = GameState.play
+          drawTopView.cleanCtx()
+        }
+        grid.playerMap += (id -> player)
+
+
         //只针对某个死亡玩家发送的死亡消息
-        //TODO UserDeadMessage和KillMessage可以做一个整合
-      case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+      case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+//          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+          deadInfo = Some(msg)
+          gameState = GameState.dead
+          webSocketClient.sendMsg(ReLive(id))
           grid.removePlayer(id)
+
         }
 
 //        //匹配模式胜利用的(目前不用)
@@ -478,6 +500,7 @@ class GameHolder(replay:Boolean = false) {
 
 
       case e: Protocol.UserJoinRoom =>
+        gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
 
       case e: Protocol.UserLeftRoom =>
@@ -510,7 +533,12 @@ class GameHolder(replay:Boolean = false) {
             }
           }
         }else{
-          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.deadPlayer.startTime)
+          deadInfo = Some(deadMsg)
+          gameState = GameState.dead
+          //TODO 商榷
+          grid.removePlayer(myId)
+//          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           Shortcut.playMusic("shutdownM")
         }
 

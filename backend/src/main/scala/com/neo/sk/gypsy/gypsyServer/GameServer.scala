@@ -76,8 +76,11 @@ class GameServer(override val boundary: Point) extends Grid {
       val color = new Random(System.nanoTime()).nextInt(7)
       val player = Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
       playerMap += id -> player
-      val event = UserJoinRoom(roomId,player,frameCount)
+      val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
+      println(s" ${id} 加入事件！！  ${frameCount+2}")
+      //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
+      dispatch(subscriber)(PlayerJoin(id,player))
     }
     waitingJoin = Map.empty[String, String]
   }
