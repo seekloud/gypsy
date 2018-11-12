@@ -110,9 +110,9 @@ object UserActor {
                      Left(id,name)
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-                   case WatchChange(id, watchId) =>
-                     log.debug(s"切换观察者: $watchId")
-                     ChangeWatch(id, watchId)
+//                   case WatchChange(id, watchId) =>
+//                     log.debug(s"切换观察者: $watchId")
+//                     ChangeWatch(id, watchId)
                    case _=>
                      UnKnowAction
                  }
@@ -166,10 +166,6 @@ object UserActor {
         case UnKnowAction =>
           Behavior.same
 
-        case unknowMsg =>
-          stashBuffer.stash(unknowMsg)
-          Behavior.same
-
         case msg:GetUserInRecordMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
@@ -177,6 +173,10 @@ object UserActor {
         case msg:GetRecordFrameMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
+
+        case unknowMsg =>
+          stashBuffer.stash(unknowMsg)
+          Behavior.same
       }
 
     }
