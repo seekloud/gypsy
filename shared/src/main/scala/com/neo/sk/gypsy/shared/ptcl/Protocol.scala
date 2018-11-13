@@ -11,7 +11,7 @@ object Protocol {
 
   sealed trait GameMessage extends WsMsgSource
 
-  case class ControllerInitial() extends GameMessage
+  trait GameBeginning extends WsMsgSource
 
   case class ErrorWsMsgFront(msg:String) extends GameMessage
 

@@ -96,7 +96,5 @@ class GameScene {
       case None =>
         gameView.drawGameWait(firstCome)
     }
-  }else{
-    gameView.drawGameLost
   }
 }

@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.KeyCode
 import javafx.util.Duration
+
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.scene.GameScene
@@ -14,7 +15,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.GameClient.myId
+import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial, myId}
 import org.scalajs.dom
 
 import scala.math.atan2
@@ -59,7 +60,7 @@ class GameHolder(
   def connectToGameServer(gameHolder:GameHolder) = {
     ClientBoot.addToPlatform{
       stageCtx.showScene(gameScene.scene,"Gaming")
-      gameClient ! Protocol.ControllerInitial()
+      gameClient ! ControllerInitial(gameHolder)
       start()
     }
   }
