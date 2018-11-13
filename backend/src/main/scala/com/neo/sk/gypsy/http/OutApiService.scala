@@ -74,7 +74,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
           val userListMap = i._2.groupBy(_.recordId)
           val key= userListMap.keys.toList
           val r= i._1.filter(a=> key.contains(a.recordId))
-          println(s"获取记录列表${r.size} ")
+          println(s"got recordList Size: r==== ${r.size}   i1====>${i._1.size}  i2====>${i._2.size} ")
           val record = r.map(i =>
             (i.recordId,
               i.roomId,
