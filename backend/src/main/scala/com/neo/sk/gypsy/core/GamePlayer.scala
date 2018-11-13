@@ -138,7 +138,7 @@ object GamePlayer {
             case None =>
               dispatchTo(msg.userActor,Protocol.InitReplayError("本局游戏中不存在该用户"))
 //              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
-              Behaviors.same
+              Behaviors.stopped
           }
         case GameLoop=>
           if(fileReader.hasMoreFrame){

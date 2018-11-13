@@ -51,6 +51,7 @@ case class WebSocketClient(
       }
       webSocketOpt.get.onerror = { event: ErrorEvent =>
         wsSetup = false
+        webSocketOpt = None
         connectErrorCallback(event)
       }
 
@@ -79,7 +80,6 @@ case class WebSocketClient(
         }
 
       }
-
       webSocketOpt.get.onclose = { event: Event =>
         wsSetup = false
         webSocketOpt=None
@@ -89,9 +89,9 @@ case class WebSocketClient(
 
   def closeWs={
     wsSetup = false
-    sendMsg(UserLeft())
     println("---close Ws active")
-    webSocketOpt.get.close()
+    webSocketOpt.foreach(_.close())
+    webSocketOpt = None
   }
 
   import org.seekloud.byteobject.ByteObject._
