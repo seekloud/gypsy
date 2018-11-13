@@ -516,24 +516,27 @@ case class DrawGame(
     ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
     ctx.font = "50px Helvetica"
     ctx.fillStyle = "#CD3700"
-    ctx.fillText(s"You Dead!", Window.w*0.5, Window.h*0.3)
+    val Width = canvas.width
+    val Height = canvas.height
+    ctx.fillText(s"You Dead!", Width*0.5, Height*0.3)
+
 //    ctx.strokeRect(Window.w*0.3,Window.h*0.28,Window.w/2,Window.h/2)
 //    drawRoundRect(window.x*0.3,window.y*0.28,window.x/3,window.y/4,30)
 //    ctx.drawImage(dead,window.x*0.65,window.y*0.37,window.x*0.1,window.x*0.1)
-    ctx.font = s"${Window.w*0.02}px Comic Sans MS"
+    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
 //    ctx.fillStyle="#EE9A00"
-    var DrawLeft = Window.w*0.32+Window.w*0.12
-    var DrawHeight = Window.h*0.3
-    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight+Window.h*0.07)
-    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight+Window.h*0.07*2)
+    var DrawLeft = Width*0.32+Width*0.12
+    var DrawHeight = Width*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
 //    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
     ctx.fillStyle=Color.White.toString()
-    DrawLeft = Window.w*0.56+Window.w*0.12
-    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight+Window.h*0.07)
-    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight+Window.h*0.07*2)
+    DrawLeft = Width*0.56+Width*0.12
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
 //    ctx.fillText(s"${msg.lifeTime}", DrawLeft,DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight+Window.h*0.07*3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*3)
   }
 
 
