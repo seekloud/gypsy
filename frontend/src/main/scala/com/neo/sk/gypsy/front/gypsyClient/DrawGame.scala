@@ -507,6 +507,8 @@ case class DrawGame(
 
   def drawWhenDead(msg:Protocol.UserDeadMessage)={
 //    ctx.fillStyle = "#ccc"//Color.Black.toString()
+//    val showTime = MTime2HMS(msg.lifeTime)
+
     ctx.fillStyle = "#000"//Color.Black.toString()
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
@@ -516,27 +518,22 @@ case class DrawGame(
     val Height = this.canvas.height
     ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
 
-//    ctx.strokeRect(Window.w*0.3,Window.h*0.28,Window.w/2,Window.h/2)
-//    drawRoundRect(window.x*0.3,window.y*0.28,window.x/3,window.y/4,30)
-//    ctx.drawImage(dead,window.x*0.65,window.y*0.37,window.x*0.1,window.x*0.1)
     ctx.font = s"${Window.w *0.02}px Comic Sans MS"
-//    ctx.fillStyle="#EE9A00"
-//    var DrawLeft = Width*0.32+Width*0.12
-//    var DrawLeft = Width*0.32
+
     var DrawLeft = Width*0.35
     var DrawHeight = Height*0.3
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
-//    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
 //    DrawLeft = Width*0.56+Width*0.12
 //    DrawLeft = Width*0.56
-    DrawLeft = ctx.measureText("Your  Final   Score:").width +  Width*0.35 + 30
+    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
     ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
-//    ctx.fillText(s"${msg.lifeTime}", DrawLeft,DrawHeight+Window.h*0.07*3)
-    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*3)
+    ctx.fillText(s"${MTime2HMS(msg.lifeTime)}", DrawLeft,DrawHeight+Height*0.07*3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
   }
 
 
@@ -545,6 +542,22 @@ case class DrawGame(
     //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
+  }
+
+  def MTime2HMS(time:Long)={
+    var ts = (time/1000)
+    var result = ""
+    if(ts/3600>0){
+      result += s"${ts/3600}小时"
+    }
+    ts = ts % 3600
+    if(ts/60>0){
+      result += s"${ts/3600}分"
+    }
+    ts = ts % 60
+    result += s"${ts}秒"
+
+    result
   }
 
 }
