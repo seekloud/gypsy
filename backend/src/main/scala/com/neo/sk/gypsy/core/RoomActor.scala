@@ -197,7 +197,7 @@ object RoomActor {
 
 
         case UserActor.Left(id, name) =>
-          log.info(s"got-------------RoomActor $msg")
+          log.info(s"got----RoomActor----Left $msg")
 //          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
@@ -492,7 +492,7 @@ object RoomActor {
       val gameInformation = GameInformation(curTime)
 //      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
-      println(s"beginSnapShot  $initStateOpt   ")
+//      println(s"beginSnapShot  $initStateOpt   ")
       val initFrame = grid.frameCount
       val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))
