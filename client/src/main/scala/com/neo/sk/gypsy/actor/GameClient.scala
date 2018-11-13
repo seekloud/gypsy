@@ -11,12 +11,15 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
+import com.neo.sk.gypsy.holder.GameHolder._
+import akka.actor.typed.scaladsl.StashBuffer
 /**
   * @author zhaoyin
-  * @date 2018/10/30  11:44 AM
+  * 2018/10/30  11:44 AM
   */
 object GameClient {
 
+  case class ControllerInitial(controller: GameHolder) extends GameBeginning
   private[this] val log = LoggerFactory.getLogger(this.getClass)
   private[this] var grid: GridOnClient = _
 
@@ -26,7 +29,7 @@ object GameClient {
 
 
   def create(): Behavior[WsMsgSource] = {
-    Behaviors.setup[GameMessage]{ ctx =>
+    Behaviors.setup[WsMsgSource]{ ctx =>
       implicit val stashBuffer: StashBuffer[WsMsgSource] = StashBuffer[WsMsgSource](Int.MaxValue)
       switchBehavior(ctx, "waitting", waitting("", -1L))
     }
@@ -36,7 +39,7 @@ object GameClient {
                       (implicit stashBuffer: StashBuffer[WsMsgSource]): Behavior[WsMsgSource]= {
     Behaviors.receive{(ctx,msg) =>
       msg match {
-        case ControllerInitial() =>
+        case ControllerInitial(gameHolder) =>
           grid = GameHolder.grid
           switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
           Behaviors.same
@@ -47,9 +50,9 @@ object GameClient {
   }
 
 
-  private def running(id:String,roomId:Long,gameHolder: GameHolder)
+  private def running(id:String,roomId:Long,gameController: GameHolder)
                      (implicit stashBuffer: StashBuffer[WsMsgSource]):Behavior[WsMsgSource]={
-    Behaviors.receive[GameMessage]{ (ctx, msg) =>
+    Behaviors.receive[WsMsgSource]{ (ctx, msg) =>
       msg match {
         case Protocol.Id(id) =>
           myId = id
@@ -95,26 +98,26 @@ object GameClient {
 
         //drawGrid(msgData.uid, data)
         //网络延迟检测
-        case Protocol.Pong(createTime) =>
-          NetDelay.receivePong(createTime ,webSocketClient)
+/*        case Protocol.Pong(createTime) =>
+          NetDelay.receivePong(createTime ,webSocketClient)*/
 
         case Protocol.SnakeRestart(id) =>
-          Shortcut.playMusic("bg")
+          //Shortcut.playMusic("bg")
           Behaviors.same
         //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
         case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
           if(id==myId){
-            DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+            //DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
             grid.removePlayer(id)
           }
           Behaviors.same
 
-        case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
+/*       case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
           DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
-          Behaviors.stopped()
+          Behaviors.stopped()*/
 
-        case Protocol.KillMessage(killerId,deadPlayer)=>
+/*      case Protocol.KillMessage(killerId,deadPlayer)=>
           grid.removePlayer(deadPlayer.id)
           val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
           grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
@@ -140,7 +143,7 @@ object GameClient {
               case _ => Shortcut.playMusic("unstop")
             }
           }
-          Behaviors.stopped
+          Behaviors.stopped*/
 
 
         case Protocol.UserMerge(id,player)=>
@@ -163,10 +166,10 @@ object GameClient {
   }
 
 
-  private[this] def switchBehavior(ctx: ActorContext[ptcl.WsMsgSource],
+  private[this] def switchBehavior(ctx: ActorContext[WsMsgSource],
                                    behaviorName: String,
-                                   behavior: Behavior[ptcl.WsMsgSource])
-                                  (implicit stashBuffer: StashBuffer[ptcl.WsMsgSource]) = {
+                                   behavior: Behavior[WsMsgSource])
+                                  (implicit stashBuffer: StashBuffer[WsMsgSource]) = {
     log.debug(s"${ctx.self.path} becomes $behaviorName behavior.")
     stashBuffer.unstashAll(ctx, behavior)
   }
