@@ -106,7 +106,7 @@ class GameHolder(replay:Boolean = false) {
   protected def checkScreenSize = {
     val newWidth=dom.window.innerWidth.toInt
     val newHeight=dom.window.innerHeight.toInt
-    if(newWidth!=window.x || newHeight!= window.y){
+    if(newWidth!= window.x || newHeight!= window.y){
       //屏幕适配
       window =  Point(newWidth, newHeight)
       drawGameView.updateCanvasSize(newWidth,newHeight)

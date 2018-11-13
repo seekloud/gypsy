@@ -59,11 +59,11 @@ case class DrawGame(
   val bounds = Point(Boundary.w, Boundary.h)
   this.canvas.width= size.x
   this.canvas.height= size.y
-  var screeScale = if(this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h).toDouble else (this.canvas.width/Window.w).toDouble
+  var screeScale = if( this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h) else (this.canvas.width / Window.w)
 
   def updateCanvasSize(newWidth:Double,newHeight:Double)={
     screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
-    println(newWidth+ "   " + newHeight + "  "+ screeScale)
+//    println(newWidth+ "   " + newHeight + "  "+ screeScale)
     this.canvas.width = newWidth.toInt
     this.canvas.height = newHeight.toInt
   }
@@ -336,10 +336,8 @@ case class DrawGame(
     val offx= this.canvas.width/2 - basePoint._1
     val offy =this.canvas.height/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
 
-//    println(scale + "   " + screeScale)
-    //var scale = data.scale
+    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
 
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
@@ -416,8 +414,6 @@ case class DrawGame(
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-        println("width: "+ this.canvas.width + "x:    "+ (xfix +offx-cell.radius-6))
-        println("height: "+ this.canvas.height + "y:    "+ (yfix+offy-cell.radius-6))
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
