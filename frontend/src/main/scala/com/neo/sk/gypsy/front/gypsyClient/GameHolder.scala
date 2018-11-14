@@ -382,11 +382,12 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
+        grid.playerMap += (id -> player)
         if(myId == id){
           gameState = GameState.play
           drawTopView.cleanCtx()
         }
-        grid.playerMap += (id -> player)
+
 
 
         //只针对某个死亡玩家发送的死亡消息
