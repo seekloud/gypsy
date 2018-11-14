@@ -88,7 +88,7 @@ object ApiProtocol {
 
   case class GetUserInRecordReq(
                                  recordId:Long,
-                                 playerId:String
+                                 playerId:String //观看玩家id
                                )
 
   case class ExistTimeInfo(
