@@ -26,7 +26,7 @@ object RecordDao {
          * 所以查找的时候拿GameRecord表先查50个，UserRecordMap里面过滤后个数是《=50的
          *
         */
-        r2 <- tUserRecordMap.sortBy(_.recordId.desc).take(count).result
+        r2 <- tUserRecordMap.sortBy(_.recordId).take(count).result
         r1 <- tGameRecord.filter(i=>i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
         //        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
 //        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
