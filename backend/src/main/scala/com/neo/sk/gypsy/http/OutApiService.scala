@@ -72,9 +72,9 @@ trait OutApiService extends ServiceUtils with SessionBase{
       RecordDao.getAllRecord(j.lastRecordId, j.count).map {
         i =>
           val userListMap = i._2.groupBy(_.recordId)
-          val key= userListMap.keys.toList
-          val r= i._1.filter(a=> key.contains(a.recordId))
-          val record = r.map(i =>
+//          val key= userListMap.keys.toList
+//          val r= i._1.filter(a=> key.contains(a.recordId))
+          val record = i._1.map(i =>
             (i.recordId,
               i.roomId,
               i.startTime,
