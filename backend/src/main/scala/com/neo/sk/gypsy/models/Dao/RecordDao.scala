@@ -28,7 +28,6 @@ object RecordDao {
         */
         r2 <- tUserRecordMap.sortBy(_.recordId.desc).take(count).result
         r1 <- tGameRecord.filter(i=>i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        println(s"getAllRecord =========== r1: ${r1.map(_.recordId)} ##########${r2.map(_.recordId)} ")
         //        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
 //        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
       } yield {
