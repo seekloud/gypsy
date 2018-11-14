@@ -37,10 +37,10 @@ object RecordDao {
     }
     else{
       val action2 = for {
-//        r2 <- tUserRecordMap.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(count).result
-//        r1 <- tGameRecord.filter(i => i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        r1 <- tGameRecord.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(count).result
-        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
+        r2 <- tUserRecordMap.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(20*count).result
+        r1 <- tGameRecord.filter(i => i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).take(count).result
+//        r1 <- tGameRecord.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(count).result
+//        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
       } yield {
         (r1,r2)
       }
