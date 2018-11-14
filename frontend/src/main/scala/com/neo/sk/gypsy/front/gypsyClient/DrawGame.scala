@@ -518,7 +518,7 @@ case class DrawGame(
 //    ctx.drawImage(dead,window.x*0.65,window.y*0.37,window.x*0.1,window.x*0.1)
     ctx.font = s"${Window.w*0.02}px Comic Sans MS"
 //    ctx.fillStyle="#EE9A00"
-    var DrawLeft = Window.w*0.32+Window.w*0.12
+    var DrawLeft = Window.w * 0.32+Window.w*0.12
     var DrawHeight = Window.h*0.3
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight+Window.h*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight+Window.h*0.07*2)
