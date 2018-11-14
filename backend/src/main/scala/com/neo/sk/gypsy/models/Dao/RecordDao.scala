@@ -19,7 +19,7 @@ object RecordDao {
   }
 
   def getAllRecord(lastRecordId: Long, count: Int) = {
-    if(lastRecordId==0L){
+    if(lastRecordId!=999999L){
       val action1 = for {
         /*
          *RecordId 写入GameRecord表时，有的时候可能因为那段录像内没有用户所以不会记录到UserRecordMap表中
@@ -28,7 +28,8 @@ object RecordDao {
         */
         r2 <- tUserRecordMap.sortBy(_.recordId.desc).take(count).result
         r1 <- tGameRecord.filter(i=>i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-//        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
+        println(s"getAllRecord =========== r1: ${r1.map(_.recordId)} ##########${r2.map(_.recordId)} ")
+        //        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
 //        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
       } yield {
         (r1,r2)
