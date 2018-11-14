@@ -552,11 +552,10 @@ case class DrawGame(
     }
     ts = ts % 3600
     if(ts/60>0){
-      result += s"${ts/3600}分"
+      result += s"${ts/60}分"
     }
     ts = ts % 60
     result += s"${ts}秒"
-
     result
   }
 
