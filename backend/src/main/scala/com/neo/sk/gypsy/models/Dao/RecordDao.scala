@@ -22,8 +22,8 @@ object RecordDao {
     if(lastRecordId==0L){
       val action1 = for {
         /*
-         *RecordId 写入GameRecord表时，有的时候可能因为那段录像内没有用户所以不会记录到UserRecordMap表中
-         * 所以查找的时候拿GameRecord表先查50个，UserRecordMap里面过滤后个数是《=50的
+         * RecordId 写入GameRecord表时，有的时候可能因为那段录像内没有用户所以不会记录到UserRecordMap表中
+         * 所以查找的时候拿GameRecord表先查50个，UserRecordMap里面过滤后个数是<=50的
          *
         */
 //        r2 <- tUserRecordMap.sortBy(_.recordId.desc).take(count).result

@@ -283,11 +283,11 @@ class GameHolder(replay:Boolean = false) {
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
           ctx.save()
-          ctx.font = "34px Helvetica"
-          ctx.fillText(s"KILL: ${p.kill}", 250, 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
+          ctx.font = s"${34 * window.x / Window.w}px Helvetica"
+          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
+          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
           ctx.restore()
-          renderFps(ctx3,NetDelay.latency)
+          renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
           val paraBack = drawGameView.drawKill(myId,grid,isDead,killList)
           killList=paraBack._1
