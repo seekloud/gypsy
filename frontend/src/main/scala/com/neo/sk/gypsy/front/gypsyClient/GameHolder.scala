@@ -95,6 +95,7 @@ class GameHolder(replay:Boolean = false) {
   )
 
   def init(): Unit = {
+    println("drawBackground1111111111")
     drawGameView.drawGameWelcome()
     drawOffScreen.drawBackground()
     drawGameView.drawGameOn()
