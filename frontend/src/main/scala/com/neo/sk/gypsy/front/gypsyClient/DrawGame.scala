@@ -243,7 +243,8 @@ case class DrawGame(
     ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
-    ctx.strokeStyle = MyColors.stripe
+//    ctx.strokeStyle = MyColors.stripe
+    ctx.strokeStyle = Color.White.toString()
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
