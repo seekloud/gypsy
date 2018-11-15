@@ -43,8 +43,8 @@ class GameHolder(replay:Boolean = false) {
   private[this] val ctx2 = canvas2.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  private[this] val canvas4 = dom.document.getElementById("ClockView").asInstanceOf[Canvas]
-  private[this] val ctx4 = canvas4.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+//  private[this] val canvas4 = dom.document.getElementById("ClockView").asInstanceOf[Canvas]
+//  private[this] val ctx4 = canvas4.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
   private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -54,7 +54,7 @@ class GameHolder(replay:Boolean = false) {
   private[this] val drawGameView=DrawGame(ctx,canvas1,window)
   private[this] val drawMiddleView=DrawGame(ctx2,canvas2,window)
   private[this] val drawTopView=DrawGame(ctx3,canvas3,window)
-  private[this] val drawClockView=DrawGame(ctx4,canvas4,window)
+//  private[this] val drawClockView=DrawGame(ctx4,canvas4,window)
   private[this] val drawOffScreen=DrawGame(offCtx,offScreenCanvas,bounds)
 
   /**
@@ -113,7 +113,7 @@ class GameHolder(replay:Boolean = false) {
 //      drawOffScreen.updateCanvasSize(newWidth,newHeight)
       drawMiddleView.updateCanvasSize(newWidth,newHeight)
       drawTopView.updateCanvasSize(newWidth,newHeight)
-      drawClockView.updateCanvasSize(newWidth,newHeight)
+//      drawClockView.updateCanvasSize(newWidth,newHeight)
       drawMiddleView.drawRankMap()
     }
   }
@@ -168,7 +168,7 @@ class GameHolder(replay:Boolean = false) {
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     if(myId != "" && gameState == GameState.play) {
-      drawClockView.cleanClock()
+//      drawClockView.cleanClock()
       draw(offsetTime)
     }else if(gameState == GameState.dead && deadInfo.isDefined){
       drawTopView.drawWhenDead(deadInfo.get)
@@ -382,11 +382,12 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
+        grid.playerMap += (id -> player)
         if(myId == id){
           gameState = GameState.play
           drawTopView.cleanCtx()
         }
-        grid.playerMap += (id -> player)
+
 
 
         //只针对某个死亡玩家发送的死亡消息
