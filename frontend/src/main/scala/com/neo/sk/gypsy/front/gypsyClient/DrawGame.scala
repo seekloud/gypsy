@@ -551,17 +551,19 @@ case class DrawGame(
 
   def MTime2HMS(time:Long)={
     var ts = (time/1000)
+    println(s"一共有 $ts 秒！")
     var result = ""
     if(ts/3600>0){
       result += s"${ts/3600}小时"
     }
     ts = ts % 3600
+    println(s"第一次 $ts 秒！")
     if(ts/60>0){
-      result += s"${ts/3600}分"
+      result += s"${ts/60}分"
     }
     ts = ts % 60
+    println(s"第二次 $ts 秒！")
     result += s"${ts}秒"
-
     result
   }
 
