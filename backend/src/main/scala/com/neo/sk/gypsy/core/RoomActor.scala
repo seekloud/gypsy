@@ -211,6 +211,8 @@ object RoomActor {
         case UserActor.Left(id, name) =>
           log.info(s"got----RoomActor----Left $msg")
 //          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
+          //复活列表清除
+          grid.ReLiveMap -= id
           grid.removePlayer(id)
           dispatch(subscribersMap)(Protocol.PlayerLeft(id, name))
           try{
