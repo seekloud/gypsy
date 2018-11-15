@@ -39,7 +39,8 @@ object RoomActor {
 
   private case object TimeOutKey
 
-  private case object ReliveTimeOutKey
+//  private case object ReliveTimeOutKey
+  private case class ReliveTimeOutKey(id:String)
 
   private case object TimeOut extends Command
 
@@ -52,6 +53,8 @@ object RoomActor {
 //  private case class UserReLive(id: String) extends Command
 
   private case class ReStart(id: String) extends Command
+
+  case class ReStartAck(id: String) extends Command
 
 //  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
 //  private case class ChangeWatch(id: String, watchId: String) extends Command
@@ -78,6 +81,7 @@ object RoomActor {
 
   val ballId = new AtomicLong(100000)
 
+//  private var ReLiveMap = Map.empty[String,Long]
 
   def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
@@ -179,22 +183,30 @@ object RoomActor {
 //          }
 //          Behaviors.same
 
-        case UserActor.UserReLive(id) =>
-          println(s"RoomActor Relive ")
-          //TODO 这里加一些watch的处理
-          timer.startSingleTimer(ReliveTimeOutKey,ReStart(id),AppSettings.reliveTime.seconds)
-          Behavior.same
+//        case UserActor.UserReLive(id) =>
+//          println(s"RoomActor Relive ")
+////          ReLiveMap.put(id,System.currentTimeMillis())
+//          ReLiveMap += (id -> System.currentTimeMillis())
+//          //TODO 这里加一些watch的处理
+////          timer.startSingleTimer(ReliveTimeOutKey(id),ReStart(id),AppSettings.reliveTime.seconds)
+//          Behavior.same
 
         case ReStart(id) =>
-          println(s"RoomActor Restart Send!")
-          timer.cancel(ReliveTimeOutKey)
+          log.info(s"RoomActor Restart Send!++++++++++++++")
+//          timer.cancel(ReliveTimeOutKey)
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
-          //只是重播音乐真正是在addPlayer里面发送加入消息
+          //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
           dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           //复活时发送全量消息
           dispatchTo(subscribersMap)(id,grid.getAllGridData)
           Behavior.same
 
+        case ReStartAck(id) =>
+          //确认复活接收
+          log.info(s"RoomActor Receive Relive Ack from $id *******************")
+          grid.ReLiveMap -= id
+//          timer.cancel(ReliveTimeOutKey(id))
+          Behavior.same
 
         case UserActor.Left(id, name) =>
           log.info(s"got----RoomActor----Left $msg")
@@ -215,17 +227,17 @@ object RoomActor {
           //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
-          println(s"userlist$userList")
+//          println(s"userlist$userList")
 
 
           var list=List[Int2]()
           var user = -1
           for(i<-0 until userList.length){
             //观战者离开
-            println(s"i=$i,u(i)=${userList(i)} ")
+//            println(s"i=$i,u(i)=${userList(i)} ")
             for(j<-0 until userList(i).shareList.length){
               if(userList(i).shareList(j) == id){
-                println(s"share    i=$i,u(i)=${userList(i)} j=$j ")
+//                println(s"share    i=$i,u(i)=${userList(i)} j=$j ")
                 list :::= List(Int2(i,j))
               }
             }
@@ -274,6 +286,16 @@ object RoomActor {
             if(tickCount % 20 == 1){
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
             }
+          }
+
+          if(grid.ReLiveMap.nonEmpty){
+            val curTime = System.currentTimeMillis()
+            val ToReLive = grid.ReLiveMap.filter(i=> (curTime - i._2) >AppSettings.reliveTime*1000)
+            val newReLive = ToReLive.map{live =>
+              ctx.self ! ReStart(live._1)
+              (live._1,curTime)
+            }
+            grid.ReLiveMap ++= newReLive
           }
 
           if (tickCount % 20 == 5) {

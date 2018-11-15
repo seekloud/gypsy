@@ -61,6 +61,8 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private var roomId = 0l
 
+  var ReLiveMap = Map.empty[String,Long]   //(id -> 时间)
+
   def setRoomId(id:Long)={
     roomId = id
   }
@@ -156,7 +158,7 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {
-    var Result = List.empty[(String,String)] //killerId,VictimId
+//    var Result = List.empty[(String,String)] //killerId,VictimId
     val newPlayerMap = playerMap.values.map {
       player =>
         var killer = ""
@@ -187,9 +189,11 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
+          //加入待复活列表
+          ReLiveMap += (player.id -> System.currentTimeMillis())
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
-          Result ::=(killer,player.id)
+//          Result ::=(killer,player.id)
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
           val event = KillMsg(killer,player,score.toInt,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)

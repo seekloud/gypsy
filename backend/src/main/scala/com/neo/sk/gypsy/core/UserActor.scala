@@ -3,12 +3,11 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.stream.OverflowStrategy
-
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront}
+import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront, ReStartAck}
 import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.Boot.roomManager
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
@@ -52,7 +51,9 @@ object UserActor {
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
 
-  case class UserReLive(id: String) extends Command with RoomActor.Command
+//  case class UserReLive(id: String) extends Command with RoomActor.Command
+
+  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
@@ -115,8 +116,12 @@ object UserActor {
 //                   case WatchChange(id, watchId) =>
 //                     log.debug(s"切换观察者: $watchId")
 //                     ChangeWatch(id, watchId)
-                   case ReLive(id) =>
-                     UserReLive(id)
+
+//                   case ReLive(id) =>
+//                     UserReLive(id)
+
+                   case ReLiveAck(id) =>
+                     UserReLiveAck(id)
 
                    case _=>
                      UnKnowAction
@@ -268,9 +273,14 @@ object UserActor {
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
 
-        case UserReLive(id) =>
-          println(s"UserActor got $id relive ")
-          roomActor ! UserReLive(id)
+//        case UserReLive(id) =>
+//          println(s"UserActor got $id relive ")
+//          roomActor ! UserReLive(id)
+//          Behavior.same
+
+        case UserReLiveAck(id) =>
+          println(s"UserActor got $id relive Ack ")
+          roomActor ! ReStartAck(id)
           Behavior.same
 
         case DispatchMsg(m)=>
