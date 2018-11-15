@@ -42,21 +42,23 @@ object GameClient {
         case ControllerInitial(gameHolder) =>
           grid = GameHolder.grid
           switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
+        case x =>
+          stashBuffer.stash(x)
           Behaviors.same
       }
 
     }
-
   }
 
 
-  private def running(id:String,roomId:Long,gameController: GameHolder)
+  private def running(id:String,roomId:Long,gameHolder: GameHolder)
                      (implicit stashBuffer: StashBuffer[WsMsgSource]):Behavior[WsMsgSource]={
     Behaviors.receive[WsMsgSource]{ (ctx, msg) =>
       msg match {
         case Protocol.Id(id) =>
           myId = id
-//          Shortcut.playMusic("bg")
+          Shortcut.playMusic("bg")
+          println(s"myID:$myId")
           Behaviors.same
 
         case m:Protocol.KeyCode =>
@@ -65,6 +67,7 @@ object GameClient {
             grid.addActionWithFrame(m.id,m)
           }
           Behaviors.same
+
         case m:Protocol.MousePosition =>
           //grid.addActionWithFrameFromServer(m.id,m)
           if(myId!=m.id || usertype == -1){
@@ -72,58 +75,80 @@ object GameClient {
           }
           Behaviors.same
 
+
         case Protocol.Ranks(current, history) =>
           grid.currentRank = current
           grid.historyRank = history
           Behaviors.same
 
+
         case Protocol.FeedApples(foods) =>
-          //        grid.food ++= foods
           grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           Behaviors.same
 
+
+
+        case Protocol.AddVirus(virus) =>
+          println(s"接收新病毒 new Virus ${virus}")
+          grid.virusMap ++= virus
+          Behaviors.same
+
+
+        case Protocol.ReduceVirus(virus) =>
+          grid.virusMap = virus
+          Behaviors.same
+
+
         case data: Protocol.GridDataSync =>
-          //TODO here should be better code.
-          println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-          /*if(data.frameCount<grid.frameCount){
-            println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-          }else if(data.frameCount>grid.frameCount){
-            // println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-            syncGridData = Some(data)
-            justSynced = true
-          }*/
           syncGridData = Some(data)
           justSynced = true
           Behaviors.same
 
+
         //drawGrid(msgData.uid, data)
         //网络延迟检测
-/*        case Protocol.Pong(createTime) =>
-          NetDelay.receivePong(createTime ,webSocketClient)*/
-
-        case Protocol.SnakeRestart(id) =>
-          //Shortcut.playMusic("bg")
+        case Protocol.Pong(createTime) =>
+          NetDelay.receivePong(createTime ,webSocketClient)
           Behaviors.same
-        //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
-        case Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+
+        case Protocol.PlayerRestart(id) =>
+//          Shortcut.playMusic("bg")
+          Behaviors.same
+
+
+        case Protocol.PlayerJoin(id,player) =>
+          println(s"${id}  加入游戏 ${grid.frameCount}")
+          grid.playerMap += (id -> player)
+          if(myId == id){
+            gameState = GameState.play
+            drawTopView.cleanCtx()
+          }
+          Behaviors.same
+
+
+
+        //只针对某个死亡玩家发送的死亡消息
+        case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
           if(id==myId){
-            //DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+            //          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
+            deadInfo = Some(msg)
+            gameState = GameState.dead
+            webSocketClient.sendMsg(ReLive(id))
             grid.removePlayer(id)
           }
           Behaviors.same
 
-/*       case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
-          DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
-          Behaviors.stopped()*/
 
-/*      case Protocol.KillMessage(killerId,deadPlayer)=>
+
+        //针对所有玩家发送的死亡消息
+        case Protocol.KillMessage(killerId,deadPlayer)=>
           grid.removePlayer(deadPlayer.id)
           val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
           grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
-          if(deadPlayer.id!=myId){
+          if(deadPlayer.id != myId){
             if(!isDead){
-              isDead=true
+              isDead = true
               killList :+=(200,killerId,deadPlayer)
             }else{
               killList :+=(200,killerId,deadPlayer)
@@ -131,7 +156,7 @@ object GameClient {
           }else{
             Shortcut.playMusic("shutdownM")
           }
-          if(killerId==myId){
+          if(killerId == myId){
             grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
               case 1 => Shortcut.playMusic("1Blood")
               case 2 => Shortcut.playMusic("2Kill")
@@ -143,19 +168,28 @@ object GameClient {
               case _ => Shortcut.playMusic("unstop")
             }
           }
-          Behaviors.stopped*/
+          Behaviors.same
 
 
         case Protocol.UserMerge(id,player)=>
           if(grid.playerMap.get(id).nonEmpty){
-            grid.playerMap=grid.playerMap - id + (id->player)
+            grid.playerMap = grid.playerMap - id + (id->player)
           }
+          Behaviors.same
 
-        //      case Protocol.MatchRoomError()=>
-        //        drawClockView.cleanClock()
-        //        JsFunc.alert("超过等待时间请重新选择")
-        //todo
-        //        LoginPage.homePage()
+
+        case Protocol.RebuildWebSocket =>
+          println("存在异地登录")
+          gameState = GameState.allopatry
+          Behaviors.same
+
+
+        //某个用户离开
+        case Protocol.PlayerLeft(id,name) =>
+          grid.removePlayer(id)
+          if(id == myId){
+            gameClose
+          }
           Behaviors.same
 
         case msg@_ =>

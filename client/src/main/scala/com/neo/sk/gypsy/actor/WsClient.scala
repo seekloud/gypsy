@@ -27,7 +27,7 @@ import io.circe.generic.auto._
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * @author zhaoyin
-  * @date 2018/10/28  3:38 PM
+  * 2018/10/28  3:38 PM
   */
 object WsClient {
   private val log = LoggerFactory.getLogger("WSClient")
@@ -38,7 +38,7 @@ object WsClient {
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
   case object Stop extends WsCommand
 
-  def create(gameClient: ActorRef[GameMessage],
+  def create(gameClient: ActorRef[WsMsgSource],
              stageCtx: StageContext,
              _system: ActorSystem,
              _materializer: Materializer,
@@ -53,7 +53,7 @@ object WsClient {
 
 
 
-  private def working(gameClient: ActorRef[GameMessage],
+  private def working(gameClient: ActorRef[WsMsgSource],
                       stageCtx: StageContext
                      )(
     implicit timer:TimerScheduler[WsCommand],
@@ -124,7 +124,7 @@ object WsClient {
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[GameMessage](buffer) match {
+          bytesDecode[WsMsgSource](buffer) match {
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
