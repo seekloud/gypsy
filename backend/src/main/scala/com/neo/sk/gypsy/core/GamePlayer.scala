@@ -125,6 +125,7 @@ object GamePlayer {
           log.info(s"-------$msg  $userMap---------")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
             case Some(u)=>
+              log.info(s"total FrameCount :${frameCount}")
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               log.info(s"replay from frame=${fileReader.getFramePosition}")
@@ -159,6 +160,7 @@ object GamePlayer {
           }
 
         case msg:GetRecordFrameMsg=>
+          log.info(s"GetRecordFrameMsg *** nowPosition:${fileReader.getFramePosition} TotalFrame ${frameCount.toLong} ")
           msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
           Behaviors.same
 
