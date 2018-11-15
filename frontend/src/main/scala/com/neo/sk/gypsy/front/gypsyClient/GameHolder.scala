@@ -173,7 +173,7 @@ class GameHolder(replay:Boolean = false) {
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
       case GameState.allopatry =>
-        drawTopView.drawWhenAllopatry()
+        drawTopView.drawWhenFinish("存在异地登录")
         gameClose
       case _ =>
     }
@@ -453,15 +453,8 @@ class GameHolder(replay:Boolean = false) {
         println("存在异地登录")
         gameState = GameState.allopatry
 
-//      case Protocol.MatchRoomError()=>
-//        drawClockView.cleanClock()
-//        JsFunc.alert("超过等待时间请重新选择")
-        //todo
-//        LoginPage.homePage()
-
         //某个用户离开
       case Protocol.PlayerLeft(id,name) =>
-        //TODO 广播
         grid.removePlayer(id)
         if(id == myId){
           gameClose
@@ -556,18 +549,15 @@ class GameHolder(replay:Boolean = false) {
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
-        //todo closeHolder
-        println(s"播放结束！！！")
-//        dom.window.alert("播放结束，谢谢观看！")
-//        dom.window.cancelAnimationFrame(nextFrame)
+        drawTopView.drawWhenFinish("播放结束")
         gameClose
 
       case e:Protocol.DecodeError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish("数据解析失败")
         gameClose
 
       case e:Protocol.InitReplayError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish(e.msg)
         gameClose
 
       case e:Protocol.UserMerge =>
