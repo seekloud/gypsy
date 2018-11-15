@@ -13,6 +13,9 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
+import com.neo.sk.gypsy.utils.Shortcut
+import org.scalajs.dom
+
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -107,8 +110,9 @@ object GameClient {
 
         //drawGrid(msgData.uid, data)
         //网络延迟检测
+          //todo
         case Protocol.Pong(createTime) =>
-          NetDelay.receivePong(createTime ,webSocketClient)
+//          NetDelay.receivePong(createTime ,webSocketClient)
           Behaviors.same
 
 
