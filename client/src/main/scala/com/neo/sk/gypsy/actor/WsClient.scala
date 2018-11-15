@@ -6,34 +6,46 @@ import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{WebSocketRequest, _}
-import akka.stream.scaladsl.{Flow, Keep}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.stream.typed.scaladsl.{ActorSink, _}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.ByteString
+import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.holder.GameHolder
+import com.neo.sk.gypsy.scene.GameScene
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import org.seekloud.byteobject.{MiddleBufferForTest, MiddleBufferInJvm}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
+import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import io.circe.parser.decode
+import io.circe.generic.auto._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * @author zhaoyin
   * @date 2018/10/28  3:38 PM
   */
 object WsClient {
-
   private val log = LoggerFactory.getLogger("WSClient")
+  private val logPrefix = "WSClient"
 
 
   sealed trait WsCommand
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
+  case object Stop extends WsCommand
 
-  def create():Behavior[WsCommand] = {
+  def create(gameClient: ActorRef[GameMessage],
+             stageCtx: StageContext,
+             _system: ActorSystem,
+             _materializer: Materializer,
+             _executor: ExecutionContextExecutor):Behavior[WsCommand] = {
     Behaviors.setup[WsCommand]{ ctx=>
       Behaviors.withTimers{ timer =>
-        working()(timer)
+        working(gameClient, stageCtx)(timer,_system,_materializer,_executor)
       }
 
     }
@@ -41,8 +53,12 @@ object WsClient {
 
 
 
-  private def working()(
+  private def working(gameClient: ActorRef[GameMessage],
+                      stageCtx: StageContext
+                     )(
     implicit timer:TimerScheduler[WsCommand],
+    system: ActorSystem,
+    materializer: Materializer,
     executor: ExecutionContextExecutor
   ):Behavior[WsCommand] = {
     Behaviors.receive[WsCommand]{(ctx,msg)=>
@@ -50,28 +66,40 @@ object WsClient {
         case ConnectGame(id,name,accessCode) =>
           val url = getWebSocketUri(id,name,accessCode)
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
-          val source = getSource
-          val sink = getSink
-          val ((stream,response, _)) =
+          val source = getSource(ctx.self)
+          val sink = getSink(gameClient)
+          val ((stream,response), _) =
             source
-          .viaMat(webSocketFlow)(Keep.both)
-          .toMat(sink)(Keep.both)
-          .run()
+            .viaMat(webSocketFlow)(Keep.both)
+            .toMat(sink)(Keep.both)
+            .run()
 
           val connected = response.flatMap { upgrade =>
-
-
+            if(upgrade.response.status == StatusCodes.SwitchingProtocols){
+              val gameScene = new GameScene()
+              val gameHolder = new GameHolder(stageCtx,gameScene,stream)
+              gameHolder.connectToGameServer(gameHolder)
+              Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
+            } else {
+              throw new RuntimeException(s"WSClient connection failed: ${upgrade.response.status}")
+            }
           }
           //链接建立时
           connected.onComplete(i=> log.info(i.toString))
           Behaviors.same
+
+        case Stop =>
+          log.info("WsClient now stop")
+          Behavior.stopped
       }
     }
   }
-
-  def getSource = ActorSource.actorRef[WsSendMsg](
+  //客户端发消息给后台
+  def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[WsSendMsg](
     completionMatcher = {
       case WsSendComplete =>
+        log.info("Websocket Complete")
+        wsClient ! Stop
     },
     failureMatcher = {
       case WsSendFailed(ex)  ⇒ ex
@@ -86,31 +114,29 @@ object WsClient {
       ))
   }
 
-  def getSink =
+  //收到后台发给前端的消息
+  def getSink(actor: ActorRef[WsMsgSource]) =
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
         log.debug(s"msg from websocket: $msg")
-        //todo 捋清protocol
-        TextMsg(msg)
+        ErrorWsMsgFront(msg)
 
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[](buffer) match{
+          bytesDecode[GameMessage](buffer) match {
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
-              //todo
-              TextMsg("decode error")
+              ErrorWsMsgFront(e.message)
           }
         msg
-    }.to(ActorSink.actorRef[]())
+    }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer(), FailMsgServer))
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
-    //todo ???
     val host = "localhost:30372"
-    s"$wsProtocol://$host/gypsy/api/playGameClient?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
+    s"$wsProtocol://$host/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
 
 
