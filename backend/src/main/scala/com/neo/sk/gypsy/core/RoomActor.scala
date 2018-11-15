@@ -72,8 +72,8 @@ object RoomActor {
   private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
-  case class getGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
-  case class getRoomId(playerId:String,replyTo:ActorRef[RoomIdRsp]) extends Command
+  case class GetGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
+  case class GetRoomId(playerId:String,replyTo:ActorRef[RoomIdRsp]) extends Command
 
   case class UserInfo(id:String, name:String, shareList:mutable.ListBuffer[String]) extends Command
 
@@ -343,8 +343,8 @@ object RoomActor {
           roomManager ! RemoveRoom(roomId)
           Behaviors.stopped
 
-        case getGamePlayerList(_ ,replyTo) =>
-          val playerList=userMap.map{i=>PlayerInfo(i._1.toString,i._2._1)}.toList
+        case GetGamePlayerList(_ ,replyTo) =>
+          val playerList=userMap.map{i=>PlayerInfo(i._1,i._2._1)}.toList
           if(playerList!=null){
             replyTo ! RoomPlayerInfoRsp(players(playerList),0,"ok")
           }
@@ -353,7 +353,7 @@ object RoomActor {
           }
           Behaviors.same
 
-        case getRoomId(playerId,replyTo) =>
+        case GetRoomId(playerId,replyTo) =>
           val IsqueryUser = if(userMap.keySet.contains(playerId)) true else false
           if(IsqueryUser){
             replyTo ! RoomIdRsp(roomInfo(roomId.toLong),0,"ok")

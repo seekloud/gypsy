@@ -63,12 +63,13 @@ case class DrawGame(
   this.canvas.height= size.y
   var screeScale = if( this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h) else (this.canvas.width / Window.w)
 
-  def updateCanvasSize(newWidth:Double,newHeight:Double)={
+  def updateCanvasSize(newWidth:Double, newHeight:Double)= {
     screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
 //    println(newWidth+ "   " + newHeight + "  "+ screeScale)
     this.canvas.width = newWidth.toInt
     this.canvas.height = newHeight.toInt
   }
+
 
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
@@ -81,7 +82,6 @@ case class DrawGame(
     val otherBody = "#696969"
   }
 
-  val littleMap = 200
   val mapMargin = 20
 
   //文本高度
@@ -261,10 +261,14 @@ case class DrawGame(
   //ctx2
   def drawRankMap():Unit = {
     //绘制当前排行
+    val littleMap = this.canvas.width * 0.18  // 200
+
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width-200,20,150,250)
+    ctx.fillRect(this.canvas.width - 200,20,150,250)
 
     //绘制小地图
+    println("littleMap:   " + littleMap)
+    println("canvas:   " + this.canvas.width)
     ctx.font = "12px Helvetica"
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
@@ -274,7 +278,6 @@ case class DrawGame(
       ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
       ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
       ctx.stroke()
-
       ctx.beginPath()
       ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
       ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
@@ -313,7 +316,7 @@ case class DrawGame(
         ctx.fillText(killerName, 25, 400)
         ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.strokeText(deadName, 25+ ctx.measureText(s"$killerName  ").width+32+50, 400)
         ctx.fillStyle = "#f27c02"
         ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
         ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
@@ -463,6 +466,8 @@ case class DrawGame(
 
   //ctx3
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+    val littleMap = this.canvas.width * 0.18  // 200
+
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.font = "12px Helvetica"
