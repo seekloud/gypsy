@@ -35,15 +35,6 @@ object GameHolder {
   var syncGridData: scala.Option[GridDataSync] = None
   var killList = List.empty[(Int,String,Player)]
 
-
-}
-class GameHolder(
-                  stageCtx: StageContext,
-                  gameScene: GameScene,
-                  serverActor: ActorRef[Protocol.WsSendMsg]
-                ) {
-  import GameHolder._
-
   private[this] val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
@@ -54,6 +45,14 @@ class GameHolder(
     KeyCode.DOWN,
     KeyCode.ESCAPE
   )
+
+}
+class GameHolder(
+                  stageCtx: StageContext,
+                  gameScene: GameScene,
+                  serverActor: ActorRef[Protocol.WsSendMsg]
+                ) {
+  import GameHolder._
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
