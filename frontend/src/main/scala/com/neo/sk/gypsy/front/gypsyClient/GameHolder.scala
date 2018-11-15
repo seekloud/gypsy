@@ -167,12 +167,24 @@ class GameHolder(replay:Boolean = false) {
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != "" && gameState == GameState.play) {
-//      drawClockView.cleanClock()
-      draw(offsetTime)
-    }else if(gameState == GameState.dead && deadInfo.isDefined){
-      drawTopView.drawWhenDead(deadInfo.get)
+    gameState match {
+      case GameState.play if myId!= ""=>
+        draw(offsetTime)
+      case GameState.dead if deadInfo.isDefined =>
+        drawTopView.drawWhenDead(deadInfo.get)
+      case GameState.allopatry =>
+        drawTopView.drawWhenAllopatry()
+        gameClose
+      case _ =>
     }
+//    if(myId != "" && gameState == GameState.play) {
+////      drawClockView.cleanClock()
+//      draw(offsetTime)
+//    }else if(gameState == GameState.dead && deadInfo.isDefined){
+//      drawTopView.drawWhenDead(deadInfo.get)
+//    }else if(gameState == GameState.allopatry){
+//
+//    }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -439,7 +451,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
-        gameClose
+        gameState = GameState.allopatry
 
 //      case Protocol.MatchRoomError()=>
 //        drawClockView.cleanClock()

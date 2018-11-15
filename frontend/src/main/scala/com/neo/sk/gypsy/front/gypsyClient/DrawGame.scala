@@ -541,6 +541,14 @@ case class DrawGame(
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
   }
 
+  def drawWhenAllopatry()={
+    ctx.fillStyle = "#000"
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.font = s"${30 * this.canvas.width / Window.w}px Helvetica"
+    ctx.fillStyle = "#fff"
+    ctx.fillText("存在异地登录", this.canvas.width * 0.5 - ctx.measureText(s"存在异地登录").width * 0.5, this.canvas.height* 0.5)
+  }
+
 
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
