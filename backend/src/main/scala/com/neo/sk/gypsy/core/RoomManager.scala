@@ -140,7 +140,7 @@ object RoomManager {
           case msg:GetGamePlayerList =>
             if(msg.roomId.toString.startsWith("1"))
             {
-              getRoomActor(ctx,msg.roomId,false) ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+              getRoomActor(ctx,msg.roomId,false) ! RoomActor.GetGamePlayerList(msg.roomId,msg.replyTo)
 //              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
             }
             Behaviors.same
@@ -149,7 +149,7 @@ object RoomManager {
             ctx.children.foreach{
               i =>
                 val roomActor=i.upcast[RoomActor.Command]
-                roomActor ! RoomActor.getRoomId(msg.playerId,msg.replyTo)
+                roomActor ! RoomActor.GetRoomId(msg.playerId,msg.replyTo)
             }
             Behaviors.same
 
