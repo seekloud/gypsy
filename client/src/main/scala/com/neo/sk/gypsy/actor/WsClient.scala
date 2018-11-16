@@ -127,18 +127,18 @@ object WsClient {
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         val msg =
-          bytesDecode[WsMsgSource](buffer) match {
+          bytesDecode[GameMessage](buffer) match {
             case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
               ErrorWsMsgFront(e.message)
           }
         msg
-    }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer(), FailMsgServer))
+    }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer, FailMsgServer))
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
-    val host = "localhost:30372"
+    val host = "localhost:30371"
     s"$wsProtocol://$host/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
 

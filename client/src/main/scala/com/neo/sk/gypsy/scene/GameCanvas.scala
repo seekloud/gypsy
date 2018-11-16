@@ -6,13 +6,10 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
-
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
-import org.scalajs.dom
-
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 
@@ -175,7 +172,7 @@ class GameCanvas(canvas: Canvas,
 
   //欢迎文字
   def drawGameWelcome(): Unit = {
-    ctx.setFill(Color.web("rgba(255,255,255,0)"))
+    ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setFont(Font.font("36px Helvetica"))
@@ -184,7 +181,7 @@ class GameCanvas(canvas: Canvas,
 
   //等待文字
   def drawGameWait(firstCome:Boolean): Unit = {
-    ctx.setFill(Color.web("rgba(255,255,255,0"))
+    ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, size.x , size.y )
     if(firstCome) {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
@@ -315,7 +312,7 @@ class GameCanvas(canvas: Canvas,
     val offx= size.x/2 - basePoint._1
     val offy =size.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2)
+    val scale = getZoomRate(zoom._1,zoom._2,1200,600)
     //var scale = data.scale
 
     //绘制背景
@@ -420,7 +417,7 @@ class GameCanvas(canvas: Canvas,
       }
     }
 
-    virus.foreach { case Virus(x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y
