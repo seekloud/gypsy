@@ -180,13 +180,8 @@ object EsheepSyncClient {
   implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(Some(EsheepProtocol.PlayerInfo("","")), errorRsp.errCode, errorRsp.msg)
 
   private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
-    errorRsp.errCode match {
-      case 1000 =>
-        ctx.self ! RefreshToken
-        ctx.self ! msg
-
-      case _ => unknownErrorHandler
-    }
+    ctx.self ! RefreshToken
+    ctx.self ! msg
 
   }
 }

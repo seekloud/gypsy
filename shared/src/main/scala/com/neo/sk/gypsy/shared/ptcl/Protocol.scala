@@ -96,7 +96,9 @@ object Protocol {
 
   case class Ping(timestamp: Long) extends UserAction
 
-  case class ReLive(id:String) extends UserAction
+//  case class ReLive(id:String) extends UserAction
+
+  case class ReLiveAck(id:String) extends UserAction
 
 
   /**

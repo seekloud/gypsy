@@ -74,9 +74,9 @@ object RecordDao {
       val action1 = for {
         r1 <- tUserRecordMap.filter(_.userId===playerId).sortBy(_.recordId.desc).take(count).result
         r2 <- tGameRecord.filter(i=>i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
+        //r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
       } yield {
-        (r2,r3)
+        (r2,r1)
       }
       db.run(action1.transactionally)
     }
@@ -84,9 +84,9 @@ object RecordDao {
       val action2 = for {
         r1 <- tUserRecordMap.filter(i=> i.recordId<lastRecordId && i.userId===playerId).sortBy(_.recordId.desc).take(count).result
         r2 <- tGameRecord.filter(i=>i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
+        //r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
       } yield {
-        (r2,r3)
+        (r2,r1)
       }
       db.run(action2.transactionally)
     }
