@@ -419,10 +419,6 @@ class GameHolder(replay:Boolean = false) {
           grid.removePlayer(id)
         }
 
-//        //匹配模式胜利用的(目前不用)
-//      case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
-//        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
-
       //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)

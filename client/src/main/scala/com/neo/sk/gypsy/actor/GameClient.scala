@@ -13,7 +13,6 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
-import com.neo.sk.gypsy.utils.Shortcut
 import com.neo.sk.gypsy.ClientBoot
 /**
   * @author zhaoyin
@@ -137,7 +136,10 @@ object GameClient {
           ClientBoot.addToPlatform{
             grid.playerMap += (id -> player)
             if(myId == id){
-              gameState = GameState.play
+              if(gameState == GameState.dead){
+                gameHolder.reLive(id)
+                gameState = GameState.play
+              }
               gameHolder.cleanCtx()
             }
           }
@@ -152,7 +154,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               deadInfo = Some(msg)
               gameState = GameState.dead
-              gameHolder.reLive(id)
+//              gameHolder.reLive(id)
               grid.removePlayer(id)
             }
           }
