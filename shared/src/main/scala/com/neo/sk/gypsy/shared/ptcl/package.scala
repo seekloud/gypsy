@@ -78,8 +78,8 @@ package object ptcl {
                  id:Long,
                  x:Int,
                  y:Int,
-                 mass:Double = 10,  //小球体重
-                 radius:Double = 4 + sqrt(10)*6,
+                 mass:Double = 50,  //小球体重
+                 radius:Double = 4 + sqrt(50)*6,
                  speed:Double = 12,
                  speedX:Float = 0,
                  speedY:Float = 0,
