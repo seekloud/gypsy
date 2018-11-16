@@ -64,7 +64,6 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.KeyCode =>
-          //grid.addActionWithFrameFromServer(m.id,m)
           if(myId!=m.id || usertype == -1){
             ClientBoot.addToPlatform{
               grid.addActionWithFrame(m.id,m)
@@ -73,7 +72,6 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.MousePosition =>
-          //grid.addActionWithFrameFromServer(m.id,m)
           if(myId!=m.id || usertype == -1){
             ClientBoot.addToPlatform{
               grid.addMouseActionWithFrame(m.id,m)
