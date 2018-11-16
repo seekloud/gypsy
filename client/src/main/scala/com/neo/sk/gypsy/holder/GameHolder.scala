@@ -81,9 +81,8 @@ class GameHolder(
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染
-        val data = grid.getGridData(myId,gameScene.window.x,gameScene.window.y)
         val offsetTime=System.currentTimeMillis()-logicFrameTime
-        gameScene.draw(myId,data,offsetTime)
+        gameScene.draw(myId,offsetTime)
       }
     }
     val timeline = new Timeline()
