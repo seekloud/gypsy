@@ -98,13 +98,7 @@ class GameHolder(
     timeline.play()
   }
 
-  //TODO 如何获取屏幕宽高
-  protected def checkScreeSize = {
-
-  }
-
   def gameLoop(): Unit = {
-    checkScreeSize
   //  NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次

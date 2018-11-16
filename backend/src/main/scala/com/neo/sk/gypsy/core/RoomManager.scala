@@ -19,8 +19,6 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, GameState}
 import io.circe.{Decoder, Encoder}
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._

@@ -18,6 +18,7 @@ import com.neo.sk.gypsy.scene.LoginScene
   */
 
 object ClientBoot{
+
   implicit val system = ActorSystem("gypsy",config)
   implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -33,6 +34,7 @@ object ClientBoot{
 class ClientBoot extends javafx.application.Application{
 
   import ClientBoot._
+
   override def start(mainStage: Stage): Unit = {
     val context = new StageContext(mainStage)
     val wsClient = system.spawn(WsClient.create(gameClient,context,system,materializer,executor),"WsClient")
