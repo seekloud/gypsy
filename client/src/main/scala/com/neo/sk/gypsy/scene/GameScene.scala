@@ -4,11 +4,12 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
-import javafx.scene.input.KeyCode
+import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
+
 
 /**
   * @author zhaoyin
@@ -17,6 +18,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 object GameScene {
   trait GameSceneListener {
     def onKeyPressed(e: KeyCode): Unit
+    def OnMouseMoved(e: MouseEvent):Unit
   }
 
 }
@@ -33,23 +35,28 @@ class GameScene {
   val middleCanvasCtx=middleCanvas.getGraphicsContext2D
   val topCanvas = new Canvas(canvasWidth,canvasHeight)
   val topCanvasCtx=topCanvas.getGraphicsContext2D
-  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
-  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
+//  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
+//  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
   val offCanvas = new Canvas(canvasWidth,canvasHeight)
   val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
+
+  gameCanvas.setStyle("z-index: 1")
+  middleCanvas.setStyle("z-index: 2")
+  topCanvas.setStyle("z-index: 3")
+
 
   val scene = new Scene(group)
   group.getChildren.add(gameCanvas)
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
-  group.getChildren.add(clockCanvas)
+//  group.getChildren.add(clockCanvas)
   group.getChildren.add(offCanvas)
 
   val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
-  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
+//  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
   val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
   def draw(myId:String,offsetTime:Long)={
@@ -98,4 +105,21 @@ class GameScene {
         gameView.drawGameWait(firstCome)
     }
   }
+
+  topCanvas.requestFocus()
+//  topCanvas.setOnKeyPressed(event => gameSceneListener.onKeyPressed(event.getCode))
+  topCanvas.setOnKeyPressed(event => {
+    println("hhhhhhhhhhh" + event)
+  })
+
+  //  topCanvas.setOnMouseMoved(event => gameSceneListener.OnMouseMoved(event))
+    topCanvas.setOnMouseMoved(event => {
+      println("laaaaaaaaaaaaaa  " + event)
+    })
+
+
+  def setGameSceneListener(listener: GameSceneListener) {
+    gameSceneListener = listener
+  }
+
 }
