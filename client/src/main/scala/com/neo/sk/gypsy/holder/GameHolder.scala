@@ -34,8 +34,10 @@ object GameHolder {
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
   var killList = List.empty[(Int,String,Player)]
+  var deadInfo :Option[Protocol.UserDeadMessage] = None
+  var gameState = GameState.play
 
-  private[this] val watchKeys = Set(
+  val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
     KeyCode.SPACE,
@@ -60,25 +62,35 @@ class GameHolder(
     ClientBoot.addToPlatform{
       stageCtx.showScene(gameScene.scene,"Gaming")
       gameClient ! ControllerInitial(gameHolder)
-      start()
+      //TODO 写在这里未必合适
+      ClientBoot.addToPlatform(
+        start()
+      )
     }
+  }
+
+  def init()= {
+    gameScene.gameView.drawGameWelcome()
+    gameScene.offView.drawBackground()
+    gameScene.gameView.drawGameOn()
+    gameScene.middleView.drawRankMap()
   }
 
   def start()={
     println("start---")
+    init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染
-        val data=grid.getGridData(myId,gameScene.window.x,gameScene.window.y)
+        val data = grid.getGridData(myId,gameScene.window.x,gameScene.window.y)
         val offsetTime=System.currentTimeMillis()-logicFrameTime
         gameScene.draw(myId,data,offsetTime)
       }
     }
     val timeline = new Timeline()
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(100),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
       //游戏循环
-      addActionListenEvent
       gameLoop()
     })
     timeline.getKeyFrames.add(keyFrame)
@@ -86,7 +98,13 @@ class GameHolder(
     timeline.play()
   }
 
+  //TODO 如何获取屏幕宽高
+  protected def checkScreeSize = {
+
+  }
+
   def gameLoop(): Unit = {
+    checkScreeSize
   //  NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次
@@ -94,7 +112,6 @@ class GameHolder(
       if (!justSynced) {
         update()
       } else {
-        //        println("back")
         if (syncGridData.nonEmpty) {
           //同步
           grid.setSyncGridData(syncGridData.get)
@@ -108,13 +125,14 @@ class GameHolder(
     grid.update()
   }
 
+
   def addActionListenEvent = {
     gameScene.topCanvas.requestFocus()
     //在画布上监听键盘事件
     gameScene.topCanvas.setOnKeyPressed{ e => {
         val key=e.getCode
         if (key == KeyCode.ESCAPE && !isDead) {
-         // gameClose
+          gameClose
         } else if (watchKeys.contains(e.getCode)) {
           if (e.getCode == KeyCode.SPACE) {
             println(s"down+${e.getCode.toString}")
@@ -144,5 +162,28 @@ class GameHolder(
     }
     }
   }
+
+  def cleanCtx() = {
+    gameScene.topView.cleanCtx()
+  }
+
+  def reLive(id: String) = {
+    serverActor ! ReLive(id)
+  }
+
+
+  def gameClose = {
+    //关闭webscoket
+    serverActor ! WsSendComplete
+    //停止前端渲染
+    stageCtx.closeStage()
+    //停止背景音乐
+  }
+  stageCtx.setStageListener(new StageContext.StageListener {
+    override def onCloseRequest(): Unit = {
+      serverActor ! WsSendComplete
+      stageCtx.closeStage()
+    }
+  })
 
 }

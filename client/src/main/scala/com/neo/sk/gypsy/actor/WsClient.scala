@@ -91,6 +91,9 @@ object WsClient {
         case Stop =>
           log.info("WsClient now stop")
           Behavior.stopped
+
+        case _ =>
+          Behaviors.same
       }
     }
   }
@@ -138,6 +141,5 @@ object WsClient {
     val host = "localhost:30372"
     s"$wsProtocol://$host/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
-
 
 }

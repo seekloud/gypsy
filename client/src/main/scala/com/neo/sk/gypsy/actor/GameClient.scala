@@ -14,8 +14,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.utils.Shortcut
-import org.scalajs.dom
-
+import com.neo.sk.gypsy.ClientBoot
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -60,51 +59,65 @@ object GameClient {
       msg match {
         case Protocol.Id(id) =>
           myId = id
-          Shortcut.playMusic("bg")
+//          Shortcut.playMusic("bg")
           println(s"myID:$myId")
           Behaviors.same
 
         case m:Protocol.KeyCode =>
           //grid.addActionWithFrameFromServer(m.id,m)
           if(myId!=m.id || usertype == -1){
-            grid.addActionWithFrame(m.id,m)
+            ClientBoot.addToPlatform{
+              grid.addActionWithFrame(m.id,m)
+            }
           }
           Behaviors.same
 
         case m:Protocol.MousePosition =>
           //grid.addActionWithFrameFromServer(m.id,m)
           if(myId!=m.id || usertype == -1){
-            grid.addMouseActionWithFrame(m.id,m)
+            ClientBoot.addToPlatform{
+              grid.addMouseActionWithFrame(m.id,m)
+            }
           }
           Behaviors.same
 
 
         case Protocol.Ranks(current, history) =>
-          grid.currentRank = current
-          grid.historyRank = history
+          ClientBoot.addToPlatform{
+            grid.currentRank = current
+            grid.historyRank = history
+          }
           Behaviors.same
 
 
         case Protocol.FeedApples(foods) =>
-          grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+          ClientBoot.addToPlatform{
+            grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+          }
           Behaviors.same
 
 
 
         case Protocol.AddVirus(virus) =>
-          println(s"接收新病毒 new Virus ${virus}")
-          grid.virusMap ++= virus
+          ClientBoot.addToPlatform{
+            println(s"接收新病毒 new Virus ${virus}")
+            grid.virusMap ++= virus
+          }
           Behaviors.same
 
 
         case Protocol.ReduceVirus(virus) =>
-          grid.virusMap = virus
+          ClientBoot.addToPlatform{
+            grid.virusMap = virus
+          }
           Behaviors.same
 
 
         case data: Protocol.GridDataSync =>
-          syncGridData = Some(data)
-          justSynced = true
+          ClientBoot.addToPlatform{
+            syncGridData = Some(data)
+            justSynced = true
+          }
           Behaviors.same
 
 
@@ -123,10 +136,12 @@ object GameClient {
 
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
-          grid.playerMap += (id -> player)
-          if(myId == id){
-            gameState = GameState.play
-            drawTopView.cleanCtx()
+          ClientBoot.addToPlatform{
+            grid.playerMap += (id -> player)
+            if(myId == id){
+              gameState = GameState.play
+              gameHolder.cleanCtx()
+            }
           }
           Behaviors.same
 
@@ -136,10 +151,12 @@ object GameClient {
         case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
           if(id==myId){
             //          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
-            deadInfo = Some(msg)
-            gameState = GameState.dead
-            webSocketClient.sendMsg(ReLive(id))
-            grid.removePlayer(id)
+            ClientBoot.addToPlatform{
+              deadInfo = Some(msg)
+              gameState = GameState.dead
+              gameHolder.reLive(id)
+              grid.removePlayer(id)
+            }
           }
           Behaviors.same
 
@@ -147,52 +164,60 @@ object GameClient {
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadPlayer)=>
-          grid.removePlayer(deadPlayer.id)
-          val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
-          grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
-          if(deadPlayer.id != myId){
-            if(!isDead){
-              isDead = true
-              killList :+=(200,killerId,deadPlayer)
+          ClientBoot.addToPlatform{
+            grid.removePlayer(deadPlayer.id)
+            val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+            grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+            if(deadPlayer.id != myId){
+              if(!isDead){
+                isDead = true
+                killList :+=(200,killerId,deadPlayer)
+              }else{
+                killList :+=(200,killerId,deadPlayer)
+              }
             }else{
-              killList :+=(200,killerId,deadPlayer)
+              //            Shortcut.playMusic("shutdownM")
             }
-          }else{
-            Shortcut.playMusic("shutdownM")
-          }
-          if(killerId == myId){
-            grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-              case 1 => Shortcut.playMusic("1Blood")
-              case 2 => Shortcut.playMusic("2Kill")
-              case 3 => Shortcut.playMusic("3Kill")
-              case 4 => Shortcut.playMusic("4Kill")
-              case 5 => Shortcut.playMusic("5Kill")
-              case 6 => Shortcut.playMusic("godlikeM")
-              case 7 => Shortcut.playMusic("legendaryM")
-              case _ => Shortcut.playMusic("unstop")
-            }
+            //          if(killerId == myId){
+            //            grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+            //              case 1 => Shortcut.playMusic("1Blood")
+            //              case 2 => Shortcut.playMusic("2Kill")
+            //              case 3 => Shortcut.playMusic("3Kill")
+            //              case 4 => Shortcut.playMusic("4Kill")
+            //              case 5 => Shortcut.playMusic("5Kill")
+            //              case 6 => Shortcut.playMusic("godlikeM")
+            //              case 7 => Shortcut.playMusic("legendaryM")
+            //              case _ => Shortcut.playMusic("unstop")
+            //            }
+            //          }
           }
           Behaviors.same
 
 
         case Protocol.UserMerge(id,player)=>
           if(grid.playerMap.get(id).nonEmpty){
-            grid.playerMap = grid.playerMap - id + (id->player)
+            ClientBoot.addToPlatform{
+              grid.playerMap = grid.playerMap - id + (id->player)
+            }
           }
           Behaviors.same
 
 
         case Protocol.RebuildWebSocket =>
           println("存在异地登录")
-          gameState = GameState.allopatry
+          ClientBoot.addToPlatform{
+            gameState = GameState.allopatry
+          }
           Behaviors.same
 
 
         //某个用户离开
         case Protocol.PlayerLeft(id,name) =>
-          grid.removePlayer(id)
-          if(id == myId){
-            gameClose
+          ClientBoot.addToPlatform{
+            grid.removePlayer(id)
+            if(id == myId){
+              gameHolder.gameClose
+            }
           }
           Behaviors.same
 

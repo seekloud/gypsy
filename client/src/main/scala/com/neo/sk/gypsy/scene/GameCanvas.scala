@@ -493,4 +493,8 @@ class GameCanvas(canvas: Canvas,
     ctx.translate(-x,-y)
   }
 
+  def cleanCtx()={
+    ctx.clearRect(0,0,size.x,size.y)
+  }
+
 }
