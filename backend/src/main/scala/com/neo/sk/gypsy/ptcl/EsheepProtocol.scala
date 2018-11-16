@@ -51,5 +51,8 @@ object EsheepProtocol {
                          startTime: Long,
                          endTime: Long
                        )
+  case class PlayerRecordInfo(
+                               playerRecord:RecordInfo
+                             )
 
 }
