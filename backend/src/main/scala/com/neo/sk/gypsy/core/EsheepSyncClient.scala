@@ -153,8 +153,11 @@ object EsheepSyncClient {
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
 
         case r:InputRecord =>
+
+          println(s"1111111111111 Recorder:$InputRecord")
           EsheepClient.inputRecoder(tokenInfo.token,r.playerId,r.nickname,r.killing,r.killed,r.score,"",r.startTime,r.endTime).onComplete{
             case Success(rst) =>
+              println(s"22222222222222222222222222$rst")
               rst match {
                 case Right(value) =>
                   log.info(s"${ctx.self.path} input record success")
