@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
 
-import scalatags.JsDom.short.{*, img, s}
+//import scalatags.JsDom.short.{*, img,s}
+import scalatags.JsDom.short._
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
@@ -56,6 +57,9 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+
+//  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
+
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
@@ -240,6 +244,9 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     println(s"Draw BackGround ================================ ")
+//    val pat = ctx.createPattern(background1,"repeat")
+//    ctx.fillStyle = pat
+//    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
     ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
