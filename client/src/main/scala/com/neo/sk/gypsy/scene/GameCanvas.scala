@@ -12,6 +12,7 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
+import javafx.scene.shape.ArcType
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -32,8 +33,8 @@ class GameCanvas(canvas: Canvas,
   val  unstoppable = new Image("file:client/src/main/resources/unstoppable.png")
   val  godlike = new Image("file:client/src/main/resources/godlike.png")
   val  legendary = new Image("file:client/src/main/resources/legendary.png")
-  val  background = new Image("file:client/src/main/resources/background.png")
-  val  background1 = new Image("file:client/src/main/resources/background1.png")
+  val  background = new Image("file:client/src/main/resources/background.jpg")
+  val  background1 = new Image("file:client/src/main/resources/b2.jpg")
   val  massImg = new Image("file:client/src/main/resources/mass.png")
   private val goldImg =new Image("file:client/src/main/resources/gold.png")
   private val silverImg = new Image("file:client/src/main/resources/silver.png")
@@ -302,7 +303,8 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  //offScreenCanvas:Canvas
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -324,23 +326,25 @@ class GameCanvas(canvas: Canvas,
 
     //TODO /2
 //    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
-    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
+//    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
+//    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
-      a._1 match{
-        case 0 => ctx.setFill(Color.web("#f3456d"))
-        case 1 => ctx.setFill(Color.web("#f49930"))
-        case 2  => ctx.setFill(Color.web("#f4d95b"))
-        case 3  => ctx.setFill(Color.web("#4cd964"))
-        case 4  => ctx.setFill(Color.web("#9fe0f6"))
-        case 5  => ctx.setFill(Color.web("#bead92"))
-        case 6  => ctx.setFill(Color.web("#cfe6ff"))
-        case _  => ctx.setFill(Color.web("#de9dd6"))
+      val foodColor = a._1 match{
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2 => "#f4d95b"
+        case 3 => "#4cd964"
+        case 4 => "#9fe0f6"
+        case 5 => "#bead92"
+        case 6 => "#cfe6ff"
+        case _ => "#de9dd6"
       }
+      ctx.setFill(Color.web(foodColor))
       a._2.foreach{ case Food(color, x, y)=>
         ctx.beginPath()
-        ctx.arc(x +offx,y +offy,10,10,0,2*Math.PI)
+        ctx.arc(x + offx,y + offy,10,10,0,360)
         ctx.fill()
       }
     }
@@ -368,7 +372,7 @@ class GameCanvas(canvas: Canvas,
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc( xfix+offx ,yfix+offy ,r,r,0,2*Math.PI)
+        ctx.arc( xfix+offx ,yfix+offy ,r,r,0,360)
         ctx.fill()
       }
     }
@@ -398,7 +402,7 @@ class GameCanvas(canvas: Canvas,
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,cell.radius+15,0,2*Math.PI)
+          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,cell.radius+15,0,360)
           ctx.fill()
         }
 
@@ -476,8 +480,9 @@ class GameCanvas(canvas: Canvas,
     players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
-        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,8,0,2*Math.PI)
+        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap, mapMargin + basePoint._2/bounds.y * littleMap,8,8,0,360)
         ctx.fill()
+      //        ctx.fillArc(mapMargin + (basePoint._1/bounds.x) * littleMap, mapMargin + basePoint._2/bounds.y * littleMap,10,10,0,360,ArcType.CHORD)
       case None=>
       // println(s"${basePoint._1},  ${basePoint._2}")
     }
