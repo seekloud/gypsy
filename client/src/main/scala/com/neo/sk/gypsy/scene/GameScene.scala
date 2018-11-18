@@ -37,10 +37,11 @@ class GameScene {
   val topCanvasCtx=topCanvas.getGraphicsContext2D
 //  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
 //  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
-  val offCanvas = new Canvas(canvasWidth,canvasHeight)
-  val offCanvasCtx= offCanvas.getGraphicsContext2D
+//  val offCanvas = new Canvas(canvasWidth,canvasHeight)
+//  val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
+//  offCanvas.setStyle("z-index: 1")
   gameCanvas.setStyle("z-index: 1")
   middleCanvas.setStyle("z-index: 2")
   topCanvas.setStyle("z-index: 3")
@@ -51,13 +52,13 @@ class GameScene {
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
 //  group.getChildren.add(clockCanvas)
-  group.getChildren.add(offCanvas)
+//  group.getChildren.add(offCanvas)
 
   val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 //  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
-  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
+//  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
@@ -89,13 +90,14 @@ class GameScene {
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
         val foods=grid.food
-        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,offCanvas,basePoint,zoom)
+        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font("34px Helvetica"))
         gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
         gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
         gameCanvasCtx.restore()
+        //TODO 绘制fps值
  //       renderFps(topCanvas,NetDelay.latency)
         //todo 解决返回值问题
         val paraBack = gameView.drawKill(myId,grid,isDead,killList)
@@ -107,15 +109,8 @@ class GameScene {
   }
 
   topCanvas.requestFocus()
-//  topCanvas.setOnKeyPressed(event => gameSceneListener.onKeyPressed(event.getCode))
-  topCanvas.setOnKeyPressed(event => {
-    println("hhhhhhhhhhh" + event)
-  })
-
-  //  topCanvas.setOnMouseMoved(event => gameSceneListener.OnMouseMoved(event))
-    topCanvas.setOnMouseMoved(event => {
-      println("laaaaaaaaaaaaaa  " + event)
-    })
+  topCanvas.setOnKeyPressed(event => gameSceneListener.onKeyPressed(event.getCode))
+  topCanvas.setOnMouseMoved(event => gameSceneListener.OnMouseMoved(event))
 
 
   def setGameSceneListener(listener: GameSceneListener) {

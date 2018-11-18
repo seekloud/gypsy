@@ -49,6 +49,8 @@ object GameHolder {
 
   def keyCode2Int(c: KeyCode) = {
     c match {
+      case KeyCode.E => KeyEvent.VK_E
+      case KeyCode.F => KeyEvent.VK_F
       case KeyCode.SPACE => KeyEvent.VK_SPACE
       case KeyCode.LEFT => KeyEvent.VK_LEFT
       case KeyCode.UP => KeyEvent.VK_UP
@@ -82,7 +84,7 @@ class GameHolder(
 
   def init()= {
     gameScene.gameView.drawGameWelcome()
-    gameScene.offView.drawBackground()
+//    gameScene.offView.drawBackground()
     gameScene.gameView.drawGameOn()
     gameScene.middleView.drawRankMap()
   }
@@ -149,16 +151,15 @@ class GameHolder(
     }
 
     override def OnMouseMoved(e: MouseEvent): Unit = {
-      println("llllll    "+ e)
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-        atan2(y - 48 -gameScene.window.y/2,x - gameScene.window.x/2 )
+        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
       }
       var FormerDegree = 0D
-      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - 48 - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         serverActor ! mp
       }
