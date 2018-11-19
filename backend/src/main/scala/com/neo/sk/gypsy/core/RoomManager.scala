@@ -39,7 +39,6 @@ object RoomManager {
   trait Command
   case object TimeKey
   case object TimeOut extends Command
-  val roomIdGenerator = new AtomicInteger(20000)
   case class JoinGame(roomId:Option[Long],sender:String,id:String,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class LeftRoom(uid:String,name:String) extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
@@ -70,13 +69,7 @@ object RoomManager {
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
-          //          case msg:JoinGame=>
-          //            if(msg.roomId.toString.startsWith("1")){
-          //              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
-          //            }else{
-          //              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,false),msg.sender,msg.id,msg.watchGame)
-          //            }
-          //            Behaviors.same
+
 
           case JoinRoom(uid,gameStateOpt,name,startTime,userActor,roomIdOpt,watchGame,watchId) =>
             roomIdOpt match{

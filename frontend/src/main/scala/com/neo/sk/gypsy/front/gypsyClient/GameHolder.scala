@@ -383,9 +383,16 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
-        grid.playerMap += (id -> player)
+        //防止复活后又发了一条JOin消息
+        if(!grid.playerMap.contains(id)){
+          grid.playerMap += (id -> player)
+        }
         if(myId == id){
-          gameState = GameState.play
+          if(gameState == GameState.dead){
+            println(s"发送复活确认")
+            webSocketClient.sendMsg(ReLiveAck(id))
+            gameState = GameState.play
+          }
           drawTopView.cleanCtx()
         }
 
@@ -397,7 +404,7 @@ class GameHolder(replay:Boolean = false) {
 //          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
           deadInfo = Some(msg)
           gameState = GameState.dead
-          webSocketClient.sendMsg(ReLive(id))
+//          webSocketClient.sendMsg(ReLive(id))
           grid.removePlayer(id)
         }
 

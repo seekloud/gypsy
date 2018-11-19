@@ -1,8 +1,11 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
+import java.util.concurrent.TimeUnit
+
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
 
-import scalatags.JsDom.short.{*, img, s}
+//import scalatags.JsDom.short.{*, img,s}
+import scalatags.JsDom.short._
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
@@ -54,6 +57,9 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+
+//  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
+
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
@@ -237,12 +243,17 @@ case class DrawGame(
 
   //背景绘制ctx3
   def drawBackground():Unit = {
+    println(s"Draw BackGround ================================ ")
+//    val pat = ctx.createPattern(background1,"repeat")
+//    ctx.fillStyle = pat
+//    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
     println("drawBackground22222222")
     ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
-    ctx.strokeStyle = MyColors.stripe
+//    ctx.strokeStyle = MyColors.stripe
+    ctx.strokeStyle = Color.White.toString()
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
@@ -538,7 +549,7 @@ case class DrawGame(
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
     ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
-    ctx.fillText(s"${MTime2HMS(msg.lifeTime)}", DrawLeft,DrawHeight+Height*0.07*3)
+    ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
   }
 
@@ -552,18 +563,18 @@ case class DrawGame(
 
   def MTime2HMS(time:Long)={
     var ts = (time/1000)
-    println(s"一共有 $ts 秒！")
+//    println(s"一共有 $ts 秒！")
     var result = ""
     if(ts/3600>0){
       result += s"${ts/3600}小时"
     }
     ts = ts % 3600
-    println(s"第一次 $ts 秒！")
+//    println(s"第一次 $ts 秒！")
     if(ts/60>0){
       result += s"${ts/60}分"
     }
     ts = ts % 60
-    println(s"第二次 $ts 秒！")
+//    println(s"第二次 $ts 秒！")
     result += s"${ts}秒"
     result
   }
