@@ -71,7 +71,6 @@ object EsheepClient extends HttpUtil {
       case Right(jsonStr) =>
         decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
           case Right(rsp) =>
-            println(s"55555555555555555555555555555555555token=$token $rsp")
             if(rsp.errCode == 0 && rsp.data.nonEmpty){
               Right(rsp.data.get)
             }else{
@@ -92,10 +91,11 @@ object EsheepClient extends HttpUtil {
     val methodName = s"addPlayerRecord"
     val url = s"${baseUrl}/esheep/api/gameServer/addPlayerRecord?token=${token}"
 
-    val data = EsheepProtocol.RecordInfo(playerId,gameId,nickname,killing,killed,score,gameExtent,startTime,endTime).asJson.noSpaces
+    val data = EsheepProtocol.RecordInfo(playerId,gameId,nickname,killing,killed,score,gameExtent,startTime,endTime)
+    val jsondata = EsheepProtocol.PlayerRecordInfo(data).asJson.noSpaces
 
 
-    postJsonRequestSend(methodName,url,Nil,data).map{
+    postJsonRequestSend(methodName,url,Nil,jsondata).map{
       case Right(jsonStr) =>
         decode[SuccessRsp](jsonStr) match {
           case Right(rsp) =>
