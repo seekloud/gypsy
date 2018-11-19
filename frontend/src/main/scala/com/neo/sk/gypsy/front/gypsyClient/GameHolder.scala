@@ -95,7 +95,6 @@ class GameHolder(replay:Boolean = false) {
   )
 
   def init(): Unit = {
-    println("drawBackground11111111111")
     drawGameView.drawGameWelcome()
     drawOffScreen.drawBackground()
     drawGameView.drawGameOn()
@@ -178,14 +177,6 @@ class GameHolder(replay:Boolean = false) {
         gameClose
       case _ =>
     }
-//    if(myId != "" && gameState == GameState.play) {
-////      drawClockView.cleanClock()
-//      draw(offsetTime)
-//    }else if(gameState == GameState.dead && deadInfo.isDefined){
-//      drawTopView.drawWhenDead(deadInfo.get)
-//    }else if(gameState == GameState.allopatry){
-//
-//    }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -395,6 +386,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
+        //防止复活后又发了一条JOin消息
         if(!grid.playerMap.contains(id)){
           grid.playerMap += (id -> player)
         }
