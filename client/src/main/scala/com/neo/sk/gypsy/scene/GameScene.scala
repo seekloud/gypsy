@@ -37,8 +37,8 @@ class GameScene {
   val topCanvasCtx=topCanvas.getGraphicsContext2D
 //  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
 //  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
-//  val offCanvas = new Canvas(canvasWidth,canvasHeight)
-//  val offCanvasCtx= offCanvas.getGraphicsContext2D
+  val offCanvas = new Canvas(canvasWidth,canvasHeight)
+  val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
 //  offCanvas.setStyle("z-index: 1")
@@ -52,13 +52,13 @@ class GameScene {
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
 //  group.getChildren.add(clockCanvas)
-//  group.getChildren.add(offCanvas)
+  group.getChildren.add(offCanvas)
 
   val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 //  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
-//  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
+  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
@@ -90,7 +90,7 @@ class GameScene {
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
         val foods=grid.food
-        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom)
+        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom,offCanvas)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font("34px Helvetica"))
