@@ -73,7 +73,6 @@ object EsheepClient extends HttpUtil {
       case Right(jsonStr) =>
         decode[EsheepProtocol.VerifyAccessCodeRsp](jsonStr) match {
           case Right(rsp) =>
-            println(s"55555555555555555555555555555555555token=$token $rsp")
             if(rsp.errCode == 0 && rsp.data.nonEmpty){
               Right(rsp.data.get)
             }else{
