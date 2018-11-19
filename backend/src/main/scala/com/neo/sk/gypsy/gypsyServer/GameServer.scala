@@ -63,12 +63,13 @@ class GameServer(override val boundary: Point) extends Grid {
 
   var ReLiveMap = Map.empty[String,Long]   //(id -> 时间)
 
+
   def setRoomId(id:Long)={
     roomId = id
   }
-
-
   var VirusId = new AtomicLong(1000L)
+
+  init()  //初始化苹果以及病毒数据
 
   implicit val sendBuffer = new MiddleBufferInJvm(81920)
 
@@ -156,6 +157,13 @@ class GameServer(override val boundary: Point) extends Grid {
       AddGameEvent(event)
     }
   }
+
+  //初始化，记录数据时候由于增加苹果和病毒是加在updateSpot里面所以初始化的快照没有任何数据
+  def init()={
+    addVirus(virusNum)
+    feedApple(foodPool)
+  }
+
 
   override def checkPlayer2PlayerCrash(): Unit = {
 //    var Result = List.empty[(String,String)] //killerId,VictimId

@@ -382,6 +382,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
+        //防止复活后又发了一条JOin消息
         if(!grid.playerMap.contains(id)){
           grid.playerMap += (id -> player)
         }
