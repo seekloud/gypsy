@@ -304,7 +304,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //offScreenCanvas:Canvas
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),offScreenCanvas:Canvas)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -325,7 +325,7 @@ class GameCanvas(canvas: Canvas,
     centerScale(scale,size.x/2,size.y/2)
 
     //TODO /2
-//    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
+    ctx.drawImage(offScreenCanvas.asInstanceOf[Image], offx, offy, bounds.x, bounds.y)
 //    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
 //    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
