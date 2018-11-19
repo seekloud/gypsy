@@ -41,10 +41,10 @@ class GameScene {
   val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
-//  offCanvas.setStyle("z-index: 1")
-  gameCanvas.setStyle("z-index: 1")
-  middleCanvas.setStyle("z-index: 2")
-  topCanvas.setStyle("z-index: 3")
+  offCanvas.setStyle("z-index: 1")
+  gameCanvas.setStyle("z-index: 2")
+  middleCanvas.setStyle("z-index: 3")
+  topCanvas.setStyle("z-index: 4")
 
 
   val scene = new Scene(group)
