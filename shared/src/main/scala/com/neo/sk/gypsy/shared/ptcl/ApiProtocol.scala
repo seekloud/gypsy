@@ -129,4 +129,15 @@ object ApiProtocol {
                               frameNum:Long
                             )
 
+  case class LoginData(
+                      wsUrl:String,
+                      scanUrl:String
+                    )
+  case class LoginResponse(
+                            data:LoginData,
+                            errCode:Int = 0,
+                            msg:String = "ok"
+                          )
+
+
 }
