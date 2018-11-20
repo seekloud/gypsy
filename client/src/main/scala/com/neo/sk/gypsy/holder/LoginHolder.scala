@@ -9,6 +9,7 @@ import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
 import com.neo.sk.gypsy.actor.WsClient.ConnectEsheep
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -25,9 +26,8 @@ class LoginHolder(
     override def onButtonConnect(): Unit = {
       getLoginResponseFromEs().map {
         case Right(r) =>
-          println("lalalla:     "+r.data.scanUrl)
           val wsUrl = r.data.wsUrl
-          val scanUrl = r.data.scanUrl
+          val scanUrl = r.data.scanUrl.replaceFirst("data:image/png;base64,","")
           loginScene.drawScanUrl(imageFromBase64(scanUrl))
           wsClient ! ConnectEsheep(wsUrl)
         case Left(l) =>
@@ -40,6 +40,13 @@ class LoginHolder(
       stageCtx.showScene(loginScene.scene,"Login",false)
     }
   }
+
+  stageCtx.setStageListener(new StageContext.StageListener {
+    override def onCloseRequest(): Unit = {
+      stageCtx.closeStage()
+    }
+  })
+
 
   def imageFromBase64(base64Str:String)={
     if(base64Str == null) null

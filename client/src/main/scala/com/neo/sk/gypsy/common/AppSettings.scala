@@ -18,8 +18,8 @@ object AppSettings {
   val esheepProtocol = appConfig.getString("esheep.protocol")
   val esheepHost = appConfig.getString("esheep.host")
   val esheepDomain = appConfig.getString("esheep.domain")
-
   val gameId = appConfig.getLong("esheep.gameId")
+
   val gameProtocol = appConfig.getString("server.protocol")
   val gameHost = appConfig.getString("server.host")
   val gameDomain = appConfig.getString("server.domain")
