@@ -212,7 +212,7 @@ class GameCanvas(canvas: Canvas,
   //背景绘制ctx3
   def drawBackground():Image = {
     //绘制背景
-    ctx.drawImage(background1,0,0,size.x,size.y)
+    ctx.drawImage(background1,0,0,size.x/4,size.y/4)
     ctx.save()
     //绘制条纹
     ctx.setStroke(Color.web(MyColors.stripe))
