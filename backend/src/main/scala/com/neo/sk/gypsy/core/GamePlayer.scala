@@ -73,6 +73,7 @@ object GamePlayer {
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
       log.info(s"${ctx.self.path} is starting..")
+      log.info(s"Player &&&&&&&&&&&&&&&&& ")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
@@ -80,6 +81,7 @@ object GamePlayer {
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
             val replay=initFileReader(r.filePath)
+            log.info(s"Player ================ ")
             val info=replay.init()
             try{
               ctx.self ! SwitchBehavior("work",
@@ -145,7 +147,7 @@ object GamePlayer {
           }
         case GameLoop=>
           if(fileReader.hasMoreFrame){
-            println(s"nowPosition ${fileReader.getFramePosition} ====== ${fileReader.getEndOfFramePosition} ")
+            println(s"nowPosition ${fileReader.getFramePosition} ======  ")
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
                 dispatchByteTo(u,f)
