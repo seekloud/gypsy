@@ -26,6 +26,7 @@ class LoginHolder(
           wsUrl = r.data.wsUrl
           scanUrl = r.data.scanUrl
           //TODO
+//          loginScene.
         case Left(l) =>
       }
 
