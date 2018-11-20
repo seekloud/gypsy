@@ -355,6 +355,7 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
+    println(foods)
     masses.groupBy(_.color).foreach{ a=>
       a._1 match{
         case 0 => ctx.setFill(Color.web("#f3456d"))
