@@ -1,10 +1,16 @@
 package com.neo.sk.gypsy.scene
 
+import java.io.ByteArrayInputStream
+
+import com.neo.sk.gypsy.ClientBoot
 import javafx.scene.control.Button
 import javafx.scene.canvas.Canvas
 import javafx.scene.paint.{Color, Paint}
 import javafx.scene.{Group, Scene}
-
+import javafx.scene.image.Image
+import javafx.scene.text.Font
+import javafx.scene.text.FontWeight
+import javafx.scene.text.FontPosture
 /**
   * @author zhaoyin
   * @date 2018/10/29  5:21 PM
@@ -39,4 +45,14 @@ class LoginScene {
   def setLoginSceneListener(listener: LoginSceneListener): Unit ={
     loginSceneListener = listener
   }
+
+  def drawScanUrl(imageStream:ByteArrayInputStream)={
+    ClientBoot.addToPlatform{
+      group.getChildren.remove(button)
+      val image = new Image(imageStream)
+      ctx.drawImage(image,100,100)
+      ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
+    }
+  }
+
 }
