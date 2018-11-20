@@ -44,7 +44,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 5.minute
+  private final val saveTime = 2.minute
 
   final case class SwitchBehavior(
                                   name: String,
@@ -238,7 +238,25 @@ object GameRecorder {
                 essf
               }
           }
+          log.info(s"&&&&&&& mapInfo : ${mapInfo} ")
+
           recorder.putMutableInfo(AppSettings.essfMapKeyName,userMapEncode(mapInfo))
+
+          //记录剩余的gameRecordBuffe 数据
+          val rs = gameRecordBuffer.reverse
+          rs.headOption.foreach{ e =>
+            recorder.writeFrame(e.event._1.fillMiddleBuffer(middleBuffer).result(),e.event._2.map(_.fillMiddleBuffer(middleBuffer).result()))
+            rs.tail.foreach{e =>
+              if(e.event._1.nonEmpty){
+                recorder.writeFrame(e.event._1.fillMiddleBuffer(middleBuffer).result())
+              }else{
+                recorder.writeEmptyFrame()
+              }
+            }
+          }
+
+          gameRecordBuffer = List[GameRecord]()  //其实可以注释了
+
           recorder.finish()
           log.info(s"${ctx.self.path} has save game data to file=${fileName}_$fileIndex")
           val endTime = System.currentTimeMillis()
