@@ -151,6 +151,27 @@ object ApiProtocol {
                        errCode:Int = 0,
                        msg:String = "ok"
                        )
+  case class Ws4AgentResponse(
+                               Ws4AgentRsp:WsResponce
+                             )
+  case class LinkGameData(
+                           gameId:Long,
+                           playerId:String
+                         )
+  case class GameServerInfo(
+                             ip:String,
+                             port:Int,
+                             domain:String
+                           )
+  case class LinkResElement(
+                             accessCode:String,
+                             gsPrimaryInfo:GameServerInfo
+                           )
+  case class LinkGameRes(
+                          data:LinkResElement,
+                          errCode:Int = 0,
+                          msg:String = "ok"
+                        )
 
 
 

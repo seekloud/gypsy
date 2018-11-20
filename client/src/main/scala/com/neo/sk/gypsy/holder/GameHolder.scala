@@ -73,7 +73,7 @@ class GameHolder(
 
   def connectToGameServer(gameHolder:GameHolder) = {
     ClientBoot.addToPlatform{
-      stageCtx.showScene(gameScene.scene,"Gaming")
+      stageCtx.showScene(gameScene.scene,"Gaming",false)
       gameClient ! ControllerInitial(gameHolder)
       //TODO 写在这里未必合适
       ClientBoot.addToPlatform(

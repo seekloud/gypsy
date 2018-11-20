@@ -8,7 +8,7 @@ import com.neo.sk.gypsy.actor.WsClient
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
-
+import com.neo.sk.gypsy.actor.WsClient.ConnectEsheep
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -20,30 +20,24 @@ class LoginHolder(
                    loginScene: LoginScene,
                    stageCtx: StageContext
                  ) {
-  var wsUrl = ""
-  var scanUrl = ""
+
   loginScene.setLoginSceneListener(new LoginScene.LoginSceneListener {
     override def onButtonConnect(): Unit = {
       getLoginResponseFromEs().map {
         case Right(r) =>
-          wsUrl = r.data.wsUrl
-          scanUrl = r.data.scanUrl
-          //TODO
+          println("lalalla:     "+r.data.scanUrl)
+          val wsUrl = r.data.wsUrl
+          val scanUrl = r.data.scanUrl
           loginScene.drawScanUrl(imageFromBase64(scanUrl))
           wsClient ! ConnectEsheep(wsUrl)
         case Left(l) =>
       }
-
-      val id = System.currentTimeMillis().toString
-      val name = "name" + System.currentTimeMillis().toString
-      val accessCode = "jgfkldpwer"
-      wsClient ! WsClient.ConnectGame(id,name,accessCode)
     }
   })
 
   def showScene(): Unit ={
     ClientBoot.addToPlatform{
-      stageCtx.showScene(loginScene.scene,"Login")
+      stageCtx.showScene(loginScene.scene,"Login",false)
     }
   }
 
@@ -53,8 +47,8 @@ class LoginHolder(
     import sun.misc.BASE64Decoder
     val decoder = new BASE64Decoder
     val bytes:Array[Byte] = decoder.decodeBuffer(base64Str)
-    for(i <- 0 until bytes.length){
-      if(bytes(i) < 0) bytes(i) = (bytes(i).+(256)).toByte
+    bytes.indices.foreach{ i =>
+      if(bytes(i) < 0) bytes(i) = (bytes(i) + 256).toByte
     }
     val b = new ByteArrayInputStream(bytes)
     b
