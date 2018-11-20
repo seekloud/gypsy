@@ -138,6 +138,20 @@ object ApiProtocol {
                             errCode:Int = 0,
                             msg:String = "ok"
                           )
+  case class WsData(
+                     userId:Long,
+                     nickname:String,
+                     token:String,
+                     tokenExpireTime:Long,
+                     headImg:Option[String],
+                     gender:Option[Int]
+                   )
+  case class WsResponce(
+                       data:WsData,
+                       errCode:Int = 0,
+                       msg:String = "ok"
+                       )
+
 
 
 }

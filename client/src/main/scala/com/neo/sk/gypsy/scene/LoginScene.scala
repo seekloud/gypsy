@@ -52,6 +52,7 @@ class LoginScene {
       val image = new Image(imageStream)
       ctx.drawImage(image,100,100)
       ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
+      ctx.fillText("请扫码登录",160,70)
     }
   }
 

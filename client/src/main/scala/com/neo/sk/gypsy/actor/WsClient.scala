@@ -19,7 +19,7 @@ import org.seekloud.byteobject.ByteObject._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import io.circe.parser.decode
 import io.circe.generic.auto._
@@ -36,6 +36,7 @@ object WsClient {
 
   sealed trait WsCommand
   case class ConnectGame(id:String, name: String, accessCode: String) extends WsCommand
+  case class ConnectEsheep(ws:String) extends WsCommand
   case object Stop extends WsCommand
 
   def create(gameClient: ActorRef[WsMsgSource],
@@ -88,6 +89,11 @@ object WsClient {
           connected.onComplete(i=> log.info(i.toString))
           Behaviors.same
 
+        case ConnectEsheep(wsUrl) =>
+          val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(wsUrl))
+          val source = getSource(ctx.self)
+          val sink = getSinkDup(ctx.self)
+          Behaviors.same
         case Stop =>
           log.info("WsClient now stop")
           Behavior.stopped
@@ -117,7 +123,7 @@ object WsClient {
       ))
   }
 
-  //收到后台发给前端的消息
+  //收到gypsy后台发给前端的消息
   def getSink(actor: ActorRef[WsMsgSource]) =
     Flow[Message].collect{
       case TextMessage.Strict(msg) =>
@@ -135,6 +141,22 @@ object WsClient {
           }
         msg
     }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer, FailMsgServer))
+
+  //收到esheep后台发给前端的消息
+  def getSinkDup(self: ActorRef[WsCommand])={
+    Sink.foreach{
+      case TextMessage.Strict(msg) =>
+
+
+      case BinaryMessage.Strict(bMsg) =>
+        val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
+        bytesDecode[WsResponce](buffer) match {
+          case Right(v) =>
+          case Left(e) =>
+            println(s"decode error: ${e.message}")
+        }
+    }
+  }
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"

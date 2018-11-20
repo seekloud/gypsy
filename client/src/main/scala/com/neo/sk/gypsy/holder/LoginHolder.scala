@@ -1,11 +1,14 @@
 package com.neo.sk.gypsy.holder
 
+import java.io.ByteArrayInputStream
+
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.actor.WsClient
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -26,7 +29,8 @@ class LoginHolder(
           wsUrl = r.data.wsUrl
           scanUrl = r.data.scanUrl
           //TODO
-//          loginScene.
+          loginScene.drawScanUrl(imageFromBase64(scanUrl))
+          wsClient ! ConnectEsheep(wsUrl)
         case Left(l) =>
       }
 
@@ -41,6 +45,19 @@ class LoginHolder(
     ClientBoot.addToPlatform{
       stageCtx.showScene(loginScene.scene,"Login")
     }
+  }
+
+  def imageFromBase64(base64Str:String)={
+    if(base64Str == null) null
+
+    import sun.misc.BASE64Decoder
+    val decoder = new BASE64Decoder
+    val bytes:Array[Byte] = decoder.decodeBuffer(base64Str)
+    for(i <- 0 until bytes.length){
+      if(bytes(i) < 0) bytes(i) = (bytes(i).+(256)).toByte
+    }
+    val b = new ByteArrayInputStream(bytes)
+    b
   }
 
 }
