@@ -43,7 +43,7 @@ class GameScene {
   val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
-  offCanvas.setStyle("z-index: 1")
+//  offCanvas.setStyle("z-index: 1")
   gameCanvas.setStyle("z-index: 2")
   middleCanvas.setStyle("z-index: 3")
   topCanvas.setStyle("z-index: 4")
@@ -54,7 +54,7 @@ class GameScene {
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
 //  group.getChildren.add(clockCanvas)
-  group.getChildren.add(offCanvas)
+//  group.getChildren.add(offCanvas)
 
   val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)

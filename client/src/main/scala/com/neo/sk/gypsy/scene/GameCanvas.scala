@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 import javafx.scene.shape.ArcType
 
-import scalafx.scene.SnapshotParameters
+import javafx.scene.SnapshotParameters
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -229,7 +229,6 @@ class GameCanvas(canvas: Canvas,
       ctx.stroke()
     }
     val params = new SnapshotParameters
-    params.setFill(Color.TRANSPARENT)
     canvas.snapshot(params, null)
   }
 
@@ -355,7 +354,6 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
-    println(foods)
     masses.groupBy(_.color).foreach{ a=>
       a._1 match{
         case 0 => ctx.setFill(Color.web("#f3456d"))
