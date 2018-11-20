@@ -63,8 +63,8 @@ class GameCanvas(canvas: Canvas,
   //文本高度
   val textLineHeight = 14
 
-  private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
-  private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
+  private[this] val stripeX = scala.collection.immutable.Range(0, (bounds.y + 50)/4,50/4)
+  private[this] val stripeY = scala.collection.immutable.Range(0, (bounds.x + 100)/4,100/4)
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -219,13 +219,13 @@ class GameCanvas(canvas: Canvas,
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x ,l )
+      ctx.lineTo(size.x/4 ,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y)
+      ctx.lineTo(l ,size.y/4)
       ctx.stroke()
     }
     val params = new SnapshotParameters

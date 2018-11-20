@@ -29,10 +29,10 @@ class GameScene {
   var gameSceneListener: GameSceneListener = _
   val canvasWidth=1200
   val canvasHeight=600
-  val boundaryWidth=4800
-  val boundaryHeight=2400
+//  val boundaryWidth=4800
+//  val boundaryHeight=2400
   val window=Point(canvasWidth,canvasHeight)
-  val bounds=Point(boundaryWidth,boundaryHeight)
+//  val bounds=Point(boundaryWidth,boundaryHeight)
   val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
@@ -63,7 +63,7 @@ class GameScene {
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 //  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
-  val offView=new GameCanvas(offCanvas,offCanvasCtx,bounds)
+  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
   def draw(myId:String,offsetTime:Long,offCanvasImgae:Image)={
     var zoom = (30.0, 30.0)
