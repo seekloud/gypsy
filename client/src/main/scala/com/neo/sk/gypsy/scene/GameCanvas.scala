@@ -212,20 +212,20 @@ class GameCanvas(canvas: Canvas,
   //背景绘制ctx3
   def drawBackground():Image = {
     //绘制背景
-    ctx.drawImage(background1,0,0,size.x/4,size.y/4)
+    ctx.drawImage(background1,0,0,size.x,size.y)
     ctx.save()
     //绘制条纹
     ctx.setStroke(Color.web(MyColors.stripe))
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x/4 ,l )
+      ctx.lineTo(size.x ,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y/4)
+      ctx.lineTo(l ,size.y)
       ctx.stroke()
     }
     val params = new SnapshotParameters
