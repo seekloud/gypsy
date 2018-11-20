@@ -106,7 +106,6 @@ case class WebSocketClient(
 //          println(s"事件数据解析成功！！！$r")
           DecodeEvents(Protocol.EventData(r))
         case Left(e) =>
-          println(s"事件数据解析不成功 ")
           replayStateDecode(a)
       }
     }else{

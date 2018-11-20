@@ -123,8 +123,8 @@ object GamePlayer {
           timer.cancel(GameLoopKey)
 //          fileReader.mutableInfoIterable
           log.info(s"UserMap-------$msg | $userMap---------")
-          log.info(s"metaData------- | $metaData********")
-          log.info(s"initState------- | $initState========")
+//          log.info(s"metaData------- | $metaData********")
+//          log.info(s"initState------- | $initState========")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
             case Some(u)=>
               log.info(s"total FrameCount :${frameCount}")
@@ -145,6 +145,7 @@ object GamePlayer {
           }
         case GameLoop=>
           if(fileReader.hasMoreFrame){
+            println(s"nowPosition ${fileReader.getFramePosition} ====== ${fileReader.getEndOfFramePosition} ")
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
                 dispatchByteTo(u,f)
