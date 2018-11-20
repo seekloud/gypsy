@@ -175,10 +175,10 @@ object WsClient {
                 val nickName = res.Ws4AgentRsp.data.nickname
                 linkGameAgent(gameId,playerId,res.Ws4AgentRsp.data.token).map{
                   case Right(resl) =>
-//                    log.debug("accessCode: " + resl.accessCode)
+                    log.debug("accessCode: " + resl.accessCode)
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
                   case Left(l) =>
-//                    log.error("link error!")
+                    log.error("link error!")
                 }
               }else{
                 log.error("link error!")
@@ -199,11 +199,9 @@ object WsClient {
   }
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
-    val wsProtocol = AppSettings.gameProtocol
-//    val domain = AppSettings.gameDomain
+    val wsProtocol = "ws"
+//    val domain = AppSettings.gameDomain  //部署到服务器上用这个
     val domain = "localhost:30371"
-    //    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
-//    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
     s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
 

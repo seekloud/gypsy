@@ -223,7 +223,7 @@ class GameHolder(
   }
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {
-      serverActor ! WsSendComplete
+//      serverActor ! WsSendComplete
       stageCtx.closeStage()
     }
   })
