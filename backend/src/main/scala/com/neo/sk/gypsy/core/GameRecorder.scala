@@ -206,7 +206,7 @@ object GameRecorder {
         val list = ListBuffer[rUserRecordMap]()
         userAllMap.foreach{
           userRecord =>
-            list.append(rUserRecordMap(recordId, userRecord._1, roomId))
+            list.append(rUserRecordMap(recordId, userRecord._1, roomId,userRecord._2._2))
         }
         Await.result(RecordDao.insertUserRecordList(list.toList), 2.minute)
         Behaviors.stopped
@@ -275,10 +275,10 @@ object GameRecorder {
                   val ballId = userRecord._2._3
                   val essf= essfMap.get(EssfMapKey(roomId,userId,userName,ballId))
                   if(essf.isDefined){
-                    list.append(rUserRecordMap(recordId,userId,roomId))
+                    list.append(rUserRecordMap(recordId,userId,roomId,userName))
 //                    list.append(rUserRecordMap(recordId,userId,roomId))
                   }else{
-                    list.append(rUserRecordMap(recordId,userId,roomId))
+                    list.append(rUserRecordMap(recordId,userId,roomId,userName))
                     //                    list.append(rUserRecordMap(recordId,userId,roomId))
                   }
 
