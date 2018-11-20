@@ -78,7 +78,7 @@ trait OutApiService extends ServiceUtils with SessionBase{
               i.startTime,
               i.endTime,
               userListMap(i.recordId).length,
-              userListMap(i.recordId).map(_.userId)
+              userListMap(i.recordId).map(u=> (u.userId) )
             )
           ).toList.sortBy(_._1)
           val data = record.map { i =>

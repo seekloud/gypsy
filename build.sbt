@@ -127,5 +127,3 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
 lazy val root = (project in file("."))
   .aggregate(frontend, backend)
   .settings(name := projectName)
-
-
