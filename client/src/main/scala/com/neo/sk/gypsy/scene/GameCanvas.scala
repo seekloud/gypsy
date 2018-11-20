@@ -45,7 +45,7 @@ class GameCanvas(canvas: Canvas,
   private val bronzeImg = new Image("file:client/src/main/resources/cooper.png")
 
   val bounds = Point(Boundary.w, Boundary.h)
-
+ // val window = Point(Window.w.toInt, Window.h.toInt)
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
@@ -229,7 +229,7 @@ class GameCanvas(canvas: Canvas,
       ctx.stroke()
     }
     val params = new SnapshotParameters
-    params.setFill(Color.TRANSPARENT)
+ //   params.setFill(Color.TRANSPARENT)
     canvas.snapshot(params, null)
   }
 
@@ -355,7 +355,6 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
-    println(foods)
     masses.groupBy(_.color).foreach{ a=>
       a._1 match{
         case 0 => ctx.setFill(Color.web("#f3456d"))
