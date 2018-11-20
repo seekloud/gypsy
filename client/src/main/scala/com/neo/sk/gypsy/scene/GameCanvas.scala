@@ -6,13 +6,17 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
+
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 import javafx.scene.shape.ArcType
+
+import scalafx.scene.SnapshotParameters
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -206,7 +210,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //背景绘制ctx3
-  def drawBackground():Unit = {
+  def drawBackground():Image = {
     //绘制背景
     ctx.drawImage(background1,0,0,size.x,size.y)
     ctx.save()
@@ -224,6 +228,9 @@ class GameCanvas(canvas: Canvas,
       ctx.lineTo(l ,size.y)
       ctx.stroke()
     }
+    val params = new SnapshotParameters
+    params.setFill(Color.TRANSPARENT)
+    canvas.snapshot(params, null)
   }
 
   //ctx2
@@ -304,7 +311,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //offScreenCanvas:Canvas
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),offScreenCanvas:Canvas)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),offScreenCanvas:Image)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -325,7 +332,7 @@ class GameCanvas(canvas: Canvas,
     centerScale(scale,size.x/2,size.y/2)
 
     //TODO /2
-    ctx.drawImage(offScreenCanvas.asInstanceOf[Image], offx, offy, bounds.x, bounds.y)
+    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
 //    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
 //    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色

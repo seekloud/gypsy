@@ -1,14 +1,16 @@
 package com.neo.sk.gypsy.scene
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
+
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
+
+import javafx.scene.image.Image
 
 
 /**
@@ -60,7 +62,7 @@ class GameScene {
 //  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
   val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
-  def draw(myId:String,offsetTime:Long)={
+  def draw(myId:String,offsetTime:Long,offCanvasImgae:Image)={
     var zoom = (30.0, 30.0)
     val data = grid.getGridData(myId,window.x,window.y)
     data.playerDetails.find(_.id == myId) match {
@@ -90,7 +92,7 @@ class GameScene {
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
         val foods=grid.food
-        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom,offCanvas)
+        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom,offCanvasImgae)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font("34px Helvetica"))
