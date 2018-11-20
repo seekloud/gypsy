@@ -34,4 +34,20 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
+  def linkGameAgent(gameId:Long,playerId:String,token:String) = {
+    val data = LinkGameData(gameId,playerId).asJson.noSpaces
+    val url  = esheepProtocol + "://" + esheepHost + "/esheep/api/gameAgent/joinGame?token="+token
+    postJsonRequestSend("post",url,Nil,data).map{
+      case Right(jsonStr) =>
+        decode[LinkGameRes](jsonStr) match {
+          case Right(res) =>
+            Right(LinkResElement(res.data.accessCode,res.data.gsPrimaryInfo))
+          case Left(le) =>
+            Left("decode error: "+le)
+        }
+      case Left(erStr) =>
+        Left("get return error:"+erStr)
+    }
+  }
+
 }

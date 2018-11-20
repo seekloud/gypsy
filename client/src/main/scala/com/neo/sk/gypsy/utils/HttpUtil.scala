@@ -13,6 +13,17 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
   */
 object HttpUtil {
 
+  //skip ssl check.
+  /*  val config: AsyncHttpClientConfig = {
+      val builder = new DefaultAsyncHttpClientConfig.Builder()
+      val sslBuilder = SslContextBuilder.forClient()
+      sslBuilder.trustManager(new TmFactory())
+      val sslContext = sslBuilder.build()
+      builder.setSslContext(sslContext)
+      builder.build()
+    }
+
+    private val ahClientImp: DefaultAsyncHttpClient = new DefaultAsyncHttpClient(config)*/
   private val ahClientImp: DefaultAsyncHttpClient = new DefaultAsyncHttpClient()
 
   private val log = LoggerFactory.getLogger(this.getClass)
@@ -36,6 +47,8 @@ object HttpUtil {
       result.future
     }
   }
+
+
 }
 
 trait HttpUtil {

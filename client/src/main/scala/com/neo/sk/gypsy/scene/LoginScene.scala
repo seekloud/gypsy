@@ -13,7 +13,7 @@ import javafx.scene.text.FontWeight
 import javafx.scene.text.FontPosture
 /**
   * @author zhaoyin
-  * @date 2018/10/29  5:21 PM
+  * 2018/10/29  5:21 PM
   */
 
 object LoginScene {
@@ -27,15 +27,15 @@ class LoginScene {
   val width = 500
   val height = 500
   val group = new Group
-  val button = new Button("start game")
+  val button = new Button("登录")
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
   var loginSceneListener: LoginSceneListener=_
 
   button.setLayoutX(230)
   button.setLayoutY(240)
-  ctx.setFill(Color.rgb(255,255,255))
-  ctx.fillRect(0,0,width,height)
+//  ctx.setFill(Color.rgb(255,255,255))
+//  ctx.fillRect(0,0,width,height)
   group.getChildren.add(canvas)
   group.getChildren.add(button)
   val scene = new Scene(group)
@@ -49,10 +49,14 @@ class LoginScene {
   def drawScanUrl(imageStream:ByteArrayInputStream)={
     ClientBoot.addToPlatform{
       group.getChildren.remove(button)
+      val bgColor = new Color(0.003, 0.176, 0.176, 1.0)
+      ctx.setFill(bgColor)
+      ctx.fillRect(0, 0, width, height)
       val image = new Image(imageStream)
-      ctx.drawImage(image,100,100)
+      ctx.drawImage(image,0,0)
       ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
-      ctx.fillText("请扫码登录",160,70)
+      ctx.setFill(Color.WHITE)
+      ctx.fillText("请扫码登录",160,300)
     }
   }
 

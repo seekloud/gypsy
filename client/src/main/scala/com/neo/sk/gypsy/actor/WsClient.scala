@@ -1,5 +1,8 @@
 package com.neo.sk.gypsy.actor
 
+import java.net.URLEncoder
+
+import akka.Done
 import akka.actor.ActorSystem
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
@@ -15,6 +18,7 @@ import com.neo.sk.gypsy.holder.GameHolder
 import com.neo.sk.gypsy.scene.GameScene
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
+import com.neo.sk.gypsy.common.AppSettings
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
@@ -23,6 +27,7 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import io.circe.parser.decode
 import io.circe.generic.auto._
+import com.neo.sk.gypsy.common.Api4GameAgent._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
@@ -93,6 +98,19 @@ object WsClient {
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(wsUrl))
           val source = getSource(ctx.self)
           val sink = getSinkDup(ctx.self)
+          val response =
+            source
+                .viaMat(webSocketFlow)(Keep.right)
+                .toMat(sink)(Keep.left)
+                .run()
+          val connected = response.flatMap { upgrade =>
+            if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+              Future.successful(s"$logPrefix connect success. ConnectEsheep!")
+            } else {
+              throw new RuntimeException(s"WSClient connection failed: ${upgrade.response.status}")
+            }
+          } //链接建立时
+          connected.onComplete(i => log.info(i.toString))
           Behaviors.same
         case Stop =>
           log.info("WsClient now stop")
@@ -143,11 +161,33 @@ object WsClient {
     }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer, FailMsgServer))
 
   //收到esheep后台发给前端的消息
-  def getSinkDup(self: ActorRef[WsCommand])={
+  def getSinkDup(self: ActorRef[WsCommand]):Sink[Message,Future[Done]]={
     Sink.foreach{
       case TextMessage.Strict(msg) =>
+        val gameId = AppSettings.gameId
+        import io.circe.generic.auto._
+        import scala.concurrent.ExecutionContext.Implicits.global
+        if(msg.length > 50) {
+          decode[Ws4AgentResponse](msg) match {
+            case Right(res) =>
+              if(res.Ws4AgentRsp.errCode == 0){
+                val playerId = "user" + res.Ws4AgentRsp.data.userId
+                val nickName = res.Ws4AgentRsp.data.nickname
+                linkGameAgent(gameId,playerId,res.Ws4AgentRsp.data.token).map{
+                  case Right(resl) =>
+//                    log.debug("accessCode: " + resl.accessCode)
+                    self ! ConnectGame(playerId,nickName,resl.accessCode)
+                  case Left(l) =>
+//                    log.error("link error!")
+                }
+              }else{
+                log.error("link error!")
+              }
+            case Left(le) =>
+              log.error(s"decode esheep webmsg error! Error information:${le}")
 
-
+          }
+        }
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         bytesDecode[WsResponce](buffer) match {
@@ -159,9 +199,12 @@ object WsClient {
   }
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
-    val wsProtocol = "ws"
-    val host = "localhost:30371"
-    s"$wsProtocol://$host/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
+    val wsProtocol = AppSettings.gameProtocol
+//    val domain = AppSettings.gameDomain
+    val domain = "localhost:30371"
+    //    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
+//    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
+    s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
   }
 
 }
