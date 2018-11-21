@@ -86,21 +86,20 @@ class GameHolder(
     }
   }
 
-  def init():Image= {
+  def init() = {
+    gameScene.offView.drawBackgroundInit()
     gameScene.gameView.drawGameWelcome()
     gameScene.gameView.drawGameOn()
     gameScene.middleView.drawRankMap()
-    gameScene.offView.drawBackground()
   }
 
   def start()={
     println("start---")
-    val offCanvas = init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染
         val offsetTime=System.currentTimeMillis()-logicFrameTime
-        gameScene.draw(myId,offsetTime,offCanvas)
+        gameScene.draw(myId,offsetTime)
       }
     }
     val timeline = new Timeline()
