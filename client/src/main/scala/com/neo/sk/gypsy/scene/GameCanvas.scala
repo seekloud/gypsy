@@ -6,13 +6,17 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
+
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 import javafx.scene.shape.ArcType
+
+import com.neo.sk.gypsy.utils.FpsComp
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -438,6 +442,7 @@ class GameCanvas(canvas: Canvas,
       ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
+    FpsComp.renderFps(ctx, 500, 10)
     ctx.restore()
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setTextAlign(TextAlignment.LEFT)

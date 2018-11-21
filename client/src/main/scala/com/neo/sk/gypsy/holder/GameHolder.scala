@@ -108,11 +108,12 @@ class GameHolder(
     timeline.getKeyFrames.add(keyFrame)
     animationTimer.start()
     timeline.play()
+
 //    addActionListenEvent
   }
 
   def gameLoop(): Unit = {
-  //  NetDelay.ping(webSocketClient)
+    serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次
       //不同步
@@ -166,44 +167,7 @@ class GameHolder(
     }
   })
 
-//  def addActionListenEvent = {
-//    println("lalalalalalal")
-//    gameScene.topCanvas.requestFocus()
-//    //在画布上监听键盘事件
-//    gameScene.topCanvas.setOnKeyPressed{ e => {
-//        val key=e.getCode
-//        if (key == KeyCode.ESCAPE && !isDead) {
-//          gameClose
-//        } else if (watchKeys.contains(e.getCode)) {
-//          if (e.getCode == KeyCode.SPACE) {
-//            println(s"down+${e.getCode.toString}")
-//          } else {
-//            println(s"down+${e.getCode.toString}")
-//            val keyCode = Protocol.KeyCode(myId, e.getCode.toString.toInt, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-//            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
-//            serverActor ! keyCode
-//          }
-//        }
-//      }
-//    }
-//    //在画布上监听鼠标事件
-//    def getDegree(x:Double,y:Double)={
-//      atan2(y - 48 -gameScene.window.y/2,x - gameScene.window.x/2 )
-//    }
-//    var FormerDegree = 0D
-//    gameScene.topCanvas.setOnMouseMoved{ e => {
-//      println("key!!!!!!!!!"+e)
-//      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - 48 - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-//      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
-//        FormerDegree = getDegree(e.getX,e.getY)
-//        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-//        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-//        serverActor ! mp
-//      }
-//    }
-//    }
-//  }
+
 
   def cleanCtx() = {
     gameScene.topView.cleanCtx()
