@@ -72,7 +72,7 @@ object GamePlayer {
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
-      log.info(s"${ctx.self.path} is starting..")
+      log.info(s"GamePlayer  ${ctx.self.path} is starting..&&&&&&&&&&&&&&")
       log.info(s"Player &&&&&&&&&&&&&&&&& ")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
