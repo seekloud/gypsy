@@ -144,6 +144,7 @@ object GamePlayer {
               Behaviors.stopped
           }
         case GameLoop=>
+          println(s"Loop ${fileReader.getFramePosition}========")
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
