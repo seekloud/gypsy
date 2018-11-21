@@ -319,14 +319,16 @@ class GameCanvas(canvas: Canvas,
 
     //绘制背景
     //    ctx.fillStyle = MyColors.background
+
+
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,size.x,size.y)
     ctx.save()
     centerScale(scale,size.x/2,size.y/2)
 
     //TODO /2
-//    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
-//    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
+    ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
+    //    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
 //    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
