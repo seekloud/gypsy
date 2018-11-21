@@ -87,7 +87,6 @@ class GameHolder(
   }
 
   def init() = {
-    gameScene.offView.drawBackgroundInit()
     gameScene.gameView.drawGameWelcome()
     gameScene.gameView.drawGameOn()
     gameScene.middleView.drawRankMap()
