@@ -144,10 +144,11 @@ object GamePlayer {
               Behaviors.stopped
           }
         case GameLoop=>
-          println(s"Loop ${fileReader.getFramePosition}========")
+//          println(s"Loop ${fileReader.getFramePosition}========")
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
+                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )

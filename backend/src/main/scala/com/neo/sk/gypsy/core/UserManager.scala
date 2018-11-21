@@ -148,6 +148,7 @@ object UserManager {
         case t:Protocol.Wrap =>
           BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
+          log.info(s"========${t}==============")
           BinaryMessage.Strict(ByteString(t.ws))
 
         case x =>
