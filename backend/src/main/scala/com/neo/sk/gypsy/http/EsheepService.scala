@@ -127,7 +127,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       if(AppSettings.gameTest){
         val replayWatcherId = "replay" + idGenerator.getAndIncrement()
         val session = GypsySession(BaseUserInfo(UserRolesType.replayer, replayWatcherId, replayWatcherId, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(replayWatcherId,replayWatcherId)),recordId,frame,playerId,_))
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(playerId,playerId)),recordId,frame,playerId,_))
         dealFutureResult(
           flowFuture.map(t =>
             addSession(session){
