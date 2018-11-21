@@ -147,7 +147,7 @@ object GamePlayer {
           }
         case GameLoop=>
           if(fileReader.hasMoreFrame){
-//            println(s"nowPosition ${fileReader.getFramePosition} ======  ")
+            log.info(s"====${ctx.self.path} Loop===== nowPosition:${fileReader.getFramePosition}==")
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
                 dispatchByteTo(u,f)
@@ -165,7 +165,7 @@ object GamePlayer {
           }
 
         case msg:GetRecordFrameMsg=>
-          log.info(s"GetRecordFrameMsg *** nowPosition:${fileReader.getFramePosition} TotalFrame ${frameCount.toLong} ")
+          log.info(s"****${ctx.self.path} GetRecordFrameMsg *** nowPosition:${fileReader.getFramePosition}")
           msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
           Behaviors.same
 
