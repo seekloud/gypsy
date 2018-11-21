@@ -95,7 +95,7 @@ class GameHolder(replay:Boolean = false) {
   )
 
   def init(): Unit = {
-    println("drawBackground1111111111")
+//    println("drawBackground1111111111")
     drawGameView.drawGameWelcome()
     drawOffScreen.drawBackground()
     drawGameView.drawGameOn()
@@ -505,6 +505,7 @@ class GameHolder(replay:Boolean = false) {
 
 
       case e: Protocol.UserJoinRoom =>
+        println(s" Receive UserJoin at Replay =================")
         gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
 
