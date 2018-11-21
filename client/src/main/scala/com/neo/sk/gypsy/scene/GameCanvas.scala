@@ -210,27 +210,33 @@ class GameCanvas(canvas: Canvas,
   }
 
   //背景绘制ctx3
-  def drawBackground():Image = {
+  def drawBackgroundInit() = {
     //绘制背景
     ctx.drawImage(background1,0,0,size.x,size.y)
-    ctx.save()
-    //绘制条纹
-    ctx.setStroke(Color.web(MyColors.stripe))
-    stripeX.foreach{ l=>
-      ctx.beginPath()
-      ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x ,l )
-      ctx.stroke()
-    }
-    stripeY.foreach{ l=>
-      ctx.beginPath()
-      ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y)
-      ctx.stroke()
-    }
-    val params = new SnapshotParameters
- //   params.setFill(Color.TRANSPARENT)
-    canvas.snapshot(params, null)
+//    ctx.save()
+//    //绘制条纹
+//    ctx.setStroke(Color.web(MyColors.stripe))
+//    stripeX.foreach{ l=>
+//      ctx.beginPath()
+//      ctx.moveTo(0 ,l )
+//      ctx.lineTo(size.x ,l )
+//      ctx.stroke()
+//    }
+//    stripeY.foreach{ l=>
+//      ctx.beginPath()
+//      ctx.moveTo(l ,0)
+//      ctx.lineTo(l ,size.y)
+//      ctx.stroke()
+//    }
+//    val params = new SnapshotParameters
+//    params.setFill(Color.TRANSPARENT)
+//    canvas.snapshot(params, null)
+  }
+
+  def drawBackground(basePoint:(Double,Double))={
+    val offx= size.x/2 - basePoint._1
+    val offy =size.y/2 - basePoint._2
+    ctx.drawImage(background1,offx,offy,bounds.x/16,bounds.y/16)
   }
 
   //ctx2
@@ -311,7 +317,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //offScreenCanvas:Canvas
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),offScreenCanvas:Image)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double))= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -332,7 +338,7 @@ class GameCanvas(canvas: Canvas,
     centerScale(scale,size.x/2,size.y/2)
 
     //TODO /2
-    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
+//    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
 //    ctx.drawImage(background1,offx,offx,bounds.x,bounds.y)
 //    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
