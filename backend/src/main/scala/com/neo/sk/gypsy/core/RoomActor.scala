@@ -370,89 +370,6 @@ object RoomActor {
     }
   }
 
-//  /**
-//    * 本状态为等待匹配创建房间*/
-//  def wait(
-//            roomId:Long,
-//            userList:mutable.ListBuffer[UserInfo],
-//            userMap:mutable.HashMap[String,String],
-//            subscribersMap:mutable.HashMap[String,ActorRef[WsMsgSource]],
-//            grid:GameServer)(implicit timer:TimerScheduler[Command]):Behavior[Command] = {
-//    Behaviors.receive { (ctx, msg) =>
-//      msg match {
-////        case CheckName(name,replyTo)=>
-////          log.info(s"$name check name")
-////          if(userMap.exists(_._2 == name)){
-////            replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-////          }else{
-////            UserDao.getUserByName(name).map{
-////              case Some(_)=>
-////                replyTo ! CheckNameRsp(roomId,10000,"UserName has existed!")
-////              case None=>
-////                replyTo ! CheckNameRsp(roomId)
-////            }
-////          }
-////          Behavior.same
-//
-//        case Join(id, name, subscriber,watchgame) =>
-//          log.info(s"got $msg")
-//          userMap.put(id,name)
-//          ctx.watchWith(subscriber,Left(id,name))
-//          subscribersMap.put(id,subscriber)
-//          grid.addSnake(id, name)
-//          if(userMap.size>1){
-//            timer.cancel(TimeOutKey)
-//            timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-//            timer.startSingleTimer(TimeOutKey,TimeOut,AppSettings.gameTime.minutes)
-//            userMap.keys.foreach{r=>
-//              dispatchTo(subscribersMap,r, Protocol.Id(r),userList)
-//              dispatchTo(subscribersMap,r,grid.getGridData(r),userList)
-//            }
-//            idle(roomId,userList,userMap,subscribersMap,grid,0l)
-//          }else{
-//            Behaviors.same
-//          }
-//
-//        case TimeOut=>
-//          log.info("matchRoom timeOut!!")
-//          roomManager ! RemoveRoom(roomId)
-//          dispatch(subscribersMap,MatchRoomError())
-//          Behaviors.stopped
-//
-//        case Left(id, name) =>
-//          log.info(s"got $msg")
-//          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
-//          grid.removePlayer(id)
-//          userMap.remove(id)
-//          subscribersMap.remove(id)
-//          if (userMap.isEmpty){
-//            Behaviors.stopped
-//          }else{
-//            Behaviors.same
-//          }
-//
-//        case x=>
-//          Behaviors.unhandled
-//      }
-//    }
-//  }
-
-//  def dispatch(subscribers:mutable.HashMap[String,ActorRef[WsMsgSource]], msg: WsMsgSource) = {
-//    subscribers.values.foreach( _ ! msg)
-//  }
-//
-//  def dispatchTo(subscribers:mutable.HashMap[String,ActorRef[WsMsgSource]], id:String, msg:WsMsgSource, userList:mutable.ListBuffer[UserInfo]) = {
-//    var shareList = mutable.ListBuffer[String]()
-//    userList.foreach(user =>
-//      if(user.id == id){
-//        shareList = user.shareList
-//      }
-//    )
-//    subscribers.get(id).foreach( _ ! msg)
-//    shareList.foreach(shareId=>
-//      subscribers.get(shareId).foreach( _ ! msg)
-//    )
-
   def dispatch(subscribers:mutable.HashMap[String,ActorRef[UserActor.Command]])(msg:Protocol.GameMessage)(implicit sendBuffer:MiddleBufferInJvm) = {
     val isKillMsg = msg.isInstanceOf[Protocol.UserDeadMessage]
     subscribers.values.foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
@@ -463,47 +380,6 @@ object RoomActor {
     subscribers.get(id).foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
 
   }
-
-//  private def sink(actor: ActorRef[Command]) = ActorSink.actorRef[Command](
-//    ref = actor,
-//    onCompleteMessage = CompleteMsgFront,
-//    onFailureMessage = FailMsgFront.apply
-//  )
-
-//  def joinGame(actor:ActorRef[RoomActor.Command], id: String, name: String,watchgame: Boolean)(implicit decoder: Decoder[UserAction]): Flow[UserAction,WsMsgSource, Any] = {
-//    val in = Flow[UserAction]
-//      .map {
-//        case KeyCode(i,keyCode,f,n)=>
-//          log.debug(s"键盘事件$keyCode")
-//          Key(id,keyCode,f,n)
-//        case MousePosition(i,clientX,clientY,f,n)=>
-//          Mouse(id,clientX,clientY,f,n)
-//        case UserLeft()=>
-//          Left(id,name)
-//        case Ping(timestamp)=>
-//          NetTest(id,timestamp)
-//        case WatchChange(id, watchId) =>
-//          log.debug(s"切换观察者: $watchId")
-//          ChangeWatch(id, watchId)
-//        case _=>
-//          UnKnowAction
-//      }
-//      .to(sink(actor))
-//
-//    val out =
-//      ActorSource.actorRef[WsMsgSource](
-//        completionMatcher = {
-//          case CompleteMsgServer ⇒
-//        },
-//        failureMatcher = {
-//          case FailMsgServer(e)  ⇒ e
-//        },
-//        bufferSize = 64,
-//        overflowStrategy = OverflowStrategy.dropHead
-//      ).mapMaterializedValue(outActor => actor ! Join(id, name, outActor,watchgame))
-//    Flow.fromSinkAndSource(in, out)
-//  }
-
 
   //暂未考虑下匹配的情况
 //  private def getGameRecorder(ctx: ActorContext[Command],gameContainer:GameContainerServerImpl,roomId:Long):ActorRef[GameRecorder.Command] = {
