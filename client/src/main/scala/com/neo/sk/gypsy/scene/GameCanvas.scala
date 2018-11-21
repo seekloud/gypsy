@@ -16,36 +16,38 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 import javafx.scene.shape.ArcType
 
+import com.neo.sk.gypsy.utils.FpsComp
+
 import scalafx.scene.SnapshotParameters
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
                  size:Point) {
-  val  img = new Image("file:client/src/main/resources/virus.png")
-  val  circle = new Image("file:client/src/main/resources/circle.png")
-  val  circle1 = new Image("file:client/src/main/resources/circle1.png")
-  val  circle2 = new Image("file:client/src/main/resources/circle2.png")
-  val  circle3 = new Image("file:client/src/main/resources/circle3.png")
-  val  circle4 = new Image("file:client/src/main/resources/circle4.png")
-  val  circle5 = new Image("file:client/src/main/resources/circle5.png")
-  val  circle6 = new Image("file:client/src/main/resources/circle6.png")
-  val  kill = new Image("file:client/src/main/resources/kill.png")
-  val  youkill = new Image("file:client/src/main/resources/youkill.png")
-  val  shutdown = new Image("file:client/src/main/resources/shutdown.png")
-  val  killingspree = new Image("file:client/src/main/resources/killingspree.png")
-  val  dominating = new Image("file:client/src/main/resources/dominating.png")
-  val  unstoppable = new Image("file:client/src/main/resources/unstoppable.png")
-  val  godlike = new Image("file:client/src/main/resources/godlike.png")
-  val  legendary = new Image("file:client/src/main/resources/legendary.png")
-  val  background = new Image("file:client/src/main/resources/background.jpg")
-  val  background1 = new Image("file:client/src/main/resources/b2.jpg")
-  val  massImg = new Image("file:client/src/main/resources/mass.png")
-  private val goldImg =new Image("file:client/src/main/resources/gold.png")
-  private val silverImg = new Image("file:client/src/main/resources/silver.png")
-  private val bronzeImg = new Image("file:client/src/main/resources/cooper.png")
+  val  img = new Image("file:client/src/main/resources/img/virus.png")
+  val  circle = new Image("file:client/src/main/resources/img/circle.png")
+  val  circle1 = new Image("file:client/src/main/resources/img/circle1.png")
+  val  circle2 = new Image("file:client/src/main/resources/img/circle2.png")
+  val  circle3 = new Image("file:client/src/main/resources/img/circle3.png")
+  val  circle4 = new Image("file:client/src/main/resources/img/circle4.png")
+  val  circle5 = new Image("file:client/src/main/resources/img/circle5.png")
+  val  circle6 = new Image("file:client/src/main/resources/img/circle6.png")
+  val  kill = new Image("file:client/src/main/resources/img/kill.png")
+  val  youkill = new Image("file:client/src/main/resources/img/youkill.png")
+  val  shutdown = new Image("file:client/src/main/resources/img/shutdown.png")
+  val  killingspree = new Image("file:client/src/main/resources/img/killingspree.png")
+  val  dominating = new Image("file:client/src/main/resources/img/dominating.png")
+  val  unstoppable = new Image("file:client/src/main/resources/img/unstoppable.png")
+  val  godlike = new Image("file:client/src/main/resources/img/godlike.png")
+  val  legendary = new Image("file:client/src/main/resources/img/legendary.png")
+  val  background = new Image("file:client/src/main/resources/img/background.jpg")
+  val  background1 = new Image("file:client/src/main/resources/img/b2.jpg")
+  val  massImg = new Image("file:client/src/main/resources/img/mass.png")
+  private val goldImg =new Image("file:client/src/main/resources/img/gold.png")
+  private val silverImg = new Image("file:client/src/main/resources/img/silver.png")
+  private val bronzeImg = new Image("file:client/src/main/resources/img/cooper.png")
 
   val bounds = Point(Boundary.w, Boundary.h)
- // val window = Point(Window.w.toInt, Window.h.toInt)
+
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
@@ -63,8 +65,8 @@ class GameCanvas(canvas: Canvas,
   //文本高度
   val textLineHeight = 14
 
-  private[this] val stripeX = scala.collection.immutable.Range(0, (bounds.y + 50)/4,50/4)
-  private[this] val stripeY = scala.collection.immutable.Range(0, (bounds.x + 100)/4,100/4)
+  private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
+  private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -210,37 +212,24 @@ class GameCanvas(canvas: Canvas,
   }
 
   //背景绘制ctx3
-  def drawBackgroundInit() = {
+  def drawBackground():Unit = {
     //绘制背景
     ctx.drawImage(background1,0,0,size.x,size.y)
-//    ctx.save()
-//    //绘制条纹
-//    ctx.setStroke(Color.web(MyColors.stripe))
-//    stripeX.foreach{ l=>
-//      ctx.beginPath()
-//      ctx.moveTo(0 ,l )
-//      ctx.lineTo(size.x ,l )
-//      ctx.stroke()
-//    }
-//    stripeY.foreach{ l=>
-//      ctx.beginPath()
-//      ctx.moveTo(l ,0)
-//      ctx.lineTo(l ,size.y)
-//      ctx.stroke()
-//    }
-//    val params = new SnapshotParameters
-//    params.setFill(Color.TRANSPARENT)
-//    canvas.snapshot(params, null)
-  }
-
-  def drawBackground(basePoint:(Double,Double),zoom:(Double,Double))={
-    val offx= size.x/2 - basePoint._1
-    val offy =size.y/2 - basePoint._2
-    val scale = getZoomRate(zoom._1,zoom._2,1200,600)
     ctx.save()
-    centerScale(scale,size.x/2,size.y/2)
-    ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
-    ctx.restore()
+    //绘制条纹
+    ctx.setStroke(Color.web(MyColors.stripe))
+    stripeX.foreach{ l=>
+      ctx.beginPath()
+      ctx.moveTo(0 ,l )
+      ctx.lineTo(size.x ,l )
+      ctx.stroke()
+    }
+    stripeY.foreach{ l=>
+      ctx.beginPath()
+      ctx.moveTo(l ,0)
+      ctx.lineTo(l ,size.y)
+      ctx.stroke()
+    }
   }
 
   //ctx2
@@ -340,9 +329,10 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0,0,size.x,size.y)
     ctx.save()
     centerScale(scale,size.x/2,size.y/2)
+
     //TODO /2
-//    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
+    //    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
 //    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
@@ -362,6 +352,7 @@ class GameCanvas(canvas: Canvas,
         ctx.beginPath()
         ctx.arc(x + offx,y + offy,10,10,0,360)
         ctx.fill()
+       //   ctx.fillRect(x + offx,y + offy,8,8)
       }
     }
     masses.groupBy(_.color).foreach{ a=>

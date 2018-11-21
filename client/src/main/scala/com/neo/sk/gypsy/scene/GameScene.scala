@@ -9,6 +9,7 @@ import javafx.scene.text.Font
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.utils.FpsComp
 
 import javafx.scene.image.Image
 
@@ -112,6 +113,7 @@ class GameScene {
       case None =>
         gameView.drawGameWait(firstCome)
     }
+    FpsComp.renderFps(gameCanvasCtx, 500, 10)
   }
 
   topCanvas.requestFocus()

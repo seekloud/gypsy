@@ -115,10 +115,11 @@ object GameRecorder {
       msg match {
         case t:GameRecord =>
           //log.info(s"${ctx.self.path} work get msg gameRecord")
+//          println(s"Game Record : ${t.event._1}")
           val wsMsg = t.event._1
           wsMsg.foreach{
-            case r@UserWsJoin(roomId ,userId,userName,ballId,frame) =>
-              println(s"record: ${r}")
+            case r@UserWsJoin(roomId ,userId,userName,ballId,frame,serialNum) =>
+              println(s"HI Someone Join Game: ${r}")
               userAllMap.put(userId,(roomId,userName,ballId))
               userMap.put(userId, (roomId,userName,ballId))
               essfMap.put(EssfMapKey(roomId,userId, userName,ballId), EssfMapJoinLeftInfo(frame, -1l))
@@ -141,7 +142,7 @@ object GameRecorder {
             case syncdata:GypsyGameSnapshot =>
               syncdata.state.frameCount
           }
-          //每100帧记录一次全量数据
+          //每100帧记录一次全量数据，1分钟大约400帧
           if(gameRecordBuffer.size > maxRecordNum){
             val rs = gameRecordBuffer.reverse
             rs.headOption.foreach{ e =>
@@ -153,6 +154,7 @@ object GameRecorder {
                   recorder.writeEmptyFrame()
                 }
               }
+//              println(s"FIle Input ==========${e.event._1}   ")
             }
 
             gameRecordBuffer = List[GameRecord]()
@@ -237,12 +239,13 @@ object GameRecorder {
               }
           }
           recorder.putMutableInfo(AppSettings.essfMapKeyName,userMapEncode(mapInfo))
-
           recorder.finish()
           log.info(s"${ctx.self.path} has save game data to file=${fileName}_$fileIndex")
           val endTime = System.currentTimeMillis()
           val filePath = AppSettings.gameDataDirectoryPath + fileName + s"_$fileIndex"
           val recordInfo = rGameRecord(-1L, gameRecordData.roomId,gameRecordData.StartTime, endTime,filePath,gameRecordData.InitialTime)
+
+          log.info(s"The UserALL : ${userAllMap.map(_._1)} ")
           RecordDao.insertGameRecord(recordInfo).onComplete{
             case Success(recordId) =>
               val list = ListBuffer[rUserRecordMap]()
@@ -262,6 +265,7 @@ object GameRecorder {
                   }
 
               }
+              log.info(s"user :${list.toList.map(_.userId)} ")
               RecordDao.insertUserRecordList(list.toList).onComplete{
                 case Success(_) =>
                   log.info(s"insert user record success")
