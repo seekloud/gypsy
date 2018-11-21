@@ -147,7 +147,7 @@ object GamePlayer {
           }
         case GameLoop=>
           if(fileReader.hasMoreFrame){
-            println(s"nowPosition ${fileReader.getFramePosition} ======  ")
+//            println(s"nowPosition ${fileReader.getFramePosition} ======  ")
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
                 dispatchByteTo(u,f)
