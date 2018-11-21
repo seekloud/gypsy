@@ -233,10 +233,14 @@ class GameCanvas(canvas: Canvas,
 //    canvas.snapshot(params, null)
   }
 
-  def drawBackground(basePoint:(Double,Double))={
+  def drawBackground(basePoint:(Double,Double),zoom:(Double,Double))={
     val offx= size.x/2 - basePoint._1
     val offy =size.y/2 - basePoint._2
-    ctx.drawImage(background1,offx,offy,bounds.x/16,bounds.y/16)
+    val scale = getZoomRate(zoom._1,zoom._2,1200,600)
+    ctx.save()
+    centerScale(scale,size.x/2,size.y/2)
+    ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
+    ctx.restore()
   }
 
   //ctx2
@@ -333,7 +337,7 @@ class GameCanvas(canvas: Canvas,
     //绘制背景
     //    ctx.fillStyle = MyColors.background
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
-    ctx.fillRect(0,0,size.x,size.y)
+//    ctx.fillRect(0,0,size.x,size.y)
     ctx.save()
     centerScale(scale,size.x/2,size.y/2)
 
