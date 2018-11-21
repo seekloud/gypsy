@@ -1,14 +1,15 @@
 package com.neo.sk.gypsy.scene
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
+
 import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.utils.FpsComp
 
 
 /**
@@ -106,6 +107,7 @@ class GameScene {
       case None =>
         gameView.drawGameWait(firstCome)
     }
+    FpsComp.renderFps(gameCanvasCtx, 500, 10)
   }
 
   topCanvas.requestFocus()
