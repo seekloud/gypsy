@@ -349,9 +349,10 @@ class GameCanvas(canvas: Canvas,
       }
       ctx.setFill(Color.web(foodColor))
       a._2.foreach{ case Food(color, x, y)=>
-        ctx.beginPath()
-        ctx.arc(x + offx,y + offy,10,10,0,360)
-        ctx.fill()
+//        ctx.beginPath()
+//        ctx.arc(x + offx,y + offy,10,10,0,360)
+//        ctx.fill()
+          ctx.fillRect(x + offx,y + offy,8,8)
       }
     }
     masses.groupBy(_.color).foreach{ a=>
@@ -442,7 +443,7 @@ class GameCanvas(canvas: Canvas,
       ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
-    FpsComp.renderFps(ctx, 500, 10)
+
     ctx.restore()
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setTextAlign(TextAlignment.LEFT)

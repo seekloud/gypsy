@@ -43,14 +43,14 @@ object FpsComp {
       val len2 = txt2.getBoundsInLocal.getWidth.toInt
       ctx.fillText(fpsString, leftBegin, lineHeight)
       ctx.fillText(pingString, leftBegin + len1 + 60, lineHeight)
-      ctx.setStroke(Color.WHITE)
+      ctx.setStroke(Color.BLACK)
       ctx.strokeText(lastRenderTimes.toString, leftBegin + len1 + 20, lineHeight)
       if (lastRenderTimes < 50)
         ctx.setFill(Color.RED)
       else
         ctx.setFill(Color.GREEN)
       ctx.fillText(lastRenderTimes.toString, leftBegin + len1 + 20, lineHeight)
-      ctx.setStroke(Color.WHITE)
+      ctx.setStroke(Color.BLACK)
       ctx.strokeText(s"${latency}ms", leftBegin + len1 + len2 + 80, lineHeight)
       if (latency <= 100)
         ctx.setFill(Color.GREEN)
