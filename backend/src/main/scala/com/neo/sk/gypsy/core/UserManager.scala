@@ -90,9 +90,8 @@ object UserManager {
           Behaviors.same
 
         case msg:GetRecordFrameMsg=>
-          val userActor = getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId))
-
-          userActor ! msg
+//          val userActor = getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId))
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
         case ChildDead(child, childRef) =>
