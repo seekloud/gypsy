@@ -14,7 +14,7 @@ import com.neo.sk.gypsy.scene.LoginScene
 
 /**
   * @author zhaoyin
-  * @date 2018/10/28  2:45 PM
+  * 2018/10/28  2:45 PM
   */
 
 object ClientBoot{

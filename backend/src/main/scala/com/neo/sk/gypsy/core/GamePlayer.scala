@@ -122,7 +122,9 @@ object GamePlayer {
           //停止之前的重放
           timer.cancel(GameLoopKey)
 //          fileReader.mutableInfoIterable
-          log.info(s"-------$msg  $userMap---------")
+          log.info(s"UserMap-------$msg | $userMap---------")
+          log.info(s"metaData------- | $metaData********")
+          log.info(s"initState------- | $initState========")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
             case Some(u)=>
               log.info(s"total FrameCount :${frameCount}")
