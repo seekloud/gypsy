@@ -322,7 +322,6 @@ object UserActor {
     * replay-actor
     */
   private def getGameReply(ctx: ActorContext[Command], recordId:Long): ActorRef[GamePlayer.Command] = {
-    log.info(s"UserActir ${ctx.self.path} get the gameReply!!${recordId} ++++++++++++++")
     val childName = s"gameReply-$recordId"
     ctx.child(childName).getOrElse{
       val actor = ctx.spawn(GamePlayer.create(recordId), childName)
