@@ -95,7 +95,7 @@ class GameScene {
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
         val foods=grid.food
-        offView.drawBackground(basePoint)
+        offView.drawBackground(basePoint,zoom)
         gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
