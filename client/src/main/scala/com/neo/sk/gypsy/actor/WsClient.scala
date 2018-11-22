@@ -202,7 +202,9 @@ object WsClient {
     val wsProtocol = "ws"
     val domain = AppSettings.gameDomain  //部署到服务器上用这个
 //    val domain = "localhost:30371"
-    s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerId&playerName=$playerName&accessCode=$accessCode"
+    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
+    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
+    s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
   }
 
 }
