@@ -174,10 +174,10 @@ object WsClient {
             case Right(res) =>
               if(res.Ws4AgentRsp.errCode == 0){
                 val data=res.Ws4AgentRsp.data
-                tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
-                val playerId = "user" + res.Ws4AgentRsp.data.userId
-                val nickName = res.Ws4AgentRsp.data.nickname
-                linkGameAgent(gameId,playerId,res.Ws4AgentRsp.data.token).map{
+                //tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
+                val playerId = "user" + data.userId
+                val nickName = data.nickname
+                linkGameAgent(gameId,playerId,data.token).map{
                   case Right(resl) =>
                     log.debug("accessCode: " + resl.accessCode)
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
