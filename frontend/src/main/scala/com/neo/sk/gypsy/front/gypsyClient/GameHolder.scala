@@ -253,6 +253,7 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, window.x, window.y)
+      println(s"@@@@@@@@@@@@MyID${myId}   play:${data.playerDetails.map(_.id)}  ")
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
           firstCome=false
@@ -294,7 +295,7 @@ class GameHolder(replay:Boolean = false) {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
-          drawGameView.drawGameWait(firstCome)
+          drawGameView.drawGameWait(firstCome,myId)
       }
     }else{
       drawGameView.drawGameLost
@@ -483,6 +484,7 @@ class GameHolder(replay:Boolean = false) {
       case e:Protocol.SyncGameAllState =>
         println(s"回放全量数据，grid frame=${grid.frameCount}, sync state frame=${e.gState.frameCount}")
         val data = e.gState
+        println(s"全量的数据  ${data.playerDetails}  ")
         syncGridData = Some(GridDataSync(data.frameCount,
           data.playerDetails,data.massDetails,
           data.virusDetails,0.toDouble,Nil,Nil))

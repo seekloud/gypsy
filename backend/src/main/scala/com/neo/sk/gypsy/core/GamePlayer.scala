@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
+//import com.neo.sk.gypsy.core.UserActor.StopReplay
 //import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
@@ -42,6 +43,7 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
+  case class StopReplay(recordId:Long) extends Command
 
   final case class SwitchBehavior(
                                  name: String,
@@ -120,7 +122,9 @@ object GamePlayer {
         case msg:InitReplay =>
           log.info("start new replay !")
           //停止之前的重放
+//          timer.cancelAll()
           timer.cancel(GameLoopKey)
+
 //          fileReader.mutableInfoIterable
           log.info(s"UserMap-------$msg | $userMap---------")
 //          log.info(s"metaData------- | $metaData********")
@@ -148,7 +152,6 @@ object GamePlayer {
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
-                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )
@@ -177,6 +180,10 @@ object GamePlayer {
 
 //        case msg:TimeOut=>
 //          Behaviors.stopped
+
+        case msg:StopReplay =>
+          log.info(s"Stop Replay! ${msg.recordId}")
+          Behaviors.stopped
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)

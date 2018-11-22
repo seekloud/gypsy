@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, UserState, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront, ReStartAck}
 import com.neo.sk.gypsy.models.GypsyUserInfo
@@ -58,7 +58,7 @@ object UserActor {
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
   private case object UnKnowAction extends Command
-  case class StopReplay(recordId:Long) extends Command
+//  case class StopReplay(recordId:Long) extends Command
 
   case object CompleteMsgFront extends Command
 
@@ -78,6 +78,10 @@ object UserActor {
   case object ChangeBehaviorToInit extends Command
 
   case class StartGame(roomId:Option[Long],watchId:Option[String],watch:Boolean) extends Command
+
+
+  private var userState = UserState.waiting
+  private[this] var watchRecordId  = 0l
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -206,14 +210,23 @@ object UserActor {
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
         case StartReply(recordId,watchId,frame) =>
+          userState = UserState.replay
+          watchRecordId = recordId
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
           Behaviors.same
 
         case StartGame(roomIdOp,watchId,watch) =>
+          userState = UserState.play
           roomManager ! UserActor.JoinRoom(userInfo.playerId,None,userInfo.nickname,startTime,ctx.self,roomIdOp,watch,watchId)
           Behaviors.same
 
         case UserLeft(actor) =>
+//          log.info(s"${actor.path} @@@@@@@@@@@@@@UserLeft")
+          if(userState == UserState.replay){
+            getGameReply(ctx,watchRecordId) ! GamePlayer.StopReplay(watchRecordId)
+            watchRecordId = 0l
+            userState = UserState.waiting
+          }
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
