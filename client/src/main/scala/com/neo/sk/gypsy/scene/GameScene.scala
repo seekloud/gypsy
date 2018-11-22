@@ -44,14 +44,14 @@ class GameScene {
   val topCanvasCtx=topCanvas.getGraphicsContext2D
 //  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
 //  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
-  val offCanvas = new Canvas(canvasWidth,canvasHeight)
-  val offCanvasCtx= offCanvas.getGraphicsContext2D
+//  val offCanvas = new Canvas(canvasWidth,canvasHeight)
+//  val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
 //  offCanvas.setStyle("z-index: 1")
-  gameCanvas.setStyle("z-index: 2")
-  middleCanvas.setStyle("z-index: 3")
-  topCanvas.setStyle("z-index: 4")
+  gameCanvas.setStyle("z-index: 1")
+  middleCanvas.setStyle("z-index: 2")
+  topCanvas.setStyle("z-index: 3")
 
 
   val scene = new Scene(group)
