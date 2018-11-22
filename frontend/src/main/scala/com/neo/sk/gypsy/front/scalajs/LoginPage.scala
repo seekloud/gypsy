@@ -166,7 +166,9 @@ object LoginPage {
 
   })
 
-//  def homePage(): Unit = {
+//  def
+  //
+  // (): Unit = {
 //    val gameHolder=new GameHolder
 //    gameHolder.init()
 //    val guestIndex = guestModel
