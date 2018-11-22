@@ -31,7 +31,7 @@ object FpsComp {
       addFps()
       ctx.setTextAlign(TextAlignment.LEFT)
 
-      ctx.setFont(Font.font(20))
+      ctx.setFont(Font.font(20.0))
       ctx.setFill(Color.WHITE)
       //    ctx.font = "20px Helvetica"
       //    ctx.fillStyle = ColorsSetting.fontColor2
