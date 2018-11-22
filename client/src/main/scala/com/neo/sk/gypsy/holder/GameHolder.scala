@@ -35,6 +35,8 @@ object GameHolder {
   var killList = List.empty[(Int,String,Player)]
   var deadInfo :Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
+  var exitFullScreen = false
+
 
   val watchKeys = Set(
     KeyCode.E,
@@ -68,6 +70,9 @@ class GameHolder(
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
+
+  private var stageWidth = stageCtx.getStage.getWidth.toInt
+  private var stageHeight = stageCtx.getStage.getHeight.toInt
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
@@ -113,6 +118,21 @@ class GameHolder(
   }
 
   def gameLoop(): Unit = {
+    if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+      gameScene.resetScreen(1200,600)
+      stageCtx.getStage.setWidth(1200)
+      stageCtx.getStage.setHeight(600)
+      exitFullScreen = true
+      gameScene.middleView.drawRankMap()
+    }
+    if(stageWidth != stageCtx.getStage.getWidth.toInt || stageHeight != stageCtx.getStage.getHeight.toInt){
+      stageWidth = stageCtx.getStage.getWidth.toInt
+      stageHeight = stageCtx.getStage.getHeight.toInt
+      gameScene.resetScreen(stageWidth,stageHeight)
+      stageCtx.getStage.setWidth(stageWidth)
+      stageCtx.getStage.setHeight(stageHeight)
+      gameScene.middleView.drawRankMap()
+    }
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次
