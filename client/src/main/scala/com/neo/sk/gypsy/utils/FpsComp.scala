@@ -33,8 +33,6 @@ object FpsComp {
 
       ctx.setFont(Font.font(20))
       ctx.setFill(Color.WHITE)
-      //    ctx.font = "20px Helvetica"
-      //    ctx.fillStyle = ColorsSetting.fontColor2
       val fpsString = "fps : "
       val txt1 = new Text(fpsString)
       val len1 = txt1.getLayoutBounds.getWidth.toInt
