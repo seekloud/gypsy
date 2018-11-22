@@ -95,7 +95,6 @@ class GameHolder(replay:Boolean = false) {
   )
 
   def init(): Unit = {
-//    println("drawBackground1111111111")
     drawGameView.drawGameWelcome()
     drawOffScreen.drawBackground()
     drawGameView.drawGameOn()
@@ -168,11 +167,15 @@ class GameHolder(replay:Boolean = false) {
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != "" && gameState == GameState.play) {
-//      drawClockView.cleanClock()
-      draw(offsetTime)
-    }else if(gameState == GameState.dead && deadInfo.isDefined){
-      drawTopView.drawWhenDead(deadInfo.get)
+    gameState match {
+      case GameState.play if myId!= ""=>
+        draw(offsetTime)
+      case GameState.dead if deadInfo.isDefined =>
+        drawTopView.drawWhenDead(deadInfo.get)
+      case GameState.allopatry =>
+        drawTopView.drawWhenFinish("存在异地登录")
+        gameClose
+      case _ =>
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
@@ -409,10 +412,6 @@ class GameHolder(replay:Boolean = false) {
           grid.removePlayer(id)
         }
 
-//        //匹配模式胜利用的(目前不用)
-//      case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
-//        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
-
       //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
@@ -448,17 +447,10 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
-        gameClose
-
-//      case Protocol.MatchRoomError()=>
-//        drawClockView.cleanClock()
-//        JsFunc.alert("超过等待时间请重新选择")
-        //todo
-//        LoginPage.homePage()
+        gameState = GameState.allopatry
 
         //某个用户离开
       case Protocol.PlayerLeft(id,name) =>
-        //TODO 广播
         grid.removePlayer(id)
         if(id == myId){
           gameClose
@@ -491,6 +483,9 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.gState.currentRank
         justSynced = true
 
+      case e: Protocol.CurrentRanks =>
+        grid.currentRank = e.currentRank
+
       case e: Protocol.KeyPress =>
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
@@ -502,9 +497,6 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.GenerateVirus =>
         grid.virusMap ++= e.virus
-
-      case e: Protocol.RemoveVirus =>
-
 
       case e: Protocol.UserJoinRoom =>
         println(s" Receive UserJoin at Replay =================")
@@ -519,6 +511,7 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.PlayerInfoChange =>
         grid.playerMap = e.player
+
 
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
@@ -555,24 +548,21 @@ class GameHolder(replay:Boolean = false) {
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
-        //todo closeHolder
-        println(s"播放结束！！！")
-//        dom.window.alert("播放结束，谢谢观看！")
-//        dom.window.cancelAnimationFrame(nextFrame)
+        drawTopView.drawWhenFinish("播放结束")
         gameClose
 
       case e:Protocol.DecodeError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish("数据解析失败")
         gameClose
 
       case e:Protocol.InitReplayError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish(e.msg)
         gameClose
 
-      case e:Protocol.UserMerge =>
-        if(grid.playerMap.get(e.id).nonEmpty){
-          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
-        }
+//      case e:Protocol.UserMerge =>
+//        if(grid.playerMap.get(e.id).nonEmpty){
+//          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
+//        }
 
       case _ =>
         println(s"unknow msg: $data")

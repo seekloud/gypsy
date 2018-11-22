@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
-//import com.neo.sk.gypsy.core.UserActor.StopReplay
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GameEvent
 //import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
@@ -126,7 +126,7 @@ object GamePlayer {
           timer.cancel(GameLoopKey)
 
 //          fileReader.mutableInfoIterable
-          log.info(s"UserMap-------$msg | $userMap---------")
+//          log.info(s"UserMap-------$msg | $userMap---------")
 //          log.info(s"metaData------- | $metaData********")
 //          log.info(s"initState------- | $initState========")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
@@ -134,7 +134,7 @@ object GamePlayer {
               log.info(s"total FrameCount :${frameCount}")
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
-              log.info(s"replay from frame=${fileReader.getFramePosition}")
+//              log.info(s"replay from frame=${fileReader.getFramePosition}")
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
@@ -152,6 +152,7 @@ object GamePlayer {
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
+//                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )
@@ -162,7 +163,6 @@ object GamePlayer {
               dispatchTo(u, Protocol.ReplayFinish())
             }
             timer.cancel(GameLoopKey)
-//            timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.stopped
           }
 
@@ -215,7 +215,7 @@ object GamePlayer {
 
   import org.seekloud.byteobject.ByteObject._
 
-  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameEvent)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 

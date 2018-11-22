@@ -34,7 +34,6 @@ class GameClient (override val boundary: Point) extends Grid {
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
-//    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
     GridDataSync(0l, Nil, Nil, Map.empty, 1.0)
   }
 
@@ -275,7 +274,7 @@ class GameClient (override val boundary: Point) extends Grid {
     }
     virus = virus1
   }*/
-override def checkVirusMassCrash(): Unit = {
+  override def checkVirusMassCrash(): Unit = {
   //TODO 这边病毒的运动有待商榷
   val virus1 = virusMap.flatMap{vi=>
     val v = vi._2
