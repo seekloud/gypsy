@@ -100,7 +100,7 @@ object UserActor {
   )
 
   def flow(id:String,name:String,recordId:Long,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
-        val in = Flow[UserActor.WebSocketMsg]
+    val in = Flow[UserActor.WebSocketMsg]
           .map {a=>
             val req = a.reqOpt.get
                  req match{
@@ -225,6 +225,12 @@ object UserActor {
           //          log.warn(s"got unknown msg: $unknowMsg")
           Behavior.same
 
+          //for 回放
+        case ChangeBehaviorToInit =>
+          frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+          ctx.unwatch(frontActor)
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
+
         case msg:GetUserInRecordMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
@@ -287,6 +293,7 @@ object UserActor {
           frontActor ! m
           Behaviors.same
 
+          //for 玩游戏+观战
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
           roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)

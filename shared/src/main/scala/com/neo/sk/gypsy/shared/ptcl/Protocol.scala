@@ -11,6 +11,10 @@ object Protocol {
 
   sealed trait GameMessage extends WsMsgSource
 
+  trait GameBeginning extends WsMsgSource
+
+  case class ErrorWsMsgFront(msg:String) extends GameMessage
+
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],

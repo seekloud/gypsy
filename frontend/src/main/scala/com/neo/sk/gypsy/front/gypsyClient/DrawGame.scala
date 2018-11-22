@@ -272,7 +272,6 @@ case class DrawGame(
   def drawRankMap():Unit = {
     //绘制当前排行
     val littleMap = this.canvas.width * 0.18  // 200
-
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(this.canvas.width - 200,20,150,250)
 
@@ -551,6 +550,15 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawWhenFinish(msg:String)={
+    ctx.fillStyle = "#000"
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.font = s"${30 * this.canvas.width / Window.w}px Helvetica"
+    ctx.fillStyle = "#fff"
+    ctx.fillText(msg, 80, 30)
+    //    ctx.fillText(msg, this.canvas.width * 0.5 - ctx.measureText(msg).width * 0.5, this.canvas.height* 0.5)
   }
 
 
