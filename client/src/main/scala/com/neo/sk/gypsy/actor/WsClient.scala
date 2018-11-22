@@ -174,7 +174,7 @@ object WsClient {
             case Right(res) =>
               if(res.Ws4AgentRsp.errCode == 0){
                 val data=res.Ws4AgentRsp.data
-                //tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
+                tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                 val playerId = "user" + data.userId
                 val nickName = data.nickname
                 linkGameAgent(gameId,playerId,data.token).map{

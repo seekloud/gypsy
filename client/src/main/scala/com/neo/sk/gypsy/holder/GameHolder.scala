@@ -95,6 +95,7 @@ class GameHolder(
 
   def start()={
     println("start---")
+    init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染

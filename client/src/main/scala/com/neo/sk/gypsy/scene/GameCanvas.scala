@@ -349,10 +349,10 @@ class GameCanvas(canvas: Canvas,
       }
       ctx.setFill(Color.web(foodColor))
       a._2.foreach{ case Food(color, x, y)=>
-//        ctx.beginPath()
-//        ctx.arc(x + offx,y + offy,10,10,0,360)
-//        ctx.fill()
-          ctx.fillRect(x + offx,y + offy,8,8)
+        ctx.beginPath()
+        ctx.arc(x + offx,y + offy,10,10,0,360)
+        ctx.fill()
+//          ctx.fillRect(x + offx,y + offy,8,8)
       }
     }
     masses.groupBy(_.color).foreach{ a=>
