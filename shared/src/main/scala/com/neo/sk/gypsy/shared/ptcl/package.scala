@@ -147,5 +147,11 @@ package object ptcl {
     val dead:Int = 2
   }
 
+  object UserState{
+    val waiting = 0
+    val play = 1
+    val watch = 2
+    val replay = 3
+  }
 
 }

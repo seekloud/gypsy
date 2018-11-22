@@ -217,7 +217,7 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean): Unit = {
+  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     if(firstCome) {
