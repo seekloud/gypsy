@@ -481,6 +481,9 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.gState.currentRank
         justSynced = true
 
+      case e: Protocol.CurrentRanks =>
+        grid.currentRank = e.currentRank
+
       case e: Protocol.KeyPress =>
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
 
@@ -492,9 +495,6 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.GenerateVirus =>
         grid.virusMap ++= e.virus
-
-      case e: Protocol.RemoveVirus =>
-
 
       case e: Protocol.UserJoinRoom =>
         println(s" Receive UserJoin at Replay =================")
@@ -509,6 +509,7 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.PlayerInfoChange =>
         grid.playerMap = e.player
+
 
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
@@ -556,10 +557,10 @@ class GameHolder(replay:Boolean = false) {
         drawTopView.drawWhenFinish(e.msg)
         gameClose
 
-      case e:Protocol.UserMerge =>
-        if(grid.playerMap.get(e.id).nonEmpty){
-          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
-        }
+//      case e:Protocol.UserMerge =>
+//        if(grid.playerMap.get(e.id).nonEmpty){
+//          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
+//        }
 
       case _ =>
         println(s"unknow msg: $data")

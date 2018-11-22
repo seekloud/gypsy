@@ -423,11 +423,6 @@ trait Grid {
               newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
-//            生成mass事件
-            if(newMassList.nonEmpty){
-              val event = GenerateMass(newMassList,frameCount)
-              AddGameEvent(event)
-            }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
