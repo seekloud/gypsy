@@ -60,10 +60,8 @@ WebSocketClient(
         event.data match {
           case blobMsg:Blob =>
             val fr = new FileReader()
-//            println(s"Entet the onMSG !!")
             fr.readAsArrayBuffer(blobMsg)
             fr.onloadend = { _: Event =>
-//              println(s"Entet the onMSG ")
               val buf = fr.result.asInstanceOf[ArrayBuffer]
               if(replay) {
                 messageHandler(replayEventDecode(buf))
@@ -104,7 +102,7 @@ WebSocketClient(
     if(a.byteLength > 0){
       bytesDecode[List[Protocol.GameEvent]](middleDataInJs) match{
         case Right(r)=>
-          println(s"事件数据解析成功！！！$r")
+//          println(s"事件数据解析成功！！！$r")
           DecodeEvents(Protocol.EventData(r))
         case Left(e) =>
           replayStateDecode(a)
@@ -119,10 +117,10 @@ WebSocketClient(
     val middleDataInJs = new MiddleBufferInJs(a)
     bytesDecode[Protocol.GameSnapshot](middleDataInJs) match {
       case Right(r)=>
-        println("全量数据解析成功： ")
+//        println("全量数据解析成功： ")
         DecodeEvent(Protocol.SyncGameAllState(r.asInstanceOf[Protocol.GypsyGameSnapshot].state))
       case Left(e) =>
-        println("全量数据解析错误： "+ e.message)
+//        println("全量数据解析错误： "+ e.message)
         DecodeEventError(Protocol.DecodeError())
     }
   }
