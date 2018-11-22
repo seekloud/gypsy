@@ -73,6 +73,7 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case RefreshToken =>
+//          log.info("000000000000000001")
           if(AppSettings.esheepAuthToken){
             EsheepClient.gsKey2Token().onComplete{
               case Success(rst) =>

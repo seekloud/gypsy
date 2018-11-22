@@ -95,11 +95,11 @@ object RoomActor {
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
 
-//              if(AppSettings.gameRecordIsWork){
-//               getGameRecorder(ctx,grid,roomId.toInt)
-//              }
-              timer.startPeriodicTimer(SyncTimeKey,Sync,WsMsgProtocol.frameRate millis)
-              idle(roomId,userList,userMap,subscribersMap,grid,0l)
+            if (AppSettings.gameRecordIsWork) {
+              getGameRecorder(ctx, grid, roomId.toInt)
+            }
+            timer.startPeriodicTimer(SyncTimeKey, Sync, WsMsgProtocol.frameRate millis)
+            idle(roomId, userList, userMap, subscribersMap, grid, 0l)
         }
     }
   }
@@ -151,7 +151,8 @@ object RoomActor {
 //              ctx.watchWith(subscriber, UserActor.Left(id, name))
               subscribersMap.put(id, subscriber)
               grid.addPlayer(id, name)
-              val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount)
+              val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount,-1)
+//              println(s"UserJoin  ${event} ")
               grid.AddGameEvent(event)
 
               subscriber ! JoinRoomSuccess(id, ctx.self)
@@ -283,11 +284,10 @@ object RoomActor {
           grid.update()
           val feedapples = grid.getNewApples
           val eventList = grid.getEvents()
-//          println(s"fra : ${grid.frameCount} ${eventList}")
           if(AppSettings.gameRecordIsWork){
-            if(tickCount % 20 == 1){
+//            if(tickCount % 20 == 1){
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
-            }
+//            }
           }
 
           if(grid.ReLiveMap.nonEmpty){
@@ -516,7 +516,7 @@ object RoomActor {
       val gameInformation = GameInformation(curTime)
 //      val gameInformation = ""
       val initStateOpt = Some(GypsyGameSnapshot(grid.getSnapShot()))
-//      println(s"beginSnapShot  $initStateOpt   ")
+//      println(s"beginSnapShot  $initStateOpt  ================ ")
       val initFrame = grid.frameCount
       val actor = ctx.spawn(GameRecorder.create(fileName,gameInformation,curTime,initFrame,initStateOpt,roomId),childName)
       ctx.watchWith(actor,ChildDead(childName,actor))

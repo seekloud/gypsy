@@ -20,7 +20,6 @@ import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout, userManager}
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.{CommonRsp, ErrorRsp}
-import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 

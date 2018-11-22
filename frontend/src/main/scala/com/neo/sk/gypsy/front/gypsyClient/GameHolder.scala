@@ -167,11 +167,15 @@ class GameHolder(replay:Boolean = false) {
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
-    if(myId != "" && gameState == GameState.play) {
-//      drawClockView.cleanClock()
-      draw(offsetTime)
-    }else if(gameState == GameState.dead && deadInfo.isDefined){
-      drawTopView.drawWhenDead(deadInfo.get)
+    gameState match {
+      case GameState.play if myId!= ""=>
+        draw(offsetTime)
+      case GameState.dead if deadInfo.isDefined =>
+        drawTopView.drawWhenDead(deadInfo.get)
+      case GameState.allopatry =>
+        drawTopView.drawWhenFinish("存在异地登录")
+        gameClose
+      case _ =>
     }
     nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
@@ -382,6 +386,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
+        //防止复活后又发了一条JOin消息
         if(!grid.playerMap.contains(id)){
           grid.playerMap += (id -> player)
         }
@@ -405,10 +410,6 @@ class GameHolder(replay:Boolean = false) {
 //          webSocketClient.sendMsg(ReLive(id))
           grid.removePlayer(id)
         }
-
-//        //匹配模式胜利用的(目前不用)
-//      case Protocol.GameOverMessage(id,killNum,score,lifeTime)=>
-//        DeadPage.gameOverModel(this,id,killNum,score,lifeTime)
 
       //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadPlayer)=>
@@ -445,17 +446,10 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
-        gameClose
-
-//      case Protocol.MatchRoomError()=>
-//        drawClockView.cleanClock()
-//        JsFunc.alert("超过等待时间请重新选择")
-        //todo
-//        LoginPage.homePage()
+        gameState = GameState.allopatry
 
         //某个用户离开
       case Protocol.PlayerLeft(id,name) =>
-        //TODO 广播
         grid.removePlayer(id)
         if(id == myId){
           gameClose
@@ -550,18 +544,15 @@ class GameHolder(replay:Boolean = false) {
 
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
-        //todo closeHolder
-        println(s"播放结束！！！")
-//        dom.window.alert("播放结束，谢谢观看！")
-//        dom.window.cancelAnimationFrame(nextFrame)
+        drawTopView.drawWhenFinish("播放结束")
         gameClose
 
       case e:Protocol.DecodeError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish("数据解析失败")
         gameClose
 
       case e:Protocol.InitReplayError =>
-        //todo closeHolder
+        drawTopView.drawWhenFinish(e.msg)
         gameClose
 
       case e:Protocol.UserMerge =>

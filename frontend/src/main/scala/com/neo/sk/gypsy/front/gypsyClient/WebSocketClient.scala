@@ -19,7 +19,8 @@ import org.seekloud.byteobject.MiddleBufferInJs
   * Time: 11:23
   *
   */
-case class WebSocketClient(
+case class
+WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
                             messageHandler:Protocol.GameMessage => Unit,
@@ -59,8 +60,10 @@ case class WebSocketClient(
         event.data match {
           case blobMsg:Blob =>
             val fr = new FileReader()
+//            println(s"Entet the onMSG !!")
             fr.readAsArrayBuffer(blobMsg)
             fr.onloadend = { _: Event =>
+//              println(s"Entet the onMSG ")
               val buf = fr.result.asInstanceOf[ArrayBuffer]
               if(replay) {
                 messageHandler(replayEventDecode(buf))
@@ -101,12 +104,14 @@ case class WebSocketClient(
     if(a.byteLength > 0){
       bytesDecode[List[Protocol.GameEvent]](middleDataInJs) match{
         case Right(r)=>
-//          println(s"事件数据解析成功！！！$r")
+          println(s"事件数据解析成功！！！$r")
           DecodeEvents(Protocol.EventData(r))
         case Left(e) =>
+          println(s"事件数据解析不成功 ")
           replayStateDecode(a)
       }
     }else{
+      println(s"事件数据解析不成功  因为0")
       DecodeEventError(Protocol.DecodeError())
     }
   }

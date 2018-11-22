@@ -11,6 +11,10 @@ object Protocol {
 
   sealed trait GameMessage extends WsMsgSource
 
+  trait GameBeginning extends WsMsgSource
+
+  case class ErrorWsMsgFront(msg:String) extends GameMessage
+
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
@@ -135,7 +139,7 @@ object Protocol {
 
   case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
   case class UserLeftRoom(userId:String,userName:String,ballId:Long,roomId:Long, override val frame:Long) extends GameEvent
-  case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
+  case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
 
