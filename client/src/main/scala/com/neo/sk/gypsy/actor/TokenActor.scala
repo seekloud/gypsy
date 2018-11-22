@@ -9,6 +9,7 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.TokenAndAcessCode
 import org.slf4j.LoggerFactory
 
 import scala.language.implicitConversions
+import com.neo.sk.gypsy.ClientBoot.executor
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -16,7 +17,7 @@ object TokenActor {
   sealed trait Command
   final case object RefreshToken extends Command
   final case class  InitToken(token: String, tokenExpireTime: Long, playerId: String) extends Command
-  final case class GetAccessCode(rsp:ActorRef[TokenAndAcessCode]) extends Command
+  final case class  GetAccessCode(rsp:ActorRef[TokenAndAcessCode]) extends Command
   private final case object GetNewToken extends Command
   private val log = LoggerFactory.getLogger(this.getClass)
   private final case object RefreshTokenKey
