@@ -150,7 +150,6 @@ object UserManager {
         case t: Protocol.ReplayFrameData =>
           log.info(s"========${t}===============")
           BinaryMessage.Strict(ByteString(t.ws))
-
         case x =>
           log.debug(s"akka stream receive unknown msg=${x}")
           TextMessage.apply("")

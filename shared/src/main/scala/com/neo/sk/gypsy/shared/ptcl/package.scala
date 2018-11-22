@@ -145,6 +145,7 @@ package object ptcl {
     val waiting:Int = 0
     val play:Int = 1
     val dead:Int = 2
+    val allopatry:Int = 3
   }
 
   object UserState{
