@@ -46,6 +46,9 @@ class GameCanvas(canvas: Canvas,
 
   val bounds = Point(Boundary.w, Boundary.h)
 
+
+
+  var realWindow = Point(size.x,size.y)
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
@@ -66,6 +69,12 @@ class GameCanvas(canvas: Canvas,
   private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
   private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
 
+  def resetScreen(width:Int,height:Int)={
+    canvas.setHeight(height)
+    canvas.setWidth(width)
+    realWindow = Point(width,height)
+
+  }
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
     ctx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
@@ -74,15 +83,15 @@ class GameCanvas(canvas: Canvas,
   //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.setFill(Color.web("rgba(255,255,255,0)"))
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
 
   }
   //绘制转圈动画
   var p =  ArrayBuffer()
   var particle = ArrayBuffer[Particle]()
   var angle = Math.PI/4
-  var width = size.x
-  var height = size.y
+  var width = realWindow.x
+  var height = realWindow.y
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
   }
@@ -159,7 +168,7 @@ class GameCanvas(canvas: Canvas,
 
   def clock(time:Int):Unit={
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.fillStyle = "rgba(99, 19, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("正在等待玩家进入", 640, 100)
@@ -178,7 +187,7 @@ class GameCanvas(canvas: Canvas,
   //欢迎文字
   def drawGameWelcome(): Unit = {
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setFont(Font.font("36px Helvetica"))
     ctx.fillText("Welcome.", 150, 180)
@@ -187,7 +196,7 @@ class GameCanvas(canvas: Canvas,
   //等待文字
   def drawGameWait(firstCome:Boolean): Unit = {
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     if(firstCome) {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
       ctx.setFont(Font.font("36px Helvetica"))
@@ -203,7 +212,7 @@ class GameCanvas(canvas: Canvas,
   //离线提示文字
   def drawGameLost: Unit = {
     ctx.setFill(Color.web("rgba(255,255,255,0"))
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setFont(Font.font("36px Helvetica"))
     ctx.fillText("Ops, connection lost....", 350, 250)
@@ -212,20 +221,20 @@ class GameCanvas(canvas: Canvas,
   //背景绘制ctx3
   def drawBackground():Unit = {
     //绘制背景
-    ctx.drawImage(background1,0,0,size.x,size.y)
+    ctx.drawImage(background1,0,0,realWindow.x,realWindow.y)
     ctx.save()
     //绘制条纹
     ctx.setStroke(Color.web(MyColors.stripe))
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x ,l )
+      ctx.lineTo(realWindow.x ,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y)
+      ctx.lineTo(l ,realWindow.y)
       ctx.stroke()
     }
   }
@@ -233,9 +242,11 @@ class GameCanvas(canvas: Canvas,
   //ctx2
   def drawRankMap():Unit = {
     //绘制当前排行
+    ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFill(Color.web(MyColors.rankList))
-    ctx.fillRect(size.x-200,20,150,250)
+    ctx.fillRect(realWindow.x-200,20,150,250)
 
+    println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
     ctx.setFont(Font.font("12px Helvetica"))
     ctx.setFill(Color.web(MyColors.rankList))
@@ -315,8 +326,8 @@ class GameCanvas(canvas: Canvas,
     val masses = data.massDetails
     val virus = data.virusDetails
 
-    val offx= size.x/2 - basePoint._1
-    val offy =size.y/2 - basePoint._2
+    val offx= realWindow.x/2 - basePoint._1
+    val offy =realWindow.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2,1200,600)
     //var scale = data.scale
@@ -326,9 +337,9 @@ class GameCanvas(canvas: Canvas,
 
 
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
-    ctx.fillRect(0,0,size.x,size.y)
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    centerScale(scale,size.x/2,size.y/2)
+    centerScale(scale,realWindow.x/2,realWindow.y/2)
 
     //TODO /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
@@ -453,14 +464,14 @@ class GameCanvas(canvas: Canvas,
   //ctx3
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
-    ctx.clearRect(0,0,size.x,size.y)
+    ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font("12px Helvetica"))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
     var index = 0
     ctx.setFill(Color.web(MyColors.background))
-    drawTextLine(s"—————排行榜—————", size.x-200, index, currentRankBaseLine)
+    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
     currentRank.foreach { score =>
       index += 1
       val drawColor = index match {
@@ -476,11 +487,11 @@ class GameCanvas(canvas: Canvas,
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, size.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+32, 13, 13)
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", size.x-193, index, currentRankBaseLine)
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index, currentRankBaseLine)
     }
     //绘制小地图
 
@@ -504,7 +515,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   def cleanCtx()={
-    ctx.clearRect(0,0,size.x,size.y)
+    ctx.clearRect(0,0,realWindow.x,realWindow.y)
   }
 
 }
