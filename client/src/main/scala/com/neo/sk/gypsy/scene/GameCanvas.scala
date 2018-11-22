@@ -180,7 +180,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Welcome.", 150, 180)
   }
 
@@ -190,11 +190,11 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, size.x , size.y )
     if(firstCome) {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Please wait.", 350, 180)
     } else {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Ops, Loading....", 350, 250)
     }
   }
@@ -205,7 +205,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255,255,255,0"))
     ctx.fillRect(0, 0, size.x , size.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Ops, connection lost....", 350, 250)
   }
 
@@ -237,7 +237,7 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(size.x-200,20,150,250)
 
     //绘制小地图
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
     ctx.setStroke(Color.web("rgba(0,0,0,0)"))
@@ -285,7 +285,7 @@ class GameCanvas(canvas: Canvas,
       else kill
       if (showTime > 0) {
         ctx.save()
-        ctx.setFont(Font.font("25px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
         ctx.strokeText(killerName, 25, 400)
         ctx.setFill(Color.web("#f27c02"))
@@ -416,7 +416,7 @@ class GameCanvas(canvas: Canvas,
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         // println(nameFont)
-        ctx.setFont(Font.font(s"${nameFont.toInt}px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds().getWidth()
         ctx.setStroke(Color.web("grey"))
@@ -454,7 +454,7 @@ class GameCanvas(canvas: Canvas,
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,size.x,size.y)
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
