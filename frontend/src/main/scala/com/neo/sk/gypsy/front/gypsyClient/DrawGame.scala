@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
 
-import scalatags.JsDom.short.{*, img, s}
+//import scalatags.JsDom.short.{*, img,s}
+import scalatags.JsDom.short._
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
@@ -56,6 +57,9 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+
+//  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
+
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
@@ -240,7 +244,11 @@ case class DrawGame(
   //背景绘制ctx3
   def drawBackground():Unit = {
     println(s"Draw BackGround ================================ ")
+//    val pat = ctx.createPattern(background1,"repeat")
+//    ctx.fillStyle = pat
+//    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
+    println("drawBackground22222222")
     ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
@@ -264,7 +272,6 @@ case class DrawGame(
   def drawRankMap():Unit = {
     //绘制当前排行
     val littleMap = this.canvas.width * 0.18  // 200
-
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(this.canvas.width - 200,20,150,250)
 
@@ -543,6 +550,15 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawWhenFinish(msg:String)={
+    ctx.fillStyle = "#000"
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.font = s"${30 * this.canvas.width / Window.w}px Helvetica"
+    ctx.fillStyle = "#fff"
+    ctx.fillText(msg, 80, 30)
+    //    ctx.fillText(msg, this.canvas.width * 0.5 - ctx.measureText(msg).width * 0.5, this.canvas.height* 0.5)
   }
 
 
