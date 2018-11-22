@@ -12,6 +12,7 @@ import scala.language.implicitConversions
 import com.neo.sk.gypsy.ClientBoot.executor
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import com.neo.sk.gypsy.ClientBoot.executor
 
 object TokenActor {
   sealed trait Command
