@@ -28,6 +28,8 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import io.circe.parser.decode
 import io.circe.generic.auto._
 import com.neo.sk.gypsy.common.Api4GameAgent._
+import com.neo.sk.gypsy.ClientBoot.tokenActor
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
@@ -171,9 +173,11 @@ object WsClient {
           decode[Ws4AgentResponse](msg) match {
             case Right(res) =>
               if(res.Ws4AgentRsp.errCode == 0){
-                val playerId = "user" + res.Ws4AgentRsp.data.userId
-                val nickName = res.Ws4AgentRsp.data.nickname
-                linkGameAgent(gameId,playerId,res.Ws4AgentRsp.data.token).map{
+                val data=res.Ws4AgentRsp.data
+                //tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
+                val playerId = "user" + data.userId
+                val nickName = data.nickname
+                linkGameAgent(gameId,playerId,data.token).map{
                   case Right(resl) =>
                     log.debug("accessCode: " + resl.accessCode)
                     self ! ConnectGame(playerId,nickName,resl.accessCode)

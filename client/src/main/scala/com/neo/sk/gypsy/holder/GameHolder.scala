@@ -3,10 +3,12 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
+
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
+
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
@@ -17,6 +19,8 @@ import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial, myId}
 import java.awt.event.KeyEvent
+import javafx.scene.image.Image
+
 import scala.math.atan2
 
 /**
@@ -82,16 +86,15 @@ class GameHolder(
     }
   }
 
-  def init()= {
+  def init() = {
     gameScene.gameView.drawGameWelcome()
-//    gameScene.offView.drawBackground()
     gameScene.gameView.drawGameOn()
+   // gameScene.offView.drawBackgroundInit()
     gameScene.middleView.drawRankMap()
   }
 
   def start()={
     println("start---")
-    init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染
