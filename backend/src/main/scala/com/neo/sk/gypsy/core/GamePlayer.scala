@@ -233,11 +233,12 @@ object GamePlayer {
   private def busy()(
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command]
-  ):Behavior[Command] =
-    Behaviors.receive[Command] {(ctx, msg) =>
+  ):Behavior[Command] = {
+    println("in the busy");
+    Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case SwitchBehavior(name, behavior, durationOpt, timeOut) =>
-          switchBehavior(ctx, name, behavior,durationOpt, timeOut)
+          switchBehavior(ctx, name, behavior, durationOpt, timeOut)
 
         case TimeOut(m) =>
           log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
@@ -249,6 +250,6 @@ object GamePlayer {
       }
     }
 
-
+  }
 
 }
