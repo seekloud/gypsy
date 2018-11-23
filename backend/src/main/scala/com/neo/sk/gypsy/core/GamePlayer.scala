@@ -175,6 +175,7 @@ object GamePlayer {
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
             PlayerInRecordInfo(r._1._1,r._1._2,fList)
           }.toList
+          println(s"GetUserInRecordMsg: $data ################$frameCount ")
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 
