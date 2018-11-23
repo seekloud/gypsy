@@ -27,6 +27,7 @@ import scala.concurrent.duration._
   * Time: 9:22
   */
 object RoomActor {
+
   val log = LoggerFactory.getLogger(this.getClass)
 
   trait Command
@@ -39,34 +40,18 @@ object RoomActor {
 
   private case object TimeOutKey
 
-//  private case object ReliveTimeOutKey
   private case class ReliveTimeOutKey(id:String)
 
   private case object TimeOut extends Command
-
- // private case class Join(id: String, name: String, subscriber: ActorRef[UserActor.Command],watchgame:Boolean) extends Command
 
   case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long,watchgame:Boolean,watchId:Option[String]) extends Command
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
-//  private case class UserReLive(id: String) extends Command
-
   private case class ReStart(id: String) extends Command
 
   case class ReStartAck(id: String) extends Command
 
-//  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
-//  private case class ChangeWatch(id: String, watchId: String) extends Command
-
-//  private case class Left(id: String, name: String) extends Command
-//
-//  private case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command
-//
-//  private case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command
-//
-//  private case class NetTest(id: String, createTime: Long) extends Command
-//
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
   private case object UnKnowAction extends Command
@@ -80,8 +65,6 @@ object RoomActor {
   val bounds = Point(Boundary.w, Boundary.h)
 
   val ballId = new AtomicLong(100000)
-
-//  private var ReLiveMap = Map.empty[String,Long]
 
   def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
@@ -165,32 +148,6 @@ object RoomActor {
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
           Behaviors.same
-
-//          //TODO 切换视角
-//        case UserActor.ChangeWatch(id, watchId) =>
-//          log.info(s"get $msg")
-//          for(i<- 0 until userList.length){
-//            for(j<-0 until userList(i).shareList.length){
-//              if(userList(i).shareList(j) == id){
-//                userList(i).shareList.remove(j)
-//              }
-//            }
-//            if(userList(i).id == watchId){
-//              userList(i).shareList.append(id)
-//              //切换视角
-//              dispatchTo(subscribersMap)(id, Protocol.Id(watchId))
-//              dispatchTo(subscribersMap)(id,grid.getAllGridData)
-//            }
-//          }
-//          Behaviors.same
-
-//        case UserActor.UserReLive(id) =>
-//          println(s"RoomActor Relive ")
-////          ReLiveMap.put(id,System.currentTimeMillis())
-//          ReLiveMap += (id -> System.currentTimeMillis())
-//          //TODO 这里加一些watch的处理
-////          timer.startSingleTimer(ReliveTimeOutKey(id),ReStart(id),AppSettings.reliveTime.seconds)
-//          Behavior.same
 
         case ReStart(id) =>
           log.info(s"RoomActor Restart Send!++++++++++++++")
@@ -306,18 +263,18 @@ object RoomActor {
             dispatch(subscribersMap)(gridData)
           } else {
             if (feedapples.nonEmpty) {
-//              dispatch(subscribersMap,WsMsgProtocol.FeedApples(newApples))
               val foodlists = feedapples.map(s=>Food(s._2,s._1.x,s._1.y)).toList
               dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
               grid.cleanNewApple
             }
           }
           if (tickCount % 20 == 1) {
+            val currentRankEvent = Protocol.CurrentRanks(grid.currentRank)
+            grid.AddGameEvent(currentRankEvent)
             dispatch(subscribersMap)(Protocol.Ranks(grid.currentRank, grid.historyRankList))
           }
           if(tickCount==0){
             val gridData = grid.getAllGridData
-            //            dispatch(subscribersMap,grid.getAllGridData)
             dispatch(subscribersMap)(gridData)
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
@@ -325,7 +282,6 @@ object RoomActor {
           idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
 
         case UserActor.NetTest(id, createTime) =>
-          //log.info(s"Net Test: createTime=$createTime")
           //log.info(s"Net Test: createTime=$createTime")
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
           Behaviors.same
@@ -380,6 +336,7 @@ object RoomActor {
     subscribers.get(id).foreach( _ ! UserActor.DispatchMsg(Protocol.Wrap(msg.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result(),isKillMsg)))
 
   }
+
 
   //暂未考虑下匹配的情况
 //  private def getGameRecorder(ctx: ActorContext[Command],gameContainer:GameContainerServerImpl,roomId:Long):ActorRef[GameRecorder.Command] = {

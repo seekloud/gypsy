@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GameEvent
 //import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
@@ -42,6 +43,7 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
+  case class StopReplay(recordId:Long) extends Command
 
   final case class SwitchBehavior(
                                  name: String,
@@ -72,7 +74,7 @@ object GamePlayer {
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
-      log.info(s"${ctx.self.path} is starting..")
+      log.info(s"GamePlayer is starting..")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
@@ -120,17 +122,19 @@ object GamePlayer {
         case msg:InitReplay =>
           log.info("start new replay !")
           //停止之前的重放
+//          timer.cancelAll()
           timer.cancel(GameLoopKey)
+
 //          fileReader.mutableInfoIterable
-          log.info(s"UserMap-------$msg | $userMap---------")
-          log.info(s"metaData------- | $metaData********")
-          log.info(s"initState------- | $initState========")
+//          log.info(s"UserMap-------$msg | $userMap---------")
+//          log.info(s"metaData------- | $metaData********")
+//          log.info(s"initState------- | $initState========")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
             case Some(u)=>
               log.info(s"total FrameCount :${frameCount}")
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
-              log.info(s"replay from frame=${fileReader.getFramePosition}")
+//              log.info(s"replay from frame=${fileReader.getFramePosition}")
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
@@ -144,9 +148,11 @@ object GamePlayer {
               Behaviors.stopped
           }
         case GameLoop=>
+//          println(s"Loop ${fileReader.getFramePosition}========")
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
+//                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )
@@ -157,12 +163,10 @@ object GamePlayer {
               dispatchTo(u, Protocol.ReplayFinish())
             }
             timer.cancel(GameLoopKey)
-//            timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
             Behaviors.stopped
           }
 
         case msg:GetRecordFrameMsg=>
-          log.info(s"GetRecordFrameMsg *** nowPosition:${fileReader.getFramePosition} TotalFrame ${frameCount.toLong} ")
           msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
           Behaviors.same
 
@@ -176,6 +180,10 @@ object GamePlayer {
 
 //        case msg:TimeOut=>
 //          Behaviors.stopped
+
+        case msg:StopReplay =>
+          log.info(s"Stop Replay! ${msg.recordId}")
+          Behaviors.stopped
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
@@ -207,7 +215,7 @@ object GamePlayer {
 
   import org.seekloud.byteobject.ByteObject._
 
-  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
+  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameEvent)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 

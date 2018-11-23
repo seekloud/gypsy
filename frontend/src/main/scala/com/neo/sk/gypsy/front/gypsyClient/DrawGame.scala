@@ -217,7 +217,7 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean): Unit = {
+  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     if(firstCome) {
@@ -243,12 +243,12 @@ case class DrawGame(
 
   //背景绘制ctx3
   def drawBackground():Unit = {
-    println(s"Draw BackGround ================================ ")
+//    println(s"Draw BackGround ================================ ")
 //    val pat = ctx.createPattern(background1,"repeat")
 //    ctx.fillStyle = pat
 //    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
-    println("drawBackground22222222")
+//    println("drawBackground22222222")
     ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
