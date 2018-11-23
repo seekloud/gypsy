@@ -86,7 +86,6 @@ object UserManager {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          println(s" Usermager Receive !! ")
           getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
