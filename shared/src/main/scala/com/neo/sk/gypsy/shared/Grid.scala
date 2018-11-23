@@ -530,23 +530,18 @@ trait Grid {
     val width = winWidth / scale / 2
     val height = winHeight / scale / 2
 
-//    var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-/*    food.foreach{
-      case (p,mass) =>
-        foodDetails ::= Food(mass, p.x, p.y)
-    }*/
+
     playerMap.foreach{
       case (id,player) =>
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
+
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
-//      foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-//      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       scale
     )

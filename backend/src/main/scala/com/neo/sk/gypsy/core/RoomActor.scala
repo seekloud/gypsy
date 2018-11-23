@@ -27,6 +27,7 @@ import scala.concurrent.duration._
   * Time: 9:22
   */
 object RoomActor {
+
   val log = LoggerFactory.getLogger(this.getClass)
 
   trait Command

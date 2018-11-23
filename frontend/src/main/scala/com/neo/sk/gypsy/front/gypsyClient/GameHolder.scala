@@ -283,7 +283,7 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          //TODO 食物没有做是否在屏幕中的判断？
+          //TODO 食物没有做是否在屏幕中的判断
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
@@ -364,15 +364,6 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap = virus
 
       case data: Protocol.GridDataSync =>
-        //TODO here should be better code.
-//        println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-        /*if(data.frameCount<grid.frameCount){
-          println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-        }else if(data.frameCount>grid.frameCount){
-          // println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-          syncGridData = Some(data)
-          justSynced = true
-        }*/
         syncGridData = Some(data)
         justSynced = true
 
