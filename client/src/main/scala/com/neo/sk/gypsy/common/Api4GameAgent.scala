@@ -46,9 +46,11 @@ object Api4GameAgent extends HttpUtil{
           case Right(res) =>
             Right(LinkResElement(res.data.accessCode,res.data.gsPrimaryInfo))
           case Left(le) =>
+            log.info("what error????",le)
             Left("decode error: "+le)
         }
       case Left(erStr) =>
+        log.info("what error?",erStr)
         Left("get return error:"+erStr)
     }
   }
