@@ -354,20 +354,14 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.FeedApples(foods) =>
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
-//        println(s"食物个数${foods.size}帧号${grid.frameCount}")
-
       case Protocol.AddVirus(virus) =>
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
-
-      case Protocol.ReduceVirus(virus) =>
-        grid.virusMap = virus
 
       case data: Protocol.GridDataSync =>
         syncGridData = Some(data)
         justSynced = true
 
-      //drawGrid(msgData.uid, data)
       //网络延迟检测
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
@@ -533,7 +527,6 @@ class GameHolder(replay:Boolean = false) {
           gameState = GameState.dead
           //TODO 商榷
           grid.removePlayer(myId)
-//          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           Shortcut.playMusic("shutdownM")
         }
 

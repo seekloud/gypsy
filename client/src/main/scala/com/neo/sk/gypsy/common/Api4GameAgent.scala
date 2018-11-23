@@ -57,13 +57,11 @@ object Api4GameAgent extends HttpUtil{
     val methodName = s"gaRefreshToken"
     val url = esheepProtocol + "://" + esheepDomain +s"/esheep/api/gameAgent/gaRefreshToken?token=$token"
 
-    val data = gaRefreshTokenReq(playerId).asJson.noSpaces
-
+    val data = GaRefreshTokenReq(playerId).asJson.noSpaces
 
     postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
-        println(jsonStr)
-        decode[gaRefreshTokenRsp](jsonStr) match {
+        decode[GaRefreshTokenRsp](jsonStr) match {
           case Right(rsp) =>
             if(rsp.errCode == 0){
               Right(rsp.data)

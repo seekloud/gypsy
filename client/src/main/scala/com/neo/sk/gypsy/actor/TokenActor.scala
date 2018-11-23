@@ -24,8 +24,8 @@ object TokenActor {
   private val log = LoggerFactory.getLogger(this.getClass)
   private final case object RefreshTokenKey
   private final case object BehaviorChangeKey
-  private final val refreshTime = 120.minutes
-  private final val GetTokenTime = Some(120.minutes)
+  private final val refreshTime = 10.minutes
+  private final val GetTokenTime = Some(10.minutes)
 
   case class TimeOut(msg:String) extends Command
 

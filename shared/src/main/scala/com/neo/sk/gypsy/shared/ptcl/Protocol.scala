@@ -32,7 +32,6 @@ object Protocol {
 
   case class FeedApples(
                          aLs: List[Food]
-                         //                         aLs: Map[Point, Int]
                        ) extends GameMessage
 
   case class Id(id: String) extends GameMessage
@@ -59,8 +58,6 @@ object Protocol {
 
   //只有用户离开房间时候发送
   case class PlayerLeft(id: String, name: String) extends GameMessage
-
-  case class ReduceVirus(virus: Map[Long,Virus]) extends GameMessage
 
   case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
 
