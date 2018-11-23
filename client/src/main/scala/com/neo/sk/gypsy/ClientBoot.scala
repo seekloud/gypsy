@@ -26,7 +26,7 @@ object ClientBoot{
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val scheduler: Scheduler = system.scheduler
   val gameClient= system.spawn(GameClient.create(),"gameHolder")
-  val tokenActor:ActorRef[TokenActor.Command] = system.spawn(TokenActor.create,"esheepSyncClient")
+  val tokenActor:ActorRef[TokenActor.Command] = system.spawn(TokenActor.create(),"esheepSyncClient")
 
   def addToPlatform(fun: => Unit) = {
     Platform.runLater(() => fun)

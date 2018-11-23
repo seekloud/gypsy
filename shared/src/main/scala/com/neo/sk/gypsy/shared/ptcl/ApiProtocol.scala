@@ -177,7 +177,7 @@ object ApiProtocol {
                           msg:String = "ok"
                         )
 
-  case class gaRefreshTokenReq(
+  case class GaRefreshTokenReq(
                                 playerId: String
                               )
 
@@ -192,7 +192,7 @@ object ApiProtocol {
                                 accessCode: String
                               )
 
-  case class gaRefreshTokenRsp(
+  case class GaRefreshTokenRsp(
                                 data: TokenInfo,
                                 errCode: Int = 0,
                                 msg: String = "ok"

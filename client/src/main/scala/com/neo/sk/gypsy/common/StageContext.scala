@@ -17,11 +17,6 @@ class StageContext(stage: Stage) {
   import StageContext._
 
   def showScene(scene: Scene,title: String = "Gypsy", flag: Boolean) = {
-//    stage.setScene(scene)
-//    stage.setTitle(title)
-//    stage.sizeToScene()
-//    stage.show()
-
     stage.setScene(scene)
     stage.setTitle(title)
     stage.sizeToScene()

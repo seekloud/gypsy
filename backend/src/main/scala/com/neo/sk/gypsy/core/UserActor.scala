@@ -112,10 +112,6 @@ object UserActor {
 //                     Left(id,name)
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-//                   case WatchChange(id, watchId) =>
-//                     log.debug(s"切换观察者: $watchId")
-//                     ChangeWatch(id, watchId)
-
 //                   case ReLive(id) =>
 //                     UserReLive(id)
 

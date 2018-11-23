@@ -14,7 +14,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.utils.FpsComp
+import com.neo.sk.gypsy.utils.{FpsComp, ClientMusic}
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -59,7 +59,7 @@ object GameClient {
       msg match {
         case Protocol.Id(id) =>
           myId = id
-//          Shortcut.playMusic("bg")
+          ClientMusic.playMusic("bg")
           println(s"myID:$myId")
           Behaviors.same
 
@@ -89,6 +89,7 @@ object GameClient {
 
 
         case Protocol.FeedApples(foods) =>
+          log.info("ClientFood:  " + foods)
           ClientBoot.addToPlatform{
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
@@ -103,14 +104,6 @@ object GameClient {
           }
           Behaviors.same
 
-
-        case Protocol.ReduceVirus(virus) =>
-          ClientBoot.addToPlatform{
-            grid.virusMap = virus
-          }
-          Behaviors.same
-
-
         case data: Protocol.GridDataSync =>
           ClientBoot.addToPlatform{
             syncGridData = Some(data)
@@ -118,8 +111,6 @@ object GameClient {
           }
           Behaviors.same
 
-
-        //drawGrid(msgData.uid, data)
         //网络延迟检测
           //todo
         case p:Protocol.Pong =>
@@ -130,7 +121,7 @@ object GameClient {
 
 
         case Protocol.PlayerRestart(id) =>
-//          Shortcut.playMusic("bg")
+          ClientMusic.playMusic("bg")
           Behaviors.same
 
 
@@ -149,20 +140,16 @@ object GameClient {
           Behaviors.same
 
 
-
         //只针对某个死亡玩家发送的死亡消息
         case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
           if(id==myId){
-            //          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
             ClientBoot.addToPlatform{
               deadInfo = Some(msg)
               gameState = GameState.dead
-//              gameHolder.reLive(id)
               grid.removePlayer(id)
             }
           }
           Behaviors.same
-
 
 
         //针对所有玩家发送的死亡消息
@@ -179,20 +166,20 @@ object GameClient {
                 killList :+=(200,killerId,deadPlayer)
               }
             }else{
-              //            Shortcut.playMusic("shutdownM")
+              ClientMusic.playMusic("shutdownM")
             }
-            //          if(killerId == myId){
-            //            grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-            //              case 1 => Shortcut.playMusic("1Blood")
-            //              case 2 => Shortcut.playMusic("2Kill")
-            //              case 3 => Shortcut.playMusic("3Kill")
-            //              case 4 => Shortcut.playMusic("4Kill")
-            //              case 5 => Shortcut.playMusic("5Kill")
-            //              case 6 => Shortcut.playMusic("godlikeM")
-            //              case 7 => Shortcut.playMusic("legendaryM")
-            //              case _ => Shortcut.playMusic("unstop")
-            //            }
-            //          }
+            if(killerId == myId){
+              grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+                case 1 => ClientMusic.playMusic("1Blood")
+                case 2 => ClientMusic.playMusic("2Kill")
+                case 3 => ClientMusic.playMusic("3Kill")
+                case 4 => ClientMusic.playMusic("4Kill")
+                case 5 => ClientMusic.playMusic("5Kill")
+                case 6 => ClientMusic.playMusic("godlikeM")
+                case 7 => ClientMusic.playMusic("legendaryM")
+                case _ => ClientMusic.playMusic("unstop")
+              }
+            }
           }
           Behaviors.same
 
