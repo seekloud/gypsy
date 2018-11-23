@@ -18,11 +18,7 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, GameState}
-import io.circe.{Decoder, Encoder}
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.generic.auto._
-import io.circe.syntax._
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
