@@ -189,7 +189,7 @@ object EsheepSyncClient {
      */
 
     ctx.self ! RefreshToken
-//    ctx.self ! msg
+    ctx.self ! msg
 
   }
 }
