@@ -528,7 +528,7 @@ class GameHolder(replay:Boolean = false) {
             }
           }
         }else{
-          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.deadPlayer.startTime)
+          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷
