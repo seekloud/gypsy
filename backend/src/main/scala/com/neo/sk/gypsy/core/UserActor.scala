@@ -179,6 +179,7 @@ object UserActor {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
+          println(s" UserActor Receive !! ")
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
 
@@ -240,6 +241,7 @@ object UserActor {
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case msg:GetUserInRecordMsg=>
+          println(s" UserActor Receive !! ")
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
 

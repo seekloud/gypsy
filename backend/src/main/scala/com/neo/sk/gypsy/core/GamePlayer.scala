@@ -171,6 +171,7 @@ object GamePlayer {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
+          println(s"GamePlayer Receive !! ")
           val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
             PlayerInRecordInfo(r._1._1,r._1._2,fList)
