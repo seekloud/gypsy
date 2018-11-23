@@ -81,11 +81,12 @@ object GamePlayer {
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
-            val replay=initFileReader(r.filePath)
-            println(s" ==============${replay.getLastSnapshotFrameIndex}  ")
-            println(s" %%%%%%%%%%%%%%${replay.getSnapshotIndexes.length}  ")
-            val info=replay.init()
             try{
+              val replay=initFileReader(r.filePath)
+              if(replay.equals(null)){
+                println("The replay is null!!!")
+              }
+              val info=replay.init()
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
