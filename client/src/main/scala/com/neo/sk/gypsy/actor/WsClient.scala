@@ -174,6 +174,7 @@ object WsClient {
             case Right(res) =>
               if(res.Ws4AgentRsp.errCode == 0){
                 val data=res.Ws4AgentRsp.data
+                println("xixix"+res)
                 tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                 val playerId = "user" + data.userId
                 val nickName = data.nickname
@@ -182,10 +183,10 @@ object WsClient {
                     log.debug("accessCode: " + resl.accessCode)
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
                   case Left(l) =>
-                    log.error("link error!")
+                    log.error("aaalink error!")
                 }
               }else{
-                log.error("link error!")
+                log.error("bbblink error!")
               }
             case Left(le) =>
               log.error(s"decode esheep webmsg error! Error information:${le}")
