@@ -81,13 +81,9 @@ object GamePlayer {
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
-            println(s" zzzzzzzzzzzzzzzzzzzzz")
             val replay=initFileReader(r.filePath)
-            println(s" ffffffffffffffffff ")
             val info=replay.init()
-            println(s" sssssssssssssssss ")
             try{
-              println(s" IN the  try  %%%%%%%% ")
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
@@ -180,7 +176,6 @@ object GamePlayer {
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
             PlayerInRecordInfo(r._1._1,r._1._2,fList)
           }.toList
-          println(s"GetUserInRecordMsg: $data ################$frameCount ")
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 

@@ -217,7 +217,6 @@ object UserActor {
           Behaviors.same
 
         case UserLeft(actor) =>
-//          log.info(s"${actor.path} @@@@@@@@@@@@@@UserLeft")
           if(userState == UserState.replay){
             getGameReply(ctx,watchRecordId) ! GamePlayer.StopReplay(watchRecordId)
             watchRecordId = 0l
