@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.shared.ptcl._
 object Protocol {
 
   /**
-    * 后端解析的数据
+    * 后端发送的数据
     * */
 
   sealed trait GameMessage extends WsMsgSource
@@ -14,13 +14,16 @@ object Protocol {
   trait GameBeginning extends WsMsgSource
 
   case class ErrorWsMsgFront(msg:String) extends GameMessage
+  final case object RebuildWebSocket extends GameMessage
+  case class DecodeEvent(data:SyncGameAllState) extends GameMessage
+  case class DecodeEvents(data:EventData) extends GameMessage
+  case class DecodeEventError(data:DecodeError) extends GameMessage
+  case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
 
   case class GridDataSync(
                            frameCount: Long,
                            playerDetails: List[Player],
-                           //foodDetails: List[Food],
                            massDetails: List[Mass],
-                           //virusDetails: List[Virus],
                            virusDetails: Map[Long,Virus],
                            scale: Double, //缩放比例
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
@@ -56,6 +59,7 @@ object Protocol {
 
   //只有用户离开房间时候发送
   case class PlayerLeft(id: String, name: String) extends GameMessage
+
   case class ReduceVirus(virus: Map[Long,Virus]) extends GameMessage
 
   case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
@@ -75,11 +79,6 @@ object Protocol {
 
   case class WsSendFailed(ex:Throwable) extends WsSendMsg
 
-//  sealed trait GameAction{
-//    val serialNum:Int //类似每一帧的动作顺序
-//    val frame:Long
-//  }
-
   sealed trait UserAction extends WsSendMsg
 
   case class TextInfo(msg:String) extends UserAction
@@ -90,50 +89,22 @@ object Protocol {
 
   case class WatchChange(id:String, watchId: String) extends UserAction
 
-//  case class UserLeft() extends UserAction
-
-//  case object ErrorWsMsgServer extends UserAction
-
   case class Ping(timestamp: Long) extends UserAction
-
-//  case class ReLive(id:String) extends UserAction
 
   case class ReLiveAck(id:String) extends UserAction
 
 
   /**
-    * event
+    * 事件记录
     * */
   sealed trait GameEvent {
     val frame:Long = -1l
     val serialNum:Int = -1
   }
 
-//  trait UserEvent extends GameEvent
-//  trait EnvironmentEvent extends GameEvent
-//  trait InfoChange extends GameEvent
-//  trait UserActionEvent extends UserEvent{
-//    val userId:String
-//    val serialNum:Int
-//  }
-  /**异地登录消息
-    * WebSocket连接重新建立*/
-  final case object RebuildWebSocket extends GameMessage
-
-  /**
-    * replay-frame-msg
-    */
-  case class DecodeEvent(data:SyncGameAllState) extends GameMessage
-  case class DecodeEvents(data:EventData) extends GameMessage
-  case class DecodeEventError(data:DecodeError) extends GameMessage
-  case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
-  case class InitReplayError(msg:String) extends GameMessage
-  case class ReplayFinish() extends GameMessage
-
-  /**
-    * replay in front
-    * */
   case class DecodeError() extends GameEvent
+  case class InitReplayError(msg:String) extends GameEvent
+  case class ReplayFinish() extends GameEvent
   case class EventData(list:List[GameEvent]) extends GameEvent
   case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
 
@@ -142,17 +113,10 @@ object Protocol {
   case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
-
-   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-   case class RemoveApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
-   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
-   case class RemoveVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent
-   case class GenerateMass(massList:List[Mass], override val frame:Long) extends GameEvent
-//  只有Virus和Mass碰撞，Player和Mass前后端都有不记
-//   case class RemoveMass(massList:List[Mass], override val frame:Long) extends GameEvent with WsMsgSource
-//   case class ReduceApples(apples:List[Food], override val frame:Long) extends GameEvent
-//  case class ReduceVirus(apples:List[Food], override val frame:Long) extends GameEvent
+  case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+  case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
   case class KillMsg(killerId:String,deadPlayer:Player,score:Int,lifeTime:Long, override val frame: Long) extends GameEvent
+  case class CurrentRanks(currentRank: List[Score]) extends GameEvent
 
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
@@ -170,7 +134,6 @@ object Protocol {
                                       playerDetails: List[Player],
                                       foodDetails: List[Food],
                                       massDetails: List[Mass],
-                                      //virusDetails: List[Virus],
                                       virusDetails: Map[Long,Virus],
                                       currentRank:List[Score]
                                     )
@@ -187,21 +150,6 @@ object Protocol {
                                   //     boundary: ,
                                   //     window:
                                 )
-
-  // TODO mass改变是否要算进生成病毒
-
-  //  final case class GenerateVirus(virus: List[Virus],override val frame:Long) extends EnvironmentEvent with WsMsgFront
-
-  //  Cell变化直接做到用户信息改变那了
-//  final case class GenerateCells(override val frame:Long) extends EnvironmentEvent with WsMsgFront
-
-  //是否做消失事件？？？
-
-
-//  sealed trait GameSnapshot
-//  final case class GypsyGameSnapshot(
-//                                    state:GypsyGameSnapInfo
-//                                  ) extends GameSnapshot with GameEvent
 
 
 

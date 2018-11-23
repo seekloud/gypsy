@@ -25,3 +25,10 @@ ALTER TABLE user_record_map ADD endFrame BIGINT DEFAULT -1;
 -- ALTER TABLE game_record ADD totalFrame BIGINT DEFAULT 0;
 ALTER TABLE user_record_map DROP COLUMN startFrame;
 ALTER TABLE user_record_map DROP COLUMN endFrame;
+
+-- 清表
+TRUNCATE game_record
+TRUNCATE user_record_map
+
+-- 添加昵称
+ALTER TABLE user_record_map ADD nickname TEXT NOT NULL ;
