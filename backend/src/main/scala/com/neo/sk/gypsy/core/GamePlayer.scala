@@ -83,9 +83,6 @@ object GamePlayer {
           case Some(r)=>
             try{
               val replay=initFileReader(r.filePath)
-              if(replay.equals(null)){
-                println("The replay is null!!!")
-              }
               val info=replay.init()
               ctx.self ! SwitchBehavior("work",
                 work(
@@ -174,7 +171,6 @@ object GamePlayer {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          println(s"GamePlayer Receive !! ")
           val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
             PlayerInRecordInfo(r._1._1,r._1._2,fList)
