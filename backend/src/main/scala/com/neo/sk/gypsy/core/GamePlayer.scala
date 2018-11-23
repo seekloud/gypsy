@@ -83,6 +83,7 @@ object GamePlayer {
           case Some(r)=>
             val replay=initFileReader(r.filePath)
             println(s" ==============${replay.getLastSnapshotFrameIndex}  ")
+            println(s" %%%%%%%%%%%%%%${replay.getSnapshotIndexes.length}  ")
             val info=replay.init()
             try{
               ctx.self ! SwitchBehavior("work",
