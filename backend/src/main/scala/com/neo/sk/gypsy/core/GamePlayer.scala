@@ -81,9 +81,13 @@ object GamePlayer {
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
+            println("======1")
             val replay=initFileReader(r.filePath)
+            println("======2")
             val info=replay.init()
+            println("======3")
             try{
+              println("======4")
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
