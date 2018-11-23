@@ -81,9 +81,11 @@ object GamePlayer {
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
+            println(s" DB ======$r  ")
             val replay=initFileReader(r.filePath)
             val info=replay.init()
             try{
+              println(s" IN the  try  %%%%%%%% ")
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
