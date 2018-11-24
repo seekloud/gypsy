@@ -1,12 +1,10 @@
 package com.neo.sk.gypsy
 
 import javafx.stage.Stage
-
 import akka.actor.{ActorSystem, Scheduler}
 import akka.stream.ActorMaterializer
 import akka.actor.typed.scaladsl.adapter._
 import javafx.application.{Application, Platform}
-
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.actor.{GameClient, TokenActor, WsClient}
 import com.neo.sk.gypsy.common.AppSettings._

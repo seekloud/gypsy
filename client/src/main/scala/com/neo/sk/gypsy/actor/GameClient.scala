@@ -139,7 +139,6 @@ object GameClient {
           }
           Behaviors.same
 
-
         //只针对某个死亡玩家发送的死亡消息
         case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
           if(id==myId){
@@ -150,6 +149,7 @@ object GameClient {
             }
           }
           Behaviors.same
+
 
 
         //针对所有玩家发送的死亡消息
