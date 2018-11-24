@@ -3,12 +3,10 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
@@ -41,6 +39,8 @@ object GameHolder {
   var deadInfo :Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
   val timeline = new Timeline()
+
+  var exitFullScreen = false
 
 
   val watchKeys = Set(
@@ -75,6 +75,9 @@ class GameHolder(
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
+
+  private var stageWidth = stageCtx.getStage.getWidth.toInt
+  private var stageHeight = stageCtx.getStage.getHeight.toInt
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
@@ -117,6 +120,21 @@ class GameHolder(
   }
 
   def gameLoop(): Unit = {
+    if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+      gameScene.resetScreen(1200,600)
+      stageCtx.getStage.setWidth(1200)
+      stageCtx.getStage.setHeight(600)
+      exitFullScreen = true
+      gameScene.middleView.drawRankMap()
+    }
+    if(stageWidth != stageCtx.getStage.getWidth.toInt || stageHeight != stageCtx.getStage.getHeight.toInt){
+      stageWidth = stageCtx.getStage.getWidth.toInt
+      stageHeight = stageCtx.getStage.getHeight.toInt
+      gameScene.resetScreen(stageWidth,stageHeight)
+      stageCtx.getStage.setWidth(stageWidth)
+      stageCtx.getStage.setHeight(stageHeight)
+      gameScene.middleView.drawRankMap()
+    }
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
       //差不多每三秒同步一次

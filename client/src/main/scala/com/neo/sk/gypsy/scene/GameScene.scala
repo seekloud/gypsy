@@ -61,6 +61,23 @@ class GameScene {
 //  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
 //  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
+  def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
+//    //    val viewWidth = 1200//1800
+//    //    val viewHeight = 750//900
+//    //    val rankWidth = 1200//1800
+//    //    val rankHeight = 250//300
+//
+//    rank.resetRankView(rankWidth, rankHeight)
+//    view.resetScreen(viewWidth, viewHeight, rankWidth, rankHeight)
+
+    gameView.resetScreen(viewWidth,viewHeight)
+    middleView.resetScreen(viewWidth,viewHeight)
+    topView.resetScreen(viewWidth,viewHeight)
+    //
+    //    rankCanvas.setWidth(rankWidth)
+    //    rankCanvas.setHeight(rankHeight)
+  }
+
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
     val data = grid.getGridData(myId,window.x,window.y)
