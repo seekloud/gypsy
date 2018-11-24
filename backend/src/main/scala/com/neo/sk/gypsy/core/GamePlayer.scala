@@ -81,9 +81,9 @@ object GamePlayer {
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
-            val replay=initFileReader(r.filePath)
-            val info=replay.init()
             try{
+              val replay=initFileReader(r.filePath)
+              val info=replay.init()
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
@@ -229,10 +229,10 @@ object GamePlayer {
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command]
   ):Behavior[Command] =
-    Behaviors.receive[Command] {(ctx, msg) =>
+    Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case SwitchBehavior(name, behavior, durationOpt, timeOut) =>
-          switchBehavior(ctx, name, behavior,durationOpt, timeOut)
+          switchBehavior(ctx, name, behavior, durationOpt, timeOut)
 
         case TimeOut(m) =>
           log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
@@ -243,7 +243,6 @@ object GamePlayer {
           Behaviors.same
       }
     }
-
 
 
 }
