@@ -9,8 +9,6 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.TokenAndAcessCode
 import org.slf4j.LoggerFactory
 
 import scala.language.implicitConversions
-//import com.neo.sk.gypsy.ClientBoot.executor
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import com.neo.sk.gypsy.ClientBoot.executor
