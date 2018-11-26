@@ -215,7 +215,6 @@ class GameHolder(replay:Boolean = false) {
     }
   }
 
-
   def addActionListenEvent = {
     canvas3.focus()
     //在画布上监听键盘事件
