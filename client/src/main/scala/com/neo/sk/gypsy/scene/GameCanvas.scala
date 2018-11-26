@@ -40,6 +40,7 @@ class GameCanvas(canvas: Canvas,
   val  background = new Image("file:client/src/main/resources/img/background.jpg")
   val  background1 = new Image("file:client/src/main/resources/img/b2.jpg")
   val  massImg = new Image("file:client/src/main/resources/img/mass.png")
+  val deadbg = new Image("file:client/src/main/resources/img/deadbg.jpg")
   private val goldImg =new Image("file:client/src/main/resources/img/gold.png")
   private val silverImg = new Image("file:client/src/main/resources/img/silver.png")
   private val bronzeImg = new Image("file:client/src/main/resources/img/cooper.png")
@@ -507,6 +508,42 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
+  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
+    ctx.setFont(Font.font("50px Helvetica"))
+    ctx.setFill(Color.web("#CD3700"))
+    val Width = realWindow.x
+    val Height = realWindow.y
+    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+
+    ctx.setFont(Font.font(s"${Window.w *0.02}px Comic Sans MS"))
+
+    var DrawLeft = Width*0.35
+    var DrawHeight = Height*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
+    ctx.setFill(Color.WHITE)
+    //    DrawLeft = Width*0.56+Width*0.12
+    DrawLeft = Width*0.56
+//    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawWhenFinish(msg:String) = {
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
+    ctx.setFont(Font.font(s"${30 * realWindow.x / Window.w}px Helvetica"))
+    ctx.setFill(Color.web("#fff"))
+    ctx.fillText(msg, realWindow.x/2 - 20,realWindow.y/2)
+  }
+
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
     //视角缩放
@@ -516,6 +553,24 @@ class GameCanvas(canvas: Canvas,
 
   def cleanCtx()={
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
+  }
+
+  def MTime2HMS(time:Long)={
+    var ts = (time/1000)
+    //    println(s"一共有 $ts 秒！")
+    var result = ""
+    if(ts/3600>0){
+      result += s"${ts/3600}小时"
+    }
+    ts = ts % 3600
+    //    println(s"第一次 $ts 秒！")
+    if(ts/60>0){
+      result += s"${ts/60}分"
+    }
+    ts = ts % 60
+    //    println(s"第二次 $ts 秒！")
+    result += s"${ts}秒"
+    result
   }
 
 }
