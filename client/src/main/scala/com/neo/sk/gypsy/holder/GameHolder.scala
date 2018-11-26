@@ -15,7 +15,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial, myId}
+import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial}
 import java.awt.event.KeyEvent
 import javafx.scene.image.Image
 
