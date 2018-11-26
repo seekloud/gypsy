@@ -430,7 +430,7 @@ class GameCanvas(canvas: Canvas,
         // println(nameFont)
         ctx.setFont(Font.font(s"${nameFont.toInt}px Helvetica"))
         val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds().getWidth()
+        val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
         ctx.strokeText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
 
@@ -541,7 +541,8 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font(s"${30 * realWindow.x / Window.w}px Helvetica"))
     ctx.setFill(Color.web("#fff"))
-    ctx.fillText(msg, realWindow.x/2 - 20,realWindow.y/2)
+    val txt = new Text(msg)
+    ctx.fillText(msg, realWindow.x * 0.5 - txt.getLayoutBounds.getWidth* 0.5,realWindow.y * 0.5)
   }
 
   def centerScale(rate:Double,x:Double,y:Double) = {
