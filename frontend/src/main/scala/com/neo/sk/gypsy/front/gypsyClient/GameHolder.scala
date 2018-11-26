@@ -271,6 +271,7 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.sendMsg(mp)
   }
 
+
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
