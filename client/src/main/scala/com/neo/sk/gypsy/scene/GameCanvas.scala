@@ -190,7 +190,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Welcome.", 150, 180)
   }
 
@@ -200,11 +200,11 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     if(firstCome) {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Please wait.", 350, 180)
     } else {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Ops, Loading....", 350, 250)
     }
   }
@@ -215,7 +215,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255,255,255,0"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Ops, connection lost....", 350, 250)
   }
 
@@ -249,7 +249,7 @@ class GameCanvas(canvas: Canvas,
 
     println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
     ctx.setStroke(Color.web("rgba(0,0,0,0)"))
@@ -297,7 +297,7 @@ class GameCanvas(canvas: Canvas,
       else kill
       if (showTime > 0) {
         ctx.save()
-        ctx.setFont(Font.font("25px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
         ctx.strokeText(killerName, 25, 400)
         ctx.setFill(Color.web("#f27c02"))
@@ -428,7 +428,7 @@ class GameCanvas(canvas: Canvas,
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         // println(nameFont)
-        ctx.setFont(Font.font(s"${nameFont.toInt}px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
@@ -466,7 +466,7 @@ class GameCanvas(canvas: Canvas,
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
@@ -512,13 +512,13 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
-    ctx.setFont(Font.font("50px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",50))
     ctx.setFill(Color.web("#CD3700"))
     val Width = realWindow.x
     val Height = realWindow.y
     ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
 
-    ctx.setFont(Font.font(s"${Window.w *0.02}px Comic Sans MS"))
+    ctx.setFont(Font.font("Comic Sans MS",Window.w *0.02))
 
     var DrawLeft = Width*0.35
     var DrawHeight = Height*0.3
@@ -539,7 +539,7 @@ class GameCanvas(canvas: Canvas,
   def drawWhenFinish(msg:String) = {
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
-    ctx.setFont(Font.font(s"${30 * realWindow.x / Window.w}px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",30 * realWindow.x / Window.w))
     ctx.setFill(Color.web("#fff"))
     val txt = new Text(msg)
     ctx.fillText(msg, realWindow.x * 0.5 - txt.getLayoutBounds.getWidth* 0.5,realWindow.y * 0.5)
