@@ -180,6 +180,7 @@ object WsClient {
                   case Right(resl) =>
                     tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
+                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                   case Left(l) =>
                     log.error("link error!res:  "+ l)
                 }
