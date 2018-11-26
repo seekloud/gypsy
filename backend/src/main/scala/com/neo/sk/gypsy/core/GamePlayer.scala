@@ -171,9 +171,17 @@ object GamePlayer {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
+//          val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
+          val data=userMap.groupBy(r=>r._1.userId).map{r=>
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
-            PlayerInRecordInfo(r._1._1,r._1._2,fList)
+//            PlayerInRecordInfo(r._1._1,r._1._2,fList)
+            val name = if(r._2.nonEmpty){
+              r._2.head._1.name
+            }else{
+              //前面都有对其遍历，感觉是多余的
+              "UnknowUser"
+            }
+            PlayerInRecordInfo(r._1,name,fList)
           }.toList
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
