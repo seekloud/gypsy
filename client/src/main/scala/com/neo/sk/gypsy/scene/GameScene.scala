@@ -111,7 +111,7 @@ class GameScene {
         gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
         gameCanvasCtx.save()
-        gameCanvasCtx.setFont(Font.font("34px Helvetica"))
+        gameCanvasCtx.setFont(Font.font(" Helvetica",24))
         gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
         gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
         gameCanvasCtx.restore()
@@ -124,7 +124,7 @@ class GameScene {
       case None =>
         gameView.drawGameWait(firstCome)
     }
-    FpsComp.renderFps(gameCanvasCtx, 500, 10)
+    FpsComp.renderFps(gameCanvasCtx, 550, 10)
   }
 
   topCanvas.requestFocus()

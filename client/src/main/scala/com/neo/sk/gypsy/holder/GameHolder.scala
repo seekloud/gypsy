@@ -17,7 +17,10 @@ import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial, myId}
 import java.awt.event.KeyEvent
+import javafx.scene.image.Image
+
 import scala.math.atan2
+import com.neo.sk.gypsy.utils.ClientMusic
 
 /**
   * @author zhaoyin
@@ -35,6 +38,8 @@ object GameHolder {
   var killList = List.empty[(Int,String,Player)]
   var deadInfo :Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
+  val timeline = new Timeline()
+
   var exitFullScreen = false
 
 
@@ -87,10 +92,10 @@ class GameHolder(
     }
   }
 
-  def init()= {
+  def init() = {
     gameScene.gameView.drawGameWelcome()
-//    gameScene.offView.drawBackground()
     gameScene.gameView.drawGameOn()
+   // gameScene.offView.drawBackgroundInit()
     gameScene.middleView.drawRankMap()
   }
 
@@ -104,7 +109,6 @@ class GameHolder(
         gameScene.draw(myId,offsetTime)
       }
     }
-    val timeline = new Timeline()
     timeline.setCycleCount(Animation.INDEFINITE)
     val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
       //游戏循环
@@ -113,8 +117,6 @@ class GameHolder(
     timeline.getKeyFrames.add(keyFrame)
     animationTimer.start()
     timeline.play()
-
-//    addActionListenEvent
   }
 
   def gameLoop(): Unit = {
@@ -197,17 +199,15 @@ class GameHolder(
     serverActor ! ReLiveAck(id)
   }
 
-
   def gameClose = {
-    //关闭webscoket
-    serverActor ! WsSendComplete
-    //停止前端渲染
-    stageCtx.closeStage()
+    //停止gameLoop
+    timeline.stop()
     //停止背景音乐
+    ClientMusic.stopMusic()
   }
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {
-//      serverActor ! WsSendComplete
+      serverActor ! WsSendComplete
       stageCtx.closeStage()
     }
   })

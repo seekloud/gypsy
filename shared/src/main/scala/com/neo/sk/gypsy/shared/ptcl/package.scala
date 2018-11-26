@@ -148,5 +148,11 @@ package object ptcl {
     val allopatry:Int = 3
   }
 
+  object UserState{
+    val waiting = 0
+    val play = 1
+    val watch = 2
+    val replay = 3
+  }
 
 }

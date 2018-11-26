@@ -83,7 +83,7 @@ object Dependencies {
       Dependencies.essf,
       Dependencies.byteobject,
       Dependencies.scalaFx
-     // "com.lihaoyi" %% "upickle" % "0.6.6"
+      // "com.lihaoyi" %% "upickle" % "0.6.6"
     )
 
 
