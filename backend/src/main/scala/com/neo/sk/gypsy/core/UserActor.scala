@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, UserState, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront, ReStartAck}
 import com.neo.sk.gypsy.models.GypsyUserInfo
@@ -41,8 +41,6 @@ object UserActor {
 
   case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
-//  case class ChangeWatch(id: String, watchId: String) extends Command with RoomActor.Command
-
   case class Left(id: String, name: String) extends Command with RoomActor.Command
 
   case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
@@ -51,14 +49,11 @@ object UserActor {
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
 
-//  case class UserReLive(id: String) extends Command with RoomActor.Command
-
   case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
   private case object UnKnowAction extends Command
-  case class StopReplay(recordId:Long) extends Command
 
   case object CompleteMsgFront extends Command
 
@@ -78,6 +73,10 @@ object UserActor {
   case object ChangeBehaviorToInit extends Command
 
   case class StartGame(roomId:Option[Long],watchId:Option[String],watch:Boolean) extends Command
+
+
+  private var userState = UserState.waiting
+  private[this] var watchRecordId  = 0l
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -113,10 +112,6 @@ object UserActor {
 //                     Left(id,name)
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-//                   case WatchChange(id, watchId) =>
-//                     log.debug(s"切换观察者: $watchId")
-//                     ChangeWatch(id, watchId)
-
 //                   case ReLive(id) =>
 //                     UserReLive(id)
 
@@ -206,14 +201,22 @@ object UserActor {
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
         case StartReply(recordId,watchId,frame) =>
+          userState = UserState.replay
+          watchRecordId = recordId
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
           Behaviors.same
 
         case StartGame(roomIdOp,watchId,watch) =>
+          userState = UserState.play
           roomManager ! UserActor.JoinRoom(userInfo.playerId,None,userInfo.nickname,startTime,ctx.self,roomIdOp,watch,watchId)
           Behaviors.same
 
         case UserLeft(actor) =>
+          if(userState == UserState.replay){
+            getGameReply(ctx,watchRecordId) ! GamePlayer.StopReplay(watchRecordId)
+            watchRecordId = 0l
+            userState = UserState.waiting
+          }
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
@@ -259,16 +262,6 @@ object UserActor {
                   ): Behavior[Command] =
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-//        case ChangeWatch(id, watchId) =>
-//          log.info(s"get $msg")
-//          roomActor ! ChangeWatch(id, watchId)
-//          Behaviors.same
-
-//        case Left(id, name) =>
-//          log.info(s"got $msg")
-//          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
-//          Behaviors.stopped
-
         case Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           roomActor ! Key(id, keyCode,frame,n)
@@ -278,11 +271,6 @@ object UserActor {
           log.debug(s"gor $msg")
           roomActor !  Mouse(id,x,y,frame,n)
           Behaviors.same
-
-//        case UserReLive(id) =>
-//          println(s"UserActor got $id relive ")
-//          roomActor ! UserReLive(id)
-//          Behavior.same
 
         case UserReLiveAck(id) =>
           println(s"UserActor got $id relive Ack ")
@@ -304,15 +292,6 @@ object UserActor {
           ctx.unwatch(actor)
           roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
           Behaviors.stopped
-
-//        case k:InputRecordByDead =>
-//          log.debug(s"input record by dead msg")
-//          if(tank.lives -1 <= 0 && !uId.contains(Constants.TankGameUserIdPrefix)){
-//            val endTime = System.currentTimeMillis()
-//            log.debug(s"input record ${EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)}")
-//            esheepSyncClient ! EsheepSyncClient.InputRecord(uId,userInfo.nickName,k.killTankNum,tank.config.getTankLivesLimit,k.damageStatistics, startTime, endTime)
-//          }
-//          Behaviors.same
 
         case e: NetTest=>
           roomActor ! e

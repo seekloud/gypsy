@@ -431,10 +431,10 @@ class GameCanvas(canvas: Canvas,
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds().getWidth()
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
 
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
     }

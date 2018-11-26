@@ -282,7 +282,7 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          //TODO 食物没有做是否在屏幕中的判断？
+          //TODO 食物没有做是否在屏幕中的判断
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
@@ -297,7 +297,7 @@ class GameHolder(replay:Boolean = false) {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
-          drawGameView.drawGameWait(firstCome)
+          drawGameView.drawGameWait(firstCome,myId)
       }
     }else{
       drawGameView.drawGameLost
@@ -353,29 +353,14 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.FeedApples(foods) =>
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
-//        println(s"食物个数${foods.size}帧号${grid.frameCount}")
-
       case Protocol.AddVirus(virus) =>
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
-      case Protocol.ReduceVirus(virus) =>
-        grid.virusMap = virus
-
       case data: Protocol.GridDataSync =>
-        //TODO here should be better code.
-//        println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-        /*if(data.frameCount<grid.frameCount){
-          println(s"丢弃同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-        }else if(data.frameCount>grid.frameCount){
-          // println(s"同步帧数据，grid frame=${grid.frameCount}, sync state frame=${data.frameCount}")
-          syncGridData = Some(data)
-          justSynced = true
-        }*/
         syncGridData = Some(data)
         justSynced = true
 
-      //drawGrid(msgData.uid, data)
       //网络延迟检测
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
@@ -473,13 +458,17 @@ class GameHolder(replay:Boolean = false) {
   private def replayMessageHandler(data:Protocol.GameEvent):Unit = {
     data match {
       case e:Protocol.SyncGameAllState =>
-        println(s"回放全量数据，grid frame=${grid.frameCount}, sync state frame=${e.gState.frameCount}")
+//        println(s"回放全量数据，grid frame=${grid.frameCount}, sync state frame=${e.gState.frameCount}")
         val data = e.gState
+//        println(s"全量的数据  ${data.playerDetails}  ")
         syncGridData = Some(GridDataSync(data.frameCount,
           data.playerDetails,data.massDetails,
           data.virusDetails,0.toDouble,Nil,Nil))
         grid.currentRank = e.gState.currentRank
         justSynced = true
+
+      case e: Protocol.CurrentRanks =>
+        grid.currentRank = e.currentRank
 
       case e: Protocol.KeyPress =>
         grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
@@ -493,9 +482,6 @@ class GameHolder(replay:Boolean = false) {
       case e: Protocol.GenerateVirus =>
         grid.virusMap ++= e.virus
 
-      case e: Protocol.RemoveVirus =>
-
-
       case e: Protocol.UserJoinRoom =>
         gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
@@ -508,6 +494,7 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.PlayerInfoChange =>
         grid.playerMap = e.player
+
 
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
@@ -533,12 +520,11 @@ class GameHolder(replay:Boolean = false) {
             }
           }
         }else{
-          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.deadPlayer.startTime)
+          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷
           grid.removePlayer(myId)
-//          DeadPage.deadModel(this,myId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           Shortcut.playMusic("shutdownM")
         }
 
@@ -552,13 +538,14 @@ class GameHolder(replay:Boolean = false) {
         gameClose
 
       case e:Protocol.InitReplayError =>
+        println(s" Receive @@@@@@@@@@@@@${e.msg}  ")
         drawTopView.drawWhenFinish(e.msg)
         gameClose
 
-      case e:Protocol.UserMerge =>
-        if(grid.playerMap.get(e.id).nonEmpty){
-          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
-        }
+//      case e:Protocol.UserMerge =>
+//        if(grid.playerMap.get(e.id).nonEmpty){
+//          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
+//        }
 
       case _ =>
         println(s"unknow msg: $data")
