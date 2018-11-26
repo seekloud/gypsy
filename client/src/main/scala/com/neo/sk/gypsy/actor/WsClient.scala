@@ -12,7 +12,7 @@ import akka.http.scaladsl.model.ws.{WebSocketRequest, _}
 import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.stream.typed.scaladsl.{ActorSink, _}
 import akka.stream.{Materializer, OverflowStrategy}
-import akka.util.ByteString
+import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.holder.GameHolder
 import com.neo.sk.gypsy.scene.GameScene
@@ -160,6 +160,8 @@ object WsClient {
               ErrorWsMsgFront(e.message)
           }
         msg
+
+
     }.to(ActorSink.actorRef[WsMsgSource](actor, CompleteMsgServer, FailMsgServer))
 
   //收到esheep后台发给前端的消息
@@ -203,8 +205,8 @@ object WsClient {
 
   def getWebSocketUri(playerId: String, playerName: String, accessCode: String):String = {
     val wsProtocol = "ws"
-//    val domain = AppSettings.gameDomain  //部署到服务器上用这个
-    val domain = "localhost:30371"
+    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+//    val domain = "localhost:30371"
     val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
     val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
     s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
