@@ -74,7 +74,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] def genWaitingStar() = {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
-      val color = new Random(System.nanoTime()).nextInt(7)
+      val color = new Random(System.nanoTime()).nextInt(24)
       val player = Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
       playerMap += id -> player
       val event = UserJoinRoom(roomId,player,frameCount+2)
