@@ -203,6 +203,7 @@ class GameHolder(replay:Boolean = false) {
                userType: Int = 0,
               ): Unit = {
     if (playerName.contains("TEST-")) isTest=true
+    println(s"111111111111111istest $isTest playerName $playerName id $playerId")
     usertype = userType
     val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
