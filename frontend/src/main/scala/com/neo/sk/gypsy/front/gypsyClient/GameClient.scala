@@ -380,13 +380,8 @@ class GameClient (override val boundary: Point) extends Grid {
   def setSyncGridData(data:GridDataSync): Unit = {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
-    //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
     frameCount = data.frameCount
-    //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    /*if(data.foodDetails.nonEmpty){
-      food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-    }*/
     if(food.nonEmpty && data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{
         f=>
@@ -396,8 +391,7 @@ class GameClient (override val boundary: Point) extends Grid {
     //food改为增量传输这里暂时不用
 //    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     massList = data.massDetails
-//    virus = data.virusDetails
-    virusMap ++= data.virusDetails
+    virusMap = data.virusDetails
 /*    val myCell=playerMap.find(_._1==myId)
     if(myCell.isDefined){
       for(i<- advanceFrame to 1 by -1){
