@@ -13,7 +13,6 @@ object ClientMusic {
 
   new JFXPanel
   val bgurI = ClientBoot.getClass.getResource("/music/bg.mp3").toString
-//  val bgurI = new File("../../../resources/music/bg.mp3").toURI.toString
   private val bg = new Media(bgurI)
   private val bgPlayer = new MediaPlayer(bg)
 
@@ -23,7 +22,6 @@ object ClientMusic {
         bgPlayer.play()
       case x =>
         val urI = ClientBoot.getClass.getResource(s"/music/$x.mp3").toString
-        //        val urI = new File(s"../../../resources/music/$x.mp3").toURI.toString
         val media = new Media(urI)
         val mPlayer = new MediaPlayer(media)
         mPlayer.play()
@@ -37,7 +35,7 @@ object ClientMusic {
 
   def main(args: Array[String]): Unit = {
     println(bgurI)
-//    playMusic("bg")
+    playMusic("bg")
   }
 
 }
