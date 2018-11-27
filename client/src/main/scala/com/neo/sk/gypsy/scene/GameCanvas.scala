@@ -65,7 +65,7 @@ class GameCanvas(canvas: Canvas,
   val  massImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/mass.png"))
   val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
-  private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img//silver.png"))
+  private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
   private val bronzeImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/cooper.png"))
 
   val bounds = Point(Boundary.w, Boundary.h)
