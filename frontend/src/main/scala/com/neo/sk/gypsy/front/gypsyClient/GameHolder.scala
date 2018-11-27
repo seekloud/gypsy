@@ -4,6 +4,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+
+import scala.util.Random
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
 import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
@@ -49,6 +52,7 @@ class GameHolder(replay:Boolean = false) {
 
   private[this] var justSynced = false
   var isDead = false
+  var isTest = false
   private[this] var firstCome=true
 
   /**可变参数*/
@@ -174,6 +178,8 @@ class GameHolder(replay:Boolean = false) {
                accessCode:String,
                userType: Int = 0,
               ): Unit = {
+    if (playerName.contains("TEST-")) isTest=true
+    println(s"111111111111111istest $isTest playerName $playerName id $playerId")
     usertype = userType
     val url = ApiRoute.getpgWebSocketUri(dom.document,playerId,playerName,roomId,accessCode,userType)
     //开启websocket
@@ -185,7 +191,6 @@ class GameHolder(replay:Boolean = false) {
       addActionListenEvent
     }
   }
-
 
   def addActionListenEvent = {
     canvas3.focus()
@@ -215,7 +220,8 @@ class GameHolder(replay:Boolean = false) {
       atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
     var FormerDegree = 0D
-    canvas3.onmousemove = { (e: dom.MouseEvent) => {
+    if( !isTest){
+      canvas3.onmousemove = { (e: dom.MouseEvent) => {
       val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.pageX,e.pageY)
@@ -223,9 +229,25 @@ class GameHolder(replay:Boolean = false) {
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         webSocketClient.sendMsg(mp)
       }
-    }
+      }
+      }
+    }else  {
+      dom.window.setTimeout(() =>
+        dom.window.setInterval(() => {
+          testSend
+        }, 2000), 3000)
     }
   }
+
+  def testSend = {
+    val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
+    val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
+    val mp = MousePosition(myId,px.toDouble,py.toDouble,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+    grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+    grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+    webSocketClient.sendMsg(mp)
+  }
+
 
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
