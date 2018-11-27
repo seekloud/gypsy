@@ -13,7 +13,7 @@ import javafx.embed.swing.JFXPanel
 object ClientMusic {
 
   new JFXPanel
-  val bgurI = new File("client/src/main/resources/music/bg.mp3").toURI.toString
+  val bgurI = new File("../../resources/music/bg.mp3").toURI.toString
   private val bg = new Media(bgurI)
   private val bgPlayer = new MediaPlayer(bg)
 
@@ -22,7 +22,7 @@ object ClientMusic {
       case "bg" =>
         bgPlayer.play()
       case x =>
-        val urI = new File(s"client/src/main/resources/music/$x.mp3").toURI.toString
+        val urI = new File(s"../../resources/music/$x.mp3").toURI.toString
         val media = new Media(urI)
         val mPlayer = new MediaPlayer(media)
         mPlayer.play()
