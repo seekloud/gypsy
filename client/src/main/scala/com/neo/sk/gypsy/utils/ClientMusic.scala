@@ -2,9 +2,8 @@ package com.neo.sk.gypsy.utils
 import java.io.File
 
 import javafx.scene.media._
-import javafx.application.Application
 import javafx.embed.swing.JFXPanel
-
+import com.neo.sk.gypsy.ClientBoot
 
 /**
   * @author zhaoyin
@@ -13,7 +12,8 @@ import javafx.embed.swing.JFXPanel
 object ClientMusic {
 
   new JFXPanel
-  val bgurI = new File("client/src/main/resources/music/bg.mp3").toURI.toString
+  val bgurI = ClientMusic.getClass.getResource("/music/bg.mp3").toURI.toString
+//  val bgurI = new File("../../../resources/music/bg.mp3").toURI.toString
   private val bg = new Media(bgurI)
   private val bgPlayer = new MediaPlayer(bg)
 
@@ -22,7 +22,8 @@ object ClientMusic {
       case "bg" =>
         bgPlayer.play()
       case x =>
-        val urI = new File(s"client/src/main/resources/music/$x.mp3").toURI.toString
+        val urI = ClientMusic.getClass.getResource(s"/music/$x.mp3").toString
+        //        val urI = new File(s"../../../resources/music/$x.mp3").toURI.toString
         val media = new Media(urI)
         val mPlayer = new MediaPlayer(media)
         mPlayer.play()
@@ -36,7 +37,7 @@ object ClientMusic {
 
   def main(args: Array[String]): Unit = {
     println(bgurI)
-    playMusic("bg")
+//    playMusic("bg")
   }
 
 }
