@@ -25,11 +25,6 @@ object GameClient {
   private[this] val log = LoggerFactory.getLogger(this.getClass)
   private[this] var grid: GridOnClient = _
 
-  var myId = "" //myId变成String类型
-  var usertype = 0
-
-
-
   def create(): Behavior[WsMsgSource] = {
     Behaviors.setup[WsMsgSource]{ ctx =>
       implicit val stashBuffer: StashBuffer[WsMsgSource] = StashBuffer[WsMsgSource](Int.MaxValue)

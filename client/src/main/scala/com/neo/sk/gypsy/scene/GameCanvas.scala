@@ -6,7 +6,7 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
-
+import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -21,54 +21,52 @@ import com.neo.sk.gypsy.utils.FpsComp
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
                  size:Point) {
-  val  img = new Image("file:client/src/main/resources/img/virus.png")
-  val  circle = new Image("file:client/src/main/resources/img/circle.png")
-  val  circle1 = new Image("file:client/src/main/resources/img/circle1.png")
-  val  circle2 = new Image("file:client/src/main/resources/img/circle2.png")
-  val  circle3 = new Image("file:client/src/main/resources/img/circle3.png")
-  val  circle4 = new Image("file:client/src/main/resources/img/circle4.png")
-  val  circle5 = new Image("file:client/src/main/resources/img/circle5.png")
-  val  circle6 = new Image("file:client/src/main/resources/img/circle6.png")
-
-  val  star1 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-01.png")
-  val  star2 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-02.png")
-  val  star3 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-03.png")
-  val  star4 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-04.png")
-  val  star5 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-05.png")
-  val  star6 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-06.png")
-  val  star7 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-07.png")
-  val  star8 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-08.png")
-  val  star9 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-09.png")
-  val  star10 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-10.png")
-  val  star11 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-11.png")
-  val  star12 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-12.png")
-  val  star13 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-13.png")
-  val  star14 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-14.png")
-  val  star15 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-15.png")
-  val  star16 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-16.png")
-  val  star17 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-17.png")
-  val  star18 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-18.png")
-  val  star19 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-19.png")
-  val  star20 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-20.png")
-  val  star21 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-21.png")
-  val  star22 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-22.png")
-  val  star23 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-23.png")
-  val  star24 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-24.png")
-
-  val  kill = new Image("file:client/src/main/resources/img/kill.png")
-  val  youkill = new Image("file:client/src/main/resources/img/youkill.png")
-  val  shutdown = new Image("file:client/src/main/resources/img/shutdown.png")
-  val  killingspree = new Image("file:client/src/main/resources/img/killingspree.png")
-  val  dominating = new Image("file:client/src/main/resources/img/dominating.png")
-  val  unstoppable = new Image("file:client/src/main/resources/img/unstoppable.png")
-  val  godlike = new Image("file:client/src/main/resources/img/godlike.png")
-  val  legendary = new Image("file:client/src/main/resources/img/legendary.png")
-  val  background = new Image("file:client/src/main/resources/img/background.jpg")
-  val  background1 = new Image("file:client/src/main/resources/img/b2.jpg")
-  val  massImg = new Image("file:client/src/main/resources/img/mass.png")
-  private val goldImg =new Image("file:client/src/main/resources/img/gold.png")
-  private val silverImg = new Image("file:client/src/main/resources/img/silver.png")
-  private val bronzeImg = new Image("file:client/src/main/resources/img/cooper.png")
+  val  img = new Image(ClientBoot.getClass.getResourceAsStream("/img/virus.png"))
+  val  circle = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle.png"))
+  val  circle1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle1.png"))
+  val  circle2 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle2.png"))
+  val  circle3 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle3.png"))
+  val  circle4 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle4.png"))
+  val  circle5 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle5.png"))
+  val  circle6 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle6.png"))
+  val  star1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-01.png"))
+  val  star2 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-02.png"))
+  val  star3 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-03.png"))
+  val  star4 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-04.png"))
+  val  star5 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-05.png"))
+  val  star6 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-06.png"))
+  val  star7 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-07.png"))
+  val  star8 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-08.png"))
+  val  star9 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-09.png"))
+  val  star10 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-10.png"))
+  val  star11 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-11.png"))
+  val  star12 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-12.png"))
+  val  star13 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-13.png"))
+  val  star14 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-14.png"))
+  val  star15 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-15.png"))
+  val  star16 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-16.png"))
+  val  star17 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-17.png"))
+  val  star18 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-18.png"))
+  val  star19 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-19.png"))
+  val  star20 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-20.png"))
+  val  star21 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-21.png"))
+  val  star22 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-22.png"))
+  val  star23 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-23.png"))
+  val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
+  val  kill = new Image(ClientBoot.getClass.getResourceAsStream("/img/kill.png"))
+  val  youkill = new Image(ClientBoot.getClass.getResourceAsStream("/img/youkill.png"))
+  val  shutdown = new Image(ClientBoot.getClass.getResourceAsStream("/img/shutdown.png"))
+  val  killingspree = new Image(ClientBoot.getClass.getResourceAsStream("/img/killingspree.png"))
+  val  dominating = new Image(ClientBoot.getClass.getResourceAsStream("/img/dominating.png"))
+  val  unstoppable = new Image(ClientBoot.getClass.getResourceAsStream("/img/unstoppable.png"))
+  val  godlike = new Image(ClientBoot.getClass.getResourceAsStream("/img/godlike.png"))
+  val  legendary = new Image(ClientBoot.getClass.getResourceAsStream("/img/legendary.png"))
+  val  background1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/b2.jpg"))
+  val  massImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/mass.png"))
+  val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
+  private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
+  private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
+  private val bronzeImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/cooper.png"))
 
   val bounds = Point(Boundary.w, Boundary.h)
 
@@ -215,7 +213,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Welcome.", 150, 180)
   }
 
@@ -225,11 +223,11 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     if(firstCome) {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Please wait.", 350, 180)
     } else {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-      ctx.setFont(Font.font("36px Helvetica"))
+      ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Ops, Loading....", 350, 250)
     }
   }
@@ -240,7 +238,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web("rgba(255,255,255,0"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
-    ctx.setFont(Font.font("36px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",36))
     ctx.fillText("Ops, connection lost....", 350, 250)
   }
 
@@ -274,7 +272,7 @@ class GameCanvas(canvas: Canvas,
 
     println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
     ctx.setStroke(Color.web("rgba(0,0,0,0)"))
@@ -322,7 +320,7 @@ class GameCanvas(canvas: Canvas,
       else kill
       if (showTime > 0) {
         ctx.save()
-        ctx.setFont(Font.font("25px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
         ctx.strokeText(killerName, 25, 400)
         ctx.setFill(Color.web("#f27c02"))
@@ -480,9 +478,9 @@ class GameCanvas(canvas: Canvas,
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         // println(nameFont)
-        ctx.setFont(Font.font(s"${nameFont.toInt}px Helvetica"))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds().getWidth()
+        val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
         ctx.strokeText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
 
@@ -518,7 +516,7 @@ class GameCanvas(canvas: Canvas,
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
-    ctx.setFont(Font.font("12px Helvetica"))
+    ctx.setFont(Font.font("Helvetica",12))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
@@ -560,6 +558,43 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
+  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
+    ctx.setFont(Font.font("Helvetica",50))
+    ctx.setFill(Color.web("#CD3700"))
+    val Width = realWindow.x
+    val Height = realWindow.y
+    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+
+    ctx.setFont(Font.font("Comic Sans MS",Window.w *0.02))
+
+    var DrawLeft = Width*0.35
+    var DrawHeight = Height*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
+    ctx.setFill(Color.WHITE)
+    //    DrawLeft = Width*0.56+Width*0.12
+    DrawLeft = Width*0.56
+//    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawWhenFinish(msg:String) = {
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
+    ctx.setFont(Font.font("Helvetica",30 * realWindow.x / Window.w))
+    ctx.setFill(Color.web("#fff"))
+    val txt = new Text(msg)
+    ctx.fillText(msg, realWindow.x * 0.5 - txt.getLayoutBounds.getWidth* 0.5,realWindow.y * 0.5)
+  }
+
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
     //视角缩放
@@ -569,6 +604,24 @@ class GameCanvas(canvas: Canvas,
 
   def cleanCtx()={
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
+  }
+
+  def MTime2HMS(time:Long)={
+    var ts = (time/1000)
+    //    println(s"一共有 $ts 秒！")
+    var result = ""
+    if(ts/3600>0){
+      result += s"${ts/3600}小时"
+    }
+    ts = ts % 3600
+    //    println(s"第一次 $ts 秒！")
+    if(ts/60>0){
+      result += s"${ts/60}分"
+    }
+    ts = ts % 60
+    //    println(s"第二次 $ts 秒！")
+    result += s"${ts}秒"
+    result
   }
 
 }
