@@ -29,6 +29,32 @@ class GameCanvas(canvas: Canvas,
   val  circle4 = new Image("file:client/src/main/resources/img/circle4.png")
   val  circle5 = new Image("file:client/src/main/resources/img/circle5.png")
   val  circle6 = new Image("file:client/src/main/resources/img/circle6.png")
+
+  val  star1 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-01.png")
+  val  star2 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-02.png")
+  val  star3 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-03.png")
+  val  star4 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-04.png")
+  val  star5 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-05.png")
+  val  star6 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-06.png")
+  val  star7 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-07.png")
+  val  star8 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-08.png")
+  val  star9 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-09.png")
+  val  star10 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-10.png")
+  val  star11 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-11.png")
+  val  star12 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-12.png")
+  val  star13 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-13.png")
+  val  star14 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-14.png")
+  val  star15 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-15.png")
+  val  star16 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-16.png")
+  val  star17 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-17.png")
+  val  star18 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-18.png")
+  val  star19 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-19.png")
+  val  star20 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-20.png")
+  val  star21 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-21.png")
+  val  star22 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-22.png")
+  val  star23 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-23.png")
+  val  star24 = new Image("file:client/src/main/resources/img/yuzhouxingqiu-24.png")
+
   val  kill = new Image("file:client/src/main/resources/img/kill.png")
   val  youkill = new Image("file:client/src/main/resources/img/youkill.png")
   val  shutdown = new Image("file:client/src/main/resources/img/shutdown.png")
@@ -398,14 +424,41 @@ class GameCanvas(canvas: Canvas,
 
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
-        case 0 => circle //(243,69,109)   b30e35
-        case 1 => circle1 //(244, 153, 48)  a65d0a
-        case 2  => circle2 //244, 217, 91   917600
-        case 3  => circle3   //76, 217, 100  05851b
-        case 4  => circle4  //159, 224, 246  037da6
-        case 5  => circle5   //190, 173, 146   875a16
-        case 6  => circle6  //207, 230, 255   4174ab
-        case _  => circle3  //222, 157, 214   8f3284
+          //经典星球
+//        case 0 => circle //(243,69,109)   b30e35
+//        case 1 => circle1 //(244, 153, 48)  a65d0a
+//        case 2  => circle2 //244, 217, 91   917600
+//        case 3  => circle3   //76, 217, 100  05851b
+//        case 4  => circle4  //159, 224, 246  037da6
+//        case 5  => circle5   //190, 173, 146   875a16
+//        case 6  => circle6  //207, 230, 255   4174ab
+//        case _  => circle3  //222, 157, 214   8f3284
+          //卡通星球
+        case 0 => star24 //(243,69,109)   b30e35
+        case 1 => star1 //(244, 153, 48)  a65d0a
+        case 2  => star2 //244, 217, 91   917600
+        case 3  => star3   //76, 217, 100  05851b
+        case 4  => star4  //159, 224, 246  037da6
+        case 5  => star5   //190, 173, 146   875a16
+        case 6  => star6  //207, 230, 255   4174ab
+        case 7 => star7 //(243,69,109)   b30e35
+        case 8 => star8 //(244, 153, 48)  a65d0a
+        case 9  => star9 //244, 217, 91   917600
+        case 10  => star10   //76, 217, 100  05851b
+        case 11 => star11  //159, 224, 246  037da6
+        case 12 => star12   //190, 173, 146   875a16
+        case 13 => star13  //207, 230, 255   4174ab
+        case 14 => star14  //222, 157, 214   8f3284
+        case 15=> star15 //(243,69,109)   b30e35
+        case 16=> star16 //(244, 153, 48)  a65d0a
+        case 17 => star17 //244, 217, 91   917600
+        case 18 => star18  //76, 217, 100  05851b
+        case 19 => star19  //159, 224, 246  037da6
+        case 20 => star20  //190, 173, 146   875a16
+        case 21 => star21  //207, 230, 255   4174ab
+        case 22=>star22 //(243,69,109)   b30e35
+        case 23=> star23 //(244, 153, 48)  a65d0a
+
       }
       cells.sortBy(_.id).foreach{ cell=>
 

@@ -31,7 +31,6 @@ object ClientBoot{
   }
 }
 
-
 class ClientBoot extends javafx.application.Application{
 
   import ClientBoot._
