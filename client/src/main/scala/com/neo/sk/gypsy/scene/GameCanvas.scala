@@ -63,7 +63,6 @@ class GameCanvas(canvas: Canvas,
   val  unstoppable = new Image("file:client/src/main/resources/img/unstoppable.png")
   val  godlike = new Image("file:client/src/main/resources/img/godlike.png")
   val  legendary = new Image("file:client/src/main/resources/img/legendary.png")
-  val  background = new Image("file:client/src/main/resources/img/background.jpg")
   val  background1 = new Image("file:client/src/main/resources/img/b2.jpg")
   val  massImg = new Image("file:client/src/main/resources/img/mass.png")
   val deadbg = new Image("file:client/src/main/resources/img/deadbg.jpg")

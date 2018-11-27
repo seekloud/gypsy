@@ -37,7 +37,7 @@ lazy val client = (project in file("client"))
   .settings(
     //pack
     packMain := Map("gypsy" -> clientMainClass),
-    packJvmOpts := Map("gypsy" -> Seq("-Xmx128m", "-Xms32m")),
+    packJvmOpts := Map("gypsy" -> Seq("-Xmx512m", "-Xms64m")),
     packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(commonSettings:_*)

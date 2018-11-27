@@ -64,8 +64,7 @@ object RoomManager {
       (ctx,msg)=>
         msg match {
 
-
-          case JoinRoom(uid,gameStateOpt,name,startTime,userActor,roomIdOpt,watchGame,watchId) =>
+          case JoinRoom(uid,gameStateOpt,name,startTime,userActor,roomIdOpt) =>
             roomIdOpt match{
               case Some(roomId) =>
                 roomInUse.get(roomId) match{
@@ -97,27 +96,7 @@ object RoomManager {
             log.debug(s"now roomInUse:$roomInUse")
             Behaviors.same
 
-
-          //          case msg:CheckName=>
-          //            val curTime=System.currentTimeMillis()
-          //            if(msg.roomId!=2){
-          //              getRoomActor(ctx,msg.roomId,false) ! RoomActor.CheckName(msg.name,msg.replyTo)
-          //            }else{
-          //              val freeRoom=roomMap.filter(r=>(curTime-r._2._1<AppSettings.waitTime*60*1000)&&r._2._2<AppSettings.limitCount)
-          //              if(freeRoom.isEmpty){
-          //                val roomId=roomIdGenerator.getAndIncrement()
-          //                getRoomActor(ctx,roomId,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
-          //                roomMap.put(roomId,(curTime,1))
-          //              }else{
-          //                import scala.util.Random
-          //                val roomString=Random.shuffle(freeRoom.keys.toList).head
-          //                getRoomActor(ctx,roomString,true) ! RoomActor.CheckName(msg.name,msg.replyTo)
-          //                roomMap.get(roomString).foreach{ r=>
-          //                  roomMap.update(roomString,(r._1,r._2+1))
-          //                }
-          //              }
-          //            }
-          //            Behavior.same
+          case Join
 
           case msg:RemoveRoom=>
             roomInUse.remove(msg.id)
@@ -163,43 +142,6 @@ object RoomManager {
             Behaviors.unhandled
         }
     }
-
-
-  //  def webSocketChatFlow(actor:ActorRef[RoomActor.Command],sender: String, id: String, watchgame: Boolean): Flow[Message, Message, Any] ={
-  //    import scala.language.implicitConversions
-  //    import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-  //    import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-  //    import io.circe.generic.auto._
-  //    import io.circe.parser._
-  //
-  //    Flow[Message]
-  //      .collect {
-  //        case BinaryMessage.Strict(msg)=>
-  //          val buffer = new MiddleBufferInJvm(msg.asByteBuffer)
-  //          bytesDecode[WsMsgServer](buffer) match {
-  //            case Right(req) => req
-  //            case Left(e) =>
-  //              log.error(s"decode binaryMessage failed,error:${e.message}")
-  //              ErrorWsMsgServer
-  //          }
-  //        case TextMessage.Strict(msg) =>
-  //          log.debug(s"msg from webSocket: $msg")
-  //          ErrorWsMsgServer
-  //
-  //        // unpack incoming WS text messages...
-  //        // This will lose (ignore) messages not received in one chunk (which is
-  //        // unlikely because chat messages are small) but absolutely possible
-  //        // FIXME: We need to handle TextMessage.Streamed as well.
-  //      }
-  //      .via(RoomActor.joinGame(actor,id, sender,watchgame)) // ... and route them through the chatFlow ...
-  //      .map {
-  //      case t:WsMsgProtocol.WsMsgFront =>
-  //        val sendBuffer = new MiddleBufferInJvm(409600)
-  //        BinaryMessage.Strict(ByteString(t.fillMiddleBuffer(sendBuffer).result()))
-  //      case x =>
-  //        TextMessage.apply("")
-  //    }.withAttributes(ActorAttributes.supervisionStrategy(decider)) // ... then log any processing errors on stdin
-  //  }
 
   private val decider: Supervision.Decider = {
     e: Throwable =>
