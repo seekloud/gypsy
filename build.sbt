@@ -9,6 +9,7 @@ val projectVersion = "2018.09.27"
 
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"
+val clientMainClass = "com.neo.sk.gypsy.ClientBoot"
 
 def commonSettings = Seq(
   version := projectVersion,
@@ -33,6 +34,12 @@ lazy val sharedJs = shared.js
 //client
 lazy val client = (project in file("client"))
   .settings(name := "client")
+  .settings(
+    //pack
+    packMain := Map("gypsy" -> clientMainClass),
+    packJvmOpts := Map("gypsy" -> Seq("-Xmx128m", "-Xms32m")),
+    packExtraClasspath := Map("gypsy" -> Seq("."))
+  )
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= Dependencies.backendDependencies)
   .dependsOn(sharedJvm)

@@ -15,7 +15,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial, myId}
+import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial}
 import java.awt.event.KeyEvent
 import javafx.scene.image.Image
 
@@ -41,6 +41,9 @@ object GameHolder {
   val timeline = new Timeline()
 
   var exitFullScreen = false
+
+  var myId = "" //myId变成String类型
+  var usertype = 0
 
 
   val watchKeys = Set(
@@ -105,8 +108,7 @@ class GameHolder(
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //游戏渲染
-        val offsetTime=System.currentTimeMillis()-logicFrameTime
-        gameScene.draw(myId,offsetTime)
+        gameRender()
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
@@ -149,6 +151,20 @@ class GameHolder(
         }
         justSynced = false
       }
+  }
+
+  def gameRender() = {
+    val offsetTime=System.currentTimeMillis()-logicFrameTime
+    gameState match {
+      case GameState.play if myId!= ""=>
+        gameScene.draw(myId,offsetTime)
+      case GameState.dead if deadInfo.isDefined =>
+        gameScene.drawWhenDead(deadInfo.get)
+      case GameState.allopatry =>
+        gameScene.drawWhenFinish("存在异地登录")
+        gameClose
+      case _ =>
+    }
   }
 
   def update(): Unit = {

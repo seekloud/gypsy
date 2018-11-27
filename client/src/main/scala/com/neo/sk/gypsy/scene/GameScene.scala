@@ -1,12 +1,12 @@
 package com.neo.sk.gypsy.scene
 
 import java.util.concurrent.atomic.AtomicInteger
+
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
-
-import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.utils.FpsComp
@@ -36,10 +36,6 @@ class GameScene {
   val middleCanvasCtx=middleCanvas.getGraphicsContext2D
   val topCanvas = new Canvas(canvasWidth,canvasHeight)
   val topCanvasCtx=topCanvas.getGraphicsContext2D
-//  val clockCanvas = new Canvas(canvasWidth,canvasHeight)
-//  val clockCanvasCtx=clockCanvas.getGraphicsContext2D
-//  val offCanvas = new Canvas(canvasWidth,canvasHeight)
-//  val offCanvasCtx= offCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
 
 //  offCanvas.setStyle("z-index: 1")
@@ -52,14 +48,10 @@ class GameScene {
   group.getChildren.add(gameCanvas)
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
-//  group.getChildren.add(clockCanvas)
-//  group.getChildren.add(offCanvas)
 
   val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
   val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
-//  val clockView=new GameCanvas(clockCanvas,clockCanvasCtx,window)
-//  val offView=new GameCanvas(offCanvas,offCanvasCtx,window)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
 //    //    val viewWidth = 1200//1800
@@ -125,6 +117,13 @@ class GameScene {
         gameView.drawGameWait(firstCome)
     }
     FpsComp.renderFps(gameCanvasCtx, 550, 10)
+  }
+
+  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
+    topView.drawWhenDead(msg)
+  }
+  def drawWhenFinish(msg:String) = {
+    topView.drawWhenFinish(msg)
   }
 
   topCanvas.requestFocus()

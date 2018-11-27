@@ -7,29 +7,19 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 
 import scala.util.Random
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
 import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import scalatags.JsDom.all._
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Color, KeyCode}
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe.parser._
+
 
 import scala.math._
-//import com.neo.sk.gypsy.front.utils.byteObject.MiddleBufferInJs
-import com.neo.sk.gypsy.shared.util.utils.getZoomRate
-import org.scalajs.dom.html
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.scalajs.js
-import scala.scalajs.js.typedarray.ArrayBuffer
-import scala.collection.mutable
+
 /**
   * User: sky
   * Date: 2018/9/13
@@ -45,8 +35,6 @@ class GameHolder(replay:Boolean = false) {
   private[this] val ctx2 = canvas2.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private[this] val canvas3 = dom.document.getElementById("TopView").asInstanceOf[Canvas]
   private[this] val ctx3 = canvas3.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-//  private[this] val canvas4 = dom.document.getElementById("ClockView").asInstanceOf[Canvas]
-//  private[this] val ctx4 = canvas4.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
   private[this] val offScreenCanvas = dom.document.getElementById("offScreen").asInstanceOf[Canvas]
   private[this] val offCtx = offScreenCanvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -83,8 +71,6 @@ class GameHolder(replay:Boolean = false) {
   //游戏状态
   private[this] var gameState = GameState.play
   var deadInfo :Option[Protocol.UserDeadMessage] = None
-//  private[this] var gameState = GameState.dead
-//  private[this] var deadInfo :Option[Protocol.UserDeadMessage] = Some(new UserDeadMessage("123","456","killer",2,2017,99999999l))
 
   private[this] val watchKeys = Set(
     KeyCode.E,
@@ -113,10 +99,8 @@ class GameHolder(replay:Boolean = false) {
       //屏幕适配
       window =  Point(newWidth, newHeight)
       drawGameView.updateCanvasSize(newWidth,newHeight)
-//      drawOffScreen.updateCanvasSize(newWidth,newHeight)
       drawMiddleView.updateCanvasSize(newWidth,newHeight)
       drawTopView.updateCanvasSize(newWidth,newHeight)
-//      drawClockView.updateCanvasSize(newWidth,newHeight)
       drawMiddleView.drawRankMap()
     }
   }
@@ -131,7 +115,6 @@ class GameHolder(replay:Boolean = false) {
       //不同步
       if (!justSynced) {
         update()
-//        println(s"当前帧号fra now is ${grid.frameCount} ")
       } else {
         if (syncGridData.nonEmpty) {
           //同步
@@ -150,13 +133,6 @@ class GameHolder(replay:Boolean = false) {
   def start(): Unit = {
     println("start---")
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-//    if(room.get==11 ||room.get==12){
-//      //      draw1.drawGameOn()
-//    }else{
-//      //限时匹配
-//      dom.window.requestAnimationFrame(animate())
-//      drawClockView.drawClock()
-//    }
     dom.window.requestAnimationFrame(gameRender())
   }
 
@@ -356,12 +332,10 @@ class GameHolder(replay:Boolean = false) {
         println(s"myID:$myId")
 
       case m:Protocol.KeyCode =>
-        //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id || usertype == -1){
           grid.addActionWithFrame(m.id,m)
         }
       case m:Protocol.MousePosition =>
-       //grid.addActionWithFrameFromServer(m.id,m)
         if(myId!=m.id || usertype == -1){
           grid.addMouseActionWithFrame(m.id,m)
         }
@@ -387,7 +361,6 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerRestart(id) =>
         Shortcut.playMusic("bg")
-      //timer = dom.window.setInterval(() => deadCheck(id, timer, start, maxScore, gameStream), Protocol.frameRate)
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${id}  加入游戏 ${grid.frameCount}")
@@ -404,15 +377,11 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-
-
         //只针对某个死亡玩家发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
-//          DeadPage.deadModel(this,id,killerName,killNum,score,lifeTime)
           deadInfo = Some(msg)
           gameState = GameState.dead
-//          webSocketClient.sendMsg(ReLive(id))
           grid.removePlayer(id)
         }
 
@@ -478,12 +447,11 @@ class GameHolder(replay:Boolean = false) {
   private def replayMessageHandler(data:Protocol.GameEvent):Unit = {
     data match {
       case e:Protocol.SyncGameAllState =>
-//        println(s"回放全量数据，grid frame=${grid.frameCount}, sync state frame=${e.gState.frameCount}")
         val data = e.gState
-//        println(s"全量的数据  ${data.playerDetails}  ")
         syncGridData = Some(GridDataSync(data.frameCount,
           data.playerDetails,data.massDetails,
           data.virusDetails,0.toDouble,Nil,Nil))
+        grid.food = e.gState.foodDetails.map(a => Point(a.x,a.y) -> a.color).toMap
         grid.currentRank = e.gState.currentRank
         justSynced = true
 
@@ -497,7 +465,7 @@ class GameHolder(replay:Boolean = false) {
         grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
-        grid.food ++= e.apples.map(a => a._1 -> a._2)
+        grid.food ++= e.apples
 
       case e: Protocol.GenerateVirus =>
         grid.virusMap ++= e.virus
@@ -558,14 +526,8 @@ class GameHolder(replay:Boolean = false) {
         gameClose
 
       case e:Protocol.InitReplayError =>
-        println(s" Receive @@@@@@@@@@@@@${e.msg}  ")
         drawTopView.drawWhenFinish(e.msg)
         gameClose
-
-//      case e:Protocol.UserMerge =>
-//        if(grid.playerMap.get(e.id).nonEmpty){
-//          grid.playerMap=grid.playerMap - e.id + (e.id -> e.player)
-//        }
 
       case _ =>
         println(s"unknow msg: $data")
