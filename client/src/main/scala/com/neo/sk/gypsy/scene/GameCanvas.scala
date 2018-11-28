@@ -61,7 +61,7 @@ class GameCanvas(canvas: Canvas,
   val  unstoppable = new Image(ClientBoot.getClass.getResourceAsStream("/img/unstoppable.png"))
   val  godlike = new Image(ClientBoot.getClass.getResourceAsStream("/img/godlike.png"))
   val  legendary = new Image(ClientBoot.getClass.getResourceAsStream("/img/legendary.png"))
-  val  background1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/b2.jpg"))
+  val  background1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/b2small.png"))
 //  val  massImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/mass.png"))
   val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
