@@ -33,13 +33,12 @@ object UserManager {
   trait Command
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
+  //玩游戏
+  final case class GetWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None,roomId:Option[Long] = None,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  //观战
+  final case class GetWatchWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, watchId:Option[String],roomId:Long, replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
   //回放
   final case class GetReplaySocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, recordId:Long,frame:Int,watchId:String,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
-//  final case class GetReplaySocketFlow(watchId: String, playerName:String,recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
-  //玩游戏+观战
-//  final case class GetWebSocketFlow(name:String, replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
-  final case class GetWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, watchId: Option[String], roomId:Option[Long] = None,watch:Boolean,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
-
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -58,8 +57,7 @@ object UserManager {
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-        case GetWebSocketFlow(playerInfoOpt,watchIdOpt,roomIdOpt,watch,replyTo) =>
-          //TODO 之后可以优化这部分
+        case GetWebSocketFlow(playerInfoOpt,roomIdOpt,replyTo) =>
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx, playerInfo.playerId) match {
             case Some(userActor) =>
@@ -67,8 +65,20 @@ object UserManager {
             case None =>
           }
           val userActor = getUserActor(ctx,playerInfo)
-          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,0L,userActor)
-          userActor ! UserActor.StartGame(roomIdOpt,watchIdOpt,watch)
+          replyTo ! getWebSocketFlow(playerInfo,0L,userActor)
+          userActor ! UserActor.StartGame(roomIdOpt)
+          Behaviors.same
+
+        case GetWatchWebSocketFlow(playerInfoOpt,watchIdOpt,roomId,replyTo) =>
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx, playerInfo.playerId) match {
+            case Some(userActor) =>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+          val userActor = getUserActor(ctx,playerInfo)
+          replyTo ! getWebSocketFlow(playerInfo,0L,userActor)
+          userActor ! UserActor.StartWatch(roomId,watchIdOpt)
           Behaviors.same
 
 
@@ -80,8 +90,7 @@ object UserManager {
             case None =>
           }
           val userActor = getUserActor(ctx,playerInfo)
-          //开始创建flow
-          replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,recordId,userActor)
+          replyTo ! getWebSocketFlow(playerInfo,recordId,userActor)
           userActor ! UserActor.StartReply(recordId,watchId,frame)
           Behaviors.same
 
@@ -106,8 +115,8 @@ object UserManager {
     }
   }
 
-  //共用
-  private def getWebSocketFlow(id:String,name:String,recordId:Long,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
+  //三种共用
+  private def getWebSocketFlow(playerInfo: ApiProtocol.PlayerInfo,recordId:Long,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
     import org.seekloud.byteobject.ByteObject._
 
@@ -143,7 +152,7 @@ object UserManager {
         // This will lose (ignore) messages not received in one chunk (which is
         // unlikely because chat messages are small) but absolutely possible
         // FIXME: We need to handle TextMessage.Streamed as well.
-      }.via(UserActor.flow(id,name,recordId,userActor))
+      }.via(UserActor.flow(playerInfo.playerId,playerInfo.nickname,recordId,userActor))
       .map{
         case t:Protocol.Wrap =>
           BinaryMessage.Strict(ByteString(t.ws))

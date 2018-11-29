@@ -52,7 +52,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
-      'playerId.as[String],
+      'playerId.as[String],//
       'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
@@ -86,7 +86,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def watchGame = (path("watchGame") & get) {
     parameter(
-      'playerId.as[String].?,
+      'playerId.as[String].?,//观看视角
       'accessCode.as[String],
       'roomId.as[Long]
     ){ case ( playerIdOpt,  accessCode, roomId) =>
@@ -120,14 +120,14 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   private def watchRecord = (path("watchRecord") & get){
     parameter(
       'recordId.as[Long],
-      'playerId.as[String],
+      'playerId.as[String], //回放视角
       'frame.as[Int],
       'accessCode.as[String]
     ){ (recordId, playerId, frame, accessCode) =>
       if(AppSettings.gameTest){
         val replayWatcherId = "replay" + idGenerator.getAndIncrement()
         val session = GypsySession(BaseUserInfo(UserRolesType.replayer, replayWatcherId, replayWatcherId, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(playerId,playerId)),recordId,frame,playerId,_))
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(replayWatcherId,replayWatcherId)),recordId,frame,playerId,_))
         dealFutureResult(
           flowFuture.map(t =>
             addSession(session){

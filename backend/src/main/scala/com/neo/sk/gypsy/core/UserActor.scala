@@ -37,13 +37,17 @@ object UserActor {
 
   case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
 
-  case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None) extends Command with RoomManager.Command
+  case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoom4Watch(roomId:Long,watchId:Option[String]) extends Command with RoomManager.Command
+  case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomSuccess(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
-  case class Left(id: String, name: String) extends Command with RoomActor.Command
+  case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+
+  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
+
+  case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
   case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
 
@@ -70,7 +74,7 @@ object UserActor {
 
   case class StartGame(roomId:Option[Long]) extends Command
 
-  case class StartWatch(roomId:Option[Long],watchId:Option[String]) extends Command
+  case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
 
   case class StartReply(recordId:Long, watchId:String, frame:Int) extends Command
 
@@ -107,14 +111,12 @@ object UserActor {
                    case KeyCode(id,keyCode,f,n)=>
                      log.debug(s"键盘事件$keyCode")
                      Key(id,keyCode,f,n)
+
                    case MousePosition(id,clientX,clientY,f,n)=>
                      Mouse(id,clientX,clientY,f,n)
-//                   case Protocol.UserLeft()=>
-//                     Left(id,name)
+
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-//                   case ReLive(id) =>
-//                     UserReLive(id)
 
                    case ReLiveAck(id) =>
                      UserReLiveAck(id)
@@ -202,11 +204,11 @@ object UserActor {
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
         case StartGame(roomIdOp) =>
-          roomManager ! UserActor.JoinRoom(userInfo.playerId,None,userInfo.nickname,startTime,ctx.self,roomIdOp)
+          roomManager ! UserActor.JoinRoom(userInfo,roomIdOp,ctx.self)
           Behaviors.same
 
-        case StartWatch(roomIdOp,watchId) =>
-          roomManager ! UserActor.JoinRoom4Watch()
+        case StartWatch(roomId,watchId) =>
+          roomManager ! UserActor.JoinRoom4Watch(userInfo,roomId,watchId,ctx.self)
           Behaviors.same
 
         case StartReply(recordId,watchId,frame) =>
@@ -218,11 +220,11 @@ object UserActor {
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
-        case JoinRoomSuccess(uid,roomActor)=>
-          switchBehavior(ctx,"play",play(userInfo,startTime,frontActor,roomActor))
+        case JoinRoomSuccess(roomActor)=>
+          switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
 
-        case JoinRoomSuccess4Watch() =>
-          switchBehavior(ctx,"watch",watch())
+        case JoinRoomSuccess4Watch(roomActor) =>
+          switchBehavior(ctx,"watch",watch(userInfo,frontActor,roomActor))
 
         case UnKnowAction =>
           Behavior.same
@@ -252,7 +254,6 @@ object UserActor {
     */
   private def play(
                     userInfo:PlayerInfo,
-                    startTime:Long,
                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
                     roomActor: ActorRef[RoomActor.Command])(
                     implicit stashBuffer:StashBuffer[Command],
@@ -280,16 +281,15 @@ object UserActor {
           frontActor ! m
           Behaviors.same
 
-          //for 玩游戏+观战
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(userInfo.playerId,userInfo.nickname)
+          roomManager ! RoomManager.LeftRoom(userInfo)
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo.playerId,userInfo.nickname)
+          roomManager ! RoomManager.LeftRoom(userInfo)
           Behaviors.stopped
 
         case e: NetTest=>
@@ -306,6 +306,8 @@ object UserActor {
     */
   private def watch(
                      userInfo:PlayerInfo,
+                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
+                     roomActor: ActorRef[RoomActor.Command]
                    )(
                      implicit stashBuffer:StashBuffer[Command],
                      timer:TimerScheduler[Command],
@@ -316,8 +318,18 @@ object UserActor {
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo.playerId,userInfo.nickname)
+          roomManager ! RoomManager.LeftRoom(userInfo)
           Behaviors.stopped
+
+        case DispatchMsg(m)=>
+          frontActor ! m
+          Behaviors.same
+
+        case ChangeBehaviorToInit=>
+          frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+          roomManager ! RoomManager.LeftRoom4Watch(userInfo)
+          ctx.unwatch(frontActor)
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknown msg=${msg}")

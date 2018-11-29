@@ -8,7 +8,7 @@ import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.shared.ptcl.{Boundary, Food, Point, Protocol, WsMsgProtocol, _}
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
-import com.neo.sk.gypsy.core.UserActor.JoinRoomSuccess
+import com.neo.sk.gypsy.core.UserActor.{JoinRoomSuccess, JoinRoomSuccess4Watch}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
@@ -44,7 +44,9 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
-  case class JoinRoom(uid:String,name:String,startTime:Long,userActor:ActorRef[UserActor.Command],roomId:Long,watchgame:Boolean,watchId:Option[String]) extends Command
+  case class JoinRoom(playerInfo: PlayerInfo,roomId:Long,userActor:ActorRef[UserActor.Command]) extends Command
+
+  case class JoinRoom4Watch(playerInfo: PlayerInfo,watchId: Option[String],userActor:ActorRef[UserActor.Command]) extends Command
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
@@ -66,7 +68,7 @@ object RoomActor {
 
   val ballId = new AtomicLong(100000)
 
-  def create(roomId:Long,matchRoom:Boolean):Behavior[Command] = {
+  def create(roomId:Long):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
         Behaviors.withTimers[Command] {
@@ -100,53 +102,48 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case JoinRoom(id, name, startTime,subscriber,roomId,watchgame,watchId) =>
-          log.info(s"got $msg")
-          if(watchgame){
-            //观战
-//            ctx.watchWith(subscriber,UserActor.Left(id,name))
-            subscribersMap.put(id,subscriber)
-            subscriber ! JoinRoomSuccess(id,ctx.self)
-            watchId match{
-              case Some(wid) =>
-                for(i<- 0 until userList.length){
-                  if(userList(i).id == wid && !userList(i).shareList.contains(id)){
-                    userList(i).shareList.append(id)
-                  }
-                }
-                dispatchTo(subscribersMap)(id,Protocol.Id(wid))
-                dispatchTo(subscribersMap)(id,grid.getAllGridData)
-              case None =>
-                val x = (new util.Random).nextInt(userList.length)
-                userList(x).shareList.append(id)
-                //观察者前端的id是其观察对象的id
-                //TODO userMap和userLists可以合并
-                dispatchTo(subscribersMap)(id,Protocol.Id(userList(x).id))
-                dispatchTo(subscribersMap)(id,grid.getAllGridData)
-            }
-          }else{
-//            if (!userMap.contains(id)) {
-              val createBallId = ballId.incrementAndGet()
-              //TODO 讨论
-              println(s" ballId:${createBallId} id:${id} fra:${grid.frameCount}")
-              userList.append(UserInfo(id, name, mutable.ListBuffer[String]()))
-              userMap.put(id, (name, createBallId))
-//              ctx.watchWith(subscriber, UserActor.Left(id, name))
-              subscribersMap.put(id, subscriber)
-              grid.addPlayer(id, name)
-              val event = UserWsJoin(roomId, id, name, createBallId, grid.frameCount,-1)
-//              println(s"UserJoin  ${event} ")
-              grid.AddGameEvent(event)
+        case JoinRoom(playerInfo,roomId,userActor) =>
+          val createBallId = ballId.incrementAndGet()
+          println(s" ballId:${createBallId} id:${playerInfo.playerId} fra:${grid.frameCount}")
+          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
+          userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId))
+          //              ctx.watchWith(subscriber, UserActor.Left(id, name))
+          subscribersMap.put(playerInfo.playerId, userActor)
+          grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
+          val event = UserWsJoin(roomId, playerInfo.playerId, playerInfo.nickname, createBallId, grid.frameCount,-1)
+          //              println(s"UserJoin  ${event} ")
+          grid.AddGameEvent(event)
 
-              subscriber ! JoinRoomSuccess(id, ctx.self)
-              dispatchTo(subscribersMap)(id, Protocol.Id(id))
-              dispatchTo(subscribersMap)(id, grid.getAllGridData)
-//            }else{
-//              println("ID重了")
-//            }
+          userActor ! JoinRoomSuccess(ctx.self)
+          dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
+          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
+          val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
+          dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
+          Behaviors.same
+
+
+        case JoinRoom4Watch(playerInfo,watchId,userActor) =>
+          subscribersMap.put(playerInfo.playerId,userActor)
+          userActor ! JoinRoomSuccess4Watch(ctx.self)
+          watchId match{
+            case Some(wid) =>
+              for(i<- 0 until userList.length){
+                if(userList(i).id == wid && !userList(i).shareList.contains(playerInfo.playerId)){
+                  userList(i).shareList.append(playerInfo.playerId)
+                }
+              }
+              dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.Id(wid))
+              dispatchTo(subscribersMap)(playerInfo.playerId,grid.getAllGridData)
+            case None =>
+              val x = (new util.Random).nextInt(userList.length)
+              userList(x).shareList.append(playerInfo.playerId)
+              //观察者前端的id是其观察对象的id
+              //TODO userMap和userLists可以合并
+              dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.Id(userList(x).id))
+              dispatchTo(subscribersMap)(playerInfo.playerId,grid.getAllGridData)
           }
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
-          dispatchTo(subscribersMap)(id,Protocol.FeedApples(foodlists))
+          dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
           Behaviors.same
 
         case ReStart(id) =>
@@ -163,12 +160,10 @@ object RoomActor {
           //确认复活接收
           log.info(s"RoomActor Receive Relive Ack from $id *******************")
           grid.ReLiveMap -= id
-//          timer.cancel(ReliveTimeOutKey(id))
           Behavior.same
 
-        case UserActor.Left(id, name) =>
+        case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
-//          subscribersMap.get(id).foreach(r=>ctx.unwatch(r))
           //复活列表清除
           grid.ReLiveMap -= id
           grid.removePlayer(id)
@@ -187,17 +182,12 @@ object RoomActor {
           //userMap里面只存玩家信息
           userMap.remove(id)
           //玩家离开or观战者离开
-//          println(s"userlist$userList")
-
-
           var list=List[Int2]()
           var user = -1
           for(i<-0 until userList.length){
             //观战者离开
-//            println(s"i=$i,u(i)=${userList(i)} ")
             for(j<-0 until userList(i).shareList.length){
               if(userList(i).shareList(j) == id){
-//                println(s"share    i=$i,u(i)=${userList(i)} j=$j ")
                 list :::= List(Int2(i,j))
               }
             }
@@ -214,6 +204,8 @@ object RoomActor {
           }
           subscribersMap.remove(id)
           Behaviors.same
+
+        case UserActor.Left4Watch(playerInfo) =>
 
         case UserActor.Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
