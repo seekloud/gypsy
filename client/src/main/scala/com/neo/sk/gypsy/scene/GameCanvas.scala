@@ -329,7 +329,7 @@ class GameCanvas(canvas: Canvas,
         ctx.setStroke(Color.web("#f32705"))
         ctx.strokeText(deadName, 25+killNameLength+32+50, 400)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, 25+killNameLength+32+50+20, 400)
+        ctx.fillText(deadName, 25+killNameLength+32+50, 400)
         ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
