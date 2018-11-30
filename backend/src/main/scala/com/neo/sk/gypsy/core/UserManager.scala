@@ -73,6 +73,7 @@ object UserManager {
 
 
         case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
+          log.info("Replay WS connecting =========")
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx,playerInfo.playerId) match{
             case Some(userActor)=>
