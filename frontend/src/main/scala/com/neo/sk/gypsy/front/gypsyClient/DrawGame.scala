@@ -487,9 +487,9 @@ case class DrawGame(
     ctx.fillStyle = MyColors.background
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
 
-    currentRank.zipWithIndex.filter(r=>r._2<4 || r._1.id == uid).foreach{rank=>
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
       val score = rank._1
-      val index = rank._2
+      val index = rank._2+1
 
       val imgOpt = index match {
         case 1 => Some(goldImg)
@@ -500,7 +500,15 @@ case class DrawGame(
       imgOpt.foreach{ img =>
         ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
       }
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index, currentRankBaseLine)
+      if(score.id == uid){
+        ctx.save()
+        ctx.fillStyle = "#FF0000"
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        ctx.restore()
+      }else{
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
+      }
+
     }
 
 /*      currentRank.foreach { score =>
