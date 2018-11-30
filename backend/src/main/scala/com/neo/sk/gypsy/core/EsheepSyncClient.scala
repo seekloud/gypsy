@@ -24,6 +24,7 @@ object EsheepSyncClient {
   private final val ReTryTime = 20.seconds
   private final case object BehaviorChangeKey
   private final case object RefreshTokenKey
+  private final case object ErrorRefreshTokenKey
 
   sealed trait Command
 
@@ -38,6 +39,8 @@ object EsheepSyncClient {
 
 
   final case object RefreshToken extends Command
+
+  final case class RefreshMsg(msg:Command) extends Command
 
   final case class VerifyAccessCode(accessCode:String, rsp:ActorRef[EsheepProtocol.VerifyAccessCodeRsp]) extends Command
 
@@ -73,7 +76,7 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case RefreshToken =>
-//          log.info("000000000000000001")
+          log.info("000000000000000001")
           if(AppSettings.esheepAuthToken){
             EsheepClient.gsKey2Token().onComplete{
               case Success(rst) =>
@@ -142,7 +145,7 @@ object EsheepSyncClient {
             case Success(rst) =>
               rst match {
                 case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(Some(value))
-                case Left(error) => handleErrorRsp(ctx, msg, error)(() => rsp ! error)
+                case Left(error) => log.info(s"===${error}");handleErrorRsp(ctx, msg, error,timer)(() => rsp ! error)
               }
             case Failure(exception) =>
               log.warn(s"${ctx.self.path} VerifyAccessCode failed, error:${exception.getMessage}")
@@ -151,6 +154,8 @@ object EsheepSyncClient {
 
         case RefreshToken =>  //发消息给自己和转换状态哪个先？
           ctx.self ! RefreshToken
+          log.info(s"Receive Refresh%%%%%%% ")
+//          timer.cancel(ErrorRefreshTokenKey)
           timer.cancel(RefreshTokenKey)
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
 
@@ -168,8 +173,14 @@ object EsheepSyncClient {
           }
           Behaviors.same
 
+        case refresh:RefreshMsg =>
+          ctx.self ! RefreshToken
+          ctx.self ! refresh.msg
+          Behaviors.same
+
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknow msg=${msg}")
+          stashBuffer.stash(unknowMsg)
           Behaviors.same
 
       }
@@ -180,16 +191,16 @@ object EsheepSyncClient {
 
   implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(Some(EsheepProtocol.PlayerInfo("","")), errorRsp.errCode, errorRsp.msg)
 
-  private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
+  private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp,timer:TimerScheduler[Command])(unknownErrorHandler: => Unit) = {
     //TODO 这里逻辑有误
 
     /*
      *如果你看到一直打印收到Token的请求，请检查下application的gameTest和accessCODE获取的流程
      * 应为如果AccessCode验证失败的话,这个函数会往自身发VerifyAccessCode，导致这里会进入一个死循环
      */
-
-    ctx.self ! RefreshToken
-    ctx.self ! msg
+    timer.startSingleTimer(ErrorRefreshTokenKey,RefreshMsg(msg),3.seconds)
+//    ctx.self ! RefreshToken
+//    ctx.self ! msg
 
   }
 }
