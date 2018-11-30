@@ -76,7 +76,7 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case RefreshToken =>
-          log.info("000000000000000001")
+//          log.info("000000000000000001")
           if(AppSettings.esheepAuthToken){
             EsheepClient.gsKey2Token().onComplete{
               case Success(rst) =>
@@ -145,7 +145,10 @@ object EsheepSyncClient {
             case Success(rst) =>
               rst match {
                 case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(Some(value))
-                case Left(error) => log.info(s"===${error}");handleErrorRsp(ctx, msg, error,timer)(() => rsp ! error)
+                case Left(error) => {
+                  log.warn(s"VerifyAccessCode Error:${error}")
+                  handleErrorRsp(ctx, msg, error,timer)(() => rsp ! error)
+                }
               }
             case Failure(exception) =>
               log.warn(s"${ctx.self.path} VerifyAccessCode failed, error:${exception.getMessage}")
@@ -154,8 +157,6 @@ object EsheepSyncClient {
 
         case RefreshToken =>  //发消息给自己和转换状态哪个先？
           ctx.self ! RefreshToken
-          log.info(s"Receive Refresh%%%%%%% ")
-//          timer.cancel(ErrorRefreshTokenKey)
           timer.cancel(RefreshTokenKey)
           switchBehavior(ctx,"init",init(),InitTime,TimeOut("init"))
 
