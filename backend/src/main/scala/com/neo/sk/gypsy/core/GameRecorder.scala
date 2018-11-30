@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.core
 
+import java.io.File
+
 import akka.actor.typed.{Behavior, PostStop}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
@@ -20,6 +22,7 @@ import org.seekloud.byteobject.encoder.BytesEncoder
 import com.neo.sk.gypsy.models.SlickTables._
 import com.neo.sk.gypsy.models.Dao._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
+
 import scala.language.implicitConversions
 import com.neo.sk.gypsy.utils.ESSFSupport.userMapEncode
 import com.neo.sk.gypsy.Boot.executor
@@ -36,6 +39,7 @@ object GameRecorder {
 
   final case class GameRecord(event:(List[GameEvent],Option[Protocol.GameSnapshot])) extends Command
   final case class SaveDate(left:Boolean) extends Command
+  final case class SaveEmptyDate(left:Boolean,path:String) extends Command
   final case object Save extends Command
   final case object RoomClose extends Command
   final case object StopRecord extends Command
@@ -44,7 +48,7 @@ object GameRecorder {
   private final val InitTime = Some(5.minutes)
   private final case object BehaviorChangeKey
   private final case object SaveDateKey
-  private final val saveTime = 10.minute
+  private final val saveTime = 1.minute
 
   final case class SwitchBehavior(
                                   name: String,
@@ -165,13 +169,24 @@ object GameRecorder {
 
         case Save =>
           log.info(s"${ctx.self.path} work get msg save")
+          val RecordFileName = AppSettings.gameDataDirectoryPath + fileName + s"_$fileIndex"
           timer.startSingleTimer(SaveDateKey, Save, saveTime)
-          ctx.self ! SaveDate(false)
+          if(userAllMap.nonEmpty){
+            ctx.self ! SaveDate(false)
+          }else{
+            ctx.self ! SaveEmptyDate(false,RecordFileName)
+          }
+
           switchBehavior(ctx,"save",save(gameRecordData,essfMap,userAllMap,userMap,startF,endF))
 
         case RoomClose =>
           log.info(s"${ctx.self.path} work get msg save, room close")
-          ctx.self ! SaveDate(true)
+          val RecordFileName = AppSettings.gameDataDirectoryPath + fileName + s"_$fileIndex"
+          if(userAllMap.nonEmpty){
+            ctx.self ! SaveDate(true)
+          }else{
+            ctx.self ! SaveEmptyDate(true,RecordFileName)
+          }
           switchBehavior(ctx,"save",save(gameRecordData,essfMap,userAllMap,userMap,startF,endF))
 
 
@@ -302,8 +317,21 @@ object GameRecorder {
 //          ctx.self !  SwitchBehavior("initRecorder",initRecorder(roomId,gameRecordData.fileName,fileIndex,gameRecordData.InitialTime, userMap))
 
         switchBehavior(ctx,"busy",busy())
+
+        case date:SaveEmptyDate =>
+          recorder.finish()
+          val deleteFile = new File(date.path)
+          if(deleteFile.isFile && deleteFile.exists()){
+            deleteFile.delete()
+            log.error(s"delete file, file is ${date.path}")
+          }else{
+            log.error(s"delete file error, file is ${date.path}")
+          }
+          if(date.left){ctx.self ! StopRecord}
+          initRecorder(roomId,gameRecordData.fileName,fileIndex,gameRecordData.InitialTime, userMap)
+
         case unknow =>
-          log.warn(s"${ctx} save got unknow msg ${unknow}")
+          log.warn(s"${ctx} save got unknow msg ")
           Behaviors.same
       }
 
