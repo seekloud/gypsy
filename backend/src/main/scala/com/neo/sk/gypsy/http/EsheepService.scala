@@ -59,7 +59,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     ){ case ( playerId, playerName, accessCode, roomIdOpt) =>
       if(AppSettings.gameTest){
         val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),None,roomIdOpt,false,_))
+        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),roomIdOpt,_))
         dealFutureResult(
           flowFuture.map(r=>
             addSession(session) {
@@ -70,7 +70,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       }else{
         authPlatUser(accessCode){player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),None,roomIdOpt,false,_))
+          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),roomIdOpt,_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {
@@ -93,7 +93,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       if(AppSettings.gameTest){
         val watcherId = "watcher" + idGenerator.getAndIncrement()
         val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, watcherId, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(watcherId,watcherId)),playerIdOpt,Some(roomId),true,_))
+        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWatchWebSocketFlow(Some(PlayerInfo(watcherId,watcherId)),playerIdOpt,roomId,_))
         dealFutureResult(
           flowFuture.map(r=>
             addSession(session) {
@@ -104,7 +104,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       } else {
         authPlatUser(accessCode){ player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.watcher, player.playerId, player.nickname, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),playerIdOpt,Some(roomId),true,_))
+          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWatchWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),playerIdOpt,roomId,_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {

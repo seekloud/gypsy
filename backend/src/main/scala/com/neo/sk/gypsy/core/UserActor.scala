@@ -43,7 +43,7 @@ object UserActor {
 
   case class JoinRoomSuccess(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
 
   case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
@@ -223,8 +223,8 @@ object UserActor {
         case JoinRoomSuccess(roomActor)=>
           switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
 
-        case JoinRoomSuccess4Watch(roomActor) =>
-          switchBehavior(ctx,"watch",watch(userInfo,frontActor,roomActor))
+        case JoinRoomSuccess4Watch(roomActor,roomId) =>
+          switchBehavior(ctx,"watch",watch(userInfo,roomId,frontActor,roomActor))
 
         case UnKnowAction =>
           Behavior.same
@@ -284,7 +284,7 @@ object UserActor {
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
           roomManager ! RoomManager.LeftRoom(userInfo)
-          ctx.unwatch(frontActor)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
@@ -306,6 +306,7 @@ object UserActor {
     */
   private def watch(
                      userInfo:PlayerInfo,
+                     roomId:Long,
                      frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
                      roomActor: ActorRef[RoomActor.Command]
                    )(
@@ -318,7 +319,7 @@ object UserActor {
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! RoomManager.LeftRoom4Watch(userInfo,roomId)
           Behaviors.stopped
 
         case DispatchMsg(m)=>
@@ -327,8 +328,8 @@ object UserActor {
 
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom4Watch(userInfo)
-          ctx.unwatch(frontActor)
+          roomManager ! RoomManager.LeftRoom4Watch(userInfo,roomId)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case unknowMsg =>
@@ -352,7 +353,8 @@ object UserActor {
       msg match {
         case ChangeBehaviorToInit =>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          ctx.unwatch(frontActor)
+          getGameReply(ctx,recordId) ! GamePlayer.StopReplay(recordId)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
