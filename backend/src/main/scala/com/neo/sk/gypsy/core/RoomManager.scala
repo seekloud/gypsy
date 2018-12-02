@@ -1,24 +1,16 @@
 package com.neo.sk.gypsy.core
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+import java.util.concurrent.atomic.{AtomicLong}
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
-import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.stream.{ActorAttributes, Materializer, Supervision}
-import akka.stream.scaladsl.Flow
-import akka.util.ByteString
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.duration._
-import com.neo.sk.gypsy.Boot.executor
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.UserActor.{JoinRoom, JoinRoom4Watch}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, GameState}
+import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 /**
   * User: sky
@@ -32,7 +24,7 @@ object RoomManager {
   case object TimeKey
   case object TimeOut extends Command
   case class LeftRoom(playerInfo: PlayerInfo) extends Command
-  case class LeftRoom4Watch(playerInfo: PlayerInfo) extends Command
+  case class LeftRoom4Watch(playerInfo: PlayerInfo,roomId:Long) extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
   case class GetRoomId(playerId:String ,replyTo:ActorRef[RoomIdRsp]) extends Command
@@ -69,7 +61,6 @@ object RoomManager {
                   case None => roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
                 }
                 getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
-              //TODO  match room need to be headled in the futrue
               case None =>
                 roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(_._1).headOption match{
                   case Some(t) =>
@@ -136,8 +127,9 @@ object RoomManager {
             }
             Behaviors.same
 
-          case LeftRoom4Watch(playerInfo) =>
-            getRoomActor(ctx, t._1)
+          case LeftRoom4Watch(playerInfo,roomId) =>
+            getRoomActor(ctx, roomId) ! UserActor.Left4Watch(playerInfo)
+            Behaviors.same
 
 
           case x=>
@@ -146,12 +138,12 @@ object RoomManager {
         }
     }
 
-  private val decider: Supervision.Decider = {
-    e: Throwable =>
-      e.printStackTrace()
-      println(s"WS stream failed with $e")
-      Supervision.Resume
-  }
+//  private val decider: Supervision.Decider = {
+//    e: Throwable =>
+//      e.printStackTrace()
+//      println(s"WS stream failed with $e")
+//      Supervision.Resume
+//  }
 
   private def getRoomActor(ctx: ActorContext[Command],roomId:Long):ActorRef[RoomActor.Command] = {
     val childName = s"RoomActor-$roomId"

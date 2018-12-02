@@ -100,7 +100,6 @@ object UserManager {
           Behaviors.same
 
         case msg:GetRecordFrameMsg=>
-//          val userActor = getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId))
           getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
@@ -158,7 +157,6 @@ object UserManager {
         case t:Protocol.Wrap =>
           BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
-//          log.info(s"========${t}===============")
           BinaryMessage.Strict(ByteString(t.ws))
         case x =>
           log.debug(s"akka stream receive unknown msg=${x}")
