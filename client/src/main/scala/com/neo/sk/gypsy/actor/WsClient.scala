@@ -133,11 +133,11 @@ object WsClient {
     failureMatcher = {
       case WsSendFailed(ex)  ⇒ ex
     },
-    bufferSize = 8,
+    bufferSize = 128,
     overflowStrategy = OverflowStrategy.fail
   ).collect{
     case message: UserAction =>
-      val sendBuffer = new MiddleBufferInJvm(409600)
+      val sendBuffer = new MiddleBufferInJvm(409600) //409600
       BinaryMessage.Strict(ByteString(
         message.fillMiddleBuffer(sendBuffer).result()
       ))
