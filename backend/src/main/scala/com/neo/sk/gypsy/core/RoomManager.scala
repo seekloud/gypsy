@@ -83,12 +83,24 @@ object RoomManager {
           case JoinRoom4Watch(playerInfo,roomId,watchId,userActor) =>
             roomInUse.get(roomId) match {
               case Some(ls) =>
-                ls.exists(p=> p._1 == watchId) match {
-                  case false => //TODO 重构02
-                  case _ => getRoomActor(ctx, roomId) ! RoomActor.JoinRoom4Watch(playerInfo,watchId,userActor)
-                }
-              case _  => //TODO 重构01
+                //TODO deal 观察的用户不在房间里
+                getRoomActor(ctx, roomId) ! RoomActor.JoinRoom4Watch(playerInfo,watchId,userActor)
+              case _  =>
             }
+            Behaviors.same
+
+          case LeftRoom(playerInfo) =>
+            roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match{
+              case Some(t) =>
+                roomInUse.put(t._1,t._2.filterNot(_._1 == playerInfo.playerId))
+                getRoomActor(ctx,t._1) ! UserActor.Left(playerInfo)
+                if(roomInUse(t._1).isEmpty && t._1 > 1l)roomInUse.remove(t._1)
+              case None => log.debug(s"该玩家不在任何房间")
+            }
+            Behaviors.same
+
+          case LeftRoom4Watch(playerInfo,roomId) =>
+            getRoomActor(ctx, roomId) ! UserActor.Left4Watch(playerInfo)
             Behaviors.same
 
           case msg:RemoveRoom=>
@@ -113,24 +125,8 @@ object RoomManager {
 
           case msg:GetRoomList =>
             val RoomList=roomInUse.keys.toList
-            println(s"roomlist$RoomList")
             msg.replyTo ! RoomListRsp(roomListInfo(RoomList),0,"ok")
             Behaviors.same
-
-          case LeftRoom(playerInfo) =>
-            roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match{
-              case Some(t) =>
-                roomInUse.put(t._1,t._2.filterNot(_._1 == playerInfo.playerId))
-                getRoomActor(ctx,t._1) ! UserActor.Left(playerInfo)
-                if(roomInUse(t._1).isEmpty && t._1 > 1l)roomInUse.remove(t._1)
-              case None => log.debug(s"该玩家不在任何房间")
-            }
-            Behaviors.same
-
-          case LeftRoom4Watch(playerInfo,roomId) =>
-            getRoomActor(ctx, roomId) ! UserActor.Left4Watch(playerInfo)
-            Behaviors.same
-
 
           case x=>
             log.debug(s"msg can't handle with ${x}")
@@ -138,12 +134,6 @@ object RoomManager {
         }
     }
 
-//  private val decider: Supervision.Decider = {
-//    e: Throwable =>
-//      e.printStackTrace()
-//      println(s"WS stream failed with $e")
-//      Supervision.Resume
-//  }
 
   private def getRoomActor(ctx: ActorContext[Command],roomId:Long):ActorRef[RoomActor.Command] = {
     val childName = s"RoomActor-$roomId"
