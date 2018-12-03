@@ -517,7 +517,7 @@ class GameCanvas(canvas: Canvas,
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
-    ctx.setFont(Font.font("Helvetica",12))
+    ctx.setFont(Font.font("Helvetica",14))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
@@ -525,6 +525,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web(MyColors.background))
 //    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
     drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
+    ctx.setFont(Font.font("Helvetica",12))
 
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
       val score = rank._1
@@ -542,7 +543,7 @@ class GameCanvas(canvas: Canvas,
       if(score.id == uid){
         ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
-        ctx.setFill(Color.web("#FF0000"))
+        ctx.setFill(Color.web("#FFFF33"))
         drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{

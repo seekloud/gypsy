@@ -479,7 +479,7 @@ case class DrawGame(
 
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
-    ctx.font = "12px Helvetica"
+    ctx.font = "14px Helvetica"
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
@@ -487,6 +487,7 @@ case class DrawGame(
     ctx.fillStyle = MyColors.background
 //    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
+    ctx.font = "12px Helvetica"
 
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
       val score = rank._1
@@ -504,7 +505,7 @@ case class DrawGame(
       if(score.id == uid){
         ctx.save()
         ctx.font = "12px Helvetica"
-        ctx.fillStyle = "#FF0000"
+        ctx.fillStyle = "#FFFF33"
         drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
