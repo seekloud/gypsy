@@ -21,8 +21,15 @@ object RecordDao {
   def getAllRecord(lastRecordId: Long, count: Int) = {
     if(lastRecordId==0L){
       val action1 = for {
-        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
-        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
+        /*
+         * RecordId 写入GameRecord表时，有的时候可能因为那段录像内没有用户所以不会记录到UserRecordMap表中
+         * 所以查找的时候拿GameRecord表先查50个，UserRecordMap里面过滤后个数是<=50的
+         *
+        */
+        r2 <- tUserRecordMap.sortBy(_.recordId.desc).take(20*count).result
+        r1 <- tGameRecord.filter(i=>i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).take(count).result
+//        r1 <- tGameRecord.sortBy(_.recordId.desc).take(count).result
+//        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
       } yield {
         (r1,r2)
       }
@@ -30,8 +37,10 @@ object RecordDao {
     }
     else{
       val action2 = for {
-        r1 <- tGameRecord.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(count).result
-        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
+        r2 <- tUserRecordMap.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(20*count).result
+        r1 <- tGameRecord.filter(i => i.recordId.inSet(r2.map(_.recordId).toSet)).sortBy(_.recordId.desc).take(count).result
+//        r1 <- tGameRecord.filter(_.recordId<lastRecordId).sortBy(_.recordId.desc).take(count).result
+//        r2 <- tUserRecordMap.filter(i => i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
       } yield {
         (r1,r2)
       }
@@ -65,9 +74,9 @@ object RecordDao {
       val action1 = for {
         r1 <- tUserRecordMap.filter(_.userId===playerId).sortBy(_.recordId.desc).take(count).result
         r2 <- tGameRecord.filter(i=>i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
+        //r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
       } yield {
-        (r2,r3)
+        (r2,r1)
       }
       db.run(action1.transactionally)
     }
@@ -75,9 +84,9 @@ object RecordDao {
       val action2 = for {
         r1 <- tUserRecordMap.filter(i=> i.recordId<lastRecordId && i.userId===playerId).sortBy(_.recordId.desc).take(count).result
         r2 <- tGameRecord.filter(i=>i.recordId.inSet(r1.map(_.recordId).toSet)).sortBy(_.recordId.desc).result
-        r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
+        //r3 <- tUserRecordMap.filter(i=> i.recordId.inSet(r2.map(_.recordId).toSet)).result
       } yield {
-        (r2,r3)
+        (r2,r1)
       }
       db.run(action2.transactionally)
     }

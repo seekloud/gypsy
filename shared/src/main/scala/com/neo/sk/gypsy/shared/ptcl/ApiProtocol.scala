@@ -28,15 +28,12 @@ object ApiProtocol {
                        startTime:Long,
                        endTime:Long,
                        userCounts:Int,
-                       userList:Seq[String]
+                       userList:Seq[(String,String)]
                        )
 
-  case class RecordsInfo(
-                       recordList:List[RecordInfo]
-                       )
 
   case class RecordListRsp(
-                            data:RecordsInfo,
+                            data:List[RecordInfo],
                             errCode:Int=0,
                             msg:String="ok"
                           )
@@ -91,7 +88,7 @@ object ApiProtocol {
 
   case class GetUserInRecordReq(
                                  recordId:Long,
-                                 playerId:String
+                                 playerId:String //观看玩家id
                                )
 
   case class ExistTimeInfo(
@@ -131,5 +128,76 @@ object ApiProtocol {
                               frame:Int,
                               frameNum:Long
                             )
+
+  case class LoginData(
+                      wsUrl:String,
+                      scanUrl:String
+                    )
+  case class LoginResponse(
+                            data:LoginData,
+                            errCode:Int = 0,
+                            msg:String = "ok"
+                          )
+  case class WsData(
+                     userId:Long,
+                     nickname:String,
+                     token:String,
+                     tokenExpireTime:Long,
+                     headImg:Option[String],
+                     gender:Option[Int]
+                   )
+  case class WsResponce(
+                       data:WsData,
+                       errCode:Int = 0,
+                       msg:String = "ok"
+                       )
+  case class Ws4AgentResponse(
+                               Ws4AgentRsp:WsResponce
+                             )
+
+  case class LinkGameData(
+                           gameId:Long,
+                           playerId:String
+                         )
+
+  case class GameServerInfo(
+                             ip:String,
+                             port:Int,
+                             domain:String
+                           )
+
+  case class LinkResElement(
+                             accessCode:String,
+                             gsPrimaryInfo:GameServerInfo
+                           )
+
+  case class LinkGameRes(
+                          data:LinkResElement,
+                          errCode:Int = 0,
+                          msg:String = "ok"
+                        )
+
+  case class GaRefreshTokenReq(
+                                playerId: String
+                              )
+
+  case class TokenInfo(
+                        token: String,
+                        expireTime: Long
+                      )
+
+  case class TokenAndAcessCode(
+                                token: String,
+                                expireTime: Long,
+                                accessCode: String
+                              )
+
+  case class GaRefreshTokenRsp(
+                                data: TokenInfo,
+                                errCode: Int = 0,
+                                msg: String = "ok"
+                              )extends CommonRsp
+
+
 
 }

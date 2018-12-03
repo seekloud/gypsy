@@ -24,6 +24,7 @@ object EsheepSyncClient {
   private final val ReTryTime = 20.seconds
   private final case object BehaviorChangeKey
   private final case object RefreshTokenKey
+  private final case object ErrorRefreshTokenKey
 
   sealed trait Command
 
@@ -38,6 +39,8 @@ object EsheepSyncClient {
 
 
   final case object RefreshToken extends Command
+
+  final case class RefreshMsg(msg:Command) extends Command
 
   final case class VerifyAccessCode(accessCode:String, rsp:ActorRef[EsheepProtocol.VerifyAccessCodeRsp]) extends Command
 
@@ -73,6 +76,7 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case RefreshToken =>
+//          log.info("000000000000000001")
           if(AppSettings.esheepAuthToken){
             EsheepClient.gsKey2Token().onComplete{
               case Success(rst) =>
@@ -132,15 +136,19 @@ object EsheepSyncClient {
                     implicit stashBuffer:StashBuffer[Command],
                     timer:TimerScheduler[Command]
                   ): Behavior[Command] = {
-    timer.startSingleTimer(RefreshTokenKey, RefreshToken, (tokenInfo.expireTime - System.currentTimeMillis()).millis)
+//    timer.startSingleTimer(RefreshTokenKey, RefreshToken, (tokenInfo.expireTime - System.currentTimeMillis()).millis)
+    timer.startSingleTimer(RefreshTokenKey, RefreshToken, (tokenInfo.expireTime-2).seconds )
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case VerifyAccessCode(accessCode, rsp) =>
           EsheepClient.verifyAccessCode(accessCode, tokenInfo.token).onComplete{
             case Success(rst) =>
               rst match {
-                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(value.playerInfo)
-                case Left(error) => handleErrorRsp(ctx, msg, error)(() => rsp ! error)
+                case Right(value) => rsp ! EsheepProtocol.VerifyAccessCodeRsp(Some(value))
+                case Left(error) => {
+                  log.warn(s"VerifyAccessCode Error:${error}")
+                  handleErrorRsp(ctx, msg, error,timer)(() => rsp ! error)
+                }
               }
             case Failure(exception) =>
               log.warn(s"${ctx.self.path} VerifyAccessCode failed, error:${exception.getMessage}")
@@ -166,8 +174,14 @@ object EsheepSyncClient {
           }
           Behaviors.same
 
+        case refresh:RefreshMsg =>
+          ctx.self ! RefreshToken
+          ctx.self ! refresh.msg
+          Behaviors.same
+
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknow msg=${msg}")
+          stashBuffer.stash(unknowMsg)
           Behaviors.same
 
       }
@@ -176,16 +190,18 @@ object EsheepSyncClient {
     }
   }
 
-  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(EsheepProtocol.PlayerInfo("",""), errorRsp.errCode, errorRsp.msg)
+  implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(Some(EsheepProtocol.PlayerInfo("","")), errorRsp.errCode, errorRsp.msg)
 
-  private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
-    errorRsp.errCode match {
-      case 1000 =>
-        ctx.self ! RefreshToken
-        ctx.self ! msg
+  private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp,timer:TimerScheduler[Command])(unknownErrorHandler: => Unit) = {
+    //TODO 这里逻辑有误
 
-      case _ => unknownErrorHandler
-    }
+    /*
+     *如果你看到一直打印收到Token的请求，请检查下application的gameTest和accessCODE获取的流程
+     * 应为如果AccessCode验证失败的话,这个函数会往自身发VerifyAccessCode，导致这里会进入一个死循环
+     */
+    timer.startSingleTimer(ErrorRefreshTokenKey,RefreshMsg(msg),3.seconds)
+//    ctx.self ! RefreshToken
+//    ctx.self ! msg
 
   }
 }

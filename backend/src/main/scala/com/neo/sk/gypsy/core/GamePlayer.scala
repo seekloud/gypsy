@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{ActorContext, StashBuffer, TimerScheduler}
 import akka.stream.testkit.TestPublisher.Subscribe
 import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GameEvent
+//import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{EssfMapJoinLeftInfo, EssfMapKey, GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -30,7 +32,7 @@ import org.seekloud.byteobject._
 
 /**
   * @author zhaoyin
-  * @date 2018/10/25  下午12:54
+  * 2018/10/25  下午12:54
   */
 object GamePlayer {
 
@@ -41,8 +43,7 @@ object GamePlayer {
 
   case class TimeOut(msg:String) extends Command
   case object GameLoop extends Command
-  case class StopReplay() extends Command
-
+  case class StopReplay(recordId:Long) extends Command
 
   final case class SwitchBehavior(
                                  name: String,
@@ -69,25 +70,25 @@ object GamePlayer {
   }
 
   /**来自UserActor的消息**/
-  case class InitReplay(userActor: ActorRef[WsMsgSource], userId: String, frame:Int) extends Command
+  case class InitReplay(userActor: ActorRef[WsMsgSource], userId: String,frame:Int) extends Command
 
   def create(recordId: Long):Behavior[Command] = {
     Behaviors.setup[Command]{ctx=>
-      log.info(s"${ctx.self.path} is starting..")
+      log.info(s"GamePlayer is starting..")
       implicit val stashBuffer = StashBuffer[Command](Int.MaxValue)
       implicit val sendBuffer = new MiddleBufferInJvm(81920)
       Behaviors.withTimers[Command] { implicit timer =>
         //操作数据库
         RecordDao.getRecordById(recordId).map {
           case Some(r)=>
-            val replay=initFileReader(r.filePath)
-            val info=replay.init()
             try{
+              val replay=initFileReader(r.filePath)
+              val info=replay.init()
               ctx.self ! SwitchBehavior("work",
                 work(
                   replay,
                   metaDataDecode(info.simulatorMetadata).right.get,
-                  initStateDecode(info.simulatorInitState).right.get,
+                  initStateDecode(info.simulatorInitState).right.get.asInstanceOf[Protocol.GypsyGameSnapshot],
                   info.frameCount,
                   userMapDecode(replay.getMutableInfo(AppSettings.essfMapKeyName).getOrElse(Array[Byte]())).right.get.m,
                 ))
@@ -107,7 +108,7 @@ object GamePlayer {
 
   def work(fileReader: FrameInputStream,
            metaData:Protocol.GameInformation,
-           initState:Protocol.GameSnapshot,
+           initState:Protocol.GypsyGameSnapshot,
            frameCount:Int,
            userMap:List[(EssfMapKey,EssfMapJoinLeftInfo)],
            userOpt:Option[ActorRef[WsMsgSource]]= None
@@ -121,30 +122,37 @@ object GamePlayer {
         case msg:InitReplay =>
           log.info("start new replay !")
           //停止之前的重放
+//          timer.cancelAll()
           timer.cancel(GameLoopKey)
-          fileReader.mutableInfoIterable
-          log.info(s"-------$msg  $userMap---------")
-          userMap.find(_._1.userId == msg.userId) match {
-            case Some(u) =>
+
+//          fileReader.mutableInfoIterable
+//          log.info(s"UserMap-------$msg | $userMap---------")
+//          log.info(s"metaData------- | $metaData********")
+//          log.info(s"initState------- | $initState========")
+          userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
+            case Some(u)=>
+              log.info(s"total FrameCount :${frameCount}")
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
+//              log.info(s"replay from frame=${fileReader.getFramePosition}")
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
-                timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
-                Behaviors.same
+//                timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
+                Behaviors.stopped
               }
-            case None=>
+            case None =>
               dispatchTo(msg.userActor,Protocol.InitReplayError("本局游戏中不存在该用户"))
-              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
-              Behaviors.same
+//              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
+              Behaviors.stopped
           }
-
         case GameLoop=>
+//          println(s"Loop ${fileReader.getFramePosition}========")
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
+//                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )
@@ -155,23 +163,34 @@ object GamePlayer {
               dispatchTo(u, Protocol.ReplayFinish())
             }
             timer.cancel(GameLoopKey)
-            timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
-            Behaviors.same
+            Behaviors.stopped
           }
 
         case msg:GetRecordFrameMsg=>
-          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount))
+          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
+//          val data=userMap.groupBy(r=>(r._1.userId,r._1.name)).map{r=>
+          val data=userMap.groupBy(r=>r._1.userId).map{r=>
             val fList=r._2.map(f=>ExistTimeInfo(f._2.joinF-initState.state.frameCount,f._2.leftF-initState.state.frameCount))
-            PlayerInRecordInfo(r._1._1,r._1._2,fList)
+//            PlayerInRecordInfo(r._1._1,r._1._2,fList)
+            val name = if(r._2.nonEmpty){
+              r._2.head._1.name
+            }else{
+              //前面都有对其遍历，感觉是多余的
+              "UnknowUser"
+            }
+            PlayerInRecordInfo(r._1,name,fList)
           }.toList
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 
-        case msg:TimeOut=>
+//        case msg:TimeOut=>
+//          Behaviors.stopped
+
+        case msg:StopReplay =>
+          log.info(s"Stop Replay! ${msg.recordId}")
           Behaviors.stopped
 
         case unKnowMsg =>
@@ -190,12 +209,21 @@ object GamePlayer {
         case msg:InitReplay =>
           dispatchTo(msg.userActor,Protocol.InitReplayError("游戏文件不存在或者已损坏！！"))
           Behaviors.stopped
+
+        case msg:GetRecordFrameMsg=>
+          msg.replyTo ! ErrorRsp(10001,"init error")
+          Behaviors.stopped
+
+        case msg:GetUserInRecordMsg=>
+          msg.replyTo ! ErrorRsp(10001,"init error")
+          Behaviors.stopped
       }
     }
   }
 
   import org.seekloud.byteobject.ByteObject._
-  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameMessage)(implicit sendBuffer: MiddleBufferInJvm) = {
+
+  def dispatchTo(subscribe: ActorRef[WsMsgSource], msg:GameEvent)(implicit sendBuffer: MiddleBufferInJvm) = {
     subscribe ! ReplayFrameData(List(msg).fillMiddleBuffer(sendBuffer).result())
   }
 
@@ -209,10 +237,10 @@ object GamePlayer {
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command]
   ):Behavior[Command] =
-    Behaviors.receive[Command] {(ctx, msg) =>
+    Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case SwitchBehavior(name, behavior, durationOpt, timeOut) =>
-          switchBehavior(ctx, name, behavior,durationOpt, timeOut)
+          switchBehavior(ctx, name, behavior, durationOpt, timeOut)
 
         case TimeOut(m) =>
           log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
@@ -223,7 +251,6 @@ object GamePlayer {
           Behaviors.same
       }
     }
-
 
 
 }

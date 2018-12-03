@@ -20,9 +20,6 @@ import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout, userManager}
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.{CommonRsp, ErrorRsp}
-import com.neo.sk.gypsy.utils.byteObject.encoder.BytesEncoder
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
-import org.seekloud.byteobject.encoder.BytesEncoder
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -30,7 +27,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe._
 
-trait OutApiService extends ServiceUtils with SessionBase {
+trait OutApiService extends ServiceUtils with SessionBase{
 
   implicit val timeout: Timeout
 
@@ -49,7 +46,7 @@ trait OutApiService extends ServiceUtils with SessionBase {
     }
   }
 
-  private val getGamePlayerList = (path("getGamePlayerList") & post & pathEndOrSingleSlash) {
+  private val getGamePlayerList = (path("getRoomPlayerList") & post & pathEndOrSingleSlash) {
     dealPostReq[getPlayerReq] { req =>
       val msgFuture: Future[RoomPlayerInfoRsp] = roomManager ? (RoomManager.GetGamePlayerList(req.roomId, _))
       msgFuture.map {
@@ -58,7 +55,7 @@ trait OutApiService extends ServiceUtils with SessionBase {
     }
   }
 
-  private val getGameRoomList = (path("getGameRoomList") & post & pathEndOrSingleSlash) {
+  private val getGameRoomList = (path("getRoomList") & post & pathEndOrSingleSlash) {
     dealGetReq {
       val msgFuture: Future[RoomListRsp] = roomManager ? (RoomManager.GetRoomList(_))
       msgFuture.map {
@@ -72,18 +69,20 @@ trait OutApiService extends ServiceUtils with SessionBase {
       RecordDao.getAllRecord(j.lastRecordId, j.count).map {
         i =>
           val userListMap = i._2.groupBy(_.recordId)
+//          val key= userListMap.keys.toList
+//          val r= i._1.filter(a=> key.contains(a.recordId))
           val record = i._1.map(i =>
             (i.recordId,
               i.roomId,
               i.startTime,
               i.endTime,
               userListMap(i.recordId).length,
-              userListMap(i.recordId).map(_.userId)
+              userListMap(i.recordId).map(u=> (u.userId,u.nickname))
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
@@ -104,12 +103,12 @@ trait OutApiService extends ServiceUtils with SessionBase {
               i.startTime,
               i.endTime,
               userListMap(i.recordId).length,
-              userListMap(i.recordId).map(_.userId)
+              userListMap(i.recordId).map(u=> (u.userId,u.nickname))
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>
@@ -130,12 +129,12 @@ trait OutApiService extends ServiceUtils with SessionBase {
               i.startTime,
               i.endTime,
               userListMap(i.recordId).length,
-              userListMap(i.recordId).map(_.userId)
+              userListMap(i.recordId).map(u=> (u.userId,u.nickname))
             )
-          ).toList
-          val data = RecordsInfo(record.map { i =>
+          ).toList.sortBy(_._1)
+          val data = record.map { i =>
             RecordInfo(i._1, i._2, i._3, i._4, i._5, i._6)
-          })
+          }
           complete(RecordListRsp(data))
       }.recover {
         case e: Exception =>

@@ -15,6 +15,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.2.3:jar" level="project" />
     <orderEntry type="module" module-name=".jvm-shared" exported="" />
+    <orderEntry type="library" name="sbt: org.seekloud:byteobject_2.12:0.1.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:macro-compat_2.12:1.1.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:machinist_2.12:0.6.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:cats-macros_2.12:1.0.1:jar" level="project" />
@@ -23,7 +24,6 @@
     <orderEntry type="library" name="sbt: org.spire-math:jawn-parser_2.12:0.11.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:1.7.25:jar" level="project" />
     <orderEntry type="library" name="sbt: org.seekloud:essf_2.12:0.0.1-beta2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.seekloud:byteobject_2.12:0.1.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scalikejdbc:scalikejdbc_2.12:2.5.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scalikejdbc:scalikejdbc-interpolation_2.12:2.5.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scalikejdbc:scalikejdbc-interpolation-macro_2.12:2.5.0:jar" level="project" />

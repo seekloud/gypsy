@@ -17,12 +17,10 @@ import scala.math._
 import scala.util.Random
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
-
 /**
   * User: Taoz
   * Date: 9/1/2016
   * Time: 5:34 PM
-  * 背景网格
   */
 trait Grid {
 
@@ -425,11 +423,6 @@ trait Grid {
               newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
-//            生成mass事件
-            if(newMassList.nonEmpty){
-              val event = GenerateMass(newMassList,frameCount)
-              AddGameEvent(event)
-            }
             Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(_.mass <= 0)
         val length = newCells.length
@@ -520,40 +513,35 @@ trait Grid {
     player.copy(cells = newCells)
   }
 
+//  def updateAndGetGridData() = {
+//    update()
+//    getGridData(myId)
+//  }
 
-
-
-  def updateAndGetGridData() = {
-    update()
-    getGridData(myId)
-  }
-
-  def getGridData(id:String) = {
+  /**
+    * method: getGridData
+    * describe: 获取自己视角中的全量数据
+    */
+  def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
-    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((500,500))
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-//    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2)
-    val width = Window.w/scale/2
-    val height = Window.h/scale/2
+    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+    val width = winWidth / scale / 2
+    val height = winHeight / scale / 2
 
-//    var foodDetails: List[Food] = Nil
     var playerDetails: List[Player] = Nil
-/*    food.foreach{
-      case (p,mass) =>
-        foodDetails ::= Food(mass, p.x, p.y)
-    }*/
+
     playerMap.foreach{
       case (id,player) =>
         if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
         playerDetails ::= player
     }
+
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
-//      foodDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-//      virus.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       scale
     )
