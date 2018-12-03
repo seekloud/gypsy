@@ -53,7 +53,7 @@ object UserActor {
 
   case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
 
-  case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
+  case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
 
   case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
@@ -213,7 +213,8 @@ object UserActor {
 
         case StartReply(recordId,watchId,frame) =>
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
-          switchBehavior(ctx,"replay",replay(userInfo,frontActor,recordId))
+          val gamePlayer = getGameReply(ctx,recordId)
+          switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
           Behaviors.same
 
         case UserLeft(actor) =>
@@ -316,7 +317,6 @@ object UserActor {
                    ):Behavior[Command]=
     Behaviors.receive[Command]{(ctx,msg) =>
       msg match {
-
         case UserLeft(actor) =>
           ctx.unwatch(actor)
           roomManager ! RoomManager.LeftRoom4Watch(userInfo,roomId)
@@ -332,6 +332,10 @@ object UserActor {
           ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
+        case e: NetTest=>
+          roomActor ! e
+          Behaviors.same
+
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknown msg=${msg}")
           Behavior.same
@@ -341,9 +345,10 @@ object UserActor {
     * 回放
     */
   private def replay(
+                      recordId: Long,
                       userInfo:PlayerInfo,
                       frontActor: ActorRef[WsMsgProtocol.WsMsgSource],
-                      recordId: Long
+                      gamePlayer: ActorRef[GamePlayer.Command]
                     )(
     implicit stashBuffer:StashBuffer[Command],
     timer:TimerScheduler[Command],
@@ -353,21 +358,25 @@ object UserActor {
       msg match {
         case ChangeBehaviorToInit =>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          getGameReply(ctx,recordId) ! GamePlayer.StopReplay(recordId)
+          gamePlayer ! GamePlayer.StopReplay(recordId)
           ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
-          getGameReply(ctx,recordId) ! GamePlayer.StopReplay(recordId)
+          gamePlayer ! GamePlayer.StopReplay(recordId)
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case msg:GetUserInRecordMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
+          gamePlayer ! msg
           Behaviors.same
 
         case msg:GetRecordFrameMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
+          gamePlayer ! msg
+          Behaviors.same
+
+        case e: NetTest=>
+          gamePlayer ! e
           Behaviors.same
 
         case unknowMsg =>

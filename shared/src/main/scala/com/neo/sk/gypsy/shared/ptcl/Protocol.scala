@@ -114,6 +114,8 @@ object Protocol {
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
   case class KillMsg(killerId:String,deadPlayer:Player,score:Int,lifeTime:Long, override val frame: Long) extends GameEvent
   case class CurrentRanks(currentRank: List[Score]) extends GameEvent
+  case class PongEvent(timestamp: Long)extends GameEvent
+
 
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到

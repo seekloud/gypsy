@@ -182,6 +182,12 @@ object GamePlayer {
           log.info(s"Stop Replay! ${msg.recordId}")
           Behaviors.stopped
 
+        case UserActor.NetTest(id, createTime)=>
+          userOpt.foreach{u=>
+            dispatchTo(u, Protocol.PongEvent(createTime))
+          }
+          Behaviors.same
+
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)
           Behavior.same
