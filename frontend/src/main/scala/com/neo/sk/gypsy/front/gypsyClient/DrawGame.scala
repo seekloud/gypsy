@@ -502,6 +502,7 @@ case class DrawGame(
       }
       if(score.id == uid){
         ctx.save()
+        ctx.font = "12px Helvetica"
         ctx.fillStyle = "#FF0000"
         drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
