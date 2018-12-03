@@ -212,7 +212,6 @@ object UserActor {
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
           val gamePlayer = getGameReply(ctx,recordId)
           switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
-          Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
@@ -232,13 +231,13 @@ object UserActor {
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
-        case msg:GetUserInRecordMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
-          Behaviors.same
-
-        case msg:GetRecordFrameMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
-          Behaviors.same
+//        case msg:GetUserInRecordMsg=>
+//          getGameReply(ctx,msg.recordId) ! msg
+//          Behaviors.same
+//
+//        case msg:GetRecordFrameMsg=>
+//          getGameReply(ctx,msg.recordId) ! msg
+//          Behaviors.same
 
         case unknowMsg=>
           stashBuffer.stash(unknowMsg)
