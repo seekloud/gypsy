@@ -175,7 +175,6 @@ object EsheepSyncClient {
 
       }
 
-
     }
   }
 
