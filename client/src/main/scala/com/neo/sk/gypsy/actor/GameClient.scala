@@ -75,13 +75,25 @@ object GameClient {
           Behaviors.same
 
 
-        case Protocol.Ranks(current, history) =>
+        case Protocol.Ranks(current) =>
           ClientBoot.addToPlatform{
-            grid.currentRank = current
-            grid.historyRank = history
+            //发来的排行版含有我的排名
+            if(current.exists(r=>r.score.id ==myId)){
+              grid.currentRank = current
+            }else{
+              //          发来的未含有我的
+              grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == myId)
+            }
+//            grid.currentRank = current
           }
           Behaviors.same
 
+        case Protocol.MyRank(rank) =>
+          ClientBoot.addToPlatform{
+            //把之前这个id的排行过滤掉
+            grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==myId) :+ rank
+          }
+          Behaviors.same
 
         case Protocol.FeedApples(foods) =>
           log.info("ClientFood:  " + foods)
