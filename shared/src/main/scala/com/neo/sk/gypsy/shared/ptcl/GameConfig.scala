@@ -45,6 +45,6 @@ object GameConfig {
   val virusSpeedDecayRate = 0.3
 
   // 排行版显示玩家数
-  val rankShowNum = 4
+  val rankShowNum = 10
 
 }

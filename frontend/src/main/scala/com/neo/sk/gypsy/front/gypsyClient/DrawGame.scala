@@ -30,8 +30,10 @@ case class DrawGame(
               size:Point
               ) {
 
-  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-//  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
+//  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/virus.png").render
+
+  //  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
 //  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
 //  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
 //  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
@@ -70,8 +72,10 @@ case class DrawGame(
   private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
   private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
   private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+//  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
+  private[this] val  background = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/background.jpg").render
+//  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+  private[this] val  background1 = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/b2.jpg").render
   private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
