@@ -6,6 +6,7 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
+
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
@@ -387,7 +388,7 @@ class GameCanvas(canvas: Canvas,
 //        ctx.beginPath()
 //        ctx.arc(x + offx,y + offy,10,10,0,360)
 //        ctx.fill()
-          ctx.fillRect(x + offx,y + offy,8,8)
+          ctx.fillRect(x + offx,y + offy,16,16)
       }
     }
     masses.groupBy(_.color).foreach{ a=>
@@ -520,10 +521,38 @@ class GameCanvas(canvas: Canvas,
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-    var index = 0
+//    var index = 0
     ctx.setFill(Color.web(MyColors.background))
-    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
-    currentRank.foreach { score =>
+//    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
+    drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
+
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
+      val score = rank._1
+      val index = rank._2+1
+
+      val imgOpt = index match {
+        case 1 => Some(goldImg)
+        case 2 => Some(silverImg)
+        case 3 => Some(bronzeImg)
+        case _ => None
+      }
+      imgOpt.foreach{ img =>
+        ctx.drawImage(img,  realWindow.x-200, index * textLineHeight+32, 13, 13)
+      }
+      if(score.id == uid){
+        ctx.save()
+        ctx.setFont(Font.font("Helvetica",12))
+        ctx.setFill(Color.web("#FFFF33"))
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        ctx.restore()
+      }else{
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
+      }
+
+    }
+
+
+    /*currentRank.foreach { score =>
       index += 1
       val drawColor = index match {
         case 1 => "#FFD700"
@@ -543,7 +572,7 @@ class GameCanvas(canvas: Canvas,
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
       drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index, currentRankBaseLine)
-    }
+    }*/
     //绘制小地图
 
     ctx.setFill(Color.web(MyColors.background))

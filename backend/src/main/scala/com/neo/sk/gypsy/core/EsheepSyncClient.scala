@@ -170,6 +170,7 @@ object EsheepSyncClient {
 
         case unknowMsg =>
           log.warn(s"${ctx.self.path} recv an unknow msg=${msg}")
+          stashBuffer.stash(unknowMsg)
           Behaviors.same
 
       }
