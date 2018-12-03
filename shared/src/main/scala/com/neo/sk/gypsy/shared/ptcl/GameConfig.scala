@@ -5,7 +5,7 @@ import com.neo.sk.gypsy.shared.util.utils
 
 object GameConfig {
 
-  val historyRankLength = 5
+//  val historyRankLength = 5
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)

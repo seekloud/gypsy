@@ -255,9 +255,25 @@ object RoomActor {
             }
           }
           if (tickCount % 20 == 1) {
-            val currentRankEvent = Protocol.CurrentRanks(grid.currentRank)
-            grid.AddGameEvent(currentRankEvent)
-            dispatch(subscribersMap)(Protocol.Ranks(grid.currentRank, grid.historyRankList))
+//            val currentRankEvent = Protocol.CurrentRanks(grid.currentRank)
+//            grid.AddGameEvent(currentRankEvent)
+//            dispatch(subscribersMap)(Protocol.Ranks(grid.currentRank))
+
+//            val PerfectRanks = grid.currentRank.splitAt(10)
+//            val RestRanks = grid.currentRank.takeRight()
+
+            val temp = grid.currentRank.zipWithIndex.splitAt(GameConfig.rankShowNum)
+            val PerfectRanks = temp._1.map(r=>RankInfo(r._2+1,r._1))
+            val RestRanks = temp._2.map(r=>(r._1.id,RankInfo(r._2+1,r._1)))
+            dispatch(subscribersMap)(Protocol.Ranks(PerfectRanks))
+
+            if(RestRanks.nonEmpty){
+              RestRanks.foreach{rank=>
+//                val index = rank._2 + 1 + GameConfig.rankShowNum
+                dispatchTo(subscribersMap)(rank._1,Protocol.MyRank(rank._2))
+              }
+            }
+
           }
           if(tickCount==0){
             val gridData = grid.getAllGridData
