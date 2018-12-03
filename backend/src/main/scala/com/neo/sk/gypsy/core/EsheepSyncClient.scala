@@ -181,15 +181,10 @@ object EsheepSyncClient {
   implicit def errorRsp2VerifyAccessCodeRsp(errorRsp: ErrorRsp): EsheepProtocol.VerifyAccessCodeRsp =  EsheepProtocol.VerifyAccessCodeRsp(Some(EsheepProtocol.PlayerInfo("","")), errorRsp.errCode, errorRsp.msg)
 
   private def handleErrorRsp(ctx:ActorContext[Command],msg:Command,errorRsp:ErrorRsp)(unknownErrorHandler: => Unit) = {
-    //TODO 这里逻辑有误
 
-    /*
-     *如果你看到一直打印收到Token的请求，请检查下application的gameTest和accessCODE获取的流程
-     * 应为如果AccessCode验证失败的话,这个函数会往自身发VerifyAccessCode，导致这里会进入一个死循环
-     */
-
-    ctx.self ! RefreshToken
-    ctx.self ! msg
-
+    if(errorRsp.errCode==200004 || errorRsp.errCode == 200003){
+      ctx.self ! RefreshToken
+      ctx.self ! msg
+    }
   }
 }
