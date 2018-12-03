@@ -72,8 +72,6 @@ case class DrawGame(
   private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
   private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
   private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-//  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-  private[this] val  background = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/background.jpg").render
 //  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
   private[this] val  background1 = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/b2.jpg").render
   private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
