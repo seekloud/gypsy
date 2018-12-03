@@ -31,13 +31,37 @@ case class DrawGame(
               ) {
 
   private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
-  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
-  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
-  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
-  private[this] val  circle4 = dom.document.getElementById("circle4").asInstanceOf[HTMLElement]
-  private[this] val  circle5 = dom.document.getElementById("circle5").asInstanceOf[HTMLElement]
-  private[this] val  circle6 = dom.document.getElementById("circle6").asInstanceOf[HTMLElement]
+//  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
+//  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
+//  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
+//  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
+//  private[this] val  circle4 = dom.document.getElementById("circle4").asInstanceOf[HTMLElement]
+//  private[this] val  circle5 = dom.document.getElementById("circle5").asInstanceOf[HTMLElement]
+//  private[this] val  circle6 = dom.document.getElementById("circle6").asInstanceOf[HTMLElement]
+  private[this] val  star1 = dom.document.getElementById("yuzhouxingqiu-01").asInstanceOf[HTMLElement]
+  private[this] val  star2 = dom.document.getElementById("yuzhouxingqiu-02").asInstanceOf[HTMLElement]
+  private[this] val  star3 = dom.document.getElementById("yuzhouxingqiu-03").asInstanceOf[HTMLElement]
+  private[this] val  star4 = dom.document.getElementById("yuzhouxingqiu-04").asInstanceOf[HTMLElement]
+  private[this] val  star5 = dom.document.getElementById("yuzhouxingqiu-05").asInstanceOf[HTMLElement]
+  private[this] val  star6 = dom.document.getElementById("yuzhouxingqiu-06").asInstanceOf[HTMLElement]
+  private[this] val  star7 = dom.document.getElementById("yuzhouxingqiu-07").asInstanceOf[HTMLElement]
+  private[this] val  star8 = dom.document.getElementById("yuzhouxingqiu-08").asInstanceOf[HTMLElement]
+  private[this] val  star9 = dom.document.getElementById("yuzhouxingqiu-09").asInstanceOf[HTMLElement]
+  private[this] val  star10 = dom.document.getElementById("yuzhouxingqiu-10").asInstanceOf[HTMLElement]
+  private[this] val  star11= dom.document.getElementById("yuzhouxingqiu-11").asInstanceOf[HTMLElement]
+  private[this] val  star12 = dom.document.getElementById("yuzhouxingqiu-12").asInstanceOf[HTMLElement]
+  private[this] val  star13 = dom.document.getElementById("yuzhouxingqiu-13").asInstanceOf[HTMLElement]
+  private[this] val  star14 = dom.document.getElementById("yuzhouxingqiu-14").asInstanceOf[HTMLElement]
+  private[this] val  star15 = dom.document.getElementById("yuzhouxingqiu-15").asInstanceOf[HTMLElement]
+  private[this] val  star16 = dom.document.getElementById("yuzhouxingqiu-16").asInstanceOf[HTMLElement]
+  private[this] val  star17 = dom.document.getElementById("yuzhouxingqiu-17").asInstanceOf[HTMLElement]
+  private[this] val  star18 = dom.document.getElementById("yuzhouxingqiu-18").asInstanceOf[HTMLElement]
+  private[this] val  star19 = dom.document.getElementById("yuzhouxingqiu-19").asInstanceOf[HTMLElement]
+  private[this] val  star20= dom.document.getElementById("yuzhouxingqiu-20").asInstanceOf[HTMLElement]
+  private[this] val  star21= dom.document.getElementById("yuzhouxingqiu-21").asInstanceOf[HTMLElement]
+  private[this] val  star22 = dom.document.getElementById("yuzhouxingqiu-22").asInstanceOf[HTMLElement]
+  private[this] val  star23 = dom.document.getElementById("yuzhouxingqiu-23").asInstanceOf[HTMLElement]
+  private[this] val  star24 = dom.document.getElementById("yuzhouxingqiu-24").asInstanceOf[HTMLElement]
   private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
   private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
   private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
@@ -412,14 +436,39 @@ case class DrawGame(
 
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
-        case 0 => circle //(243,69,109)   b30e35
-        case 1 => circle1 //(244, 153, 48)  a65d0a
-        case 2  => circle2 //244, 217, 91   917600
-        case 3  => circle3   //76, 217, 100  05851b
-        case 4  => circle4  //159, 224, 246  037da6
-        case 5  => circle5   //190, 173, 146   875a16
-        case 6  => circle6  //207, 230, 255   4174ab
-        case _  => circle3  //222, 157, 214   8f3284
+//        case 0 => circle //(243,69,109)   b30e35
+//        case 1 => circle1 //(244, 153, 48)  a65d0a
+//        case 2  => circle2 //244, 217, 91   917600
+//        case 3  => circle3   //76, 217, 100  05851b
+//        case 4  => circle4  //159, 224, 246  037da6
+//        case 5  => circle5   //190, 173, 146   875a16
+//        case 6  => circle6  //207, 230, 255   4174ab
+//        case _  => circle3  //222, 157, 214   8f3284
+
+        case 0 => star24 //(243,69,109)   b30e35
+        case 1 => star1 //(244, 153, 48)  a65d0a
+        case 2  => star2 //244, 217, 91   917600
+        case 3  => star3   //76, 217, 100  05851b
+        case 4  => star4  //159, 224, 246  037da6
+        case 5  => star5   //190, 173, 146   875a16
+        case 6  => star6  //207, 230, 255   4174ab
+        case 7 => star7 //(243,69,109)   b30e35
+        case 8 => star8 //(244, 153, 48)  a65d0a
+        case 9  => star9 //244, 217, 91   917600
+        case 10  => star10   //76, 217, 100  05851b
+        case 11 => star11  //159, 224, 246  037da6
+        case 12 => star12   //190, 173, 146   875a16
+        case 13 => star13  //207, 230, 255   4174ab
+        case 14 => star14  //222, 157, 214   8f3284
+        case 15=> star15 //(243,69,109)   b30e35
+        case 16=> star16 //(244, 153, 48)  a65d0a
+        case 17 => star17 //244, 217, 91   917600
+        case 18 => star18  //76, 217, 100  05851b
+        case 19 => star19  //159, 224, 246  037da6
+        case 20 => star20  //190, 173, 146   875a16
+        case 21 => star21  //207, 230, 255   4174ab
+        case 22=>star22 //(243,69,109)   b30e35
+        case 23=> star23 //(244, 153, 48)  a65d0a
       }
       cells.sortBy(_.id).foreach{ cell=>
 
@@ -504,7 +553,7 @@ case class DrawGame(
       if(score.id == uid){
         ctx.save()
         ctx.font = "12px Helvetica"
-        ctx.fillStyle = "#FF0000"
+        ctx.fillStyle = "#FFFF33"
         drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
