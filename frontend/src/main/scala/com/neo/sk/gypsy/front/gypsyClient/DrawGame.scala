@@ -483,9 +483,10 @@ case class DrawGame(
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-    var index = 0
+//    var index = 0
     ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
+//    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
 
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
       val score = rank._1
