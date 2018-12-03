@@ -40,6 +40,10 @@ package object ptcl {
 ////排行榜信息
   case class Score(id: String, n: String, k: Int, score: Double, t: Option[Long] = None)
 
+  case class RankInfo(
+          index:Int, //排名
+          score:Score //分数
+  )
 
   case class Food(color:Int, x:Int, y:Int)
 

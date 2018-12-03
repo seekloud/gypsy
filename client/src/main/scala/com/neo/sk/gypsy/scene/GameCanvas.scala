@@ -514,7 +514,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font("Helvetica",12))
@@ -526,9 +526,11 @@ class GameCanvas(canvas: Canvas,
 //    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
     drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
 
-    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
-      val score = rank._1
-      val index = rank._2+1
+    //这里过滤是为了防止回放的时候传全量的排行版数据
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+      val score = rank._1.score
+      //      val index = rank._2+1
+      val index = rank._1.index
 
       val imgOpt = index match {
         case 1 => Some(goldImg)
@@ -537,20 +539,19 @@ class GameCanvas(canvas: Canvas,
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img,  realWindow.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+32, 13, 13)
       }
       if(score.id == uid){
         ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
         ctx.setFill(Color.web("#FF0000"))
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
       }
 
     }
-
 
     /*currentRank.foreach { score =>
       index += 1

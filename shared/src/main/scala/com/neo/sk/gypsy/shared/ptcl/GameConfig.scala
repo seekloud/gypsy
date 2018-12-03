@@ -5,7 +5,7 @@ import com.neo.sk.gypsy.shared.util.utils
 
 object GameConfig {
 
-  val historyRankLength = 5
+//  val historyRankLength = 5
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
@@ -45,6 +45,6 @@ object GameConfig {
   val virusSpeedDecayRate = 0.3
 
   // 排行版显示玩家数
-  val rankShowNum = 10
+  val rankShowNum = 4
 
 }
