@@ -516,6 +516,9 @@ class GameHolder(replay:Boolean = false) {
           Shortcut.playMusic("shutdownM")
         }
 
+      case e:Protocol.PongEvent =>
+        NetDelay.receivePong(e.timestamp ,webSocketClient)
+
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
         drawTopView.drawWhenFinish("播放结束")

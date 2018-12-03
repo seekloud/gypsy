@@ -175,9 +175,6 @@ object GamePlayer {
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 
-//        case msg:TimeOut=>
-//          Behaviors.stopped
-
         case msg:StopReplay =>
           log.info(s"Stop Replay! ${msg.recordId}")
           Behaviors.stopped
