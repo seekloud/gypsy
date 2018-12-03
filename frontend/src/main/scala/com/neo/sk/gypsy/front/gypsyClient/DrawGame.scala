@@ -31,7 +31,7 @@ case class DrawGame(
               ) {
 
 //  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/virus.png").render
+  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/stone.png").render
 
   //  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
 //  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
@@ -276,8 +276,10 @@ case class DrawGame(
 //    ctx.fillStyle = pat
 //    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
-//    println("drawBackground22222222")
-    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
+    background1.onload = { _ =>
+      ctx.drawImage(background1,0,0, bounds.x, bounds.y)
+    }
+//    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
 //    ctx.strokeStyle = MyColors.stripe
@@ -536,9 +538,7 @@ case class DrawGame(
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-//    var index = 0
     ctx.fillStyle = MyColors.background
-//    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据

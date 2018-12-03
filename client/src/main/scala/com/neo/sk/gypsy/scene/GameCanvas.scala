@@ -22,7 +22,7 @@ import com.neo.sk.gypsy.utils.FpsComp
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
                  size:Point) {
-  val  img = new Image(ClientBoot.getClass.getResourceAsStream("/img/virus.png"))
+  val  img = new Image(ClientBoot.getClass.getResourceAsStream("/img/stone.png"))
 //  val  circle = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle.png"))
 //  val  circle1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle1.png"))
 //  val  circle2 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle2.png"))
