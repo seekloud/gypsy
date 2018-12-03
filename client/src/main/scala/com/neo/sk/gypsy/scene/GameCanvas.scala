@@ -388,7 +388,7 @@ class GameCanvas(canvas: Canvas,
 //        ctx.beginPath()
 //        ctx.arc(x + offx,y + offy,10,10,0,360)
 //        ctx.fill()
-          ctx.fillRect(x + offx,y + offy,8,8)
+          ctx.fillRect(x + offx,y + offy,16,16)
       }
     }
     masses.groupBy(_.color).foreach{ a=>
@@ -542,7 +542,7 @@ class GameCanvas(canvas: Canvas,
       if(score.id == uid){
         ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
-        ctx.setFill(Color.web("#FF0000"))
+        ctx.setFill(Color.web("#FFFF33"))
         drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
