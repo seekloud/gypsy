@@ -30,8 +30,10 @@ case class DrawGame(
               size:Point
               ) {
 
-  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-//  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
+//  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/virus.png").render
+
+  //  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
 //  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
 //  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
 //  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
@@ -70,8 +72,10 @@ case class DrawGame(
   private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
   private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
   private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+//  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
+  private[this] val  background = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/background.jpg").render
+//  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+  private[this] val  background1 = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/b2.jpg").render
   private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
@@ -297,7 +301,7 @@ case class DrawGame(
     //绘制当前排行
     val littleMap = this.canvas.width * 0.18  // 200
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - 200,20,150,250)
+    ctx.fillRect(this.canvas.width - 200,20,160,56+GameConfig.rankShowNum*14)
 
     //绘制小地图
     println("littleMap:   " + littleMap)
@@ -523,7 +527,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
@@ -537,9 +541,11 @@ case class DrawGame(
 //    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
 
-    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
-      val score = rank._1
-      val index = rank._2+1
+    //这里过滤是为了防止回放的时候传全量的排行版数据
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+      val score = rank._1.score
+//      val index = rank._2+1
+      val index = rank._1.index
 
       val imgOpt = index match {
         case 1 => Some(goldImg)
@@ -554,10 +560,10 @@ case class DrawGame(
         ctx.save()
         ctx.font = "12px Helvetica"
         ctx.fillStyle = "#FFFF33"
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
       }
 
     }
