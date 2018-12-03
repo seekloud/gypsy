@@ -1,6 +1,11 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
+import java.util.concurrent.TimeUnit
+
 import com.neo.sk.gypsy.front.scalajs.DrawCircle
+
+//import scalatags.JsDom.short.{*, img,s}
+import scalatags.JsDom.short._
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
@@ -25,7 +30,7 @@ case class DrawGame(
               size:Point
               ) {
 
-  private[this] val  img = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
   private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
   private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
@@ -50,11 +55,25 @@ case class DrawGame(
   silverImg.setAttribute("src", "/gypsy/static/img/silver.png")
   private val bronzeImg = dom.document.createElement("img").asInstanceOf[html.Image]
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
+//  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
+  private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+
+//  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
+
 
   //屏幕尺寸
   val bounds = Point(Boundary.w, Boundary.h)
-  this.canvas.width=this.size.x
-  this.canvas.height=this.size.y
+  this.canvas.width= size.x
+  this.canvas.height= size.y
+  var screeScale = if( this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h) else (this.canvas.width / Window.w)
+
+  def updateCanvasSize(newWidth:Double, newHeight:Double)= {
+    screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
+//    println(newWidth+ "   " + newHeight + "  "+ screeScale)
+    this.canvas.width = newWidth.toInt
+    this.canvas.height = newHeight.toInt
+  }
+
 
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
@@ -67,7 +86,6 @@ case class DrawGame(
     val otherBody = "#696969"
   }
 
-  val littleMap = 200
   val mapMargin = 20
 
   //文本高度
@@ -84,18 +102,23 @@ case class DrawGame(
   //绘制背景ctx
   def drawGameOn(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
 
   }
  //绘制转圈动画
   var p =  ArrayBuffer()
   var particle = ArrayBuffer[Particle]()
   var angle = Math.PI/4
-  var width = canvas.width
-  var height = canvas.height
+  var width = this.canvas.width
+  var height = this.canvas.height
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
   }
+
+  def cleanCtx()={
+    ctx.clearRect(0,0,size.x,size.y)
+  }
+
   class Particle(x1:Double,y1:Double){
     var x= x1
     var y = y1
@@ -168,7 +191,7 @@ case class DrawGame(
   }
   def clock(time:Int):Unit={
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 19, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("正在等待玩家进入", 640, 100)
@@ -187,16 +210,16 @@ case class DrawGame(
   //欢迎文字
   def drawGameWelcome(): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Welcome.", 150, 180)
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean): Unit = {
+  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     if(firstCome) {
       ctx.fillStyle = "rgba(99, 99, 99, 1)"
       ctx.font = "36px Helvetica"
@@ -212,7 +235,7 @@ case class DrawGame(
   //离线提示文字
   def drawGameLost: Unit = {
     ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, size.x , size.y )
+    ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.font = "36px Helvetica"
     ctx.fillText("Ops, connection lost....", 350, 250)
@@ -220,21 +243,27 @@ case class DrawGame(
 
   //背景绘制ctx3
   def drawBackground():Unit = {
+//    println(s"Draw BackGround ================================ ")
+//    val pat = ctx.createPattern(background1,"repeat")
+//    ctx.fillStyle = pat
+//    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
-    ctx.drawImage(background1,0,0,size.x,size.y)
+//    println("drawBackground22222222")
+    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
-    ctx.strokeStyle = MyColors.stripe
+//    ctx.strokeStyle = MyColors.stripe
+    ctx.strokeStyle = Color.White.toString()
     stripeX.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(0 ,l )
-      ctx.lineTo(size.x ,l )
+      ctx.lineTo(bounds.x,l )
       ctx.stroke()
     }
     stripeY.foreach{ l=>
       ctx.beginPath()
       ctx.moveTo(l ,0)
-      ctx.lineTo(l ,size.y)
+      ctx.lineTo(l ,bounds.y)
       ctx.stroke()
     }
   }
@@ -242,10 +271,13 @@ case class DrawGame(
   //ctx2
   def drawRankMap():Unit = {
     //绘制当前排行
+    val littleMap = this.canvas.width * 0.18  // 200
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(size.x-200,20,150,250)
+    ctx.fillRect(this.canvas.width - 200,20,150,250)
 
     //绘制小地图
+    println("littleMap:   " + littleMap)
+    println("canvas:   " + this.canvas.width)
     ctx.font = "12px Helvetica"
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
@@ -255,7 +287,6 @@ case class DrawGame(
       ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
       ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
       ctx.stroke()
-
       ctx.beginPath()
       ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
       ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
@@ -294,7 +325,7 @@ case class DrawGame(
         ctx.fillText(killerName, 25, 400)
         ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.strokeText(deadName, 25+ ctx.measureText(s"$killerName  ").width+32+50, 400)
         ctx.fillStyle = "#f27c02"
         ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
         ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
@@ -316,18 +347,17 @@ case class DrawGame(
     val masses = data.massDetails
     val virus = data.virusDetails
 
-    val offx= size.x/2 - basePoint._1
-    val offy =size.y/2 - basePoint._2
+    val offx= this.canvas.width/2 - basePoint._1
+    val offy =this.canvas.height/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2)
-    //var scale = data.scale
+
+    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
 
     //绘制背景
-    //    ctx.fillStyle = MyColors.background
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
-    ctx.fillRect(0,0,size.x,size.y)
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
     ctx.save()
-    centerScale(scale,size.x/2,size.y/2)
+    centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
     //TODO /2
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
@@ -347,7 +377,7 @@ case class DrawGame(
       }
       a._2.foreach{ case Food(color, x, y)=>
         ctx.beginPath()
-        ctx.arc(x +offx,y +offy,10,0,2*Math.PI)
+        ctx.arc(x + offx,y + offy,10,0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -375,7 +405,7 @@ case class DrawGame(
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
         ctx.beginPath()
-        ctx.arc( xfix+offx ,yfix+offy ,r,0,2*Math.PI)
+        ctx.arc( xfix + offx ,yfix + offy ,r,0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -398,14 +428,13 @@ case class DrawGame(
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
-          ctx.arc(xfix+offx,yfix+offy,cell.radius+15,0,2*Math.PI)
+          ctx.arc(xfix + offx,yfix + offy, cell.radius + 15,0,2*Math.PI)
           ctx.fill()
         }
 
@@ -435,7 +464,7 @@ case class DrawGame(
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
 
-      ctx.drawImage(img,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
+      ctx.drawImage(virusImg,xfix-radius+offx,yfix-radius+offy,radius*2,radius*2)
       ctx.restore()
     }
     ctx.restore()
@@ -446,16 +475,45 @@ case class DrawGame(
 
   //ctx3
   def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+    val littleMap = this.canvas.width * 0.18  // 200
+
     //绘制当前排行
-    ctx.clearRect(0,0,size.x,size.y)
+    ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.font = "12px Helvetica"
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-    var index = 0
+//    var index = 0
     ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", size.x-200, index, currentRankBaseLine)
-    currentRank.foreach { score =>
+//    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
+
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
+      val score = rank._1
+      val index = rank._2+1
+
+      val imgOpt = index match {
+        case 1 => Some(goldImg)
+        case 2 => Some(silverImg)
+        case 3 => Some(bronzeImg)
+        case _ => None
+      }
+      imgOpt.foreach{ img =>
+        ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
+      }
+      if(score.id == uid){
+        ctx.save()
+        ctx.font = "12px Helvetica"
+        ctx.fillStyle = "#FF0000"
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        ctx.restore()
+      }else{
+        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
+      }
+
+    }
+
+/*      currentRank.foreach { score =>
       index += 1
       val drawColor = index match {
         case 1 => "#FFD700"
@@ -470,12 +528,12 @@ case class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, size.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
       }
       //      ctx3.strokeStyle = drawColor
       //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", size.x-193, index, currentRankBaseLine)
-    }
+      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index, currentRankBaseLine)
+    }*/
     //绘制小地图
 
     ctx.fillStyle = MyColors.background
@@ -489,11 +547,71 @@ case class DrawGame(
     }
   }
 
+
+  def drawWhenDead(msg:Protocol.UserDeadMessage)={
+//    ctx.fillStyle = "#ccc"//Color.Black.toString()
+//    val showTime = MTime2HMS(msg.lifeTime)
+
+    ctx.fillStyle = "#000"//Color.Black.toString()
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
+    ctx.font = "50px Helvetica"
+    ctx.fillStyle = "#CD3700"
+    val Width = this.canvas.width
+    val Height = this.canvas.height
+    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+
+    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
+
+    var DrawLeft = Width*0.35
+    var DrawHeight = Height*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
+    ctx.fillStyle=Color.White.toString()
+//    DrawLeft = Width*0.56+Width*0.12
+//    DrawLeft = Width*0.56
+    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawWhenFinish(msg:String)={
+    ctx.fillStyle = "#000"
+    ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.font = s"${30 * this.canvas.width / Window.w}px Helvetica"
+    ctx.fillStyle = "#fff"
+    ctx.fillText(msg, 80, 30)
+    //    ctx.fillText(msg, this.canvas.width * 0.5 - ctx.measureText(msg).width * 0.5, this.canvas.height* 0.5)
+  }
+
+
   def centerScale(rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
     //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
+  }
+
+  def MTime2HMS(time:Long)={
+    var ts = (time/1000)
+//    println(s"一共有 $ts 秒！")
+    var result = ""
+    if(ts/3600>0){
+      result += s"${ts/3600}小时"
+    }
+    ts = ts % 3600
+//    println(s"第一次 $ts 秒！")
+    if(ts/60>0){
+      result += s"${ts/60}分"
+    }
+    ts = ts % 60
+//    println(s"第二次 $ts 秒！")
+    result += s"${ts}秒"
+    result
   }
 
 }

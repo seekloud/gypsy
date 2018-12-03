@@ -108,14 +108,18 @@ package object ptcl {
                   targetY:Double = 0.0,
                   speed:Double = 0
                   )
+  case class Int2(
+                 i:Int,
+                 j:Int
+                 )
   object Boundary{
     val w = 4800
     val h = 2400
   }
 
   object Window{
-    val w = 1200
-    val h = 600
+    val w = 1200.0 //1200
+    val h = 600.0 //600
   }
 
 
@@ -135,4 +139,20 @@ package object ptcl {
                        clientX:Double,
                        clientY:Double
                      )
+
+
+  object GameState{
+    val waiting:Int = 0
+    val play:Int = 1
+    val dead:Int = 2
+    val allopatry:Int = 3
+  }
+
+  object UserState{
+    val waiting = 0
+    val play = 1
+    val watch = 2
+    val replay = 3
+  }
+
 }

@@ -166,7 +166,9 @@ object LoginPage {
 
   })
 
-//  def homePage(): Unit = {
+//  def
+  //
+  // (): Unit = {
 //    val gameHolder=new GameHolder
 //    gameHolder.init()
 //    val guestIndex = guestModel
@@ -176,7 +178,6 @@ object LoginPage {
 //    val userRegisterButton: Button = dom.document.getElementById("userRegister").asInstanceOf[HTMLButtonElement]
 //    val roomId:Input = dom.document.getElementById("roomId").asInstanceOf[HTMLInputElement]
 //    val watcher:Input = dom.document.getElementById("watcher").asInstanceOf[HTMLInputElement]
-//
 //    nameField.focus()
 //    loginButton.onclick = {
 //      (_: MouseEvent) =>
@@ -192,7 +193,7 @@ object LoginPage {
 //                  println(s"name${nameField.value} has existed ")
 //                  LayuiJs.msg(rsp.msg, 5, 2000)
 //                } else {
-//                  //进入游戏
+                    //进入游戏
 //                  var id = 0
 //                  if(watcher.checked){
 //                    id = -1

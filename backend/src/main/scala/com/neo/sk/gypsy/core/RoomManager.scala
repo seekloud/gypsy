@@ -18,13 +18,7 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol
 
 import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, GameState}
-import io.circe.{Decoder, Encoder}
-import com.neo.sk.gypsy.utils.byteObject.MiddleBufferInJvm
-import com.neo.sk.gypsy.utils.byteObject.ByteObject._
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.generic.auto._
-import io.circe.syntax._
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
@@ -39,7 +33,6 @@ object RoomManager {
   trait Command
   case object TimeKey
   case object TimeOut extends Command
-  val roomIdGenerator = new AtomicInteger(20000)
   case class JoinGame(roomId:Option[Long],sender:String,id:String,watchGame: Boolean, replyTo:ActorRef[Flow[Message,Message,Any]])extends Command
   case class LeftRoom(uid:String,name:String) extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
@@ -70,13 +63,7 @@ object RoomManager {
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
-          //          case msg:JoinGame=>
-          //            if(msg.roomId.toString.startsWith("1")){
-          //              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,true),msg.sender,msg.id,msg.watchGame)
-          //            }else{
-          //              msg.replyTo ! webSocketChatFlow(getRoomActor(ctx,msg.roomId,false),msg.sender,msg.id,msg.watchGame)
-          //            }
-          //            Behaviors.same
+
 
           case JoinRoom(uid,gameStateOpt,name,startTime,userActor,roomIdOpt,watchGame,watchId) =>
             roomIdOpt match{
@@ -140,7 +127,8 @@ object RoomManager {
           case msg:GetGamePlayerList =>
             if(msg.roomId.toString.startsWith("1"))
             {
-              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
+              getRoomActor(ctx,msg.roomId,false) ! RoomActor.GetGamePlayerList(msg.roomId,msg.replyTo)
+//              ctx.child(s"RoomActor-${msg.roomId.toString}").get.upcast[RoomActor.Command] ! RoomActor.getGamePlayerList(msg.roomId,msg.replyTo)
             }
             Behaviors.same
 
@@ -148,12 +136,13 @@ object RoomManager {
             ctx.children.foreach{
               i =>
                 val roomActor=i.upcast[RoomActor.Command]
-                roomActor ! RoomActor.getRoomId(msg.playerId,msg.replyTo)
+                roomActor ! RoomActor.GetRoomId(msg.playerId,msg.replyTo)
             }
             Behaviors.same
 
           case msg:GetRoomList =>
             val RoomList=roomInUse.keys.toList
+            println(s"roomlist$RoomList")
             msg.replyTo ! RoomListRsp(roomListInfo(RoomList),0,"ok")
             Behaviors.same
 

@@ -16,7 +16,6 @@ import akka.stream.{ActorAttributes, Supervision}
 import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
-
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
 
@@ -26,11 +25,20 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
   */
 object UserManager {
 
+  import org.seekloud.byteobject.MiddleBufferInJvm
+
+
   private val log = LoggerFactory.getLogger(this.getClass)
 
   trait Command
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
+  //回放
+  final case class GetReplaySocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, recordId:Long,frame:Int,watchId:String,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+//  final case class GetReplaySocketFlow(watchId: String, playerName:String,recordId:Long, frame:Int,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  //玩游戏+观战
+//  final case class GetWebSocketFlow(name:String, replyTo:ActorRef[Flow[Message,Message,Any]], userInfoOpt:Option[GypsyUserInfo], roomId:Option[Long] = None,watch:Boolean) extends Command
+  final case class GetWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, watchId: Option[String], roomId:Option[Long] = None,watch:Boolean,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
 
 
   def create(): Behavior[Command] = {
@@ -50,7 +58,6 @@ object UserManager {
   ):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
-//        case GetWebSocketFlow(name,replyTo, userInfoOpt, roomIdOpt,watch) =>
         case GetWebSocketFlow(playerInfoOpt,watchIdOpt,roomIdOpt,watch,replyTo) =>
           //TODO 之后可以优化这部分
           val playerInfo = playerInfoOpt.get
@@ -59,15 +66,14 @@ object UserManager {
               userActor ! UserActor.ChangeBehaviorToInit
             case None =>
           }
-//          println("come11111")
           val userActor = getUserActor(ctx,playerInfo)
           replyTo ! getWebSocketFlow(playerInfo.playerId,playerInfo.nickname,0L,userActor)
           userActor ! UserActor.StartGame(roomIdOpt,watchIdOpt,watch)
           Behaviors.same
 
-//        case GetReplaySocketFlow(watchId,playerName,recordId,frame,replyTo) =>
+
         case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
-          //TODO getUserActorOpt
+          log.info("Replay WS connecting =========")
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx,playerInfo.playerId) match{
             case Some(userActor)=>
@@ -81,11 +87,16 @@ object UserManager {
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
-          getUserActor(ctx,msg.watchId) ! msg
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
           Behaviors.same
 
         case msg:GetRecordFrameMsg=>
-          getUserActor(ctx,msg.watchId) ! msg
+//          val userActor = getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId))
+          getUserActor(ctx,ApiProtocol.PlayerInfo(msg.watchId,msg.watchId)) ! msg
+          Behaviors.same
+
+        case ChildDead(child, childRef) =>
+          ctx.unwatch(childRef)
           Behaviors.same
 
         case unknow =>
@@ -104,7 +115,7 @@ object UserManager {
     implicit def parseJsonString2WsMsgFront(s:String): Option[Protocol.UserAction] = {
 
       try {
-              import io.circe.generic.auto._
+        import io.circe.generic.auto._
               import io.circe.parser._
         val wsMsg = decode[Protocol.UserAction](s).right.get
         Some(wsMsg)
@@ -138,8 +149,8 @@ object UserManager {
         case t:Protocol.Wrap =>
           BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
+//          log.info(s"========${t}===============")
           BinaryMessage.Strict(ByteString(t.ws))
-
         case x =>
           log.debug(s"akka stream receive unknown msg=${x}")
           TextMessage.apply("")

@@ -35,7 +35,7 @@ object EsheepProtocol {
                                  )
 
   case class VerifyAccessCodeRsp(
-                                  data: PlayerInfo,
+                                  data: Option[PlayerInfo],
                                   errCode: Int = 0,
                                   msg: String = "ok"
                                 ) extends CommonRsp
@@ -51,5 +51,8 @@ object EsheepProtocol {
                          startTime: Long,
                          endTime: Long
                        )
+  case class PlayerRecordInfo(
+                               playerRecord:RecordInfo
+                             )
 
 }

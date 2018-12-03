@@ -19,7 +19,8 @@ import org.seekloud.byteobject.MiddleBufferInJs
   * Time: 11:23
   *
   */
-case class WebSocketClient(
+case class
+WebSocketClient(
                             connectSuccessCallback: Event => Unit,
                             connectErrorCallback:ErrorEvent => Unit,
                             messageHandler:Protocol.GameMessage => Unit,
@@ -51,6 +52,7 @@ case class WebSocketClient(
       }
       webSocketOpt.get.onerror = { event: ErrorEvent =>
         wsSetup = false
+        webSocketOpt = None
         connectErrorCallback(event)
       }
 
@@ -79,7 +81,6 @@ case class WebSocketClient(
         }
 
       }
-
       webSocketOpt.get.onclose = { event: Event =>
         wsSetup = false
         webSocketOpt=None
@@ -89,9 +90,9 @@ case class WebSocketClient(
 
   def closeWs={
     wsSetup = false
-    sendMsg(UserLeft())
     println("---close Ws active")
-    webSocketOpt.get.close()
+    webSocketOpt.foreach(_.close())
+    webSocketOpt = None
   }
 
   import org.seekloud.byteobject.ByteObject._
@@ -107,6 +108,7 @@ case class WebSocketClient(
           replayStateDecode(a)
       }
     }else{
+      println(s"事件数据解析不成功  因为长度为0")
       DecodeEventError(Protocol.DecodeError())
     }
   }
@@ -115,9 +117,10 @@ case class WebSocketClient(
     val middleDataInJs = new MiddleBufferInJs(a)
     bytesDecode[Protocol.GameSnapshot](middleDataInJs) match {
       case Right(r)=>
+//        println("全量数据解析成功： ")
         DecodeEvent(Protocol.SyncGameAllState(r.asInstanceOf[Protocol.GypsyGameSnapshot].state))
       case Left(e) =>
-        println("全量数据解析错误： "+ e.message)
+//        println("全量数据解析错误： "+ e.message)
         DecodeEventError(Protocol.DecodeError())
     }
   }

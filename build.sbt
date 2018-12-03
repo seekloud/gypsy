@@ -9,6 +9,7 @@ val projectVersion = "2018.09.27"
 
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"
+val clientMainClass = "com.neo.sk.gypsy.ClientBoot"
 
 def commonSettings = Seq(
   version := projectVersion,
@@ -33,6 +34,12 @@ lazy val sharedJs = shared.js
 //client
 lazy val client = (project in file("client"))
   .settings(name := "client")
+  .settings(
+    //pack
+    packMain := Map("gypsy" -> clientMainClass),
+    packJvmOpts := Map("gypsy" -> Seq("-Xmx512m", "-Xms512m")),
+    packExtraClasspath := Map("gypsy" -> Seq("."))
+  )
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= Dependencies.backendDependencies)
   .dependsOn(sharedJvm)
@@ -66,7 +73,7 @@ lazy val frontend = (project in file("frontend"))
       "com.lihaoyi" %%% "scalatags" % "0.6.5",
       "org.scala-lang.modules" %% "scala-swing" % "2.0.1",
       "org.seekloud" %%% "byteobject" % "0.1.1",
-      "org.seekloud" %% "essf" % "0.0.1-beta2"
+      "org.seekloud" %% "essf" % "0.0.1-beta3"
       //"org.scala-js" %%% "scalajs-java-time" % scalaJsJavaTime
       //"com.lihaoyi" %%% "utest" % "0.3.0" % "test"
     )
@@ -127,5 +134,3 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
 lazy val root = (project in file("."))
   .aggregate(frontend, backend)
   .settings(name := projectName)
-
-
