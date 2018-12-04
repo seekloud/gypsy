@@ -308,8 +308,9 @@ class GameCanvas(canvas: Canvas,
       val deadName = deadPlayer.name
       val txt1=new Text(killerName)
       val txt2=new Text(deadName)
-      val killNameLength=txt1.getLayoutBounds().getWidth()
-      val deadNameLength=txt2.getLayoutBounds().getWidth()
+      val killNameLength=txt1.getLayoutBounds.getWidth
+      val deadNameLength=txt2.getLayoutBounds.getWidth
+      val allWidth = (killNameLength + deadNameLength + 32 + 25 + 50)/2
       val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
@@ -322,14 +323,14 @@ class GameCanvas(canvas: Canvas,
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(killerName, realWindow.x*0.4, realWindow.y*0.2)
+        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(killerName, realWindow.x*0.4, realWindow.y*0.2)
-        ctx.drawImage(killImg,realWindow.x * 0.4+killNameLength+25,realWindow.y*0.2,32,32)
+        ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
+        ctx.drawImage(killImg,realWindow.x * 0.5 -allWidth + killNameLength + 25,realWindow.y*0.15,32,32)
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
+        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
+        ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
