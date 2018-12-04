@@ -283,7 +283,7 @@ class GameHolder(replay:Boolean = false) {
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
           ctx.save()
-          ctx.font = s"${34 * window.x / Window.w}px Helvetica"
+          ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
           ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
           ctx.restore()
