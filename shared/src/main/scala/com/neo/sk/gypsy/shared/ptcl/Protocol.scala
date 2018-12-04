@@ -36,7 +36,10 @@ object Protocol {
 
   case class Id(id: String) extends GameMessage
 
-  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
+//  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
+  case class Ranks(currentRank: List[RankInfo]) extends GameMessage
+
+  case class MyRank(rank:RankInfo) extends GameMessage
 
   case class PlayerRestart(id:String) extends GameMessage
 
@@ -113,7 +116,9 @@ object Protocol {
   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
   case class KillMsg(killerId:String,deadPlayer:Player,score:Int,lifeTime:Long, override val frame: Long) extends GameEvent
-  case class CurrentRanks(currentRank: List[Score]) extends GameEvent
+  case class CurrentRanks(currentRank: List[RankInfo]) extends GameEvent
+  case class PongEvent(timestamp: Long)extends GameEvent
+
 
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
   //  缩放放到
@@ -132,7 +137,7 @@ object Protocol {
                                       foodDetails: List[Food],
                                       massDetails: List[Mass],
                                       virusDetails: Map[Long,Virus],
-                                      currentRank:List[Score]
+                                      currentRank:List[RankInfo]
                                     )
 
   final case class GameInformation(

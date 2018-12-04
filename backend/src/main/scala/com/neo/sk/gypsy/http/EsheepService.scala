@@ -52,14 +52,14 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
-      'playerId.as[String],
+      'playerId.as[String],//
       'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
     ){ case ( playerId, playerName, accessCode, roomIdOpt) =>
       if(AppSettings.gameTest){
         val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),None,roomIdOpt,false,_))
+        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),roomIdOpt,_))
         dealFutureResult(
           flowFuture.map(r=>
             addSession(session) {
@@ -70,7 +70,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       }else{
         authPlatUser(accessCode){player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),None,roomIdOpt,false,_))
+          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),roomIdOpt,_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {
@@ -86,14 +86,14 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def watchGame = (path("watchGame") & get) {
     parameter(
-      'playerId.as[String].?,
+      'playerId.as[String].?,//观看视角
       'accessCode.as[String],
       'roomId.as[Long]
     ){ case ( playerIdOpt,  accessCode, roomId) =>
       if(AppSettings.gameTest){
         val watcherId = "watcher" + idGenerator.getAndIncrement()
         val session = GypsySession(BaseUserInfo(UserRolesType.watcher, watcherId, watcherId, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(watcherId,watcherId)),playerIdOpt,Some(roomId),true,_))
+        val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWatchWebSocketFlow(Some(PlayerInfo(watcherId,watcherId)),playerIdOpt,roomId,_))
         dealFutureResult(
           flowFuture.map(r=>
             addSession(session) {
@@ -104,7 +104,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       } else {
         authPlatUser(accessCode){ player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.watcher, player.playerId, player.nickname, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),playerIdOpt,Some(roomId),true,_))
+          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWatchWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),playerIdOpt,roomId,_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {
@@ -120,14 +120,14 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   private def watchRecord = (path("watchRecord") & get){
     parameter(
       'recordId.as[Long],
-      'playerId.as[String],
+      'playerId.as[String], //回放视角
       'frame.as[Int],
       'accessCode.as[String]
     ){ (recordId, playerId, frame, accessCode) =>
       if(AppSettings.gameTest){
         val replayWatcherId = "replay" + idGenerator.getAndIncrement()
         val session = GypsySession(BaseUserInfo(UserRolesType.replayer, replayWatcherId, replayWatcherId, ""), System.currentTimeMillis()).toSessionMap
-        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(playerId,playerId)),recordId,frame,playerId,_))
+        val flowFuture:Future[Flow[Message,Message,Any]] = userManager ? (UserManager.GetReplaySocketFlow(Some(PlayerInfo(replayWatcherId,replayWatcherId)),recordId,frame,playerId,_))
         dealFutureResult(
           flowFuture.map(t =>
             addSession(session){

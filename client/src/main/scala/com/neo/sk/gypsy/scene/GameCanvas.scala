@@ -22,7 +22,7 @@ import com.neo.sk.gypsy.utils.FpsComp
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
                  size:Point) {
-  val  img = new Image(ClientBoot.getClass.getResourceAsStream("/img/virus.png"))
+  val  img = new Image(ClientBoot.getClass.getResourceAsStream("/img/stone.png"))
 //  val  circle = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle.png"))
 //  val  circle1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle1.png"))
 //  val  circle2 = new Image(ClientBoot.getClass.getResourceAsStream("/img/circle2.png"))
@@ -323,15 +323,15 @@ class GameCanvas(canvas: Canvas,
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(killerName, 25, 400)
+        ctx.strokeText(killerName, realWindow.x*0.4, realWindow.y*0.2)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(killerName, 25, 400)
-        ctx.drawImage(killImg,25+killNameLength+25,400,32,32)
+        ctx.fillText(killerName, realWindow.x*0.4, realWindow.y*0.2)
+        ctx.drawImage(killImg,realWindow.x * 0.4+killNameLength+25,realWindow.y*0.2,32,32)
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(deadName, 25+killNameLength+32+50, 400)
+        ctx.strokeText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, 25+killNameLength+32+50, 400)
-        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
+        ctx.fillText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
+//        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
@@ -514,7 +514,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font("Helvetica",12))
@@ -526,9 +526,11 @@ class GameCanvas(canvas: Canvas,
 //    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
     drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
 
-    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
-      val score = rank._1
-      val index = rank._2+1
+    //这里过滤是为了防止回放的时候传全量的排行版数据
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+      val score = rank._1.score
+      //      val index = rank._2+1
+      val index = rank._1.index
 
       val imgOpt = index match {
         case 1 => Some(goldImg)
@@ -537,20 +539,19 @@ class GameCanvas(canvas: Canvas,
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img,  realWindow.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+32, 13, 13)
       }
       if(score.id == uid){
         ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
         ctx.setFill(Color.web("#FFFF33"))
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
       }
 
     }
-
 
     /*currentRank.foreach { score =>
       index += 1

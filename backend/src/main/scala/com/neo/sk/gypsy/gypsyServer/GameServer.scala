@@ -46,14 +46,14 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
-  private [this] var userLists = mutable.ListBuffer[UserInfo]()
+//  private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
   var currentRank = List.empty[Score]
-  private[this] var historyRankMap = Map.empty[String, Score]
-  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
+//  private[this] var historyRankMap = Map.empty[String, Score]
+//  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 
-  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
+//  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
   def addPlayer(id: String, name: String) = waitingJoin += (id -> name)
 
@@ -98,23 +98,23 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private[this] def updateRanks() = {
     currentRank = playerMap.values.map(s => Score(s.id, s.name, s.kill, s.cells.map(_.mass).sum)).toList.sorted
-    var historyChange = false
-    currentRank.foreach { cScore =>
-      historyRankMap.get(cScore.id) match {
-        case Some(oldScore) if cScore.score > oldScore.score =>
-          historyRankMap += (cScore.id -> cScore)
-          historyChange = true
-        case None if cScore.score > historyRankThreshold =>
-          historyRankMap += (cScore.id -> cScore)
-          historyChange = true
-        case _ => //do nothing.
-      }
-    }
-    if (historyChange) {
-      historyRankList = historyRankMap.values.toList.sorted.take(historyRankLength)
-      historyRankThreshold = historyRankList.lastOption.map(_.score.toInt).getOrElse(-1)
-      historyRankMap = historyRankList.map(s => s.id -> s).toMap
-    }
+//    var historyChange = false
+//    currentRank.foreach { cScore =>
+//      historyRankMap.get(cScore.id) match {
+//        case Some(oldScore) if cScore.score > oldScore.score =>
+//          historyRankMap += (cScore.id -> cScore)
+//          historyChange = true
+//        case None if cScore.score > historyRankThreshold =>
+//          historyRankMap += (cScore.id -> cScore)
+//          historyChange = true
+//        case _ => //do nothing.
+//      }
+//    }
+//    if (historyChange) {
+//      historyRankList = historyRankMap.values.toList.sorted.take(historyRankLength)
+//      historyRankThreshold = historyRankList.lastOption.map(_.score.toInt).getOrElse(-1)
+//      historyRankMap = historyRankList.map(s => s.id -> s).toMap
+//    }
   }
 
   override def feedApple(appleCount: Int): Unit = {
@@ -519,13 +519,15 @@ class GameServer(override val boundary: Point) extends Grid {
       Food(f._2,f._1.x,f._1.y)
     }.toList
 
+    val snapRank = currentRank.zipWithIndex.map(r=>RankInfo(r._2+1,r._1))
+
     Protocol.GypsyGameSnapInfo(
       frameCount,
       playerDetails,
       foodDetails,
       massList,
       virusMap,
-      currentRank
+      snapRank
     )
   }
 
@@ -573,8 +575,8 @@ class GameServer(override val boundary: Point) extends Grid {
     GameEventMap.getOrElse(frame,List.empty)
   }
 
-  def getUserList(userList:mutable.ListBuffer[UserInfo])={
-    userLists = userList
-  }
+//  def getUserList(userList:mutable.ListBuffer[UserInfo])={
+//    userLists = userList
+//  }
 
 }
