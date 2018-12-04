@@ -39,7 +39,7 @@ object EsheepClient{
     val playerId = "gogo"
     val apiToken = "lala"
 
-    val client = new EsheepDemoClient(host, port, playerId, apiToken)
+    val client = new EsheepClient(host, port, playerId, apiToken)
 
     val rsp1 = client.createRoom()
 
