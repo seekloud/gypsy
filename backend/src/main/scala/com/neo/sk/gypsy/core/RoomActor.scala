@@ -75,7 +75,7 @@ object RoomActor {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
             val userMap = mutable.HashMap[String, (String,Long)]()
-            val userList = mutable.ListBuffer[UserInfo]()
+//            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
@@ -84,14 +84,13 @@ object RoomActor {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
             timer.startPeriodicTimer(SyncTimeKey, Sync, WsMsgProtocol.frameRate millis)
-            idle(roomId, userList, userMap, subscribersMap, grid, 0l)
+            idle(roomId, userMap, subscribersMap, grid, 0l)
         }
     }
   }
 
   def idle(
             roomId:Long,
-            userList:mutable.ListBuffer[UserInfo],
             userMap:mutable.HashMap[String,(String,Long)],//[Id, (name, ballId)]
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
             grid:GameServer,
@@ -225,7 +224,7 @@ object RoomActor {
 
         case Sync =>
           grid.getSubscribersMap(subscribersMap)
-          grid.getUserList(userList)
+//          grid.getUserList(userList)
           grid.update()
           val feedapples = grid.getNewApples
           val eventList = grid.getEvents()
@@ -281,7 +280,7 @@ object RoomActor {
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
-          idle(roomId,userList,userMap,subscribersMap,grid,tickCount+1)
+          idle(roomId,userMap,subscribersMap,grid,tickCount+1)
 
         case UserActor.NetTest(id, createTime) =>
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
