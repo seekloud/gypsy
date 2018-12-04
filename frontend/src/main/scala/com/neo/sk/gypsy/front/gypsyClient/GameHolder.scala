@@ -535,8 +535,9 @@ class GameHolder(replay:Boolean = false) {
         gameClose
 
       case e:Protocol.DecodeError =>
-        drawTopView.drawWhenFinish("数据解析失败")
-        gameClose
+        println("数据解析失败")
+//        drawTopView.drawWhenFinish("数据解析失败")
+//        gameClose
 
       case e:Protocol.InitReplayError =>
         drawTopView.drawWhenFinish(e.msg)
