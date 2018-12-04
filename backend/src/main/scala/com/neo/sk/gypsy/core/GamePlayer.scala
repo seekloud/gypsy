@@ -122,37 +122,26 @@ object GamePlayer {
         case msg:InitReplay =>
           log.info("start new replay !")
           //停止之前的重放
-//          timer.cancelAll()
           timer.cancel(GameLoopKey)
-
-//          fileReader.mutableInfoIterable
-//          log.info(s"UserMap-------$msg | $userMap---------")
-//          log.info(s"metaData------- | $metaData********")
-//          log.info(s"initState------- | $initState========")
           userMap.filter(t=>t._1.userId == msg.userId && t._2.leftF >= msg.frame).sortBy(_._2.joinF).headOption match {
             case Some(u)=>
               log.info(s"total FrameCount :${frameCount}")
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
-//              log.info(s"replay from frame=${fileReader.getFramePosition}")
               if(fileReader.hasMoreFrame){
                 timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
-//                timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"),waitTime)
                 Behaviors.stopped
               }
             case None =>
               dispatchTo(msg.userActor,Protocol.InitReplayError("本局游戏中不存在该用户"))
-//              timer.startSingleTimer(BehaviorWaitKey,TimeOut("wait time out"), waitTime)
               Behaviors.stopped
           }
         case GameLoop=>
-//          println(s"Loop ${fileReader.getFramePosition}========")
           if(fileReader.hasMoreFrame){
             userOpt.foreach(u=>
               fileReader.readFrame().foreach{ f=>
-//                println(s" f: ${f.eventsData}  ********** ")
                 dispatchByteTo(u,f)
               }
             )
@@ -186,12 +175,15 @@ object GamePlayer {
           msg.replyTo ! userInRecordRsp(PlayerList(frameCount,data))
           Behaviors.same
 
-//        case msg:TimeOut=>
-//          Behaviors.stopped
-
         case msg:StopReplay =>
           log.info(s"Stop Replay! ${msg.recordId}")
           Behaviors.stopped
+
+        case UserActor.NetTest(id, createTime)=>
+          userOpt.foreach{u=>
+            dispatchTo(u, Protocol.PongEvent(createTime))
+          }
+          Behaviors.same
 
         case unKnowMsg =>
           stashBuffer.stash(unKnowMsg)

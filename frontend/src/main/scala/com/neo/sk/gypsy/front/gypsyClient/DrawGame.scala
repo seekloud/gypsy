@@ -30,8 +30,10 @@ case class DrawGame(
               size:Point
               ) {
 
-  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-//  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
+//  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
+  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/stone.png").render
+
+  //  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
 //  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
 //  private[this] val  circle2 = dom.document.getElementById("circle2").asInstanceOf[HTMLElement]
 //  private[this] val  circle3 = dom.document.getElementById("circle3").asInstanceOf[HTMLElement]
@@ -70,8 +72,8 @@ case class DrawGame(
   private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
   private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
   private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-  private[this] val  background = dom.document.getElementById("background").asInstanceOf[HTMLElement]
-  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+//  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
+  private[this] val  background1 = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/b2.jpg").render
   private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
@@ -272,24 +274,26 @@ case class DrawGame(
 //    ctx.fillStyle = pat
 //    ctx.fillRect(0,0,bounds.x,bounds.y)
     //绘制背景
-//    println("drawBackground22222222")
-    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
+    background1.onload = { _ =>
+      ctx.drawImage(background1,0,0, bounds.x, bounds.y)
+    }
+//    ctx.drawImage(background1,0,0, bounds.x, bounds.y)
     ctx.save()
     //绘制条纹
 //    ctx.strokeStyle = MyColors.stripe
-    ctx.strokeStyle = Color.White.toString()
-    stripeX.foreach{ l=>
-      ctx.beginPath()
-      ctx.moveTo(0 ,l )
-      ctx.lineTo(bounds.x,l )
-      ctx.stroke()
-    }
-    stripeY.foreach{ l=>
-      ctx.beginPath()
-      ctx.moveTo(l ,0)
-      ctx.lineTo(l ,bounds.y)
-      ctx.stroke()
-    }
+//    ctx.strokeStyle = Color.White.toString()
+//    stripeX.foreach{ l=>
+//      ctx.beginPath()
+//      ctx.moveTo(0 ,l )
+//      ctx.lineTo(bounds.x,l )
+//      ctx.stroke()
+//    }
+//    stripeY.foreach{ l=>
+//      ctx.beginPath()
+//      ctx.moveTo(l ,0)
+//      ctx.lineTo(l ,bounds.y)
+//      ctx.stroke()
+//    }
   }
 
   //ctx2
@@ -297,7 +301,7 @@ case class DrawGame(
     //绘制当前排行
     val littleMap = this.canvas.width * 0.18  // 200
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - 200,20,150,250)
+    ctx.fillRect(this.canvas.width - 200,20,160,56+GameConfig.rankShowNum*14)
 
     //绘制小地图
     println("littleMap:   " + littleMap)
@@ -344,15 +348,15 @@ case class DrawGame(
         ctx.save()
         ctx.font = "25px Helvetica"
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(killerName, 25, 400)
+        ctx.strokeText(killerName, this.canvas.width * 0.4, this.canvas.height * 0.2)
         ctx.fillStyle = "#f27c02"
-        ctx.fillText(killerName, 25, 400)
-        ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
+        ctx.fillText(killerName, this.canvas.width * 0.4, this.canvas.height * 0.2)
+        ctx.drawImage(killImg,this.canvas.width * 0.4+ctx.measureText(s"$killerName ").width+25,this.canvas.height * 0.2,32,32)
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(deadName, 25+ ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.strokeText(deadName, this.canvas.width * 0.4+ ctx.measureText(s"$killerName  ").width+32+50, this.canvas.height * 0.2)
         ctx.fillStyle = "#f27c02"
-        ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
-        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
+        ctx.fillText(deadName, this.canvas.width * 0.4+ctx.measureText(s"$killerName  ").width+32+50, this.canvas.height * 0.2)
+//        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
@@ -523,7 +527,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[Score],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
@@ -532,14 +536,14 @@ case class DrawGame(
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-//    var index = 0
     ctx.fillStyle = MyColors.background
-//    drawTextLine(s"—————排行榜—————", this.canvas.width-200, index, currentRankBaseLine)
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
 
-    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.id == uid).foreach{rank=>
-      val score = rank._1
-      val index = rank._2+1
+    //这里过滤是为了防止回放的时候传全量的排行版数据
+    currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+      val score = rank._1.score
+//      val index = rank._2+1
+      val index = rank._1.index
 
       val imgOpt = index match {
         case 1 => Some(goldImg)
@@ -554,10 +558,10 @@ case class DrawGame(
         ctx.save()
         ctx.font = "12px Helvetica"
         ctx.fillStyle = "#FFFF33"
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${rank._2+1}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
       }
 
     }
@@ -628,6 +632,7 @@ case class DrawGame(
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
   }
 
+
   def drawWhenFinish(msg:String)={
     ctx.fillStyle = "#000"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
@@ -647,18 +652,15 @@ case class DrawGame(
 
   def MTime2HMS(time:Long)={
     var ts = (time/1000)
-//    println(s"一共有 $ts 秒！")
     var result = ""
     if(ts/3600>0){
       result += s"${ts/3600}小时"
     }
     ts = ts % 3600
-//    println(s"第一次 $ts 秒！")
     if(ts/60>0){
       result += s"${ts/60}分"
     }
     ts = ts % 60
-//    println(s"第二次 $ts 秒！")
     result += s"${ts}秒"
     result
   }

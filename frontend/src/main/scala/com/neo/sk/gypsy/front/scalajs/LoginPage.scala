@@ -118,7 +118,7 @@ object LoginPage {
           button(`class` := "layui-btn layui-btn-fluid", *.id := "login", "登陆")),
         div(`class` := "layui-form-item login-back",
           //i(`class`:="layui-icon layui-icon-return",style:="color:#1E9FFF;"),
-          a(*.id := "back2guest", style := "color:#1E9FFF;", "返回登陆")
+          a(*.id := "back2guest", style := "color:#1E9FFF;", "返回登陆"),
         )
       )
     ).toString().asInstanceOf[HTMLElement]

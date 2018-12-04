@@ -340,9 +340,18 @@ class GameHolder(replay:Boolean = false) {
           grid.addMouseActionWithFrame(m.id,m)
         }
 
-      case Protocol.Ranks(current, history) =>
-        grid.currentRank = current
-        grid.historyRank = history
+      case Protocol.Ranks(current) =>
+        //发来的排行版含有我的排名
+        if(current.exists(r=>r.score.id ==myId)){
+          grid.currentRank = current
+        }else{
+//          发来的未含有我的
+          grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == myId)
+        }
+
+      case Protocol.MyRank(rank) =>
+        //把之前这个id的排行过滤掉
+        grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==myId) :+ rank
 
       case Protocol.FeedApples(foods) =>
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
@@ -455,6 +464,7 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.gState.currentRank
         justSynced = true
 
+        //TODO 好像没用到
       case e: Protocol.CurrentRanks =>
         grid.currentRank = e.currentRank
 
@@ -516,14 +526,18 @@ class GameHolder(replay:Boolean = false) {
           Shortcut.playMusic("shutdownM")
         }
 
+      case e:Protocol.PongEvent =>
+        NetDelay.receivePong(e.timestamp ,webSocketClient)
+
       case e:Protocol.ReplayFinish=>
         //游戏回放结束
         drawTopView.drawWhenFinish("播放结束")
         gameClose
 
       case e:Protocol.DecodeError =>
-        drawTopView.drawWhenFinish("数据解析失败")
-        gameClose
+        println("数据解析失败")
+//        drawTopView.drawWhenFinish("数据解析失败")
+//        gameClose
 
       case e:Protocol.InitReplayError =>
         drawTopView.drawWhenFinish(e.msg)

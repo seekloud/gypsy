@@ -5,18 +5,15 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.{Protocol, UserState, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront, ReStartAck}
-import com.neo.sk.gypsy.models.GypsyUserInfo
 import com.neo.sk.gypsy.Boot.roomManager
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
-
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -37,17 +34,23 @@ object UserActor {
 
   case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
 
-  case class JoinRoom(uid:String,gameStateOpt:Option[Int],name:String,startTime:Long,userActor:ActorRef[UserActor.Command], roomIdOpt:Option[Long] = None,watch:Boolean,watchId:Option[String]) extends Command with RoomManager.Command
+  case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomSuccess(uId:String,roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class Left(id: String, name: String) extends Command with RoomActor.Command
+  case class JoinRoomSuccess(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+
+  case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
+
+  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
+
+  case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
   case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
 
   case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
 
-  case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command
+  case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
 
   case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
@@ -66,17 +69,16 @@ object UserActor {
 
   case class TimeOut(msg: String) extends Command
 
+  case class StartGame(roomId:Option[Long]) extends Command
+
+  case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
+
   case class StartReply(recordId:Long, watchId:String, frame:Int) extends Command
 
   case class UserLeft[U](actorRef: ActorRef[U]) extends Command
 
   case object ChangeBehaviorToInit extends Command
 
-  case class StartGame(roomId:Option[Long],watchId:Option[String],watch:Boolean) extends Command
-
-
-  private var userState = UserState.waiting
-  private[this] var watchRecordId  = 0l
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
                                    behaviorName: String,
@@ -106,14 +108,12 @@ object UserActor {
                    case KeyCode(id,keyCode,f,n)=>
                      log.debug(s"键盘事件$keyCode")
                      Key(id,keyCode,f,n)
+
                    case MousePosition(id,clientX,clientY,f,n)=>
                      Mouse(id,clientX,clientY,f,n)
-//                   case Protocol.UserLeft()=>
-//                     Left(id,name)
+
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
-//                   case ReLive(id) =>
-//                     UserReLive(id)
 
                    case ReLiveAck(id) =>
                      UserReLiveAck(id)
@@ -164,10 +164,6 @@ object UserActor {
           ctx.unwatch(actor)
           Behaviors.stopped
 
-        case TimeOut(m) =>
-          log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
-          Behaviors.stopped
-
         case UnKnowAction =>
           Behavior.same
 
@@ -181,6 +177,10 @@ object UserActor {
         case msg:GetRecordFrameMsg=>
           getGameReply(ctx,msg.recordId) ! msg
           Behaviors.same
+
+        case TimeOut(m) =>
+          log.debug(s"${ctx.self.path} is time out when busy,msg=${m}")
+          Behaviors.stopped
 
         case unknowMsg =>
           stashBuffer.stash(unknowMsg)
@@ -200,47 +200,44 @@ object UserActor {
   ):Behavior[Command] =
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
-        case StartReply(recordId,watchId,frame) =>
-          userState = UserState.replay
-          watchRecordId = recordId
-          getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
+        case StartGame(roomIdOp) =>
+          roomManager ! UserActor.JoinRoom(userInfo,roomIdOp,ctx.self)
           Behaviors.same
 
-        case StartGame(roomIdOp,watchId,watch) =>
-          userState = UserState.play
-          roomManager ! UserActor.JoinRoom(userInfo.playerId,None,userInfo.nickname,startTime,ctx.self,roomIdOp,watch,watchId)
+        case StartWatch(roomId,watchId) =>
+          roomManager ! UserActor.JoinRoom4Watch(userInfo,roomId,watchId,ctx.self)
           Behaviors.same
+
+        case StartReply(recordId,watchId,frame) =>
+          getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
+          val gamePlayer = getGameReply(ctx,recordId)
+          switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
 
         case UserLeft(actor) =>
-          if(userState == UserState.replay){
-            getGameReply(ctx,watchRecordId) ! GamePlayer.StopReplay(watchRecordId)
-            watchRecordId = 0l
-            userState = UserState.waiting
-          }
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
-        case JoinRoomSuccess(uid,roomActor)=>
-          switchBehavior(ctx,"play",play(uid, userInfo,startTime,frontActor,roomActor))
+        case JoinRoomSuccess(roomActor)=>
+          switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
+
+        case JoinRoomSuccess4Watch(roomActor,roomId) =>
+          switchBehavior(ctx,"watch",watch(userInfo,roomId,frontActor,roomActor))
 
         case UnKnowAction =>
-          //          stashBuffer.stash(unknowMsg)
-          //          log.warn(s"got unknown msg: $unknowMsg")
           Behavior.same
 
-          //for 回放
         case ChangeBehaviorToInit =>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
-        case msg:GetUserInRecordMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
-          Behaviors.same
-
-        case msg:GetRecordFrameMsg=>
-          getGameReply(ctx,msg.recordId) ! msg
-          Behaviors.same
+//        case msg:GetUserInRecordMsg=>
+//          getGameReply(ctx,msg.recordId) ! msg
+//          Behaviors.same
+//
+//        case msg:GetRecordFrameMsg=>
+//          getGameReply(ctx,msg.recordId) ! msg
+//          Behaviors.same
 
         case unknowMsg=>
           stashBuffer.stash(unknowMsg)
@@ -249,11 +246,11 @@ object UserActor {
     }
 
 
-  //玩游戏+观战
+  /**
+    * 玩游戏
+    */
   private def play(
-                    uId:String,
                     userInfo:PlayerInfo,
-                    startTime:Long,
                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
                     roomActor: ActorRef[RoomActor.Command])(
                     implicit stashBuffer:StashBuffer[Command],
@@ -281,16 +278,15 @@ object UserActor {
           frontActor ! m
           Behaviors.same
 
-          //for 玩游戏+观战
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
-          ctx.unwatch(frontActor)
+          roomManager ! RoomManager.LeftRoom(userInfo)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(uId,userInfo.nickname)
+          roomManager ! RoomManager.LeftRoom(userInfo)
           Behaviors.stopped
 
         case e: NetTest=>
@@ -302,6 +298,88 @@ object UserActor {
           Behavior.same
       }
     }
+  /**
+    * 观战
+    */
+  private def watch(
+                     userInfo:PlayerInfo,
+                     roomId:Long,
+                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
+                     roomActor: ActorRef[RoomActor.Command]
+                   )(
+                     implicit stashBuffer:StashBuffer[Command],
+                     timer:TimerScheduler[Command],
+                     sendBuffer:MiddleBufferInJvm
+                   ):Behavior[Command]=
+    Behaviors.receive[Command]{(ctx,msg) =>
+      msg match {
+        case UserLeft(actor) =>
+          ctx.unwatch(actor)
+          roomManager ! RoomManager.LeftRoom4Watch(userInfo,roomId)
+          Behaviors.stopped
+
+        case DispatchMsg(m)=>
+          frontActor ! m
+          Behaviors.same
+
+        case ChangeBehaviorToInit=>
+          frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+          roomManager ! RoomManager.LeftRoom4Watch(userInfo,roomId)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
+
+        case e: NetTest=>
+          roomActor ! e
+          Behaviors.same
+
+        case unknowMsg =>
+          log.warn(s"${ctx.self.path} recv an unknown msg=${msg}")
+          Behavior.same
+      }
+    }
+  /**
+    * 回放
+    */
+  private def replay(
+                      recordId: Long,
+                      userInfo:PlayerInfo,
+                      frontActor: ActorRef[WsMsgProtocol.WsMsgSource],
+                      gamePlayer: ActorRef[GamePlayer.Command]
+                    )(
+    implicit stashBuffer:StashBuffer[Command],
+    timer:TimerScheduler[Command],
+    sendBuffer:MiddleBufferInJvm
+  ):Behavior[Command] =
+    Behaviors.receive[Command]{(ctx, msg) =>
+      msg match {
+        case ChangeBehaviorToInit =>
+          frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+          gamePlayer ! GamePlayer.StopReplay(recordId)
+          ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
+
+        case UserLeft(actor) =>
+          gamePlayer ! GamePlayer.StopReplay(recordId)
+          ctx.unwatch(actor)
+          switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
+
+        case msg:GetUserInRecordMsg=>
+          gamePlayer ! msg
+          Behaviors.same
+
+        case msg:GetRecordFrameMsg=>
+          gamePlayer ! msg
+          Behaviors.same
+
+        case e: NetTest=>
+          gamePlayer ! e
+          Behaviors.same
+
+        case unknowMsg =>
+          Behavior.same
+      }
+    }
+
 
 
   /**
