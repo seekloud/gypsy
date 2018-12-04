@@ -5,7 +5,7 @@ name := "gypsy"
 val scalaV = "2.12.6"
 //val scalaV = "2.11.8"
 val projectName = "gypsy"
-val projectVersion = "2018.09.27"
+val projectVersion = "2018.12.04"
 
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"
@@ -41,7 +41,11 @@ lazy val client = (project in file("client"))
     packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= Dependencies.backendDependencies)
+  .settings(libraryDependencies ++= Dependencies.backendDependencies ++ Dependencies.grpcSeq ).settings(
+  PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value
+  )
+)
   .dependsOn(sharedJvm)
 
 // Scala-Js frontend
