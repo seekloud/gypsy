@@ -71,9 +71,8 @@ class GameCanvas(canvas: Canvas,
 
   val bounds = Point(Boundary.w, Boundary.h)
 
-
-
   var realWindow = Point(size.x,size.y)
+
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
