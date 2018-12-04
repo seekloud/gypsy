@@ -42,6 +42,9 @@ lazy val client = (project in file("client"))
   )
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= Dependencies.backendDependencies)
+    .settings(  PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value
+    ))
   .dependsOn(sharedJvm)
 
 // Scala-Js frontend
