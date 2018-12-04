@@ -61,6 +61,12 @@ object Dependencies {
   val scalaFx = "org.scalafx" %% "scalafx" % "10.0.2-R15"
 
 
+  val grpcSeq = Seq(
+    "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
+    "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+  )
+
+
 
   val backendDependencies =
     Dependencies.akkaSeq ++
