@@ -348,15 +348,15 @@ case class DrawGame(
         ctx.save()
         ctx.font = "25px Helvetica"
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(killerName, 25, 400)
+        ctx.strokeText(killerName, this.canvas.width * 0.4, this.canvas.height * 0.2)
         ctx.fillStyle = "#f27c02"
-        ctx.fillText(killerName, 25, 400)
-        ctx.drawImage(killImg,25+ctx.measureText(s"$killerName ").width+25,400,32,32)
+        ctx.fillText(killerName, this.canvas.width * 0.4, this.canvas.height * 0.2)
+        ctx.drawImage(killImg,this.canvas.width * 0.4+ctx.measureText(s"$killerName ").width+25,this.canvas.height * 0.2,32,32)
         ctx.strokeStyle = "#f32705"
-        ctx.strokeText(deadName, 25+ ctx.measureText(s"$killerName  ").width+32+50, 400)
+        ctx.strokeText(deadName, this.canvas.width * 0.4+ ctx.measureText(s"$killerName  ").width+32+50, this.canvas.height * 0.2)
         ctx.fillStyle = "#f27c02"
-        ctx.fillText(deadName, 25+ctx.measureText(s"$killerName  ").width+32+50, 400)
-        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
+        ctx.fillText(deadName, this.canvas.width * 0.4+ctx.measureText(s"$killerName  ").width+32+50, this.canvas.height * 0.2)
+//        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
@@ -631,6 +631,7 @@ case class DrawGame(
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
   }
+
 
   def drawWhenFinish(msg:String)={
     ctx.fillStyle = "#000"
