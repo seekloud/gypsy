@@ -46,7 +46,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
-  private [this] var userLists = mutable.ListBuffer[UserInfo]()
+//  private [this] var userLists = mutable.ListBuffer[UserInfo]()
 
 
   var currentRank = List.empty[Score]
@@ -575,8 +575,8 @@ class GameServer(override val boundary: Point) extends Grid {
     GameEventMap.getOrElse(frame,List.empty)
   }
 
-  def getUserList(userList:mutable.ListBuffer[UserInfo])={
-    userLists = userList
-  }
+//  def getUserList(userList:mutable.ListBuffer[UserInfo])={
+//    userLists = userList
+//  }
 
 }
