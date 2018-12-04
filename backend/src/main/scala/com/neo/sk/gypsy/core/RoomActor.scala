@@ -74,7 +74,8 @@ object RoomActor {
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
-            val userMap = mutable.HashMap[String, (String,Long)]()
+            val userMap = mutable.HashMap[String, (String,Long,Long)]()
+            val userSyncMap = mutable.HashMap[Long,Set[String]]()
 //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             val grid = new GameServer(bounds)
@@ -84,15 +85,16 @@ object RoomActor {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
             timer.startPeriodicTimer(SyncTimeKey, Sync, WsMsgProtocol.frameRate millis)
-            idle(roomId, userMap, subscribersMap, grid, 0l)
+            idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
     }
   }
 
   def idle(
             roomId:Long,
-            userMap:mutable.HashMap[String,(String,Long)],//[Id, (name, ballId)]
+            userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)]
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
+            userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long
           )(
@@ -105,8 +107,14 @@ object RoomActor {
           val createBallId = ballId.incrementAndGet()
           println(s" ballId:${createBallId} id:${playerInfo.playerId} fra:${grid.frameCount}")
 //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
-          userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId))
+          val group = tickCount % AppSettings.SyncCount
+          userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId,group))
           subscribersMap.put(playerInfo.playerId, userActor)
+          userSyncMap.get(group) match{
+            case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
+            case None => userSyncMap.put(group,Set(playerInfo.playerId))
+          }
+//          userSyncMap.put(playerInfo.playerId,grid.frameCount)
           grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
           userActor ! JoinRoomSuccess(ctx.self)
 
@@ -139,6 +147,14 @@ object RoomActor {
               dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.Id(userMap.head._1))
               dispatchTo(subscribersMap)(playerInfo.playerId,grid.getAllGridData)
           }
+
+          val group = grid.frameCount % AppSettings.SyncCount
+          //TODO 没玩家怎么观看 ？？？ 先这样写
+          userSyncMap.get(group) match{
+            case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
+            case None => userSyncMap.put(group,Set(playerInfo.playerId))
+          }
+
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
           Behaviors.same
@@ -146,7 +162,7 @@ object RoomActor {
         case ReStart(id) =>
           log.info(s"RoomActor Restart Send!++++++++++++++")
 //          timer.cancel(ReliveTimeOutKey)
-          grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
+          grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
           dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           //复活时发送全量消息
@@ -166,6 +182,7 @@ object RoomActor {
           grid.removePlayer(playerInfo.playerId)
           dispatch(subscribersMap)(Protocol.PlayerLeft(playerInfo.playerId, playerInfo.nickname))
           try{
+            // 添加离开事件
             val leftballId = userMap(playerInfo.playerId)._2
             //添加离开信息
             log.info(s"user left fra ${grid.frameCount}  ${leftballId} ")
@@ -175,6 +192,15 @@ object RoomActor {
             case e:Exception =>
               log.error(s"Had something wrong in add Left event!! Caused by:${e.getMessage}")
           }
+          //userSyncMap 中删去数据
+          userMap.get(playerInfo.playerId).foreach{u=>
+            val group = u._3
+            userSyncMap.get(group) match {
+              case Some(s) => userSyncMap.update(group,s-playerInfo.playerId)
+              case None => userSyncMap.put(group,Set.empty[String])
+            }
+          }
+
           //userMap里面只存玩家信息
           userMap.remove(playerInfo.playerId)
           //玩家离开or观战者离开
@@ -202,13 +228,22 @@ object RoomActor {
           Behaviors.same
 
         case UserActor.Left4Watch(playerInfo) =>
+          //userSyncMap 中删去数据
+          userMap.get(playerInfo.playerId).foreach{u=>
+            val group = u._3
+            userSyncMap.get(group) match {
+              case Some(s) => userSyncMap.update(group,s-playerInfo.playerId)
+              case None => userSyncMap.put(group,Set.empty[String])
+            }
+          }
+
           subscribersMap.remove(playerInfo.playerId)
           Behaviors.same
 
         case UserActor.Key(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l))._1)
+            grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           } else {
             grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
@@ -242,17 +277,37 @@ object RoomActor {
             grid.ReLiveMap ++= newReLive
           }
 
-          if (tickCount % 20 == 5) {
-            //remind 此处传输全局数据-同步数据
-            val gridData = grid.getAllGridData
-            dispatch(subscribersMap)(gridData)
-          } else {
-            if (feedapples.nonEmpty) {
-              val foodlists = feedapples.map(s=>Food(s._2,s._1.x,s._1.y)).toList
-              dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
-              grid.cleanNewApple
+          //错峰发送全量数据 与 苹果数据
+          val group = tickCount % AppSettings.SyncCount
+          var syncUser = Set.empty[String]
+          userSyncMap.get(group).foreach{users=>
+            if(users.nonEmpty){
+              syncUser = users
+              val gridData = grid.getAllGridData
+              dispatch(subscribersMap.filter(s=>users.contains(s._1)))(gridData)
             }
+
           }
+          //发苹果数据
+          if (feedapples.nonEmpty) {
+            val foodlists = feedapples.map(s=>Food(s._2,s._1.x,s._1.y)).toList
+            dispatch(subscribersMap.filterNot(s=>syncUser.contains(s._1)))(Protocol.FeedApples(foodlists))
+            grid.cleanNewApple
+          }
+
+
+//          if (tickCount % 20 == 5) {
+//            //remind 此处传输全局数据-同步数据
+//            val gridData = grid.getAllGridData
+//            dispatch(subscribersMap)(gridData)
+//          } else {
+//            if (feedapples.nonEmpty) {
+//              val foodlists = feedapples.map(s=>Food(s._2,s._1.x,s._1.y)).toList
+//              dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
+//              grid.cleanNewApple
+//            }
+//          }
+
           if (tickCount % 20 == 1) {
 //            val currentRankEvent = Protocol.CurrentRanks(grid.currentRank)
 //            grid.AddGameEvent(currentRankEvent)
@@ -280,7 +335,7 @@ object RoomActor {
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
-          idle(roomId,userMap,subscribersMap,grid,tickCount+1)
+          idle(roomId,userMap,subscribersMap,userSyncMap,grid,tickCount+1)
 
         case UserActor.NetTest(id, createTime) =>
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
