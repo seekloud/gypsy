@@ -41,10 +41,11 @@ lazy val client = (project in file("client"))
     packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= Dependencies.backendDependencies)
-    .settings(  PB.targets in Compile := Seq(
+  .settings(libraryDependencies ++= Dependencies.backendDependencies ++ Dependencies.grpcSeq ).settings(
+  PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value
-    ))
+  )
+)
   .dependsOn(sharedJvm)
 
 // Scala-Js frontend

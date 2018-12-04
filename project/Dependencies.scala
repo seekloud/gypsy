@@ -67,6 +67,7 @@ object Dependencies {
   )
 
 
+
   val backendDependencies =
     Dependencies.akkaSeq ++
     Dependencies.akkaHttpSeq ++
@@ -87,8 +88,7 @@ object Dependencies {
       Dependencies.ehcache,
       Dependencies.essf,
       Dependencies.byteobject,
-      Dependencies.scalaFx,
-      Dependencies.grpcSeq
+      Dependencies.scalaFx
       // "com.lihaoyi" %% "upickle" % "0.6.6"
     )
 
