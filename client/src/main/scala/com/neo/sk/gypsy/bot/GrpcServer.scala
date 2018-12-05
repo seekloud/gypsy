@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.bot
 
-import io.grpc.{Server, ServerBuilder}
+import io.grpc.{Server, ServerBuilder, ServerServiceDefinition}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
