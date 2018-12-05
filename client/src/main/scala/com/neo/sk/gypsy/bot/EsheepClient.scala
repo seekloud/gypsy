@@ -21,7 +21,6 @@ class EsheepClient(
 
   val credit = Credit(playerId = playerId, apiToken = apiToken)
 
-
   def createRoom(): Future[CreateRoomRsp] = esheepStub.createRoom(credit)
 
   def observation(): Future[ObservationRsp] = esheepStub.observation(credit)
@@ -55,6 +54,7 @@ object EsheepClient{
     println("client DONE.")
 
   }
+
 }
 
 
