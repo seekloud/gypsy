@@ -26,7 +26,7 @@ object EsheepServer {
     val executor = concurrent.ExecutionContext.Implicits.global
     val port = 5321
 
-    val server = EsheepDemoServer.build(port, executor)
+    val server = EsheepServer.build(port, executor)
     server.start()
     println(s"Server started at $port")
 
