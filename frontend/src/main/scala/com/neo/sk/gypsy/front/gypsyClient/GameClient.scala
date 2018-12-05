@@ -63,19 +63,6 @@ class GameClient (override val boundary: Point) extends Grid {
                   if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
                   else if (cell.y > cell2.y) cellY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
                 }
-//                 else if (distance < radiusTotal / 2) {
-//                  if (cell.radius > cell2.radius) {
-//                    //被融合的细胞不能再被其他细胞融合
-//                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
-//                      mergeInFlame = true
-//                      mergeCells = cell2 :: mergeCells
-//                    }
-//                  }
-//                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
-//                    mergeInFlame = true
-//                    deleteCells = cell :: deleteCells
-//                  }
-//                }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
@@ -177,7 +164,6 @@ class GameClient (override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
