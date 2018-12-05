@@ -72,7 +72,7 @@ lazy val frontend = (project in file("frontend"))
       "io.circe" %%% "circe-parser" % "0.8.0",
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "io.suzaku" %%% "diode" % "1.1.2",
-      "in.nvilla" %%% "monadic-html" % "0.4.0-RC1" withSources(),
+      "in.nvilla" %%% "monadic-html" % "0.4.0-RC1",
       //"com.lihaoyi" %%% "upickle" % "0.6.6",
       "com.lihaoyi" %%% "scalatags" % "0.6.5",
       "org.scala-lang.modules" %% "scala-swing" % "2.0.1",
