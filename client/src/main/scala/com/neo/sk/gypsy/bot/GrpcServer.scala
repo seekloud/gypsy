@@ -7,6 +7,7 @@ import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
 class GrpcServer {
 
   private var server: Option[Server] = None
@@ -25,7 +26,6 @@ class GrpcServer {
   def stop(): Unit = server.foreach(_.shutdown())
 
   def blockUntilShutdown(): Unit = server.foreach(_.awaitTermination())
-
 
 }
 
