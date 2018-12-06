@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.bot
 
+import akka.actor.typed.ActorRef
+import com.neo.sk.gypsy.actor.BotActor
 import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
@@ -10,9 +12,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object EsheepServer {
 
-  def build(port: Int, executionContext: ExecutionContext): Server = {
+  def build(port: Int, executionContext: ExecutionContext, botActor:  ActorRef[BotActor.Command]): Server = {
 
-    val service = new EsheepService()
+    val service = new EsheepService(botActor)
 
     ServerBuilder.forPort(port).addService(
       EsheepAgentGrpc.bindService(service, executionContext)
@@ -21,30 +23,30 @@ object EsheepServer {
   }
 
 
-  def main(args: Array[String]): Unit = {
-
-    val executor = concurrent.ExecutionContext.Implicits.global
-    val port = 5321
-
-    val server = EsheepServer.build(port, executor)
-    server.start()
-    println(s"Server started at $port")
-
-    sys.addShutdownHook {
-      println("JVM SHUT DOWN.")
-      server.shutdown()
-      println("SHUT DOWN.")
-    }
-
-    server.awaitTermination()
-    println("DONE.")
-
-  }
+//  def main(args: Array[String]): Unit = {
+//
+//    val executor = concurrent.ExecutionContext.Implicits.global
+//    val port = 5321
+//
+//    val server = EsheepServer.build(port, executor)
+//    server.start()
+//    println(s"Server started at $port")
+//
+//    sys.addShutdownHook {
+//      println("JVM SHUT DOWN.")
+//      server.shutdown()
+//      println("SHUT DOWN.")
+//    }
+//
+//    server.awaitTermination()
+//    println("DONE.")
+//
+//  }
 
 }
 
 
-class EsheepService() extends EsheepAgent {
+class EsheepService(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
   override def createRoom(request: Credit): Future[CreateRoomRsp] = {
     println(s"createRoom Called by [$request")
     val state = State.init_game
