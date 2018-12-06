@@ -73,7 +73,7 @@ object EsheepSyncClient {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case RefreshToken =>
-//          log.info("000000000000000001")
+          log.info("000000000000000001")
           if(AppSettings.esheepAuthToken){
             EsheepClient.gsKey2Token().onComplete{
               case Success(rst) =>
@@ -82,7 +82,7 @@ object EsheepSyncClient {
                     ctx.self ! SwitchBehavior("work",work(rsp))
 
                   case Left(error) =>
-                    log.error(s"${ctx.self.path} get token failed.error:${error.msg}")
+                    log.error(s"${ctx.self.path} get token failed.error: Code=> ${error.errCode} Msg: ${error.msg}")
                     ctx.self ! SwitchBehavior("stop", Behaviors.stopped)
                 }
               case Failure(error) =>

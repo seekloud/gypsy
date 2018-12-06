@@ -41,7 +41,7 @@ object EsheepClient extends HttpUtil {
 
     postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
-//        log.info("000000000000000003 ")
+        log.info("000000000000000003 ")
         decode[EsheepProtocol.GameServerKey2TokenRsp](jsonStr) match {
           case Right(rsp) =>
             if(rsp.errCode == 0){
@@ -56,7 +56,9 @@ object EsheepClient extends HttpUtil {
             Left(ErrorRsp(-1, error.getMessage))
         }
       case Left(error) =>
-        log.debug(s"${methodName}  failed,error:${error.getMessage}")
+//        log.debug(s"${methodName}  failed,error:${error.getMessage}")
+        log.info(s"${methodName}  failed,error:${error.getMessage}")
+        log.info(s"${url}  data:${data}")
         Left(ErrorRsp(-1,error.getMessage))
     }
   }
