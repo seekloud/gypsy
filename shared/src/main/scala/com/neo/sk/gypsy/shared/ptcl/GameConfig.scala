@@ -24,7 +24,6 @@ object GameConfig {
   val splitBaseSpeed = 40
   //食物质量
   val foodMass = 1
-
   //食物池
   var foodPool = 300
   //病毒数量
