@@ -41,7 +41,7 @@ object EsheepClient extends HttpUtil {
 
     postJsonRequestSend(methodName,url,Nil,data).map{
       case Right(jsonStr) =>
-        log.info("000000000000000003 ")
+//        log.info("000000000000000003 ")
         decode[EsheepProtocol.GameServerKey2TokenRsp](jsonStr) match {
           case Right(rsp) =>
             if(rsp.errCode == 0){
