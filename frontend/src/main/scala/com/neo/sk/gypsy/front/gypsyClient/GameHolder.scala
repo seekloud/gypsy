@@ -434,7 +434,11 @@ class GameHolder(replay:Boolean = false) {
         //某个用户离开
       case Protocol.PlayerLeft(id,name) =>
         grid.removePlayer(id)
-        if(id == myId){
+        if(id == myId && usertype == -1){
+          //观看的用户离开房间
+          drawTopView.drawWhenFinish("您观看的玩家已离开……")
+          gameClose
+        }else if(id==myId){
           gameClose
         }
 
