@@ -72,6 +72,8 @@ class GameCanvas(canvas: Canvas,
   val bounds = Point(Boundary.w, Boundary.h)
 
   var realWindow = Point(size.x,size.y)
+  var screeScale = if( realWindow.x / Window.w > realWindow.y/Window.h) realWindow.y / Window.h else realWindow.x / Window.w
+
 
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
@@ -97,7 +99,7 @@ class GameCanvas(canvas: Canvas,
     canvas.setHeight(height)
     canvas.setWidth(width)
     realWindow = Point(width,height)
-
+    screeScale = if( realWindow.x / Window.w > realWindow.y/Window.h) realWindow.y / Window.h else realWindow.x / Window.w
   }
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -354,7 +356,7 @@ class GameCanvas(canvas: Canvas,
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2,1200,600)
+    val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
     //var scale = data.scale
 
     //绘制背景
