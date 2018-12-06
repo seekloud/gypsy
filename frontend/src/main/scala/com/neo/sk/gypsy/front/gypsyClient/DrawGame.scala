@@ -106,10 +106,11 @@ case class DrawGame(
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
-    val myHeader = "#cccccc"
+    val myHeader = "#AEEEEE"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
     val otherBody = "#696969"
+    val bigPlayer = "#FF8C69"
   }
 
   val mapMargin = 20
@@ -527,7 +528,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),offsetTime:Long)={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
@@ -588,9 +589,35 @@ case class DrawGame(
       drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index, currentRankBaseLine)
     }*/
     //绘制小地图
-
-    ctx.fillStyle = MyColors.background
-    players.find(_.id == uid) match {
+    ctx.fillStyle = MyColors.bigPlayer
+    val bigPlayers=players.filter(player=>player.cells.map(_.mass).sum>1000 && player.id!=uid)
+    bigPlayers.map{player=>
+      var sumX = 0.0
+      var sumY = 0.0
+      var xMax = 0.0
+      var xMin = 10000.0
+      var yMin = 10000.0
+      var yMax = 0.0
+      player.cells.foreach { cell =>
+        val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
+        val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
+        val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
+        val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
+        if (newX>xMax) xMax=newX
+        if (newX<xMin) xMin=newX
+        if (newY>yMax) yMax=newY
+        if (newY<yMin) yMin=newY
+        sumX += newX
+        sumY += newY
+      }
+      val offx = sumX /player.cells.length
+      val offy = sumY /player.cells.length
+      ctx.beginPath()
+      ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,0,2*Math.PI)
+      ctx.fill()
+    }
+    ctx.fillStyle = MyColors.myHeader
+    players.find(player=>player.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
