@@ -7,6 +7,7 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
+import akka.actor.typed.scaladsl.adapter._
 
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
@@ -69,7 +70,7 @@ class BotHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
-  private val botActor = ClientBoot.system.spawn(BotActor.create(this))
+  private val botActor = ClientBoot.system.spawn(BotActor.create(this),"BotActor")
 
 
 
@@ -152,7 +153,7 @@ class BotHolder(
     grid.update()
   }
 
-  private def wsMessageHandler(data:GameMessage):Unit = {
+  def gameMessageHandler(data:GameMessage):Unit = {
     data match {
       case Protocol.Id(id) =>
         myId = id

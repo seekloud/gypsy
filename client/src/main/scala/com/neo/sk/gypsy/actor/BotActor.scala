@@ -173,7 +173,7 @@ object BotActor {
         //decode process.
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         bytesDecode[GameMessage](buffer) match {
-          case Right(v) => botController.gameMessageReceiver(v)
+          case Right(v) => botController.gameMessageHandler(v)
           case Left(e) =>
             println(s"decode error: ${e.message}")
         }
@@ -186,7 +186,7 @@ object BotActor {
         f.map { bMsg =>
           val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
           bytesDecode[GameMessage](buffer) match {
-            case Right(v) => botController.gameMessageReceiver(v)
+            case Right(v) => botController.gameMessageHandler(v)
             case Left(e) =>
               println(s"decode error: ${e.message}")
           }
@@ -215,14 +215,14 @@ object BotActor {
   def getJoinRoomWebSocketUri(roomId: String, playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 
   def getCreateRoomWebSocketUri(playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 
