@@ -1,14 +1,14 @@
 package com.neo.sk.gypsy.holder
 
-import com.neo.sk.gypsy.ClientBoot._
+import akka.actor.typed.ActorRef
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
 
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-import akka.actor.typed.scaladsl.adapter._
 
+import akka.actor.typed.scaladsl.adapter._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
@@ -19,6 +19,7 @@ import com.neo.sk.gypsy.scene.GameScene
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.ClientBoot
+import com.neo.sk.gypsy.actor.BotActor.MsgToService
 import com.neo.sk.gypsy.actor.{BotActor, GameClient}
 
 import scala.math.atan2
@@ -205,7 +206,7 @@ class BotHolder(
         if(myId == id){
           if(gameState == GameState.dead){
             println(s"发送复活确认")
-            botActor ! ReLiveAck(id)
+            botActor ! MsgToService(ReLiveAck(id))
             gameState = GameState.play
           }
           //TODO drawTopView.cleanCtx()

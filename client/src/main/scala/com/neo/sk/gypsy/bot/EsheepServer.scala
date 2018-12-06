@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.bot
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.actor.BotActor
+import com.neo.sk.gypsy.actor.BotActor.CreateRoom
 import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
@@ -22,33 +23,13 @@ object EsheepServer {
 
   }
 
-
-//  def main(args: Array[String]): Unit = {
-//
-//    val executor = concurrent.ExecutionContext.Implicits.global
-//    val port = 5321
-//
-//    val server = EsheepServer.build(port, executor)
-//    server.start()
-//    println(s"Server started at $port")
-//
-//    sys.addShutdownHook {
-//      println("JVM SHUT DOWN.")
-//      server.shutdown()
-//      println("SHUT DOWN.")
-//    }
-//
-//    server.awaitTermination()
-//    println("DONE.")
-//
-//  }
-
 }
 
 
 class EsheepService(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
   override def createRoom(request: Credit): Future[CreateRoomRsp] = {
     println(s"createRoom Called by [$request")
+    botActor ! CreateRoom(request.playerId,request.apiToken)
     val state = State.init_game
     Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
   }
