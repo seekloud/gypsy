@@ -36,7 +36,6 @@
     <orderEntry type="library" name="sbt: com.typesafe.akka:akka-stream-typed_2.12:2.5.13:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.akka:akka-stream_2.12:2.5.13:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.akka:akka-testkit_2.12:2.5.12:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.typesafe.netty:netty-reactive-streams:1.0.8:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.slick:slick-codegen_2.12:3.2.1:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.slick:slick_2.12:3.2.1:jar" level="project" />
     <orderEntry type="library" name="sbt: com.zaxxer:HikariCP:2.6.2:jar" level="project" />
@@ -47,16 +46,10 @@
     <orderEntry type="library" name="sbt: io.circe:circe-jawn_2.12:0.9.3:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-numbers_2.12:0.9.3:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-parser_2.12:0.9.3:jar" level="project" />
-    <orderEntry type="library" name="sbt: io.netty:netty-transport-native-epoll:4.0.46.Final:linux-x86_64:jar" level="project" />
     <orderEntry type="library" name="sbt: joda-time:joda-time:2.9.7:jar" level="project" />
     <orderEntry type="library" name="sbt: net.sf.ehcache:ehcache:2.10.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.commons:commons-dbcp2:2.1.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.commons:commons-pool2:2.4.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.asynchttpclient:async-http-client:2.0.32:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.asynchttpclient:async-http-client-netty-utils:2.0.32:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.asynchttpclient:netty-codec-dns:2.0.32:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.asynchttpclient:netty-resolver:2.0.32:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.asynchttpclient:netty-resolver-dns:2.0.32:jar" level="project" />
     <orderEntry type="library" name="sbt: org.joda:joda-convert:1.8.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.postgresql:postgresql:9.4.1208:jar" level="project" />
     <orderEntry type="library" name="sbt: org.reactivestreams:reactive-streams:1.0.2:jar" level="project" />
@@ -111,15 +104,13 @@
     <orderEntry type="library" name="sbt: io.opencensus:opencensus-api:0.12.3:jar" level="project" />
     <orderEntry type="library" name="sbt: io.opencensus:opencensus-contrib-grpc-metrics:0.12.3:jar" level="project" />
     <orderEntry type="library" name="sbt: org.codehaus.mojo:animal-sniffer-annotations:1.17:jar" level="project" />
-    <orderEntry type="module-library">
-      <library name="sbt: unmanaged-sources-and-docs">
-        <CLASSES />
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.ivy2/cache/io.netty/netty-transport-native-epoll/srcs/netty-transport-native-epoll-4.0.46.Final-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
+    <orderEntry type="library" name="sbt: com.sun.activation:javax.activation:1.2.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.typesafe.netty:netty-reactive-streams:2.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.netty:netty-codec-dns:4.1.27.Final:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.netty:netty-resolver-dns:4.1.27.Final:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.netty:netty-transport-native-epoll:4.1.27.Final:linux-x86_64:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.netty:netty-transport-native-unix-common:4.1.27.Final:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.asynchttpclient:async-http-client:2.5.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.asynchttpclient:async-http-client-netty-utils:2.5.2:jar" level="project" />
   </component>
 </module>
