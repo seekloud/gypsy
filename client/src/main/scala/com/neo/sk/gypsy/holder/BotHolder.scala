@@ -43,12 +43,7 @@ object BotHolder {
   val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
-    KeyCode.SPACE,
-    KeyCode.LEFT,
-    KeyCode.UP,
-    KeyCode.RIGHT,
-    KeyCode.DOWN,
-    KeyCode.ESCAPE
+    KeyCode.SPACE
   )
 
   def keyCode2Int(c: KeyCode) = {
@@ -56,10 +51,6 @@ object BotHolder {
       case KeyCode.E => KeyEvent.VK_E
       case KeyCode.F => KeyEvent.VK_F
       case KeyCode.SPACE => KeyEvent.VK_SPACE
-      case KeyCode.LEFT => KeyEvent.VK_LEFT
-      case KeyCode.UP => KeyEvent.VK_UP
-      case KeyCode.RIGHT => KeyEvent.VK_RIGHT
-      case KeyCode.DOWN => KeyEvent.VK_DOWN
       case KeyCode.F2 => KeyEvent.VK_F2
       case _ => KeyEvent.VK_F2
     }
@@ -78,10 +69,10 @@ class BotHolder(
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
-  def connectToGameServer(gameHolder:GameHolder) = {
+  def connectToGameServer(botHolder:BotHolder) = {
     ClientBoot.addToPlatform{
       stageCtx.showScene(gameScene.scene,"Gaming",false)
-      gameClient ! ControllerInitial(gameHolder)
+      gameClient ! ControllerInitial(botHolder)
       //TODO 写在这里未必合适
       ClientBoot.addToPlatform(
         start()

@@ -3,8 +3,9 @@ package com.neo.sk.gypsy.common
 import java.awt.event.KeyEvent
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
+import scala.math._
 
-import org.seekloud.esheepapi.pb.actions.Move
+import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 
 object Constant {
@@ -39,7 +40,12 @@ object Constant {
     }
   }
 
-  def
+  def swingToXY(swing:Swing):(Int,Int)={
+    val angle = swing.radian
+    val distan = swing.distance
+    ((cos(angle)*distan).toInt,(sin(angle)*distan).toInt)
+  }
+
 
   val CanvasWidth = 800
   val CanvasHeight = 600
