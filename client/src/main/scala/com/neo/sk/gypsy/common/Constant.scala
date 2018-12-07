@@ -12,6 +12,20 @@ object Constant {
 
 
 
+  object ColorsSetting {
+    val backgroundColor: Color = Color.rgb(245, 245, 245)
+    val fontColor: Color = Color.BLACK
+    val gameNameColor: Color = Color.rgb(91, 196, 140)
+    val defaultColor: Color = Color.rgb(0, 0, 128)
+    val borderColor: Color = Color.rgb(105, 105, 105)
+    val mapColor: Color = Color.rgb(192, 192, 192)
+    val redColor: Color = Color.RED
+    val greenColor: Color = Color.GREEN
+    val yellowColor: Color = Color.YELLOW
+    val dieInfoBackgroundColor: Color = Color.rgb(51, 51, 51)
+    val dieInfoFontColor: Color = Color.rgb(224, 238, 253)
+  }
+
   def hex2Rgb(hex: String) = {
     val red = hexToDec(hex.slice(1, 3))
     val green = hexToDec(hex.slice(3, 5))
