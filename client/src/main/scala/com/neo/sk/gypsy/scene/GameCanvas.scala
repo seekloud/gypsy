@@ -79,10 +79,11 @@ class GameCanvas(canvas: Canvas,
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
-    val myHeader = "#cccccc"
+    val myHeader = "#AEEEEE"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
     val otherBody = "#696969"
+    val bigPlayer = "#FF8C69"
   }
 
   val littleMap = 200
@@ -480,13 +481,16 @@ class GameCanvas(canvas: Canvas,
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         // println(nameFont)
         ctx.setFont(Font.font("Helvetica",nameFont))
+        var playermass=cell.mass
         val txt3=new Text(name)
+        val txt4=new Text(playermass.toString)
         val nameWidth = txt3.getLayoutBounds.getWidth
+        val massWidth = txt4.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
-
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
       }
     }
@@ -514,7 +518,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition])={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font("Helvetica",12))
@@ -576,7 +580,16 @@ class GameCanvas(canvas: Canvas,
     }*/
     //绘制小地图
 
-    ctx.setFill(Color.web(MyColors.background))
+    ctx.setFill(Color.web(MyColors.bigPlayer))
+    bigPlayerPosition.filterNot(_.id==uid).map{player=>
+      val offx = player.x.toDouble
+      val offy = player.y.toDouble
+      ctx.beginPath()
+      ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,8,0,360)
+      ctx.fill()
+    }
+
+    ctx.setFill(Color.web(MyColors.myHeader))
     players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
