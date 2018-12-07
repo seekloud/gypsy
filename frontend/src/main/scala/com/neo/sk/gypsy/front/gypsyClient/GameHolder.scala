@@ -281,7 +281,7 @@ class GameHolder(replay:Boolean = false) {
           //TODO 食物没有做是否在屏幕中的判断
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,offsetTime)
+          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
           ctx.save()
           ctx.font = s"${34 * window.x / Window.w}px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
