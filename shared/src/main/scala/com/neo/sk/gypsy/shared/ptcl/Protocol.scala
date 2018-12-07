@@ -81,7 +81,7 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-  case class TextInfo(msg:String) extends UserAction
+//  case class TextInfo(msg:String) extends UserAction
 
   case class MousePosition(id: String,clientX:Double,clientY:Double, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
 

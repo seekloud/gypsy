@@ -196,7 +196,7 @@ object WsClient {
         }
       case BinaryMessage.Strict(bMsg) =>
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
-        bytesDecode[WsResponce](buffer) match {
+        bytesDecode[WsResponse](buffer) match {
           case Right(v) =>
           case Left(e) =>
             println(s"decode error: ${e.message}")
