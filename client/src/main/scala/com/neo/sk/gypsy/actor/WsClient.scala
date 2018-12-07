@@ -86,7 +86,8 @@ object WsClient {
             if(upgrade.response.status == StatusCodes.SwitchingProtocols){
               val gameScene = new GameScene()
               val gameHolder = new GameHolder(stageCtx,gameScene,stream)
-              gameHolder.connectToGameServer(gameHolder)
+//              gameHolder.connectToGameServer(gameHolder)
+              gameHolder.connectToGameServer()
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
             } else {
               throw new RuntimeException(s"WSClient connection failed: ${upgrade.response.status}")
