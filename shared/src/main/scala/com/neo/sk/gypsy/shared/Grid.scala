@@ -537,9 +537,7 @@ trait Grid {
     val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     val width = winWidth / scale / 2
     val height = winHeight / scale / 2
-    println("get position")
     val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.mass).sum>30).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
-    println("get successful")
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
