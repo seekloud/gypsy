@@ -556,7 +556,6 @@ case class DrawGame(
       imgOpt.foreach{ img =>
         ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
       }
-      print("why not")
       if(score.id == uid){
         ctx.save()
         ctx.font = "12px Helvetica"
@@ -592,10 +591,10 @@ case class DrawGame(
     }*/
     //绘制小地图
     ctx.fillStyle = MyColors.bigPlayer
-    bigPlayerPosition.map{player=>
+    bigPlayerPosition.filterNot(_.id==uid).map{player=>
       println("TEST"+player.id)
-      val offx = player.x
-      val offy = player.y
+      val offx = player.x.toDouble
+      val offy = player.y.toDouble
       ctx.beginPath()
       ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,0,2*Math.PI)
       ctx.fill()
