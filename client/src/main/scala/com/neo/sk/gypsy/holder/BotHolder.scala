@@ -12,8 +12,7 @@ import akka.actor.typed.scaladsl.adapter._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.GameScene
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import java.awt.event.KeyEvent
@@ -64,7 +63,7 @@ object BotHolder {
 }
 class BotHolder(
                   stageCtx: StageContext,
-                  gameScene: GameScene,
+                  gameScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
