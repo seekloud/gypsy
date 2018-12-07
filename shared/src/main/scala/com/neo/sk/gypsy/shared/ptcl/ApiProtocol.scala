@@ -126,7 +126,8 @@ object ApiProtocol {
 
   case class RecordFrameInfo(
                               frame:Int,
-                              frameNum:Long
+                              frameNum:Long,
+                              frameDuration:Long
                             )
 
   case class LoginData(
@@ -146,13 +147,13 @@ object ApiProtocol {
                      headImg:Option[String],
                      gender:Option[Int]
                    )
-  case class WsResponce(
+  case class WsResponse(
                        data:WsData,
                        errCode:Int = 0,
                        msg:String = "ok"
                        )
   case class Ws4AgentResponse(
-                               Ws4AgentRsp:WsResponce
+                               Ws4AgentRsp:WsResponse
                              )
 
   case class LinkGameData(
