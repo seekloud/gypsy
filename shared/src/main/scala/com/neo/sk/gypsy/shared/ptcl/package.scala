@@ -78,6 +78,14 @@ package object ptcl {
                    cells:List[Cell],//分裂
                    startTime:Long=System.currentTimeMillis()
                    )
+
+  case class PlayerPosition(
+                             id:String,
+                             x:Int,
+                             y:Int,
+                             targetX:Int = 0,//运动方向，大部分做了归一化
+                             targetY:Int = 0,
+                           )
   case class Cell(
                  id:Long,
                  x:Int,

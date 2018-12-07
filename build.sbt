@@ -103,6 +103,7 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
   )
   .settings(
     libraryDependencies ++= Dependencies.backendDependencies ++ Dependencies.grpcSeq
+    //libraryDependencies ++= Dependencies.backendDependencies
   )
   .settings {
     (resourceGenerators in Compile) += Def.task {
