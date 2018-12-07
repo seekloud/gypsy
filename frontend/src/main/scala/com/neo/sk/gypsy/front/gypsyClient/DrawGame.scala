@@ -501,7 +501,7 @@ case class DrawGame(
         ctx.strokeStyle = "grey"
         ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy - (nameFont.toInt * 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt)
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
       }
@@ -556,6 +556,7 @@ case class DrawGame(
       imgOpt.foreach{ img =>
         ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
       }
+      print("why not")
       if(score.id == uid){
         ctx.save()
         ctx.font = "12px Helvetica"
@@ -591,21 +592,19 @@ case class DrawGame(
     }*/
     //绘制小地图
     ctx.fillStyle = MyColors.bigPlayer
-    //val bigPlayers=bigPlayerPositis.filter(player=>player.cells.map(_.mass).sum>50 && player.id!=uid)
-    //val bigPlayersScore = currentRank.filter(i=>i.score.score>30&&i.score.id!=uid)
-    //val bigPlayers=players.filter(i=>i.id)
     bigPlayerPosition.map{player=>
-      //println("TEST"+player.name)
+      println("TEST"+player.id)
       val offx = player.x
       val offy = player.y
       ctx.beginPath()
       ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,0,2*Math.PI)
       ctx.fill()
-      //println("down"+player.name)
+      println("down"+player.id)
     }
     ctx.fillStyle = MyColors.myHeader
     players.find(player=>player.id == uid) match {
       case Some(player)=>
+        println("hehehhhehehehe")
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
         ctx.fill()
