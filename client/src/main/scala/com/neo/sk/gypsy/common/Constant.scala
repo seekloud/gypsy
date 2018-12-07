@@ -39,7 +39,6 @@ object Constant {
     }
   }
 
-  def
 
   val CanvasWidth = 800
   val CanvasHeight = 600
