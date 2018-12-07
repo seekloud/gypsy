@@ -494,14 +494,15 @@ case class DrawGame(
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        // println(nameFont)
+        var playermass=cells.map(_.mass).sum
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
+        val massWidth = ctx.measureText(playermass.toString).width
         ctx.strokeStyle = "grey"
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
-
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy - (nameFont.toInt * 2))
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
       }
     }
@@ -528,7 +529,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),offsetTime:Long)={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long)={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
@@ -590,31 +591,17 @@ case class DrawGame(
     }*/
     //绘制小地图
     ctx.fillStyle = MyColors.bigPlayer
-    val bigPlayers=players.filter(player=>player.cells.map(_.mass).sum>1000 && player.id!=uid)
-    bigPlayers.map{player=>
-      var sumX = 0.0
-      var sumY = 0.0
-      var xMax = 0.0
-      var xMin = 10000.0
-      var yMin = 10000.0
-      var yMax = 0.0
-      player.cells.foreach { cell =>
-        val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-        val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
-        val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
-        val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
-        if (newX>xMax) xMax=newX
-        if (newX<xMin) xMin=newX
-        if (newY>yMax) yMax=newY
-        if (newY<yMin) yMin=newY
-        sumX += newX
-        sumY += newY
-      }
-      val offx = sumX /player.cells.length
-      val offy = sumY /player.cells.length
+    //val bigPlayers=bigPlayerPositis.filter(player=>player.cells.map(_.mass).sum>50 && player.id!=uid)
+    //val bigPlayersScore = currentRank.filter(i=>i.score.score>30&&i.score.id!=uid)
+    //val bigPlayers=players.filter(i=>i.id)
+    bigPlayerPosition.map{player=>
+      //println("TEST"+player.name)
+      val offx = player.x
+      val offy = player.y
       ctx.beginPath()
       ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,0,2*Math.PI)
       ctx.fill()
+      //println("down"+player.name)
     }
     ctx.fillStyle = MyColors.myHeader
     players.find(player=>player.id == uid) match {

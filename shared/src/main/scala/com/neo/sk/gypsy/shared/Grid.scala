@@ -517,7 +517,15 @@ trait Grid {
 //    update()
 //    getGridData(myId)
 //  }
-
+/*implicit val Ordering = new Ordering[Score] {
+  override def compare(x: Score, y: Score): Int = {
+    var r = (y.score - x.score).toInt
+    if (r == 0) {
+      r = (y.k - x.k).toInt
+    }
+    r
+  }
+}*/
   /**
     * method: getGridData
     * describe: 获取自己视角中的全量数据
@@ -529,7 +537,7 @@ trait Grid {
     val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     val width = winWidth / scale / 2
     val height = winHeight / scale / 2
-
+    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.mass).sum>30).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
@@ -543,7 +551,8 @@ trait Grid {
       playerDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
-      scale
+      scale,
+      allPlayerPosition
     )
   }
 

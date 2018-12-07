@@ -102,7 +102,8 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
     packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(
-    libraryDependencies ++= Dependencies.backendDependencies ++ Dependencies.grpcSeq
+    //libraryDependencies ++= Dependencies.backendDependencies ++ Dependencies.grpcSeq
+    libraryDependencies ++= Dependencies.backendDependencies
   )
   .settings {
     (resourceGenerators in Compile) += Def.task {
