@@ -103,7 +103,7 @@ class GameHolder(
   }
 
   def start()={
-    println("start---")
+    println("start---!!!")
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
