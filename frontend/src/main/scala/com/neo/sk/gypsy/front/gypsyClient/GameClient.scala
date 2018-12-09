@@ -28,8 +28,7 @@ class GameClient (override val boundary: Point) extends Grid {
 
 //  var currentRank = List.empty[Score]
   var currentRank = List.empty[RankInfo]
-  //fixme 此处变量未有实际用途
-//  var historyRank = List.empty[Score]
+  //  var historyRank = List.empty[Score]
   //序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
@@ -78,7 +77,7 @@ class GameClient (override val boundary: Point) extends Grid {
 //                }
               }
             }
-            List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+            List(Cell(cell.id, cellX, cellY, cell.mass, cell.newmass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -103,7 +102,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var vSplitCells = List[Cell]()
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
             virusMap.foreach { vi =>
@@ -128,7 +127,7 @@ class GameClient (override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
 
         val length = newCells.length
@@ -153,7 +152,7 @@ class GameClient (override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             food.foreach {
               case (p, color) =>
@@ -167,7 +166,7 @@ class GameClient (override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -188,7 +187,7 @@ class GameClient (override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
               case p: Mass =>
@@ -198,7 +197,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -208,7 +207,6 @@ class GameClient (override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }

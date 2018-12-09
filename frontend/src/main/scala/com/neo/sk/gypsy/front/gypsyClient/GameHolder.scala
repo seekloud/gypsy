@@ -252,6 +252,7 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, window.x, window.y)
+//      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
           firstCome=false
@@ -278,9 +279,8 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          //TODO 食物没有做是否在屏幕中的判断
           val foods = grid.food
-          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
+          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
           ctx.save()
           ctx.font = "34px Helvetica"
@@ -434,11 +434,7 @@ class GameHolder(replay:Boolean = false) {
         //某个用户离开
       case Protocol.PlayerLeft(id,name) =>
         grid.removePlayer(id)
-        if(id == myId && usertype == -1){
-          //观看的用户离开房间
-          drawTopView.drawWhenFinish("您观看的玩家已离开……")
-          gameClose
-        }else if(id==myId){
+        if(id == myId){
           gameClose
         }
 

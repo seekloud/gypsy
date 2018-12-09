@@ -166,7 +166,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val score = player.cells.map(_.mass).sum
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
               p._2.cells.foreach { otherCell =>
@@ -183,8 +183,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
-        }.filterNot(_.mass <= 0)
+//            println(cell.mass + "   " + newMass)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
+        }.filterNot(_.newmass <= 0)
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
             case Some(killerPlayer) =>
@@ -240,7 +241,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var newRadius = cell.radius
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var cellX = cell.x
             var cellY = cell.y
             //自身cell合并检测
@@ -250,7 +251,6 @@ class GameServer(override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  //todo 这里难道不是还是会重合吗
                     if (cell.x < cell2.x) cellX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
                     else if (cell.x > cell2.x) cellX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
                     if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
@@ -258,6 +258,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
                 }
                 else if (distance < radiusTotal / 2) {
+                  /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
                   if (cell.radius > cell2.radius) {
                     //被融合的细胞不能再被其他细胞融合
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
@@ -276,8 +277,8 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cellX, cellY, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }.filterNot(_.mass <= 0)
+            List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+        }.filterNot(_.newmass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -309,7 +310,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var vSplitCells = List[Cell]()
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
             virusMap.foreach { vi =>
@@ -326,15 +327,16 @@ class GameServer(override val boundary: Point) extends Grid {
                 for (i <- 0 until v.splitNumber) {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
-                  val startLen = (newRadius + cellRadius) * 1.2*3
+                  val startLen = (newRadius + cellRadius) * 1.2 * 3
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 0, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+            /**1+13**/
+            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -362,7 +364,7 @@ class GameServer(override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             food.foreach {
               case (p, color) =>
@@ -377,7 +379,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -398,7 +400,7 @@ class GameServer(override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
               case p: Mass =>
@@ -408,7 +410,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -488,9 +490,12 @@ class GameServer(override val boundary: Point) extends Grid {
       case (p,mass) =>
         newFoodDetails ::= Food(mass, p.x, p.y)
     }
-    playerMap.foreach{
-      case (id,player) =>
-        playerDetails ::= player
+    playerMap = playerMap.map{
+      item =>
+        val  newcells  = item._2.cells.map(cell => cell.copy(mass = cell.newmass))
+        val newplayer = item._2.copy(cells = newcells)
+        playerDetails ::= newplayer
+        item.copy(_2 = newplayer)
     }
     eatenFoods.foreach{
       case (p,mass) =>
