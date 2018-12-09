@@ -46,9 +46,6 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Int]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
-//  private [this] var userLists = mutable.ListBuffer[UserInfo]()
-
-
   var currentRank = List.empty[Score]
 //  private[this] var historyRankMap = Map.empty[String, Score]
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
@@ -263,7 +260,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     //被融合的细胞不能再被其他细胞融合
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
                       playerIsMerge=true
-                      newMass += cell2.mass
+                      newMass += cell2.newmass
                       newRadius = 4 + sqrt(newMass) * mass2rRate
                       mergeCells = cell2 :: mergeCells
                     }
