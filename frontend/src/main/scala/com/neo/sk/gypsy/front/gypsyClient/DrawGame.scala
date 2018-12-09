@@ -369,7 +369,7 @@ case class DrawGame(
     }
   }
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -439,7 +439,7 @@ case class DrawGame(
       }
     }
 
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
 //        case 0 => circle //(243,69,109)   b30e35
 //        case 1 => circle1 //(244, 153, 48)  a65d0a
@@ -475,14 +475,17 @@ case class DrawGame(
         case 22=>star22 //(243,69,109)   b30e35
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
-      cells.sortBy(_.id).foreach{ cell=>
-
+      var cellDifference = false
+      val newcells = cells.sortBy(_.id).map{ cell =>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
-        ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
+        /**关键：根据mass来改变大小**/
+        val radius = 4 + sqrt(cell.mass)*6
+        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+        //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
         //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
         if(protect){
@@ -503,7 +506,30 @@ case class DrawGame(
         ctx.fillStyle = MyColors.background
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
         ctx.restore()
+
+        /**膨胀、缩小效果**/
+        var newcell = cell
+        println(cell.mass +"  "+cell.newmass)
+        if(cell.mass != cell.newmass){
+          //根据差值来膨胀或缩小
+          cellDifference = true
+          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
+          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+        }
+        newcell
       }
+        if(cellDifference){
+          //改变player的x,y
+          val length = newcells.length
+          val newX = newcells.map(_.x).sum / length
+          val newY = newcells.map(_.y).sum / length
+          val left = newcells.map(a => a.x - a.radius).min
+          val right = newcells.map(a => a.x + a.radius).max
+          val bottom = newcells.map(a => a.y - a.radius).min
+          val top = newcells.map(a => a.y + a.radius).max
+          val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+          gird.playerMap += (id -> player)
+        }
     }
 
     virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>

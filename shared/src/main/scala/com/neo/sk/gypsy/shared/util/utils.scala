@@ -30,7 +30,7 @@ object utils {
     if(width < newCWidth/2 && height < newCHeight/2){
 
     }else{
-      scale = if(newCWidth/2/width>newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
+      scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
 //      scale = List(300.0/height,600.0/width).min
     }
     scale
