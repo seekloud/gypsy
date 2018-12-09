@@ -378,7 +378,6 @@ case class DrawGame(
 
     val offx= this.canvas.width/2 - basePoint._1
     val offy =this.canvas.height/2 - basePoint._2
-    //    println(s"zoom：$zoom")
 
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
 
@@ -486,8 +485,6 @@ case class DrawGame(
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
         //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
-        //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
-        //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()
@@ -497,7 +494,6 @@ case class DrawGame(
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        // println(nameFont)
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
         ctx.strokeStyle = "grey"
@@ -560,8 +556,6 @@ case class DrawGame(
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.font = "12px Helvetica"
-    //    ctx.fillStyle = MyColors.rankList
-    //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
     ctx.fillStyle = MyColors.background
     drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
@@ -569,7 +563,6 @@ case class DrawGame(
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
       val score = rank._1.score
-//      val index = rank._2+1
       val index = rank._1.index
 
       val imgOpt = index match {
@@ -592,28 +585,6 @@ case class DrawGame(
       }
 
     }
-
-/*      currentRank.foreach { score =>
-      index += 1
-      val drawColor = index match {
-        case 1 => "#FFD700"
-        case 2 => "#D1D1D1"
-        case 3 => "#8B5A00"
-        case _ => "#CAE1FF"
-      }
-      val imgOpt = index match {
-        case 1 => Some(goldImg)
-        case 2 => Some(silverImg)
-        case 3 => Some(bronzeImg)
-        case _ => None
-      }
-      imgOpt.foreach{ img =>
-        ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
-      }
-      //      ctx3.strokeStyle = drawColor
-      //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index, currentRankBaseLine)
-    }*/
     //绘制小地图
 
     ctx.fillStyle = MyColors.background
@@ -623,15 +594,11 @@ case class DrawGame(
         ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)
         ctx.fill()
       case None=>
-      // println(s"${basePoint._1},  ${basePoint._2}")
     }
   }
 
 
   def drawWhenDead(msg:Protocol.UserDeadMessage)={
-//    ctx.fillStyle = "#ccc"//Color.Black.toString()
-//    val showTime = MTime2HMS(msg.lifeTime)
-
     ctx.fillStyle = "#000"//Color.Black.toString()
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
@@ -650,8 +617,6 @@ case class DrawGame(
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
     ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
-//    DrawLeft = Width*0.56+Width*0.12
-//    DrawLeft = Width*0.56
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
     ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
@@ -666,7 +631,6 @@ case class DrawGame(
     ctx.font = s"${30 * this.canvas.width / Window.w}px Helvetica"
     ctx.fillStyle = "#fff"
     ctx.fillText(msg, 80, 30)
-    //    ctx.fillText(msg, this.canvas.width * 0.5 - ctx.measureText(msg).width * 0.5, this.canvas.height* 0.5)
   }
 
 
