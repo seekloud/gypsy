@@ -481,9 +481,8 @@ class GameCanvas(canvas: Canvas,
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        // println(nameFont)
         ctx.setFont(Font.font("Helvetica",nameFont))
-        var playermass=cell.mass
+        var playermass=cell.mass.toInt
         val txt3=new Text(name)
         val txt4=new Text(playermass.toString)
         val nameWidth = txt3.getLayoutBounds.getWidth

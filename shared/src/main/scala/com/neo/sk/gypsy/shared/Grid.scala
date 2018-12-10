@@ -57,6 +57,8 @@ trait Grid {
 
   val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
 
+  val bigPlayerMass = 500.0
+
   var deadPlayerMap=Map.empty[Long,Player]
 
   //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
@@ -503,7 +505,7 @@ trait Grid {
     val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     val width = winWidth / scale / 2
     val height = winHeight / scale / 2
-    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.mass).sum>30).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
+    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.mass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
