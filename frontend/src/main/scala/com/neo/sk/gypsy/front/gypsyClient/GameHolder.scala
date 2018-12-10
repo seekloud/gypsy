@@ -60,6 +60,7 @@ class GameHolder(replay:Boolean = false) {
   var usertype = 0
   var nextFrame = 0
   var nextInt = 0
+  var FormerDegree = 0D
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
@@ -222,7 +223,7 @@ class GameHolder(replay:Boolean = false) {
     def getDegree(x:Double,y:Double)= {
       atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
-    var FormerDegree = 0D
+
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) => {
       val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
