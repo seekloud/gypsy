@@ -25,11 +25,7 @@ class GameClient (override val boundary: Point) extends Grid {
 
   override def feedApple(appleCount: Int): Unit = {} //do nothing.
   override def addVirus(v: Int): Unit = {}
-
-//  var currentRank = List.empty[Score]
   var currentRank = List.empty[RankInfo]
-  //fixme 此处变量未有实际用途
-//  var historyRank = List.empty[Score]
   //序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
@@ -43,10 +39,6 @@ class GameClient (override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
-//        var mergeCells = List[Cell]()
-        //已经被本体其他cell融合的cell
-//        var deleteCells = List[Cell]()
-        //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             //自身cell合并检测
@@ -65,7 +57,7 @@ class GameClient (override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+            List(Cell(cell.id, cellX, cellY, cell.mass, cell.newmass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -80,8 +72,6 @@ class GameClient (override val boundary: Point) extends Grid {
     mergeInFlame
   }
 
-//  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {}
-
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
     val newPlayerMap = playerMap.values.map {
@@ -90,13 +80,12 @@ class GameClient (override val boundary: Point) extends Grid {
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var vSplitCells = List[Cell]()
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
             virusMap.foreach { vi =>
               val v = vi._2
               if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
-//                virus = virus.filterNot(_ == v)
                 removeVirus += (vi._1->vi._2)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
@@ -108,14 +97,13 @@ class GameClient (override val boundary: Point) extends Grid {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
                   val startLen = (newRadius + cellRadius) * 1.2*3
-                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 0, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
 
         val length = newCells.length
@@ -126,7 +114,6 @@ class GameClient (override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     virusMap --= removeVirus.keySet.toList
@@ -140,7 +127,7 @@ class GameClient (override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             food.foreach {
               case (p, color) =>
@@ -154,7 +141,7 @@ class GameClient (override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -174,7 +161,7 @@ class GameClient (override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
               case p: Mass =>
@@ -184,7 +171,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -194,73 +181,10 @@ class GameClient (override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
-/*  override def checkVirusMassCrash(): Unit = {
-    val virus1 = virusMap.flatMap{vi=>
-      val v = vi._2
-      var newMass = v.mass
-      var newRadius = v.radius
-      var newSpeed = v.speed
-      var newTargetX = v.targetX
-      var newTargetY = v.targetY
-      var newX = v.x
-      var newY = v.y
-      var hasMoved = false
-      val (nx,ny)= normalization(newTargetX,newTargetY)
-      massList.foreach {
-        case p: Mass =>
-          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
-            val (mx,my)=normalization(p.targetX,p.targetY)
-            // println(s"mx$mx,my$my")
-            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
-
-            newX += vx.toInt
-            newY += vy.toInt
-            hasMoved =true
-            val newPoint =ExamBoundary(newX,newY)
-            newX = newPoint._1
-            newY = newPoint._2
-/*            val borderCalc = 0
-            if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
-            if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
-            if (newX < borderCalc) newX = borderCalc
-            if (newY < borderCalc) newY = borderCalc*/
-            newMass += p.mass
-            newRadius = 4 + sqrt(newMass) * mass2rRate
-            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
-            newTargetX = vx
-            newTargetY = vy
-            massList = massList.filterNot(l => l == p)
-          }
-      }
-      /*newSpeed -= 0.3
-      if(newSpeed<0) newSpeed=0
-      if(hasMoved==false && newSpeed!=0){
-        newX += (nx*newSpeed).toInt
-        newY += (ny*newSpeed).toInt
-        val borderCalc = 0
-        if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
-        if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
-        if (newX < borderCalc) newX = borderCalc
-        if (newY < borderCalc) newY = borderCalc
-      }*/
-      if(newMass>virusMassLimit){
-        newMass = newMass/2
-        newRadius = 4 + sqrt(newMass) * mass2rRate
-        val newX2 = newX + (nx*newRadius*2).toInt
-        val newY2 = newY + (ny*newRadius*2).toInt
-        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed),v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
-      }else{
-        List(v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed))
-      }
-    }
-    virus = virus1
-  }*/
   override def checkVirusMassCrash(): Unit = {
   //TODO 这边病毒的运动有待商榷
   val virus1 = virusMap.flatMap{vi=>
@@ -292,18 +216,12 @@ class GameClient (override val boundary: Point) extends Grid {
     if(newMass>virusMassLimit){
       newMass = newMass/2
       newRadius = 4 + sqrt(newMass) * mass2rRate
-//      val newX2 = newX + (nx*newRadius*2).toInt
-//      val newY2 = newY + (ny*newRadius*2).toInt
       //分裂后新生成两个(多的那个由后台发)
       val v1 = vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
-//      val v2 = VirusId.getAndIncrement() -> v.copy(x = newX2,y=newY2,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
-//      newVirus ++= List(v2)
-//      List(v1,v2)
       List(v1)
     }else{
 
       val v1 =vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
-      //        newVirus += v1
       List(v1)
     }
   }
@@ -376,15 +294,8 @@ class GameClient (override val boundary: Point) extends Grid {
       }
     }
     //food改为增量传输这里暂时不用
-//    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     massList = data.massDetails
     virusMap = data.virusDetails
-/*    val myCell=playerMap.find(_._1==myId)
-    if(myCell.isDefined){
-      for(i<- advanceFrame to 1 by -1){
-        update()
-      }
-    }*/
   }
 
   //从第frame开始回滚到现在
