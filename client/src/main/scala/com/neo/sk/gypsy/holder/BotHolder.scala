@@ -1,26 +1,30 @@
 package com.neo.sk.gypsy.holder
 
-import com.neo.sk.gypsy.ClientBoot
+import akka.actor.typed.ActorRef
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
+
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
+
+import akka.actor.typed.scaladsl.adapter._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.GameScene
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
-import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial}
 import java.awt.event.KeyEvent
-import javafx.scene.image.Image
+
+import com.neo.sk.gypsy.ClientBoot
+import com.neo.sk.gypsy.actor.BotActor.MsgToService
+import com.neo.sk.gypsy.actor.{BotActor, GameClient}
 
 import scala.math.atan2
-import com.neo.sk.gypsy.utils.ClientMusic
+import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
 object BotHolder {
+
 
   val bounds = Point(Boundary.w,Boundary.h)
   val grid = new GridOnClient(bounds)
@@ -43,12 +47,7 @@ object BotHolder {
   val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
-    KeyCode.SPACE,
-    KeyCode.LEFT,
-    KeyCode.UP,
-    KeyCode.RIGHT,
-    KeyCode.DOWN,
-    KeyCode.ESCAPE
+    KeyCode.SPACE
   )
 
   def keyCode2Int(c: KeyCode) = {
@@ -56,10 +55,6 @@ object BotHolder {
       case KeyCode.E => KeyEvent.VK_E
       case KeyCode.F => KeyEvent.VK_F
       case KeyCode.SPACE => KeyEvent.VK_SPACE
-      case KeyCode.LEFT => KeyEvent.VK_LEFT
-      case KeyCode.UP => KeyEvent.VK_UP
-      case KeyCode.RIGHT => KeyEvent.VK_RIGHT
-      case KeyCode.DOWN => KeyEvent.VK_DOWN
       case KeyCode.F2 => KeyEvent.VK_F2
       case _ => KeyEvent.VK_F2
     }
@@ -68,31 +63,24 @@ object BotHolder {
 }
 class BotHolder(
                   stageCtx: StageContext,
-                  gameScene: GameScene,
+                  gameScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
+  private val botActor = ClientBoot.system.spawn(BotActor.create(this),"BotActor")
+
+
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
-  def connectToGameServer(gameHolder:GameHolder) = {
-    ClientBoot.addToPlatform{
-      stageCtx.showScene(gameScene.scene,"Gaming",false)
-      gameClient ! ControllerInitial(gameHolder)
-      //TODO 写在这里未必合适
-      ClientBoot.addToPlatform(
-        start()
-      )
-    }
-  }
 
   def init() = {
-    //gameScene.gameView.drawGameWelcome()
+
     gameScene.gameView.drawGameOn()
-    // gameScene.offView.drawBackgroundInit()
+
     gameScene.middleView.drawRankMap()
   }
 
@@ -165,6 +153,118 @@ class BotHolder(
     grid.update()
   }
 
+  def gameMessageHandler(data:GameMessage):Unit = {
+    data match {
+      case Protocol.Id(id) =>
+        myId = id
+
+      case m:Protocol.KeyCode =>
+        if(myId!=m.id || usertype == -1){
+          grid.addActionWithFrame(m.id,m)
+        }
+      case m:Protocol.MousePosition =>
+        if(myId!=m.id || usertype == -1){
+          grid.addMouseActionWithFrame(m.id,m)
+        }
+
+      case Protocol.Ranks(current) =>
+        //发来的排行版含有我的排名
+        if(current.exists(r=>r.score.id ==myId)){
+          grid.currentRank = current
+        }else{
+          //          发来的未含有我的
+          grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == myId)
+        }
+
+      case Protocol.MyRank(rank) =>
+        //把之前这个id的排行过滤掉
+        grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==myId) :+ rank
+
+      case Protocol.FeedApples(foods) =>
+        grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
+
+      case Protocol.AddVirus(virus) =>
+        println(s"接收新病毒 new Virus ${virus}")
+        grid.virusMap ++= virus
+
+      case data: Protocol.GridDataSync =>
+        syncGridData = Some(data)
+        justSynced = true
+
+      //网络延迟检测
+      case p:Protocol.Pong =>
+        FpsComp.receivePingPackage(p)
+
+
+      case Protocol.PlayerJoin(id,player) =>
+        println(s"${id}  加入游戏 ${grid.frameCount}")
+        //防止复活后又发了一条JOin消息
+        if(!grid.playerMap.contains(id)){
+          grid.playerMap += (id -> player)
+        }
+        if(myId == id){
+          if(gameState == GameState.dead){
+            println(s"发送复活确认")
+            botActor ! MsgToService(ReLiveAck(id))
+            gameState = GameState.play
+          }
+          //TODO drawTopView.cleanCtx()
+        }
+
+      //只针对某个死亡玩家发送的死亡消息
+      case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
+        if(id==myId){
+          deadInfo = Some(msg)
+          gameState = GameState.dead
+          grid.removePlayer(id)
+        }
+
+      //针对所有玩家发送的死亡消息
+      case Protocol.KillMessage(killerId,deadPlayer)=>
+        grid.removePlayer(deadPlayer.id)
+        val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+        if(deadPlayer.id != myId){
+          if(!isDead){
+            isDead = true
+            killList :+=(200,killerId,deadPlayer)
+          }else{
+            killList :+=(200,killerId,deadPlayer)
+          }
+        }
+
+
+      case Protocol.UserMerge(id,player)=>
+        if(grid.playerMap.get(id).nonEmpty){
+          grid.playerMap = grid.playerMap - id + (id->player)
+        }
+
+      case Protocol.RebuildWebSocket =>
+        println("存在异地登录")
+        gameState = GameState.allopatry
+
+      //某个用户离开
+      case Protocol.PlayerLeft(id,name) =>
+        grid.removePlayer(id)
+        if(id == myId){
+          gameClose
+        }
+//
+//      case Protocol.DecodeEvent(data)=>
+//        replayMessageHandler(data)
+//
+//      case Protocol.DecodeEvents(data)=>
+//        data.list.foreach(item => replayMessageHandler(item))
+//
+//      case Protocol.DecodeEventError(data) =>
+//        replayMessageHandler(data)
+
+      case msg@_ =>
+        println(s"unknown $msg")
+
+    }
+  }
+
   gameScene.setGameSceneListener(new GameScene.GameSceneListener {
     override def onKeyPressed(e: KeyCode): Unit = {
       val key=e
@@ -197,7 +297,8 @@ class BotHolder(
         serverActor ! mp
       }
     }
-  })
+  }
+  )
 
 
 

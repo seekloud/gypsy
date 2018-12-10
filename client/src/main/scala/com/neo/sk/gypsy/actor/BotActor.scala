@@ -19,8 +19,8 @@ import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system}
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.holder.BotHolder
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, WsSendComplete, WsSendFailed, WsSendMsg}
-import org.seekloud.esheepapi.pb.actions.Move
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 /**
   * Created by dry on 2018/12/3.
@@ -40,11 +40,13 @@ object BotActor {
 
   case class LeaveRoom(playerId: String) extends Command
 
-  case class Action(move: Move) extends Command
+  case class Action(swing: Swing) extends Command
 
   case class ReturnObservation(playerId: String) extends Command
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
+
+
 
 
   def create(botController: BotHolder): Behavior[Command] = {
@@ -146,7 +148,7 @@ object BotActor {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case Action(swing) =>
-          val actionNum = Constant.moveToKeyCode(move)
+          val (x,y) = Constant.swingToXY(swing)
           //          if(actionNum != -1)
           //            actor ! Key
           Behaviors.same
@@ -173,7 +175,7 @@ object BotActor {
         //decode process.
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         bytesDecode[GameMessage](buffer) match {
-          case Right(v) => botController.gameMessageReceiver(v)
+          case Right(v) => botController.gameMessageHandler(v)
           case Left(e) =>
             println(s"decode error: ${e.message}")
         }
@@ -186,7 +188,7 @@ object BotActor {
         f.map { bMsg =>
           val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
           bytesDecode[GameMessage](buffer) match {
-            case Right(v) => botController.gameMessageReceiver(v)
+            case Right(v) => botController.gameMessageHandler(v)
             case Left(e) =>
               println(s"decode error: ${e.message}")
           }
@@ -215,14 +217,14 @@ object BotActor {
   def getJoinRoomWebSocketUri(roomId: String, playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 
   def getCreateRoomWebSocketUri(playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 
