@@ -70,7 +70,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       }else{
         authPlatUser(accessCode){player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,player.nickname)),roomIdOpt,_))
+          val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,playerName)),roomIdOpt,_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {

@@ -71,18 +71,20 @@ class GameCanvas(canvas: Canvas,
 
   val bounds = Point(Boundary.w, Boundary.h)
 
-
-
   var realWindow = Point(size.x,size.y)
+  var screeScale = if( realWindow.x / Window.w > realWindow.y/Window.h) realWindow.y / Window.h else realWindow.x / Window.w
+
+
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
-    val myHeader = "#cccccc"
+    val myHeader = "#AEEEEE"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
     val otherBody = "#696969"
+    val bigPlayer = "#FF8C69"
   }
 
   val littleMap = 200
@@ -98,7 +100,7 @@ class GameCanvas(canvas: Canvas,
     canvas.setHeight(height)
     canvas.setWidth(width)
     realWindow = Point(width,height)
-
+    screeScale = if( realWindow.x / Window.w > realWindow.y/Window.h) realWindow.y / Window.h else realWindow.x / Window.w
   }
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
@@ -309,8 +311,9 @@ class GameCanvas(canvas: Canvas,
       val deadName = deadPlayer.name
       val txt1=new Text(killerName)
       val txt2=new Text(deadName)
-      val killNameLength=txt1.getLayoutBounds().getWidth()
-      val deadNameLength=txt2.getLayoutBounds().getWidth()
+      val killNameLength=txt1.getLayoutBounds.getWidth
+      val deadNameLength=txt2.getLayoutBounds.getWidth
+      val allWidth = (killNameLength + deadNameLength + 32 + 25 + 50)/2
       val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
@@ -323,14 +326,14 @@ class GameCanvas(canvas: Canvas,
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(killerName, realWindow.x*0.4, realWindow.y*0.2)
+        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(killerName, realWindow.x*0.4, realWindow.y*0.2)
-        ctx.drawImage(killImg,realWindow.x * 0.4+killNameLength+25,realWindow.y*0.2,32,32)
+        ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
+        ctx.drawImage(killImg,realWindow.x * 0.5 -allWidth + killNameLength + 25,realWindow.y*0.15,32,32)
         ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
+        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, realWindow.x * 0.4+killNameLength+32+50, realWindow.y*0.2)
+        ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
@@ -354,7 +357,7 @@ class GameCanvas(canvas: Canvas,
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
     //    println(s"zoom：$zoom")
-    val scale = getZoomRate(zoom._1,zoom._2,1200,600)
+    val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
     //var scale = data.scale
 
     //绘制背景
@@ -478,15 +481,17 @@ class GameCanvas(canvas: Canvas,
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        // println(nameFont)
         ctx.setFont(Font.font("Helvetica",nameFont))
+        var playermass=cell.mass.toInt
         val txt3=new Text(name)
+        val txt4=new Text(playermass.toString)
         val nameWidth = txt3.getLayoutBounds.getWidth
+        val massWidth = txt4.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
-
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", xfix + offx - (nameWidth*nameFont/12.0) / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
       }
     }
@@ -514,7 +519,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition])={
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFont(Font.font("Helvetica",12))
@@ -553,7 +558,16 @@ class GameCanvas(canvas: Canvas,
 
     //绘制小地图
 
-    ctx.setFill(Color.web(MyColors.background))
+    ctx.setFill(Color.web(MyColors.bigPlayer))
+    bigPlayerPosition.filterNot(_.id==uid).map{player=>
+      val offx = player.x.toDouble
+      val offy = player.y.toDouble
+      ctx.beginPath()
+      ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,8,0,360)
+      ctx.fill()
+    }
+
+    ctx.setFill(Color.web(MyColors.myHeader))
     players.find(_.id == uid) match {
       case Some(player)=>
         ctx.beginPath()

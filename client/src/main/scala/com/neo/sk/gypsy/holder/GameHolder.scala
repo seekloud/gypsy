@@ -10,7 +10,6 @@ import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
@@ -44,7 +43,7 @@ object GameHolder {
 
   var myId = "" //myId变成String类型
   var usertype = 0
-
+  var FormerDegree = 0D
 
   val watchKeys = Set(
     KeyCode.E,
@@ -104,7 +103,7 @@ class GameHolder(
   }
 
   def start()={
-    println("start---")
+    println("start---!!!")
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
@@ -193,10 +192,12 @@ class GameHolder(
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
+//        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
+        atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
-      var FormerDegree = 0D
-      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+
+      val mp = MousePosition(myId, e.getX.toFloat - gameScene.gameView.realWindow.x / 2, e.getY.toFloat - gameScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+//      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
