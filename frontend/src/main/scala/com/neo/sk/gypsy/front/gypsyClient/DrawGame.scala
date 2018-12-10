@@ -106,10 +106,11 @@ case class DrawGame(
     val rankList = "rgba(0, 0, 0, 0.64)"
     val background = "#fff"
     val stripe = "rgba(181, 181, 181, 0.5)"
-    val myHeader = "#cccccc"
+    val myHeader = "#AEEEEE"
     val myBody = "#FFFFFF"
     val otherHeader = "rgba(78,69,69,0.82)"
     val otherBody = "#696969"
+    val bigPlayer = "#FF8C69"
   }
 
   val mapMargin = 20
@@ -494,13 +495,15 @@ case class DrawGame(
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        var playermass=cell.mass
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
+        val massWidth = ctx.measureText(playermass.toString).width
         ctx.strokeStyle = "grey"
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
-
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.fillStyle = MyColors.background
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
 
         /**膨胀、缩小效果**/
@@ -550,7 +553,7 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double))={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long)={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
@@ -586,9 +589,16 @@ case class DrawGame(
 
     }
     //绘制小地图
-
-    ctx.fillStyle = MyColors.background
-    players.find(_.id == uid) match {
+    ctx.fillStyle = MyColors.bigPlayer
+    bigPlayerPosition.filterNot(_.id==uid).map{player=>
+      val offx = player.x.toDouble
+      val offy = player.y.toDouble
+      ctx.beginPath()
+      ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,0,2*Math.PI)
+      ctx.fill()
+    }
+    ctx.fillStyle = MyColors.myHeader
+    players.find(player=>player.id == uid) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap,mapMargin + basePoint._2/bounds.y * littleMap,8,0,2*Math.PI)

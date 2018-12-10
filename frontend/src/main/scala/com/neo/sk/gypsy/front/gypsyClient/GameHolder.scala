@@ -285,7 +285,7 @@ class GameHolder(replay:Boolean = false) {
 
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint)
+          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)

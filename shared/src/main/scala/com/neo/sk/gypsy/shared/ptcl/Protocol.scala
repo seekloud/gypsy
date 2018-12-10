@@ -26,6 +26,7 @@ object Protocol {
                            massDetails: List[Mass],
                            virusDetails: Map[Long,Virus],
                            scale: Double, //缩放比例
+                           playersPosition: List[PlayerPosition],
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
@@ -81,7 +82,7 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-  case class TextInfo(msg:String) extends UserAction
+//  case class TextInfo(msg:String) extends UserAction
 
   case class MousePosition(id: String,clientX:Double,clientY:Double, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
 

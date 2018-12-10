@@ -31,7 +31,7 @@ class GameClient (override val boundary: Point) extends Grid {
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
-    GridDataSync(0l, Nil, Nil, Map.empty, 1.0)
+    GridDataSync(0l, Nil, Nil, Map.empty, 1.0,Nil)
   }
 
   override def checkCellMerge: Boolean = {

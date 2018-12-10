@@ -56,7 +56,9 @@ object EsheepClient extends HttpUtil {
             Left(ErrorRsp(-1, error.getMessage))
         }
       case Left(error) =>
-        log.debug(s"${methodName}  failed,error:${error.getMessage}")
+//        log.debug(s"${methodName}  failed,error:${error.getMessage}")
+        log.info(s"${methodName}  failed,error:${error.getMessage}")
+        log.info(s"${url}  data:${data}")
         Left(ErrorRsp(-1,error.getMessage))
     }
   }

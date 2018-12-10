@@ -129,7 +129,7 @@ object GamePlayer {
               log.info(s"set replay from frame=${msg.frame}")
               fileReader.gotoSnapshot(msg.frame)
               if(fileReader.hasMoreFrame){
-                timer.startPeriodicTimer(GameLoopKey, GameLoop, 150.millis)
+                timer.startPeriodicTimer(GameLoopKey, GameLoop, frameRate.millis)
                 work(fileReader,metaData,initState,frameCount,userMap,Some(msg.userActor))
               }else{
                 Behaviors.stopped
@@ -156,7 +156,7 @@ object GamePlayer {
           }
 
         case msg:GetRecordFrameMsg=>
-          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong))
+          msg.replyTo ! GetRecordFrameRsp(RecordFrameInfo(fileReader.getFramePosition,frameCount.toLong,frameRate))
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>
