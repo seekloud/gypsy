@@ -175,7 +175,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
                   //吃掉别人了
                   p2pCrash = true
-                  newMass += otherCell.mass
+                  newMass += otherCell.newmass
                   newRadius = 4 + sqrt(newMass) * 6
                 }
               }
@@ -376,7 +376,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length

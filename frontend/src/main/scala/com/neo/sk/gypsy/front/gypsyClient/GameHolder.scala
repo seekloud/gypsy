@@ -132,6 +132,10 @@ class GameHolder(replay:Boolean = false) {
 
   def start(): Unit = {
     println("start---")
+    /**
+      * gameLoop: 150ms
+      * gameRender: 约为16ms
+      */
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }

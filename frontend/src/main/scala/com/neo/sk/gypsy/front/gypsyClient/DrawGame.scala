@@ -505,7 +505,7 @@ case class DrawGame(
 
         /**膨胀、缩小效果**/
         var newcell = cell
-        println(cell.mass +"  "+cell.newmass)
+//        println(cell.mass +"  "+cell.newmass)
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true

@@ -122,7 +122,6 @@ trait Grid {
   def update() = {
     updateSpots()
     updatePlayer()
-//    println(playerMap.head._2.cells.head.mass+ "   "+ playerMap.head._2.cells.head.newmass)
     actionMap -= frameCount
     mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
@@ -185,11 +184,6 @@ trait Grid {
       var newX = v.x
       var newY = v.y
       var newSpeed = v.speed
-      //      var newMass = v.mass
-//      var newRadius = v.radius
-//      var newSpeed = v.speed
-//      var newTargetX = v.targetX
-//      var newTargetY = v.targetY
       if(v.speed!=0){
         newX = v.x + (nx*v.speed).toInt
         newY = v.y + (ny*v.speed).toInt
@@ -272,7 +266,7 @@ trait Grid {
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
-      val slowdown = utils.logSlowDown(cell.mass, slowBase) - initMassLog + 1
+      val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = target.clientX / degX
@@ -393,7 +387,7 @@ trait Grid {
   //发射小球
   def checkPlayerShotMass(actMap: Map[String, KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
     //TODO 这里写下有哪些是分裂的
-    var newPlayerMap = playerMap.values.map {
+    val newPlayerMap = playerMap.values.map {
       player =>
         val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
         val shot = actMap.get(player.id) match {
@@ -431,7 +425,7 @@ trait Grid {
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
     }
-    playerMap ++= newPlayerMap.map(s => (s.id, s)).toList
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
 
   //TODO 暂时前后
@@ -459,7 +453,7 @@ trait Grid {
             var splitRadius = 0.0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.mass > splitLimit && player.cells.size < maxCellNum) {
+            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toInt
               newMass = newMass - splitMass
@@ -488,35 +482,15 @@ trait Grid {
   }
 
 
-//超过200的cell质量衰减
-/*  def massDecrease():Unit={
-    val newPlayerMap = playerMap.values.map{player=>
-      val newCells=player.cells.map{cell=>
-        var newMass = cell.mass
-        if(cell.mass > decreaseLimit)
-          newMass = cell.mass*decreaseRate
-        cell.copy(mass = newMass)
-      }
-      player.copy(cells = newCells)
-    }
-    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-
-  }*/
-
   def massDecrease(player:Player)={
     val newCells=player.cells.map{cell=>
-      var newMass = cell.mass
-      if(cell.mass > decreaseLimit)
-        newMass = cell.mass * decreaseRate
-      cell.copy(mass = newMass)
+      var newMass = cell.newmass
+      if(cell.newmass > decreaseLimit)
+        newMass = cell.newmass * decreaseRate
+      cell.copy(newmass = newMass)
     }
     player.copy(cells = newCells)
   }
-
-//  def updateAndGetGridData() = {
-//    update()
-//    getGridData(myId)
-//  }
 
   /**
     * method: getGridData
