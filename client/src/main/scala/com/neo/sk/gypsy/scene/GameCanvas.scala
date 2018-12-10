@@ -12,12 +12,11 @@ import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+import com.neo.sk.gypsy.common.Constant._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
-import javafx.scene.shape.ArcType
 
-import com.neo.sk.gypsy.utils.FpsComp
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -371,8 +370,6 @@ class GameCanvas(canvas: Canvas,
 
     //TODO /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
-    //    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
-//    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
@@ -470,8 +467,6 @@ class GameCanvas(canvas: Canvas,
         ctx.save()
 
         ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
-        //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
-        //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
@@ -481,7 +476,6 @@ class GameCanvas(canvas: Canvas,
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        // println(nameFont)
         ctx.setFont(Font.font("Helvetica",nameFont))
         var playermass=cell.mass
         val txt3=new Text(name)
@@ -668,5 +662,105 @@ class GameCanvas(canvas: Canvas,
     result += s"${ts}秒"
     result
   }
+
+  /*******************视野在整个地图中的位置***********************/
+  def drawLocation(uid:String)={
+    ctx.setFill(ColorsSetting.backgroundColor)
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
+    //TODO
+  }
+  /********************视野内不可交互的元素（地图背景元素）*********************/
+  /********************视野内可交互的元素（物品，道具，子弹等）*********************/
+  def drawInteract(uid:String,offx:Double,offy:Double,scale:Double,food:List[Food],virus:List[Virus],mass:List[Mass])={
+
+    centerScale(scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    food.groupBy(_.color).foreach{a=>
+      val foodColor = a._1 match{
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2 => "#f4d95b"
+        case 3 => "#4cd964"
+        case 4 => "#9fe0f6"
+        case 5 => "#bead92"
+        case 6 => "#cfe6ff"
+        case _ => "#de9dd6"
+      }
+      ctx.setFill(Color.web(foodColor))
+      a._2.foreach{ case Food(color, x, y)=>
+        //        ctx.beginPath()
+        //        ctx.arc(x + offx,y + offy,10,10,0,360)
+        //        ctx.fill()
+        ctx.fillRect(x + offx,y + offy,16,16)
+      }
+    }
+
+    mass.groupBy(_.color).foreach{ a=>
+      a._1 match{
+        case 0 => ctx.setFill(Color.web("#f3456d"))
+        case 1 => ctx.setFill(Color.web("#f49930"))
+        case 2  => ctx.setFill(Color.web("#f4d95b"))
+        case 3  => ctx.setFill(Color.web("#4cd964"))
+        case 4  => ctx.setFill(Color.web("#9fe0f6"))
+        case 5  => ctx.setFill(Color.web("#bead92"))
+        case 6  => ctx.setFill(Color.web("#cfe6ff"))
+        case _  => ctx.setFill(Color.web("#de9dd6"))
+      }
+      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+
+        ctx.beginPath()
+        ctx.arc( x+offx ,y+offy ,r,r,0,360)
+        ctx.fill()
+      }
+    }
+
+    virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+    }
+  }
+  /********************视野内包括自己的所有玩家*********************/
+
+  def drawPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+      val circleColor = color.toInt % 7 match{
+        //经典星球
+                case 0 => "#b30e35"
+                case 1 => "#a65d0a"
+                case 2  => "#917600"
+                case 3  => "#05851b"
+                case 4  => "#037da6"
+                case 5  => "#875a16"
+                case 6  => "#4174ab"
+                case _  => "#8f3284"
+
+      }
+      ctx.setFill(Color.web(circleColor))
+      cells.sortBy(_.id).foreach{ cell=>
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc( x+offx ,y+offy ,cell.radius,cell.radius,0,360)
+        ctx.fill()
+
+        if(protect){
+          ctx.setFill(Color.web(MyColors.halo))
+          ctx.beginPath()
+          ctx.arc(x+offx,y+offy,cell.radius+15,cell.radius+15,0,360)
+          ctx.fill()
+        }
+        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        ctx.setFont(Font.font("Helvetica",nameFont))
+        val txt3=new Text(name)
+        val nameWidth = txt3.getLayoutBounds.getWidth
+        ctx.setStroke(Color.web("grey"))
+        ctx.strokeText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+        ctx.setFill(Color.web(MyColors.background))
+        ctx.fillText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+        ctx.restore()
+      }
+    }
+  }
+  /*********************视野内的自己********************/
+  /*********************面板状态信息图层********************/
+  /*********************人类视图********************/
 
 }
