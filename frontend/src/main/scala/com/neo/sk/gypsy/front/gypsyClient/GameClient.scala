@@ -141,7 +141,7 @@ class GameClient (override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
