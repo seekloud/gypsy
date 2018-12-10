@@ -78,17 +78,38 @@ package object ptcl {
                    cells:List[Cell],//分裂
                    startTime:Long=System.currentTimeMillis()
                    )
+
+  case class PlayerPosition(
+                             id:String,
+                             x:Int,
+                             y:Int,
+                             targetX:Int = 0,//运动方向，大部分做了归一化
+                             targetY:Int = 0,
+                           )
+//  case class Cell(
+//                 id:Long,
+//                 x:Int,
+//                 y:Int,
+//                 mass:Double = 10,  //小球体重
+//                 radius:Double = 4 + sqrt(10)*6,
+//                 speed:Double = 12,
+//                 speedX:Float = 0,
+//                 speedY:Float = 0,
+//                 parallel:Boolean = false,
+//                 isCorner:Boolean =false
+//                 )
   case class Cell(
-                 id:Long,
-                 x:Int,
-                 y:Int,
-                 mass:Double = 10,  //小球体重
-                 radius:Double = 4 + sqrt(10)*6,
-                 speed:Double = 12,
-                 speedX:Float = 0,
-                 speedY:Float = 0,
-                 parallel:Boolean = false,
-                 isCorner:Boolean =false
+                   id:Long,
+                   x:Int,
+                   y:Int,
+                   mass:Double = 50,  //小球体重
+                   newmass:Double = 50,
+                   radius:Double = 4 + sqrt(50)*6,
+                   speed:Double = 12,
+                   speedX:Float = 0,
+                   speedY:Float = 0,
+                   parallel:Boolean = false,
+                   isCorner:Boolean =false
                  )
 //吐出的小球
   case class Mass(

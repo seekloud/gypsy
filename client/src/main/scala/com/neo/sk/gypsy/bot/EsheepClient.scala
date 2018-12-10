@@ -14,13 +14,15 @@ class EsheepClient(
   playerId: String,
   apiToken: String
 ) {
-
+  //1.创建gRPC channel,根据端口和IP连接服务端
   private[this] val channel: ManagedChannel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build
 
+  //2.创建存根,存根是根据.proto文件中生成的类IFourKindGrpc的代理.
   private val esheepStub: EsheepAgentStub = EsheepAgentGrpc.stub(channel)
 
-  val credit = Credit(playerId = playerId, apiToken = apiToken)
 
+  //3.调用服务端的服务方法.相当于发送请求,并获取服务端的回应.
+  val credit = Credit(playerId = playerId, apiToken = apiToken)
 
   def createRoom(): Future[CreateRoomRsp] = esheepStub.createRoom(credit)
 
@@ -55,6 +57,7 @@ object EsheepClient{
     println("client DONE.")
 
   }
+
 }
 
 
