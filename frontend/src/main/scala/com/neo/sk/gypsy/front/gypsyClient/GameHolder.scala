@@ -131,7 +131,11 @@ class GameHolder(replay:Boolean = false) {
   }
 
   def start(): Unit = {
-    println("start---......")
+    println("start---")
+    /**
+      * gameLoop: 150ms
+      * gameRender: 约为16ms
+      */
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
     dom.window.requestAnimationFrame(gameRender())
   }
@@ -252,6 +256,7 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, window.x, window.y)
+//      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
           firstCome=false
@@ -278,12 +283,11 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
 
-          //TODO 食物没有做是否在屏幕中的判断
           val foods = grid.food
-          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom)
+          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
           ctx.save()
-          ctx.font = s"${34 * window.x / Window.w}px Helvetica"
+          ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
           ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
           ctx.restore()
