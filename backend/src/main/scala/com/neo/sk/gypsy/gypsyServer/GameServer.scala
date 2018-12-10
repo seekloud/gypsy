@@ -483,6 +483,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
+    var playerPosition:List[PlayerPosition] = Nil
     newFoods.foreach{
       case (p,mass) =>
         newFoodDetails ::= Food(mass, p.x, p.y)
@@ -492,6 +493,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val  newcells  = item._2.cells.map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
+        playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
         item.copy(_2 = newplayer)
     }
     eatenFoods.foreach{
@@ -506,6 +508,7 @@ class GameServer(override val boundary: Point) extends Grid {
       massList,
       virusMap,
       1.0,
+      playerPosition,
       newFoodDetails,
       eatenFoodDetails
     )

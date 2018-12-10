@@ -16,7 +16,7 @@ object WsMsgProtocol {
 
 
 
-  val frameRate = 150
+  val frameRate = 150  //ms
 
   val advanceFrame = 0 //客户端提前的帧数
 

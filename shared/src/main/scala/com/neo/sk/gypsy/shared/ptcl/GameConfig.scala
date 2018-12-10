@@ -24,7 +24,6 @@ object GameConfig {
   val splitBaseSpeed = 40
   //食物质量
   val foodMass = 1
-
   //食物池
   var foodPool = 300
   //病毒数量
@@ -43,7 +42,6 @@ object GameConfig {
   val massSpeedDecayRate = 25
 //  病毒衰减速度
   val virusSpeedDecayRate = 0.3
-
   // 排行版显示玩家数
   val rankShowNum = 10
 

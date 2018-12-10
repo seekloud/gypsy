@@ -1,6 +1,5 @@
 package com.neo.sk.gypsy.holder
 
-
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
 import com.neo.sk.gypsy.shared.ptcl._
@@ -10,6 +9,7 @@ import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
+import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
@@ -20,12 +20,7 @@ import javafx.scene.image.Image
 
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.ClientMusic
-
-/**
-  * @author zhaoyin
-  * 2018/10/29  5:13 PM
-  */
-object GameHolder {
+object BotHolder {
 
   val bounds = Point(Boundary.w,Boundary.h)
   val grid = new GridOnClient(bounds)
@@ -71,7 +66,7 @@ object GameHolder {
   }
 
 }
-class GameHolder(
+class BotHolder(
                   stageCtx: StageContext,
                   gameScene: GameScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
@@ -97,12 +92,12 @@ class GameHolder(
   def init() = {
     //gameScene.gameView.drawGameWelcome()
     gameScene.gameView.drawGameOn()
-   // gameScene.offView.drawBackgroundInit()
+    // gameScene.offView.drawBackgroundInit()
     gameScene.middleView.drawRankMap()
   }
 
   def start()={
-    println("start---!!!")
+    println("start---~~~~~")
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
@@ -138,18 +133,18 @@ class GameHolder(
     }
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
-      //差不多每三秒同步一次
-      //不同步
-      if (!justSynced) {
-        update()
-      } else {
-        if (syncGridData.nonEmpty) {
-          //同步
-          grid.setSyncGridData(syncGridData.get)
-          syncGridData = None
-        }
-        justSynced = false
+    //差不多每三秒同步一次
+    //不同步
+    if (!justSynced) {
+      update()
+    } else {
+      if (syncGridData.nonEmpty) {
+        //同步
+        grid.setSyncGridData(syncGridData.get)
+        syncGridData = None
       }
+      justSynced = false
+    }
   }
 
   def gameRender() = {
@@ -191,12 +186,10 @@ class GameHolder(
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-//        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
-        atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
+        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
       }
       var FormerDegree = 0D
-      val mp = MousePosition(myId, e.getX.toFloat - gameScene.gameView.realWindow.x / 2, e.getY.toFloat - gameScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-//      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
