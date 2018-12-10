@@ -495,7 +495,7 @@ case class DrawGame(
 
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        var playermass=cell.mass
+        var playermass=cell.mass.toInt
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
         val massWidth = ctx.measureText(playermass.toString).width
