@@ -8,7 +8,7 @@ import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgentStub
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class EsheepClient(
+class BotClient(
   host: String,
   port: Int,
   playerId: String,
@@ -30,7 +30,7 @@ class EsheepClient(
 }
 
 
-object EsheepClient{
+object BotClient{
 
 
   def main(args: Array[String]): Unit = {
@@ -41,7 +41,7 @@ object EsheepClient{
     val playerId = "gogo"
     val apiToken = "lala"
 
-    val client = new EsheepClient(host, port, playerId, apiToken)
+    val client = new BotClient(host, port, playerId, apiToken)
 
     val rsp1 = client.createRoom()
 

@@ -14,11 +14,12 @@ import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.shared.ptcl._
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
-
+import com.neo.sk.gypsy.common.StageContext
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system}
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.holder.BotHolder
+import com.neo.sk.gypsy.scene.LayeredScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
@@ -30,6 +31,8 @@ object BotActor {
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
 
+  var botHolder: BotHolder = null
+
   sealed trait Command
 
   case object Work extends Command
@@ -40,6 +43,8 @@ object BotActor {
 
   case class LeaveRoom(playerId: String) extends Command
 
+  case object ActionSpace extends Command
+
   case class Action(swing: Swing) extends Command
 
   case class ReturnObservation(playerId: String) extends Command
@@ -47,19 +52,19 @@ object BotActor {
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
 
-
-
-  def create(botController: BotHolder): Behavior[Command] = {
+  def create(botController: BotHolder,
+             stageCtx: StageContext): Behavior[Command] = {
     Behaviors.setup[Command] { ctx =>
       implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers { implicit timer =>
         ctx.self ! Work
-        waitingGaming(botController)
+        waitingGaming(botController,stageCtx)
       }
     }
   }
 
-  def waitingGaming(botController: BotHolder)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def waitingGaming(botController: BotHolder,
+                    stageCtx: StageContext)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case Work =>
@@ -77,7 +82,7 @@ object BotActor {
           }
           server.awaitTermination()
           log.debug("DONE.")
-          waitingGame(botController)
+          waitingGame(botController,stageCtx)
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -86,7 +91,9 @@ object BotActor {
     }
   }
 
-  def waitingGame(botController: BotHolder)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def waitingGame(botController: BotHolder,
+                  stageCtx: StageContext
+                 )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case CreateRoom(playerId, apiToken) =>
@@ -101,6 +108,8 @@ object BotActor {
 
           val connected = response.flatMap { upgrade =>
             if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+              val layeredScene = new LayeredScene
+              botHolder = new BotHolder(stageCtx,layeredScene,stream)
               Future.successful("connect success")
             } else {
               throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
@@ -149,8 +158,8 @@ object BotActor {
       msg match {
         case Action(swing) =>
           val (x,y) = Constant.swingToXY(swing)
-          //          if(actionNum != -1)
-          //            actor ! Key
+          //if(actionNum != -1)
+          //actor ! Key
           Behaviors.same
 
         case ReturnObservation(playerId) =>
