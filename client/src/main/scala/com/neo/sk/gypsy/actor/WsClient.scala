@@ -55,7 +55,6 @@ object WsClient {
       Behaviors.withTimers{ timer =>
         working(gameClient, stageCtx)(timer,_system,_materializer,_executor)
       }
-
     }
   }
 
@@ -114,6 +113,7 @@ object WsClient {
           } //链接建立时
           connected.onComplete(i => log.info(i.toString))
           Behaviors.same
+
         case Stop =>
           log.info("WsClient now stop")
           Behavior.stopped

@@ -23,7 +23,7 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 /**
-  * Created by dry on 2018/12/3.
+  * Created by wym on 2018/12/3.
   **/
 
 object BotActor {
