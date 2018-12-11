@@ -153,7 +153,8 @@ object BotActor {
     }
   }
 
-  def gaming(actor: ActorRef[Protocol.WsSendMsg])(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def gaming(actor: ActorRef[Protocol.WsSendMsg]
+            )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
 //        case Action(swing) =>
@@ -163,10 +164,12 @@ object BotActor {
 //          Behaviors.same
 
         case ReturnObservation(playerId) =>
+
           Behaviors.same
 
         case LeaveRoom(playerId) =>
-          Behaviors.same
+          log.info("BotActor now stop.")
+          Behaviors.stopped
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
