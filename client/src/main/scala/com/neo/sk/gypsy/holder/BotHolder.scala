@@ -322,6 +322,12 @@ class BotHolder(
   def getFrameCount = {
     grid.frameCount
   }
+  def getInform(playerId:String) = {
+    val player = grid.playerMap.find(_._1 == playerId).get._2
+    val score = player.cells.map(_.newmass).sum
+    val kill = player.kill
+    (score,kill)
+  }
 
   def cleanCtx() = {
     gameScene.topView.cleanCtx()

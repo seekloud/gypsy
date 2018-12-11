@@ -76,8 +76,13 @@ class EsheepService(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def inform(request: Credit): Future[InformRsp] = {
     println(s"action Called by [$request")
-    val rsp = InformRsp()
-    Future.successful(rsp)
+    if(checkBotToken(request.playerId,request.apiToken)){
+      val rsp = InformRsp(score = botHolder.getInform.)
+      Future.successful(rsp)
+    }else{
+      Future.successful(InformRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+    }
+
   }
 }
 
