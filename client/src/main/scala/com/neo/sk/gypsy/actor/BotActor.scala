@@ -156,11 +156,11 @@ object BotActor {
   def gaming(actor: ActorRef[Protocol.WsSendMsg])(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Action(swing) =>
-          val (x,y) = Constant.swingToXY(swing)
-          //if(actionNum != -1)
-          //actor ! Key
-          Behaviors.same
+//        case Action(swing) =>
+//          val (x,y) = Constant.swingToXY(swing)
+//          //if(actionNum != -1)
+//          //actor ! Key
+//          Behaviors.same
 
         case ReturnObservation(playerId) =>
           Behaviors.same
