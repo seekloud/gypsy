@@ -40,7 +40,7 @@ object BotHolder {
 
   var exitFullScreen = false
 
-  var myId = "" //myId变成String类型
+  var myId = ""
   var usertype = 0
 
 
