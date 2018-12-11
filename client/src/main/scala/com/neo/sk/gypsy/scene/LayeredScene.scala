@@ -88,7 +88,7 @@ class LayeredScene {
         val basePoint = (offx, offy)
         val foods=grid.food
         gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom)
-        topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,)
+        topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font(" Helvetica",24))
         gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
