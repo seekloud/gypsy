@@ -2,12 +2,10 @@ package com.neo.sk.gypsy.holder
 
 import akka.actor.typed.ActorRef
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-
 import akka.actor.typed.scaladsl.adapter._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
@@ -16,16 +14,15 @@ import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import java.awt.event.KeyEvent
-
+import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.actor.BotActor.MsgToService
 import com.neo.sk.gypsy.actor.{BotActor, GameClient}
-
+import org.seekloud.esheepapi.pb.actions._
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+
 object BotHolder {
-
-
   val bounds = Point(Boundary.w,Boundary.h)
   val grid = new GridOnClient(bounds)
   var justSynced = false
@@ -277,7 +274,7 @@ class BotHolder(
           println(s"down+${e.toString}")
           val keyCode = Protocol.KeyCode(myId, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
-          grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+//          grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           serverActor ! keyCode
         }
       }
@@ -286,21 +283,45 @@ class BotHolder(
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
+        atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
       var FormerDegree = 0D
-      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, e.getX.toFloat - gameScene.gameView.realWindow.x / 2, e.getY.toFloat - gameScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
-        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+//        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+        serverActor ! mp
+      }
+    }
+  })
+
+  def gameActionReceiver(key:Int, swing:Option[Swing]) = {
+    if(key != 0){
+      //使用E、F
+      val keyCode = Protocol.KeyCode(myId, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
+//      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+      serverActor ! keyCode
+    }
+    if(swing.nonEmpty){
+      def getDegree(x:Double,y:Double)={
+        atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
+      }
+      var FormerDegree = 0D
+      val (x,y) = Constant.swingToXY(swing.get)
+      val mp = MousePosition(myId, x.toFloat - gameScene.gameView.realWindow.x / 2, y.toFloat - gameScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      if(math.abs(getDegree(x,y)-FormerDegree)*180/math.Pi>5){
+        FormerDegree = getDegree(x,y)
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame))
         serverActor ! mp
       }
     }
   }
-  )
 
-
+  def getFrameCount = {
+    grid.frameCount
+  }
 
   def cleanCtx() = {
     gameScene.topView.cleanCtx()
