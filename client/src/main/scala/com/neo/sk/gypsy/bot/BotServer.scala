@@ -33,7 +33,7 @@ class EsheepService(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
       val state = State.init_game
       Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
-      Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error")))
+      Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }
   }
 
