@@ -182,7 +182,7 @@ object WsClient {
                   case Right(resl) =>
                     tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
-                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
+//                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                   case Left(l) =>
                     log.error("link error!res:  "+ l)
                 }
@@ -191,7 +191,6 @@ object WsClient {
               }
             case Left(le) =>
               log.error(s"decode esheep webmsg error! Error information:${le}")
-
           }
         }
       case BinaryMessage.Strict(bMsg) =>
