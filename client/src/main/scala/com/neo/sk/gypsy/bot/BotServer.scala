@@ -10,11 +10,11 @@ import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
 import scala.concurrent.{ExecutionContext, Future}
 import com.neo.sk.gypsy.utils.BotUtil._
 
-object EsheepServer {
+object BotServer {
 
   def build(port: Int, executionContext: ExecutionContext, botActor:  ActorRef[BotActor.Command]): Server = {
 
-    val service = new EsheepService(botActor)
+    val service = new BotServer(botActor)
 
     ServerBuilder.forPort(port).addService(
       EsheepAgentGrpc.bindService(service, executionContext)
@@ -25,8 +25,9 @@ object EsheepServer {
 }
 
 
-class EsheepService(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
+class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
   override def createRoom(request: Credit): Future[CreateRoomRsp] = {
+    //TODO
     println(s"createRoom Called by [$request")
     if(checkBotToken(request.playerId,request.apiToken)){
       botActor ! CreateRoom(request.playerId,request.apiToken)
