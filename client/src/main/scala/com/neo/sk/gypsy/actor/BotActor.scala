@@ -14,21 +14,24 @@ import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.shared.ptcl._
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
-
+import com.neo.sk.gypsy.common.StageContext
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system}
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.holder.BotHolder
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, WsSendComplete, WsSendFailed, WsSendMsg}
-import org.seekloud.esheepapi.pb.actions.Move
+import com.neo.sk.gypsy.scene.LayeredScene
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 /**
-  * Created by dry on 2018/12/3.
+  * Created by wym on 2018/12/3.
   **/
 
 object BotActor {
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
+
+  var botHolder: BotHolder = null
 
   sealed trait Command
 
@@ -40,24 +43,28 @@ object BotActor {
 
   case class LeaveRoom(playerId: String) extends Command
 
-  case class Action(move: Move) extends Command
+  case object ActionSpace extends Command
+
+  case class Action(swing: Swing) extends Command
 
   case class ReturnObservation(playerId: String) extends Command
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
 
-  def create(botController: BotHolder): Behavior[Command] = {
+  def create(botController: BotHolder,
+             stageCtx: StageContext): Behavior[Command] = {
     Behaviors.setup[Command] { ctx =>
       implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers { implicit timer =>
         ctx.self ! Work
-        waitingGaming(botController)
+        waitingGaming(botController,stageCtx)
       }
     }
   }
 
-  def waitingGaming(botController: BotHolder)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def waitingGaming(botController: BotHolder,
+                    stageCtx: StageContext)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case Work =>
@@ -75,7 +82,7 @@ object BotActor {
           }
           server.awaitTermination()
           log.debug("DONE.")
-          waitingGame(botController)
+          waitingGame(botController,stageCtx)
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -84,7 +91,9 @@ object BotActor {
     }
   }
 
-  def waitingGame(botController: BotHolder)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def waitingGame(botController: BotHolder,
+                  stageCtx: StageContext
+                 )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
         case CreateRoom(playerId, apiToken) =>
@@ -99,6 +108,8 @@ object BotActor {
 
           val connected = response.flatMap { upgrade =>
             if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+              val layeredScene = new LayeredScene
+              botHolder = new BotHolder(stageCtx,layeredScene,stream)
               Future.successful("connect success")
             } else {
               throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
@@ -142,20 +153,23 @@ object BotActor {
     }
   }
 
-  def gaming(actor: ActorRef[Protocol.WsSendMsg])(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
+  def gaming(actor: ActorRef[Protocol.WsSendMsg]
+            )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Action(swing) =>
-          val actionNum = Constant.moveToKeyCode(move)
-          //          if(actionNum != -1)
-          //            actor ! Key
-          Behaviors.same
+//        case Action(swing) =>
+//          val (x,y) = Constant.swingToXY(swing)
+//          //if(actionNum != -1)
+//          //actor ! Key
+//          Behaviors.same
 
         case ReturnObservation(playerId) =>
+
           Behaviors.same
 
         case LeaveRoom(playerId) =>
-          Behaviors.same
+          log.info("BotActor now stop.")
+          Behaviors.stopped
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -173,7 +187,7 @@ object BotActor {
         //decode process.
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         bytesDecode[GameMessage](buffer) match {
-          case Right(v) => botController.gameMessageReceiver(v)
+          case Right(v) => botController.gameMessageHandler(v)
           case Left(e) =>
             println(s"decode error: ${e.message}")
         }
@@ -186,7 +200,7 @@ object BotActor {
         f.map { bMsg =>
           val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
           bytesDecode[GameMessage](buffer) match {
-            case Right(v) => botController.gameMessageReceiver(v)
+            case Right(v) => botController.gameMessageHandler(v)
             case Left(e) =>
               println(s"decode error: ${e.message}")
           }
@@ -215,14 +229,14 @@ object BotActor {
   def getJoinRoomWebSocketUri(roomId: String, playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 
   def getCreateRoomWebSocketUri(playerId: String, accessCode: String): String = {
     val wsProtocol = "ws"
     val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30368"
+    //    val domain = "localhost:30371"
     s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
   }
 

@@ -199,6 +199,11 @@ object ApiProtocol {
                                 msg: String = "ok"
                               )extends CommonRsp
 
+  case class BotKey2Token(
+                         botId: Long,
+                         botKey: String
+                         )
+
 
 
 }

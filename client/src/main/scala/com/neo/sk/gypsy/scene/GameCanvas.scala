@@ -12,12 +12,11 @@ import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+import com.neo.sk.gypsy.common.Constant._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
-import javafx.scene.shape.ArcType
 
-import com.neo.sk.gypsy.utils.FpsComp
 
 class GameCanvas(canvas: Canvas,
                  ctx:GraphicsContext,
@@ -347,7 +346,7 @@ class GameCanvas(canvas: Canvas,
   }
 
   //offScreenCanvas:Canvas
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double))= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -371,8 +370,6 @@ class GameCanvas(canvas: Canvas,
 
     //TODO /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
-    //    ctx.drawImage(offScreenCanvas, offx, offy, bounds.x, bounds.y)
-//    ctx.drawImage(background1,)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
@@ -423,7 +420,7 @@ class GameCanvas(canvas: Canvas,
       }
     }
 
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
           //经典星球
 //        case 0 => circle //(243,69,109)   b30e35
@@ -461,7 +458,8 @@ class GameCanvas(canvas: Canvas,
         case 23=> star23 //(244, 153, 48)  a65d0a
 
       }
-      cells.sortBy(_.id).foreach{ cell=>
+      var cellDifference = false
+      val newcells = cells.sortBy(_.id).map{ cell=>
 
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
@@ -469,9 +467,10 @@ class GameCanvas(canvas: Canvas,
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
 
-        ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
-        //ctx.arc(xfix +offx,yfix+offy,cell.radius-1,0,2*Math.PI)
-        //DrawCircle.drawCircle(ctx,xfix+offx,yfix+offy,cell.radius-1)
+        /**关键：根据mass来改变大小**/
+        val radius = 4 + sqrt(cell.mass)*6
+        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+//        ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
@@ -493,6 +492,28 @@ class GameCanvas(canvas: Canvas,
         ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
+        /**膨胀、缩小效果**/
+        var newcell = cell
+        //        println(cell.mass +"  "+cell.newmass)
+        if(cell.mass != cell.newmass){
+          //根据差值来膨胀或缩小
+          cellDifference = true
+          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
+          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+        }
+        newcell
+      }
+      if(cellDifference){
+        //改变player的x,y
+        val length = newcells.length
+        val newX = newcells.map(_.x).sum / length
+        val newY = newcells.map(_.y).sum / length
+        val left = newcells.map(a => a.x - a.radius).min
+        val right = newcells.map(a => a.x + a.radius).max
+        val bottom = newcells.map(a => a.y - a.radius).min
+        val top = newcells.map(a => a.y + a.radius).max
+        val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+        gird.playerMap += (id -> player)
       }
     }
 
@@ -644,5 +665,196 @@ class GameCanvas(canvas: Canvas,
     result += s"${ts}秒"
     result
   }
+  /*********************分层视图400*200****************************/
+
+  /*******************1.视野在整个地图中的位置***********************/
+  def drawLocation(uid:String,data:Protocol.GridDataSync)={
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    data.playerDetails.foreach{player=>
+      if(player.id == uid){
+        ctx.setFill(Color.GRAY)
+        ctx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
+      }
+    }
+  }
+  /********************2.视野内不可交互的元素（地图背景元素）*********************/
+  def drawNonInterac() = {
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+  }
+  /********************3.视野内可交互的元素（food，mass，virus）****************/
+  def drawInteract(uid:String,offx:Double,offy:Double,scale:Double,food:List[Food],virus:List[Virus],mass:List[Mass])={
+    centerScale(scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    food.groupBy(_.color).foreach{a=>
+      val foodColor = a._1 match{
+        case 0 => "#f3456d"
+        case 1 => "#f49930"
+        case 2 => "#f4d95b"
+        case 3 => "#4cd964"
+        case 4 => "#9fe0f6"
+        case 5 => "#bead92"
+        case 6 => "#cfe6ff"
+        case _ => "#de9dd6"
+      }
+      ctx.setFill(Color.web(foodColor))
+      a._2.foreach{ case Food(color, x, y)=>
+        //        ctx.beginPath()
+        //        ctx.arc(x + offx,y + offy,10,10,0,360)
+        //        ctx.fill()
+        ctx.fillRect(x + offx,y + offy,16,16)
+      }
+    }
+
+    mass.groupBy(_.color).foreach{ a=>
+      a._1 match{
+        case 0 => ctx.setFill(Color.web("#f3456d"))
+        case 1 => ctx.setFill(Color.web("#f49930"))
+        case 2  => ctx.setFill(Color.web("#f4d95b"))
+        case 3  => ctx.setFill(Color.web("#4cd964"))
+        case 4  => ctx.setFill(Color.web("#9fe0f6"))
+        case 5  => ctx.setFill(Color.web("#bead92"))
+        case 6  => ctx.setFill(Color.web("#cfe6ff"))
+        case _  => ctx.setFill(Color.web("#de9dd6"))
+      }
+      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+
+        ctx.beginPath()
+        ctx.arc( x+offx ,y+offy ,r,r,0,360)
+        ctx.fill()
+      }
+    }
+
+    virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
+    }
+  }
+  /********************4.视野内包括自己的所有玩家******************************/
+  def drawAllPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+      val circleColor = color.toInt % 7 match{
+        //纯色星球
+                case 0 => "#b30e35"
+                case 1 => "#a65d0a"
+                case 2  => "#917600"
+                case 3  => "#05851b"
+                case 4  => "#037da6"
+                case 5  => "#875a16"
+                case 6  => "#4174ab"
+                case _  => "#8f3284"
+
+      }
+      ctx.setFill(Color.web(circleColor))
+      cells.sortBy(_.id).foreach{ cell=>
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc( x+offx ,y+offy ,cell.radius,cell.radius,0,360)
+        ctx.fill()
+
+        if(protect){
+          ctx.setFill(Color.web(MyColors.halo))
+          ctx.beginPath()
+          ctx.arc(x+offx,y+offy,cell.radius+15,cell.radius+15,0,360)
+          ctx.fill()
+        }
+        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        ctx.setFont(Font.font("Helvetica",nameFont))
+        val txt3=new Text(name)
+        val nameWidth = txt3.getLayoutBounds.getWidth
+        ctx.setStroke(Color.web("grey"))
+        ctx.strokeText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+        ctx.setFill(Color.web(MyColors.background))
+        ctx.fillText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+        ctx.restore()
+      }
+    }
+  }
+  /*********************5.视野内的自己***************************************/
+  def drawPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+      if(id == uid){
+        val circleColor = color.toInt % 7 match{
+          //纯色星球
+          case 0 => "#b30e35"
+          case 1 => "#a65d0a"
+          case 2  => "#917600"
+          case 3  => "#05851b"
+          case 4  => "#037da6"
+          case 5  => "#875a16"
+          case 6  => "#4174ab"
+          case _  => "#8f3284"
+
+        }
+        ctx.setFill(Color.web(circleColor))
+        cells.sortBy(_.id).foreach{ cell=>
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc( x+offx ,y+offy ,cell.radius,cell.radius,0,360)
+          ctx.fill()
+
+          if(protect){
+            ctx.setFill(Color.web(MyColors.halo))
+            ctx.beginPath()
+            ctx.arc(x+offx,y+offy,cell.radius+15,cell.radius+15,0,360)
+            ctx.fill()
+          }
+          var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+          nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+          ctx.setFont(Font.font("Helvetica",nameFont))
+          val txt3=new Text(name)
+          val nameWidth = txt3.getLayoutBounds.getWidth
+          ctx.setStroke(Color.web("grey"))
+          ctx.strokeText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+          ctx.setFill(Color.web(MyColors.background))
+          ctx.fillText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
+          ctx.restore()
+        }
+      }
+    }
+  }
+  /*********************6.面板状态信息图层************************************/
+  def drawInform(id: String, grid: GridOnClient) = {
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    //自己放第一个
+    val maxScore = grid.playerMap.map(player =>
+        player._2.cells.map(_.newmass).sum
+    ).toList.max
+    val maxKill = grid.playerMap.map(player =>
+      player._2.kill
+    ).toList.max
+    val myScore = grid.playerMap.filter(_._1 == id)(id).cells.map(_.newmass).sum
+    val myKill = grid.playerMap.filter(_._1 == id)(id).kill
+
+    def drawScoreKill(score: Double,kill: Int, index:Int) = {
+      //score
+      ctx.setFill(ColorsSetting.scoreColor)
+      ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
+        (280 * score / maxScore).toInt)
+      //kill
+      ctx.setFill(ColorsSetting.killColor)
+      ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+    }
+    drawScoreKill(myScore,myKill,0)
+    val sortedPlayerLists = grid.playerMap.filterNot(_._1 == id).values.toList.sortBy(_.cells.map(_.newmass).sum)
+    if(sortedPlayerLists.length <= 10){
+      for(i<-0 until sortedPlayerLists.length){
+        val player = sortedPlayerLists(i)
+        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
+      }
+    } else {
+      //选前十个
+      val sortedPlayerListsT = sortedPlayerLists.take(10)
+      for(i<-0 until sortedPlayerListsT.length){
+        val player = sortedPlayerListsT(i)
+        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
+      }
+    }
+
+
+  }
+
+  /********************* 人类视图：800*400 ***********************************/
 
 }
