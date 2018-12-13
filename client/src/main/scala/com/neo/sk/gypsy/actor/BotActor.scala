@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.actor
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.scaladsl.{Keep, Sink}
-import com.neo.sk.gypsy.bot.EsheepServer
+import com.neo.sk.gypsy.bot.BotServer
 import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import akka.http.scaladsl.Http
@@ -71,7 +71,7 @@ object BotActor {
           val executor = concurrent.ExecutionContext.Implicits.global
           val port = 5321
 
-          val server = EsheepServer.build(port, executor, ctx.self)
+          val server = BotServer.build(port, executor, ctx.self)
           server.start()
           log.debug(s"Server started at $port")
 
