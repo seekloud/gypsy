@@ -481,10 +481,16 @@ case class DrawGame(
       frame+=1
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell =>
+//        val cellx = if(cell.x!=cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate)
+//          cell.x + cell.speedX * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
+//        else cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
+//        val celly = if(cell.y!=cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate)
+//          cell.y + cell.speedY * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
+//        else cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
-        val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+        val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
