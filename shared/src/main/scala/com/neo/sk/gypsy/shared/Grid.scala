@@ -260,6 +260,7 @@ trait Grid {
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       //速度*方向==向某个方向移动的距离
+      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
       target = if(!cell.parallel) Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y) else Position(mouseAct.clientX , mouseAct.clientY)
@@ -269,12 +270,14 @@ trait Grid {
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
       val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
+      println(s"slowdown:$slowdown")
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = target.clientX / degX
       } else {
         if (cell.speed > 30 / slowdown) {
-          newSpeed -= 2
+          newSpeed -= acceleration
+//          newSpeed = 30 / slowdown
         } else {
           if (distance < cell.radius) {
             if (cell.speed > 0) {
