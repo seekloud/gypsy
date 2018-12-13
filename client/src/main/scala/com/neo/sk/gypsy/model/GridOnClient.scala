@@ -31,7 +31,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
 
   override def getAllGridData: GridDataSync={
     //    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
-    GridDataSync(0l, Nil, Nil, Map.empty, 1.0)
+    GridDataSync(0l, Nil, Nil, Map.empty, 1.0, Nil)
   }
 
   override def checkCellMerge: Boolean = {
@@ -74,7 +74,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                 //                }
               }
             }
-            List(Cell(cell.id, cellX, cellY, cell.mass, cell.radius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+            List(Cell(cell.id, cellX, cellY, cell.mass, cell.newmass, cell.radius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner))
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -99,7 +99,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var vSplitCells = List[Cell]()
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
             virusMap.foreach { vi =>
@@ -124,7 +124,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                 }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
 
         val length = newCells.length
@@ -149,7 +149,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             food.foreach {
               case (p, color) =>
@@ -163,7 +163,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                     newProtected = false
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -184,7 +184,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
-            var newMass = cell.mass
+            var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
               case p: Mass =>
@@ -194,7 +194,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                   massList = massList.filterNot(l => l == p)
                 }
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
