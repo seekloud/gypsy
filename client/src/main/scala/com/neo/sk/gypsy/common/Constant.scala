@@ -68,6 +68,7 @@ object Constant {
 
   val layeredCanvasWidth = 400
   val layeredCanvasHeight = 200
+  val informWidth = 15
 
   val humanCanvasWidth = 800
   val humanCanvasHeight = 400
