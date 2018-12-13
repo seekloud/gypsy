@@ -837,10 +837,47 @@ class GameCanvas(canvas: Canvas,
     }
   }
   /*********************6.面板状态信息图层************************************/
-  def drawInform(player: Player) = {
+  def drawInform(id: String, grid: GridOnClient) = {
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    //自己放第一个
+    val maxScore = grid.playerMap.map(player =>
+        player._2.cells.map(_.newmass).sum
+    ).toList.max
+    val maxKill = grid.playerMap.map(player =>
+      player._2.kill
+    ).toList.max
+    val myScore = grid.playerMap.filter(_._1 == id)(id).cells.map(_.newmass).sum
+    val myKill = grid.playerMap.filter(_._1 == id)(id).kill
+
+    def drawScoreKill(score: Double,kill: Int, index:Int) = {
+      //score
+      ctx.setFill(ColorsSetting.scoreColor)
+      ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
+        (280 * score / maxScore).toInt)
+      //kill
+      ctx.setFill(ColorsSetting.killColor)
+      ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+    }
+    drawScoreKill(myScore,myKill,0)
+    val sortedPlayerLists = grid.playerMap.filterNot(_._1 == id).values.toList.sortBy(_.cells.map(_.newmass).sum)
+    if(sortedPlayerLists.length <= 10){
+      for(i<-0 until sortedPlayerLists.length){
+        val player = sortedPlayerLists(i)
+        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
+      }
+    } else {
+      //选前十个
+      val sortedPlayerListsT = sortedPlayerLists.take(10)
+      for(i<-0 until sortedPlayerListsT.length){
+        val player = sortedPlayerListsT(i)
+        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
+      }
+    }
+
 
   }
 
-  /*********************人类视图：800*400 ***********************************/
+  /********************* 人类视图：800*400 ***********************************/
 
 }
