@@ -370,6 +370,8 @@ case class DrawGame(
     }
   }
 
+  var frame=1
+
   def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient)= {
     //计算偏移量
     val players = data.playerDetails
@@ -475,6 +477,8 @@ case class DrawGame(
         case 22=>star22 //(243,69,109)   b30e35
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
+      println(s"frame:$frame,x:$x,y:$y")
+      frame+=1
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell =>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
