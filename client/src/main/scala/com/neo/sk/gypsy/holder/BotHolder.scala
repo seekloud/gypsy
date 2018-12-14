@@ -67,7 +67,7 @@ class BotHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
-  private val botActor = ClientBoot.system.spawn(BotActor.create(this),"BotActor")
+  private val botActor = ClientBoot.system.spawn(BotActor.create(this,stageCtx),"BotActor")
 
 
 

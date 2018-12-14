@@ -22,8 +22,8 @@ class LoginHolder(
                    stageCtx: StageContext
                  ) {
 
-  loginScene.setLoginSceneListener(new LoginScene.LoginSceneListener {
-    override def onButtonConnect(): Unit = {
+  loginScene.setLoginListener(new LoginScene.LoginSceneListener {
+    override def onButtonScanLogin: Unit = {
       getLoginResponseFromEs().map {
         case Right(r) =>
           val wsUrl = r.data.wsUrl
@@ -33,7 +33,29 @@ class LoginHolder(
         case Left(l) =>
       }
     }
+
+    override def onButtonBotConnect(): Unit = {
+
+    }
+
+    override def onButtonEmailConnect(): Unit = {
+
+    }
+
+    override def onButtonBotLogin(): Unit = {
+
+    }
+
+    override def onButtonEmailLogin(): Unit = {
+
+    }
+
+    override def onButtonPlayerLogin(): Unit = {
+      loginScene.drawLoginWay()
+    }
   })
+
+
 
   def showScene(): Unit ={
     ClientBoot.addToPlatform{
