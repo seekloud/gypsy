@@ -91,6 +91,8 @@ object TokenActor {
           }
           switchBehavior(ctx, "busy", busy(), GetTokenTime, TimeOut("Get Token"))
 
+
+          //TODO 暂未调用
         case GetAccessCode(rsp) =>
           Api4GameAgent.linkGameAgent(AppSettings.gameId,token,playerId).onComplete{
             case Success(rst) =>

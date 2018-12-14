@@ -87,7 +87,7 @@ object Api4GameAgent extends HttpUtil{
     val data = BotKey2Token(botId,botKey).asJson.noSpaces
     postJsonRequestSend(methodName, url, Nil, data).map{
       case Right(jsonStr) =>
-        decode[GaRefreshTokenRsp](jsonStr) match {
+        decode[BotTokenRsp](jsonStr) match {
           case Right(rsp) =>
             if(rsp.errCode == 0){
               Right(rsp.data)

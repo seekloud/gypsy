@@ -83,10 +83,12 @@ class GameHolder(
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
-  def connectToGameServer(gameHolder:GameHolder) = {
+//  def connectToGameServer(gameHolder:GameHolder) = {
+  def connectToGameServer() = {
     ClientBoot.addToPlatform{
       stageCtx.showScene(gameScene.scene,"Gaming",false)
-      gameClient ! ControllerInitial(gameHolder)
+      gameClient ! ControllerInitial(this)
+      //TODO 写在这里未必合适
       ClientBoot.addToPlatform(
         start()
       )
