@@ -37,7 +37,7 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
-  def linkGameAgent(gameId:Long,playerId:String,token:String) = {
+  def linkGameAgent(gameId:Long, playerId:String, token:String) = {
     val data = LinkGameData(gameId,playerId).asJson.noSpaces
     val url  = esheepProtocol + "://" + esheepDomain + "/esheep/api/gameAgent/joinGame?token="+token
     postJsonRequestSend("linkGameAgentPost",url,Nil,data).map{
@@ -55,7 +55,7 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
-  def refreshToken(playerId: String,token:String): Future[Either[ErrorRsp,TokenInfo]] = {
+  def refreshToken(playerId:String, token:String): Future[Either[ErrorRsp,TokenInfo]] = {
     val methodName = s"gaRefreshToken"
     val url = esheepProtocol + "://" + esheepDomain +s"/esheep/api/gameAgent/gaRefreshToken?token=$token"
 
@@ -77,6 +77,27 @@ object Api4GameAgent extends HttpUtil{
         }
       case Left(error) =>
         println(s"${methodName}  failed,error:${error.getMessage}")
+        Left(ErrorRsp(-1,error.getMessage))
+    }
+  }
+
+  def botKey2Token(botId:Long, botKey:String) = {
+    val methodName = "botkey2token"
+    val url = esheepProtocol + "://" + esheepDomain + "/esheep/api/sdk/botKey2Token"
+    val data = BotKey2Token(botId,botKey).asJson.noSpaces
+    postJsonRequestSend(methodName, url, Nil, data).map{
+      case Right(jsonStr) =>
+        decode[GaRefreshTokenRsp](jsonStr) match {
+          case Right(rsp) =>
+            if(rsp.errCode == 0){
+              Right(rsp.data)
+            }else{
+              Left(ErrorRsp(rsp.errCode, rsp.msg))
+            }
+          case Left(error) =>
+            Left(ErrorRsp(-1, error.getMessage))
+        }
+      case Left(error) =>
         Left(ErrorRsp(-1,error.getMessage))
     }
   }

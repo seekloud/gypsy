@@ -250,6 +250,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   addActionWithFrame(id,a)
                 case b:MousePosition=>
                   addMouseActionWithFrame(id,b)
+                case _ =>
               }
             }
           }
