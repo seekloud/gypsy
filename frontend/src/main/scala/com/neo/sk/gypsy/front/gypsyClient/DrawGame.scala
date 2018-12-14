@@ -16,9 +16,14 @@ import org.scalajs.dom.html.{Canvas, Image}
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-
+import com.neo.sk.gypsy.front.utils.EchartsJs
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
+import io.circe.generic.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
+
+
 /**
   * User: sky
   * Date: 2018/9/14
@@ -83,6 +88,7 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
 
 //  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
 
@@ -331,6 +337,7 @@ case class DrawGame(
   }
 
   def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,Player)])={
+
     if(isKill){
       val showTime = killList.head._1
       val killerId = killList.head._2
@@ -632,6 +639,14 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+
+  def drawEcharts() = {
+    val myChart = EchartsJs.echarts.init(echarts)
+    val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line"))).asJson
+    myChart.setOption(option)
+    ctx.drawImage(echarts,0,0,400,200)
   }
 
 

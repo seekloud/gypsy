@@ -173,6 +173,24 @@ package object ptcl {
     val allopatry:Int = 3
   }
 
+  case class XAxis(
+                    `type`:String,
+                    boundaryGap:Boolean,
+                    data:List[String]
+                  )
+  case class YAxis(
+                    `type`:String
+                  )
+  case class SeriesItem(
+                       data:List[Int],
+                       `type`: String
+                       )
+  case class EchartOption(
+                           xAxis:XAxis,
+                           yAxis:YAxis,
+                           series:List[SeriesItem]
+                         )
+
 //  object UserState{
 //    val waiting = 0
 //    val play = 1
