@@ -404,7 +404,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
   }
 
   //从第frame开始回滚到现在
-  def rollback(frame:Long) = {
+/*  def rollback(frame:Long) = {
     gameSnapshotMap.get(frame) match {
       case Some(state) =>
         val curFrame = frameCount
@@ -423,7 +423,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         }
       case None =>
     }
-  }
+  }*/
 
   def reStart={
     myId = ""
