@@ -20,7 +20,7 @@ object LoginScene {
   trait LoginSceneListener {
 
     def onButtonPlayerLogin()
-    def onButtonBotLogin()
+    def onButtonBotLogin(botId: String, botKey: String)
     def onButtonScanLogin() //扫码
     def onButtonEmailLogin() //邮箱
     def onButtonEmailConnect()

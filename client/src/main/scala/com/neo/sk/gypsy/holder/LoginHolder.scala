@@ -4,11 +4,13 @@ import java.io.ByteArrayInputStream
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.actor.WsClient
+import com.neo.sk.gypsy.actor.BotActor._
+import com.neo.sk.gypsy.actor.{BotActor, WsClient}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
 import com.neo.sk.gypsy.actor.WsClient.ConnectEsheep
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -18,9 +20,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 class LoginHolder(
                    wsClient: ActorRef[WsClient.WsCommand],
+                   botActor: ActorRef[BotActor.Command],
                    loginScene: LoginScene,
                    stageCtx: StageContext
                  ) {
+
+  private[this] val log = LoggerFactory.getLogger(this.getClass)
 
   loginScene.setLoginListener(new LoginScene.LoginSceneListener {
     override def onButtonScanLogin: Unit = {
@@ -42,8 +47,9 @@ class LoginHolder(
 
     }
 
-    override def onButtonBotLogin(): Unit = {
-
+    override def onButtonBotLogin(botId: String, botKey: String): Unit = {
+      log.info(s"bot join")
+      botActor ! BotLogin(botId,botKey)
     }
 
     override def onButtonEmailLogin(): Unit = {

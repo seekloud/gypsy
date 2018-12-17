@@ -28,7 +28,5 @@ object EchartsJs{
     def init(props:HTMLElement):EchartsJs.Echart = js.native
   }
 
-
-
 }
 

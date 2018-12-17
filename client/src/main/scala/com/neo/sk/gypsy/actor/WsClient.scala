@@ -14,8 +14,8 @@ import akka.stream.typed.scaladsl.{ActorSink, _}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.common.StageContext
-import com.neo.sk.gypsy.holder.GameHolder
-import com.neo.sk.gypsy.scene.GameScene
+import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
+import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 import com.neo.sk.gypsy.common.AppSettings
@@ -29,7 +29,7 @@ import io.circe.parser.decode
 import io.circe.generic.auto._
 import com.neo.sk.gypsy.common.Api4GameAgent._
 import com.neo.sk.gypsy.ClientBoot.tokenActor
-
+import com.neo.sk.gypsy.botService.BotServer
 
 import scala.concurrent.ExecutionContext.Implicits.global
 /**
@@ -83,9 +83,9 @@ object WsClient {
 
           val connected = response.flatMap { upgrade =>
             if(upgrade.response.status == StatusCodes.SwitchingProtocols){
-              val gameScene = new GameScene()
+              val gameScene = new GameScene
               val gameHolder = new GameHolder(stageCtx,gameScene,stream)
-//              gameHolder.connectToGameServer(gameHolder)
+              //gameHolder.connectToGameServer(gameHolder)
               gameHolder.connectToGameServer()
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
             } else {
@@ -181,7 +181,7 @@ object WsClient {
                 val nickName = data.nickname
                 linkGameAgent(gameId,playerId,data.token).map{
                   case Right(resl) =>
-                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
+                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,playerId)
                     self ! ConnectGame(playerId,nickName,resl.accessCode)
 //                    tokenActor ! TokenActor.InitToken(data.token,data.tokenExpireTime,s"user${data.userId}")
                   case Left(l) =>
