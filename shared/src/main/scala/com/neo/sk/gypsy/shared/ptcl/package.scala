@@ -181,15 +181,18 @@ package object ptcl {
   case class YAxis(
                     `type`:String
                   )
+  case class AreaStyle()
+
   case class SeriesItem(
                        data:List[Int],
-                       `type`: String
+                       `type`: String,
+                       areaStyle: AreaStyle
                        )
   case class EchartOption(
-                           xAxis:XAxis,
-                           yAxis:YAxis,
-                           series:List[SeriesItem]
-                         )
+                               xAxis:XAxis,
+                               yAxis:YAxis,
+                               series:List[SeriesItem]
+                             )
 
 //  object UserState{
 //    val waiting = 0
