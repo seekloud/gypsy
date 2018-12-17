@@ -1,10 +1,11 @@
 package com.neo.sk.gypsy.scene
 
 import java.util.concurrent.atomic.AtomicInteger
+
+import com.neo.sk.gypsy.common.AppSettings
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
-
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
 import com.neo.sk.gypsy.utils.FpsComp
@@ -13,10 +14,67 @@ import com.neo.sk.gypsy.utils.FpsComp
 class LayeredScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
+
+  val group = new Group()
+  //TODO 为什么是1300*900 不是1600 * 900
+  val scene = new Scene(group, 1300,900)
+
+//  400*200
+  val layerWidth = AppSettings.layerCanvasW
+  val layerHeight = AppSettings.layerCanvasH
+
+//  800*400
+  val viewWidth = AppSettings.viewCanvasW
+  val viewHeight = AppSettings.viewCanvasH
+
+  val layerMapCanvas = new Canvas(layerWidth,layerHeight)
+  val layerInfoCanvas = new Canvas(layerWidth,layerHeight)
+  val layerBgCanvas = new Canvas(layerWidth,layerHeight)
+  val layerAppleCanvas = new Canvas(layerWidth,layerHeight)
+  val layerAllSnakesCanvas = new Canvas(layerWidth,layerHeight)
+  val layerMySnakeCanvas = new Canvas(layerWidth,layerHeight)
+
+//  人类视图
+  val viewCanvas = new Canvas(viewWidth,viewHeight)
+
+
+  /*
+   *  这里几个是设置布局位置
+   */
+//  TODO 调一调布局
+  layerBgCanvas.setLayoutX(800)
+  layerBgCanvas.setLayoutY(0)
+  layerInfoCanvas.setLayoutX(1200)
+  layerInfoCanvas.setLayoutY(0)
+  layerMySnakeCanvas.setLayoutX(800)
+  layerMySnakeCanvas.setLayoutY(400)
+  layerAllSnakesCanvas.setLayoutX(1200)
+  layerAllSnakesCanvas.setLayoutY(400)
+  layerMapCanvas.setLayoutX(800)
+  layerMapCanvas.setLayoutY(600)
+  layerAppleCanvas.setLayoutX(1200)
+  layerAppleCanvas.setLayoutY(600)
+
+  viewCanvas.setLayoutX(0)
+  viewCanvas.setLayoutY(100)
+
+//  把Canvas加进group
+  group.getChildren.add(viewCanvas)
+
+  group.getChildren.add(layerMapCanvas)
+  group.getChildren.add(layerInfoCanvas)
+  group.getChildren.add(layerBgCanvas)
+  group.getChildren.add(layerAllSnakesCanvas)
+  group.getChildren.add(layerAppleCanvas)
+  group.getChildren.add(layerMySnakeCanvas)
+
+
+
+
+
   val canvasWidth=1200
   val canvasHeight=600
   val window=Point(canvasWidth,canvasHeight)
-  val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
   val middleCanvas = new Canvas(canvasWidth,canvasHeight)
@@ -31,7 +89,6 @@ class LayeredScene {
   topCanvas.setStyle("z-index: 3")
 
 
-  val scene = new Scene(group)
   group.getChildren.add(gameCanvas)
   group.getChildren.add(middleCanvas)
   group.getChildren.add(topCanvas)
