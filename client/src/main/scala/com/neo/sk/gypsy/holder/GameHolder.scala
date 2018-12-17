@@ -112,7 +112,7 @@ class GameHolder(
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(WsMsgProtocol.frameRate),{ _ =>
       //游戏循环
       gameLoop()
     })
