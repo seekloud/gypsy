@@ -16,9 +16,13 @@ import org.scalajs.dom.html.{Canvas, Image}
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-
+import com.neo.sk.gypsy.front.utils.EchartsJs
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
+import io.circe.generic.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
+
 /**
   * User: sky
   * Date: 2018/9/14
@@ -83,6 +87,7 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
 
 //  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
 
@@ -331,6 +336,7 @@ case class DrawGame(
   }
 
   def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,Player)])={
+
     if(isKill){
       val showTime = killList.head._1
       val killerId = killList.head._2
@@ -369,6 +375,8 @@ case class DrawGame(
       (killList,isKill)
     }
   }
+
+  var frame=1
 
   def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient)= {
     //计算偏移量
@@ -475,12 +483,20 @@ case class DrawGame(
         case 22=>star22 //(243,69,109)   b30e35
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
+      println(s"frame:$frame,x:$x,y:$y")
+      frame+=1
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell =>
+//        val cellx = if(cell.x!=cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate)
+//          cell.x + cell.speedX * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
+//        else cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
+//        val celly = if(cell.y!=cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate)
+//          cell.y + cell.speedY * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
+//        else cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
-        val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
+        val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
@@ -632,6 +648,15 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+
+  def drawEcharts() = {
+    val myChart = EchartsJs.echarts.init(echarts)
+    val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line",AreaStyle()))).asJson
+//    myChart.setOption(option)
+    println(option)
+    ctx.drawImage(echarts,0,0,400,200)
   }
 
 
