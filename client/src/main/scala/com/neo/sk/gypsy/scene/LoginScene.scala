@@ -18,7 +18,13 @@ import javafx.scene.text.FontPosture
 
 object LoginScene {
   trait LoginSceneListener {
-    def onButtonConnect()
+
+    def onButtonPlayerLogin()
+    def onButtonBotLogin()
+    def onButtonScanLogin() //扫码
+    def onButtonEmailLogin() //邮箱
+    def onButtonEmailConnect()
+    def onButtonBotConnect()
   }
 }
 class LoginScene {
@@ -27,31 +33,57 @@ class LoginScene {
   val width = 500
   val height = 500
   val group = new Group
-  val button = new Button("登录")
+  val playerButton = new Button("娱乐模式")
+  val BotButton = new Button("训练模式")
+  val ScanButton = new Button("扫码登录")
+  val EmailButton = new Button("邮箱登录")
+  val EmailConnect = new Button("确定")
+  val BotConnectButton = new Button("开始训练")
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
   var loginSceneListener: LoginSceneListener=_
 
-  button.setLayoutX(230)
-  button.setLayoutY(240)
-  ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
-  ctx.setFill(Color.BLACK)
+  playerButton.setLayoutX(220)
+  playerButton.setLayoutY(180)
+  BotButton.setLayoutX(220)
+  BotButton.setLayoutY(300)
+  EmailButton.setLayoutX(220)
+  EmailButton.setLayoutY(180)
+  ScanButton.setLayoutX(220)
+  ScanButton.setLayoutY(300)
   group.getChildren.add(canvas)
-  group.getChildren.add(button)
+  group.getChildren.add(playerButton)
+  group.getChildren.add(BotButton)
   val scene = new Scene(group)
 
-  button.setOnAction(_ => loginSceneListener.onButtonConnect())
+  playerButton.setOnAction(_ => loginSceneListener.onButtonPlayerLogin())
+  BotButton.setOnAction(_ => loginSceneListener.onButtonBotLogin())
+  ScanButton.setOnAction(_ => loginSceneListener.onButtonScanLogin())
+  EmailButton.setOnAction(_ => loginSceneListener.onButtonEmailLogin())
+  EmailConnect.setOnAction(_ => loginSceneListener.onButtonEmailConnect())
+  BotConnectButton.setOnAction(_ => loginSceneListener.onButtonBotConnect())
 
-  def setLoginSceneListener(listener: LoginSceneListener): Unit ={
+  def setLoginListener(listener: LoginSceneListener): Unit ={
     loginSceneListener = listener
   }
 
   def drawScanUrl(imageStream:ByteArrayInputStream)={
     ClientBoot.addToPlatform{
-      group.getChildren.remove(button)
+      group.getChildren.remove(EmailButton)
+      group.getChildren.remove(ScanButton)
       val image = new Image(imageStream)
+      ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
+      ctx.setFill(Color.BLACK)
       ctx.drawImage(image,100,80)
       ctx.fillText("请扫码登录",180,400)
+    }
+  }
+  def drawLoginWay()={
+    ClientBoot.addToPlatform{
+      group.getChildren.remove(playerButton)
+      group.getChildren.remove(BotButton)
+      group.getChildren.add(EmailButton)
+      group.getChildren.add(ScanButton)
     }
   }
 
