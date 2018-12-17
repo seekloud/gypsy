@@ -23,7 +23,6 @@ import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
 
-
 /**
   * User: sky
   * Date: 2018/9/14
@@ -644,8 +643,9 @@ case class DrawGame(
 
   def drawEcharts() = {
     val myChart = EchartsJs.echarts.init(echarts)
-    val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line"))).asJson
-    myChart.setOption(option)
+    val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line",AreaStyle()))).asJson
+//    myChart.setOption(option)
+    println(option)
     ctx.drawImage(echarts,0,0,400,200)
   }
 

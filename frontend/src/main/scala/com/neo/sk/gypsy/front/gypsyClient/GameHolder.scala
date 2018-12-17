@@ -155,7 +155,7 @@ class GameHolder(replay:Boolean = false) {
       case GameState.play if myId!= ""=>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
-//        drawTopView.drawWhenDead(deadInfo.get)
+        drawTopView.drawWhenDead(deadInfo.get)
         drawTopView.drawEcharts()
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")

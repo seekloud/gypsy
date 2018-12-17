@@ -26,11 +26,11 @@ object BotServer {
 
 
 class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
-  override def createRoom(request: Credit): Future[CreateRoomRsp] = {
+  override def createRoom(request: CreateRoomReq): Future[CreateRoomRsp] = {
     //TODO
     println(s"createRoom Called by [$request")
-    if(checkBotToken(request.playerId,request.apiToken)){
-      botActor ! CreateRoom(request.playerId,request.apiToken)
+    if(checkBotToken(request.credit.get.apiToken)){
+//      botActor ! CreateRoom(request.playerId,request.apiToken)
       val state = State.init_game
       Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
@@ -40,8 +40,8 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def joinRoom(request: JoinRoomReq): Future[SimpleRsp] = {
     println(s"joinRoom Called by [$request")
-    if(checkBotToken(request.credit.get.playerId,request.credit.get.apiToken)){
-      botActor ! JoinRoom(request.roomId,request.credit.get.playerId,request.credit.get.apiToken)
+    if(checkBotToken(request.credit.get.apiToken)){
+//      botActor ! JoinRoom(request.roomId,request.credit.get.playerId,request.credit.get.apiToken)
       val state = State.in_game
       Future.successful(SimpleRsp(errCode = 102, state = state, msg = "ok"))
     }else{
@@ -52,8 +52,8 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def leaveRoom(request: Credit): Future[SimpleRsp] = {
     println(s"leaveRoom Called by [$request")
-    if(checkBotToken(request.playerId,request.apiToken)){
-      botActor ! LeaveRoom(request.playerId)
+    if(checkBotToken(request.apiToken)){
+//      botActor ! LeaveRoom(request.playerId)
       val state = State.ended
       Future.successful(SimpleRsp(errCode = 103, state = state, msg = "ok"))
     }else{
@@ -63,7 +63,7 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def actionSpace(request: Credit): Future[ActionSpaceRsp] = {
     println(s"actionSpace Called by [$request")
-    if(checkBotToken(request.playerId,request.apiToken)){
+    if(checkBotToken(request.apiToken)){
       val rsp = ActionSpaceRsp(swing = true, apply = List(0, 69,70),fire = List(), move = List(), errCode = 13, state = State.unknown, msg = "ok")
       Future.successful(rsp)
     }else{
@@ -73,7 +73,7 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def action(request: ActionReq): Future[ActionRsp] = {
     println(s"action Called by [$request")
-    if(checkBotToken(request.credit.get.playerId,request.credit.get.apiToken)){
+    if(checkBotToken(request.credit.get.apiToken)){
       botHolder.gameActionReceiver(request.apply,request.swing)
       val rsp = ActionRsp(frameIndex = botHolder.getFrameCount.toInt, errCode = 13, state = State.unknown, msg = "ok")
       Future.successful(rsp)
@@ -84,7 +84,7 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def observation(request: Credit): Future[ObservationRsp] = {
     println(s"action Called by [$request")
-    if(checkBotToken(request.playerId,request.apiToken)){
+    if(checkBotToken(request.apiToken)){
       //TODO
       val rsp = ObservationRsp()
       Future.successful(rsp)
@@ -95,15 +95,21 @@ class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
 
   override def inform(request: Credit): Future[InformRsp] = {
     println(s"action Called by [$request")
-    if(checkBotToken(request.playerId,request.apiToken)){
-      val rsp = InformRsp(score = botHolder.getInform(request.playerId)._1.toInt, kills = botHolder.getInform(request.playerId)._2,
-        state = State.unknown, msg = "ok")
-      Future.successful(rsp)
+    if(checkBotToken(request.apiToken)){
+//      val rsp = InformRsp(score = botHolder.getInform(request.playerId)._1.toInt, kills = botHolder.getInform(request.playerId)._2,
+//        state = State.unknown, msg = "ok")
+//      Future.successful(rsp)
+      Future.successful(InformRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }else{
       Future.successful(InformRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }
 
   }
+
+  override def reincarnation(request: Credit):Future[SimpleRsp] = {
+    Future.successful(SimpleRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+  }
+
 }
 
 

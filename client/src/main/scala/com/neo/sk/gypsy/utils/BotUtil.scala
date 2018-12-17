@@ -7,8 +7,8 @@ import com.neo.sk.gypsy.common.AppSettings.botSecure
   */
 object BotUtil {
 
-  def checkBotToken(playerId: String, apiToken: String) = {
-    if(playerId == botSecure._1 && apiToken == botSecure._2)
+  def checkBotToken(apiToken: String) = {
+    if(apiToken == botSecure._2)
       true
     else
       false

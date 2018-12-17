@@ -145,7 +145,7 @@ trait Grid {
       val myInfo = playerMap(myId)
       var myScore = 0
       myInfo.cells.foreach{c=>
-        myScore += c.newmass
+        myScore += c.newmass.toInt
       }
       tempScoreList += myScore
       if(tempScoreList.length > Compress_times){
