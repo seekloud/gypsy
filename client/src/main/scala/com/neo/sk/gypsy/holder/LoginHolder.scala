@@ -34,11 +34,11 @@ class LoginHolder(
       }
     }
 
-    override def onButtonBotConnect(): Unit = {
+    override def onButtonBotConnect(botId:String,botKey:String): Unit = {
 
     }
 
-    override def onButtonEmailConnect(): Unit = {
+    override def onButtonEmailConnect(email:String,password:String): Unit = {
 
     }
 
@@ -47,11 +47,16 @@ class LoginHolder(
     }
 
     override def onButtonEmailLogin(): Unit = {
+      loginScene.drawEmailLogin()
 
     }
 
     override def onButtonPlayerLogin(): Unit = {
       loginScene.drawLoginWay()
+    }
+
+    override def onButtonReturn(): Unit = {
+      loginScene.drawReturn()
     }
   })
 
