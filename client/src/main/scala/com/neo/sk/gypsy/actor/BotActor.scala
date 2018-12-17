@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.actor
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.scaladsl.{Keep, Sink}
-import com.neo.sk.gypsy.bot.BotServer
+import com.neo.sk.gypsy.botService.BotServer
 import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import akka.http.scaladsl.Http
@@ -14,13 +14,15 @@ import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.shared.ptcl._
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
-import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
+
 import scala.concurrent.Future
-import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system}
-import com.neo.sk.gypsy.common.Constant
+import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
+import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
 import com.neo.sk.gypsy.holder.BotHolder
 import com.neo.sk.gypsy.scene.LayeredScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 /**
@@ -31,9 +33,9 @@ object BotActor {
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
 
-  var botHolder: BotHolder = null
-
   sealed trait Command
+
+  case class BotLogin(botId:String, botKey:String) extends Command
 
   case object Work extends Command
 
@@ -52,37 +54,52 @@ object BotActor {
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
 
-  def create(botController: BotHolder,
-             stageCtx: StageContext): Behavior[Command] = {
+  def create(
+              gameClient: ActorRef[WsMsgSource],
+              stageCtx: StageContext
+            ): Behavior[Command] = {
     Behaviors.setup[Command] { ctx =>
       implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers { implicit timer =>
         ctx.self ! Work
-        waitingGaming(botController,stageCtx)
+        waitingGaming(gameClient,stageCtx)
       }
     }
   }
 
-  def waitingGaming(botController: BotHolder,
+  def waitingGaming(gameClient: ActorRef[WsMsgSource],
                     stageCtx: StageContext)(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Work =>
-          val executor = concurrent.ExecutionContext.Implicits.global
-          val port = 5321
+        case BotLogin(botId,botKey) =>
+          botKey2Token(botId,botKey).map{
+            case Right(value) =>
+              val gameId = AppSettings.gameId
+              val playerId = "bot" + botId
+              linkGameAgent(gameId,playerId,value.token).map{
+                case Right(res) =>
+                  tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
+                  ctx.self ! Work
+                case Left(e) =>
+              }
+            case Left(e) =>
 
+          }
+          Behaviors.same
+        case Work =>
+          //启动BotService
+          val port = 5321
           val server = BotServer.build(port, executor, ctx.self)
           server.start()
           log.debug(s"Server started at $port")
-
           sys.addShutdownHook {
             log.debug("JVM SHUT DOWN.")
             server.shutdown()
             log.debug("SHUT DOWN.")
           }
-          server.awaitTermination()
-          log.debug("DONE.")
-          waitingGame(botController,stageCtx)
+//          server.awaitTermination()
+//          log.debug("DONE.")
+          waitingGame(gameClient,stageCtx)
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -91,7 +108,7 @@ object BotActor {
     }
   }
 
-  def waitingGame(botController: BotHolder,
+  def waitingGame(gameClient: ActorRef[WsMsgSource],
                   stageCtx: StageContext
                  )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
@@ -99,7 +116,7 @@ object BotActor {
         case CreateRoom(playerId, apiToken) =>
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(getCreateRoomWebSocketUri(playerId, apiToken)))
           val source = getSource
-          val sink = getSink(botController)
+          val sink = getSink(gameClient)
           val ((stream, response), closed) =
             source
               .viaMat(webSocketFlow)(Keep.both) // keep the materialized Future[WebSocketUpgradeResponse]
@@ -109,7 +126,8 @@ object BotActor {
           val connected = response.flatMap { upgrade =>
             if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
               val layeredScene = new LayeredScene
-              botHolder = new BotHolder(stageCtx,layeredScene,stream)
+              val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+              botHolder.connectToGameServer()
               Future.successful("connect success")
             } else {
               throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
@@ -125,7 +143,7 @@ object BotActor {
         case JoinRoom(roomId, playerId, apiToken) =>
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(getJoinRoomWebSocketUri(roomId, playerId, apiToken)))
           val source = getSource
-          val sink = getSink(botController)
+          val sink = getSink(gameClient)
           val ((stream, response), closed) =
             source
               .viaMat(webSocketFlow)(Keep.both) // keep the materialized Future[WebSocketUpgradeResponse]
@@ -134,6 +152,9 @@ object BotActor {
 
           val connected = response.flatMap { upgrade =>
             if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+              val layeredScene = new LayeredScene
+              val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+              botHolder.connectToGameServer()
               Future.successful("connect success")
             } else {
               throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
@@ -157,11 +178,11 @@ object BotActor {
             )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-//        case Action(swing) =>
-//          val (x,y) = Constant.swingToXY(swing)
-//          //if(actionNum != -1)
-//          //actor ! Key
-//          Behaviors.same
+        case Action(swing) =>
+          val (x,y) = Constant.swingToXY(swing)
+          //if(actionNum != -1)
+          //actor ! Key
+          Behaviors.same
 
         case ReturnObservation(playerId) =>
 
@@ -178,7 +199,7 @@ object BotActor {
     }
   }
 
-  private[this] def getSink(botController: BotHolder) =
+  private[this] def getSink(gameClient: ActorRef[WsMsgSource]) =
     Sink.foreach[Message] {
       case TextMessage.Strict(msg) =>
         log.debug(s"msg from webSocket: $msg")
@@ -187,7 +208,7 @@ object BotActor {
         //decode process.
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
         bytesDecode[GameMessage](buffer) match {
-          case Right(v) => botController.gameMessageHandler(v)
+          case Right(v) =>
           case Left(e) =>
             println(s"decode error: ${e.message}")
         }
@@ -200,7 +221,7 @@ object BotActor {
         f.map { bMsg =>
           val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
           bytesDecode[GameMessage](buffer) match {
-            case Right(v) => botController.gameMessageHandler(v)
+            case Right(v) =>
             case Left(e) =>
               println(s"decode error: ${e.message}")
           }

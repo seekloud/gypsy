@@ -28,7 +28,7 @@ class GameScene {
   var gameSceneListener: GameSceneListener = _
   val canvasWidth=1200
   val canvasHeight=600
-  val window=Point(canvasWidth,canvasHeight)
+  var window=Point(canvasWidth,canvasHeight)
   val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
@@ -54,25 +54,15 @@ class GameScene {
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
-//    //    val viewWidth = 1200//1800
-//    //    val viewHeight = 750//900
-//    //    val rankWidth = 1200//1800
-//    //    val rankHeight = 250//300
-//
-//    rank.resetRankView(rankWidth, rankHeight)
-//    view.resetScreen(viewWidth, viewHeight, rankWidth, rankHeight)
-
+    window = Point(viewWidth,viewHeight)
     gameView.resetScreen(viewWidth,viewHeight)
     middleView.resetScreen(viewWidth,viewHeight)
     topView.resetScreen(viewWidth,viewHeight)
-    //
-    //    rankCanvas.setWidth(rankWidth)
-    //    rankCanvas.setHeight(rankHeight)
   }
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,window.x,window.y)
+    val data = grid.getGridData(myId,1200,600)
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false

@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.actor
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
-import com.neo.sk.gypsy.holder.GameHolder
+import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
 import com.neo.sk.gypsy.shared.ptcl
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.model.GridOnClient
@@ -14,7 +14,7 @@ import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.utils.{FpsComp, ClientMusic}
+import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -22,6 +22,8 @@ import com.neo.sk.gypsy.utils.{FpsComp, ClientMusic}
 object GameClient {
 
   case class ControllerInitial(controller: GameHolder) extends GameBeginning
+  case class ControllerInitialBot(controller: BotHolder) extends GameBeginning
+
   private[this] val log = LoggerFactory.getLogger(this.getClass)
   private[this] var grid: GridOnClient = _
 

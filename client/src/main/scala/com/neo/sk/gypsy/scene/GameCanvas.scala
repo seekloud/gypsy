@@ -348,27 +348,19 @@ class GameCanvas(canvas: Canvas,
   //offScreenCanvas:Canvas
   def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
     //计算偏移量
-    val players = data.playerDetails
-    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
-    val masses = data.massDetails
-    val virus = data.virusDetails
-
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
-    //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
-    //var scale = data.scale
-
-    //绘制背景
-    //    ctx.fillStyle = MyColors.background
-
+    centerScale(scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    centerScale(scale,realWindow.x/2,realWindow.y/2)
-
-    //TODO /2
+    val players = data.playerDetails
+    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
+    val masses = data.massDetails
+    val virus = data.virusDetails
+    //   /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
@@ -419,7 +411,6 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
-
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
           //经典星球
@@ -516,7 +507,6 @@ class GameCanvas(canvas: Canvas,
         gird.playerMap += (id -> player)
       }
     }
-
     virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x

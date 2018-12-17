@@ -81,7 +81,7 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
-  def botKey2Token(botId:Long, botKey:String) = {
+  def botKey2Token(botId:String, botKey:String) = {
     val methodName = "botkey2token"
     val url = esheepProtocol + "://" + esheepDomain + "/esheep/api/sdk/botKey2Token"
     val data = BotKey2Token(botId,botKey).asJson.noSpaces
