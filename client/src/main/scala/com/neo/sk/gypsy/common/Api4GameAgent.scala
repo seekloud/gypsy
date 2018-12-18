@@ -102,4 +102,25 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
+  def emailLogin(email:String,password:String)={
+    val methodName="GET"
+    val url = esheepProtocol + "://" + esheepDomain + "/esheep/rambler/login"
+    val data=LoginReq(email,password).asJson.noSpaces
+    postJsonRequestSend(methodName,url,Nil,data).map{
+      case Right(data) =>
+        decode[ESheepUserInfoRsp](data) match {
+          case Right(rsp) =>
+            if(rsp.errCode==0){
+              Right(rsp)
+            }
+            else{
+              Left(ErrorRsp(rsp.errCode,rsp.msg))
+            }
+          case Left(error)=>
+            Left(ErrorRsp(-1,error.getMessage))
+        }
+      case Left(error) =>
+        Left(ErrorRsp(-1,error.getMessage))
+    }
+  }
 }
