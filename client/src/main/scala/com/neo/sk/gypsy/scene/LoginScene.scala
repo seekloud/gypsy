@@ -11,6 +11,7 @@ import javafx.scene.image.Image
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 import javafx.scene.text.FontPosture
+import scalafx.scene.text.Text
 /**
   * @author zhaoyin
   * 2018/10/29  5:21 PM
@@ -53,7 +54,10 @@ class LoginScene {
   val botKeyLabel = new Label("BotKey:")
   val botKeyInput = new TextField()
 
-  val ErrorTip = new TextField()
+  val ErrorTip = new Text()
+  ErrorTip.setLayoutX(190)
+  ErrorTip.setLayoutY(310)
+  ErrorTip.setFill(Color.RED)
 
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
@@ -79,9 +83,19 @@ class LoginScene {
   pwdInput.setLayoutX(180)
   pwdInput.setLayoutY(250)
 
-  EmailConnect.setLayoutX(180)
+  botIdLabel.setLayoutX(120)
+  botIdLabel.setLayoutY(160)
+  botIdInput.setLayoutX(180)
+  botIdInput.setLayoutY(160)
+
+  botKeyLabel.setLayoutX(120)
+  botKeyLabel.setLayoutY(250)
+  botKeyInput.setLayoutX(180)
+  botKeyInput.setLayoutY(250)
+
+  EmailConnect.setLayoutX(190)
   EmailConnect.setLayoutY(320)
-  BotConnectButton.setLayoutX(180)
+  BotConnectButton.setLayoutX(190)
   BotConnectButton.setLayoutY(320)
 
 
@@ -89,7 +103,6 @@ class LoginScene {
   group.getChildren.add(playerButton)
   group.getChildren.add(BotButton)
   val scene = new Scene(group)
-
   ReturnButton.setOnAction(_ => loginSceneListener.onButtonReturn())
   playerButton.setOnAction(_ => loginSceneListener.onButtonPlayerLogin())
   BotButton.setOnAction(_ => loginSceneListener.onButtonBotLogin())
@@ -110,10 +123,11 @@ class LoginScene {
   EmailConnect.setOnAction{ _ =>
     val account = accountInput.getText()
     val pwd = pwdInput.getText()
-    if (account == "") {
-      ErrorTip.setText("email不能为空")
-    } else if (pwd == "") {
-      ErrorTip.setText("password不能为空")
+    if (account == ""||pwd=="") {
+      ClientBoot.addToPlatform{
+        ErrorTip.setText("email或密码不能为空")
+        group.getChildren.add(ErrorTip)
+      }
     } else {
       loginSceneListener.onButtonEmailConnect(account, pwd)
     }
@@ -121,6 +135,11 @@ class LoginScene {
 
   def setLoginListener(listener: LoginSceneListener): Unit ={
     loginSceneListener = listener
+  }
+
+  def clearCanvas() = {
+    ctx.setFill(Color.web("rgb(250, 250, 250)"))
+    ctx.fillRect(0, 0, width, height)
   }
 
   def drawScanUrl(imageStream:ByteArrayInputStream)={
@@ -155,7 +174,7 @@ class LoginScene {
       group.getChildren.add(passwordLabel)
       group.getChildren.add(pwdInput)
       group.getChildren.add(EmailConnect)
-      ReturnButton.setLayoutX(260)
+      ReturnButton.setLayoutX(280)
       ReturnButton.setLayoutY(320)
       group.getChildren.add(ReturnButton)
     }
@@ -163,14 +182,14 @@ class LoginScene {
 
   def drawBotLogin():Unit={
     ClientBoot.addToPlatform{
-      group.getChildren.remove(EmailButton)
-      group.getChildren.remove(ScanButton)
+      group.getChildren.remove(playerButton)
+      group.getChildren.remove(BotButton)
       group.getChildren.add(botIdLabel)
       group.getChildren.add(botIdInput)
       group.getChildren.add(botKeyLabel)
       group.getChildren.add(botKeyInput)
       group.getChildren.add(BotConnectButton)
-      ReturnButton.setLayoutX(260)
+      ReturnButton.setLayoutX(280)
       ReturnButton.setLayoutY(320)
       group.getChildren.add(ReturnButton)
     }
@@ -190,7 +209,8 @@ class LoginScene {
     group.getChildren.remove(EmailConnect)
     group.getChildren.remove(BotConnectButton)
     group.getChildren.remove(ReturnButton)
-    //group.getChildren.add(canvas)
+    group.getChildren.remove(ErrorTip)
+    clearCanvas()
     group.getChildren.add(playerButton)
     group.getChildren.add(BotButton)
   }
