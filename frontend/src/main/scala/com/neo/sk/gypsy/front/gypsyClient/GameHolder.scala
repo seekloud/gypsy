@@ -3,7 +3,6 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 
 import scala.util.Random

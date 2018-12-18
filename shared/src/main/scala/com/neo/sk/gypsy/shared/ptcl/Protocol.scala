@@ -1,13 +1,15 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl._
-
+import game._
 object Protocol {
 
   /**
     * 后端发送的数据
     * */
+  trait WsMsgSource
+
+  case object CompleteMsgServer extends WsMsgSource
+  case class FailMsgServer(ex: Throwable) extends WsMsgSource
 
   sealed trait GameMessage extends WsMsgSource
 

@@ -2,19 +2,14 @@ package com.neo.sk.gypsy.core
 
 
 import java.util.concurrent.atomic.AtomicLong
-
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.stream.scaladsl.Flow
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.stream.ActorAttributes
 import akka.util.ByteString
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import akka.stream.{ActorAttributes, Supervision}
-import com.neo.sk.gypsy.models.GypsyUserInfo
-import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp

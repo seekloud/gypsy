@@ -7,7 +7,6 @@ import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{UserLeft}
 import com.neo.sk.gypsy.shared.ptcl.{Captcha, Point, SuccessRsp}
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{UserLoginInfo, UserLoginRsq, UserMaxScore, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
 import org.scalajs.dom.raw._

@@ -3,21 +3,21 @@ package com.neo.sk.gypsy.shared
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
-
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
-
 import scala.collection.mutable.ListBuffer
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
-
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.game._
+
 
 /**
   * User: Taoz
@@ -460,8 +460,8 @@ trait Grid {
               val massRadius = 4 + sqrt(shotMass) * 6
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-//              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+//              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)

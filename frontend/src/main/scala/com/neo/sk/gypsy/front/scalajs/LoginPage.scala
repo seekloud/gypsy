@@ -9,7 +9,6 @@ import com.neo.sk.gypsy.front.utils.LayuiJs.layer
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl.Protocol.MousePosition
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp, UserLoginInfo, UserLoginRsq, UserRegisterInfo}
 import org.scalajs.dom
 import org.scalajs.dom.html._
 import org.scalajs.dom.raw._

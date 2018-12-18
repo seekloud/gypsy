@@ -4,7 +4,6 @@ import com.neo.sk.gypsy.shared._
 //import com.neo.sk.gypsy.shared.ptcl.GameConfig.{coverRate, foodPool}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 

@@ -1,17 +1,15 @@
 package com.neo.sk.gypsy.core
 
 import java.util.concurrent.atomic.{AtomicLong}
-
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import org.slf4j.LoggerFactory
-
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.UserActor.{JoinRoom, JoinRoom4Watch}
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp}
-
 import scala.collection.mutable
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+
 /**
   * User: sky
   * Date: 2018/7/23

@@ -6,7 +6,7 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
 import javafx.scene.layout._
 import com.neo.sk.gypsy.holder.GameHolder._
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol}
 import com.neo.sk.gypsy.utils.FpsComp
 import com.neo.sk.gypsy.common.Constant._
 class LayeredScene {
