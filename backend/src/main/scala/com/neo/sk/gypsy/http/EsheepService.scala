@@ -48,7 +48,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       'roomId.as[Long].?
     ){ case ( playerId, playerName, accessCode, roomIdOpt) =>
       if(AppSettings.gameTest){
-        val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
+        val session = GypsySession(BaseUserInfo(UserRolesType.player, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
         val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(playerId,playerName)),roomIdOpt,_))
         dealFutureResult(
           flowFuture.map(r=>
@@ -59,7 +59,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
         )
       }else{
         authPlatUser(accessCode){player =>
-          val session = GypsySession(BaseUserInfo(UserRolesType.guest, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
+          val session = GypsySession(BaseUserInfo(UserRolesType.player, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
           val flowFuture:Future[Flow[Message,Message,Any]]=userManager ? (UserManager.GetWebSocketFlow(Some(PlayerInfo(player.playerId,playerName)),roomIdOpt,_))
           dealFutureResult(
             flowFuture.map(r=>
@@ -141,14 +141,24 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     }
   }
 
+  //for bot
   private def createRoom = (path("createRoom") & get){
     parameter(
       'playerId.as[String],
       'playerName.as[String],
       'accessCode.as[String]
     ){ case (playerId, playerName, accessCode) =>
-        authPlatUser(accessCode)
-
+        authPlatUser(accessCode){player =>
+          val session = GypsySession(BaseUserInfo(UserRolesType.player, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
+          val flowFuture:Future[Flow[Message,Message,Any]]= userManager ? (UserManager.GetCreateRoomSocketFlow(Some(PlayerInfo(player.playerId,playerName)),_))
+          dealFutureResult(
+            flowFuture.map(r=>
+              addSession(session) {
+                handleWebSocketMessages(r)
+              }
+            )
+          )
+        }
     }
   }
 
