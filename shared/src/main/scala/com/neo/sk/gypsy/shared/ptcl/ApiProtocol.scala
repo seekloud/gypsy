@@ -214,7 +214,7 @@ object ApiProtocol {
 
 
   case class BotKey2Token(
-                         botId: String,
+                         botId: Long,
                          botKey: String
                          )
 
