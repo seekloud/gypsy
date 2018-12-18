@@ -3,22 +3,24 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.GameScene
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial}
 import java.awt.event.KeyEvent
 import javafx.scene.image.Image
-
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.ClientMusic
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 
 /**
   * @author zhaoyin
