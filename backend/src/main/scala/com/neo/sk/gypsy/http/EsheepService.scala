@@ -6,27 +6,18 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.marshalling
 import akka.stream.scaladsl.Flow
 import akka.stream.{ActorAttributes, ActorMaterializer, Materializer, Supervision}
 import akka.util.{ByteString, Timeout}
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.http.SessionBase.GypsySession
-import com.neo.sk.gypsy.models.GypsyUserInfo
-//import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
-import com.neo.sk.gypsy.utils.SecureUtil
-import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.Boot.{esheepClient, executor, roomManager, timeout, userManager}
 import akka.actor.typed.scaladsl.AskPattern._
 import com.neo.sk.gypsy.core.{EsheepSyncClient, RoomManager,UserManager}
-import com.neo.sk.gypsy.http.ServiceUtils.CommonRsp
-import com.neo.sk.gypsy.ptcl.EsheepProtocol
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -51,7 +42,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
 
   private def playGame = (path("playGame") & get & pathEndOrSingleSlash) {
     parameter(
-      'playerId.as[String],//
+      'playerId.as[String],
       'playerName.as[String],
       'accessCode.as[String],
       'roomId.as[Long].?
@@ -147,6 +138,17 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
           )
         }
       }
+    }
+  }
+
+  private def createRoom = (path("createRoom") & get){
+    parameter(
+      'playerId.as[String],
+      'playerName.as[String],
+      'accessCode.as[String]
+    ){ case (playerId, playerName, accessCode) =>
+        authPlatUser(accessCode)
+
     }
   }
 
