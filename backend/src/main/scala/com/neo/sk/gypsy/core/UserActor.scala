@@ -5,18 +5,18 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
-import com.neo.sk.gypsy.shared.ptcl.{Protocol, WsMsgProtocol}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.RoomActor.{CompleteMsgFront, FailMsgFront, ReStartAck}
+import com.neo.sk.gypsy.core.RoomActor.ReStartAck
 import com.neo.sk.gypsy.Boot.roomManager
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 /**
   * @author zhaoyin
   *  2018/10/25  下午10:27
@@ -32,7 +32,7 @@ object UserActor {
 
   case class WebSocketMsg(reqOpt: Option[Protocol.UserAction]) extends Command
 
-  case class DispatchMsg(msg:WsMsgProtocol.WsMsgSource) extends Command
+  case class DispatchMsg(msg:Protocol.WsMsgSource) extends Command
 
   case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
@@ -65,7 +65,7 @@ object UserActor {
   /**
     * 此处的actor是前端虚拟acotr，GameReplayer actor直接与前端acotr通信
     * */
-  case class UserFrontActor(actor: ActorRef[WsMsgProtocol.WsMsgSource]) extends Command
+  case class UserFrontActor(actor: ActorRef[Protocol.WsMsgSource]) extends Command
 
   case class TimeOut(msg: String) extends Command
 
@@ -100,7 +100,7 @@ object UserActor {
     onFailureMessage = FailMsgFront.apply
   )
 
-  def flow(id:String,name:String,recordId:Long,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, WsMsgProtocol.WsMsgSource,Any] = {
+  def flow(id:String,name:String,recordId:Long,actor:ActorRef[UserActor.Command]):Flow[WebSocketMsg, Protocol.WsMsgSource,Any] = {
     val in = Flow[UserActor.WebSocketMsg]
           .map {a=>
             val req = a.reqOpt.get
@@ -125,12 +125,12 @@ object UserActor {
           .to(sink(actor,recordId))
 
     val out =
-      ActorSource.actorRef[WsMsgProtocol.WsMsgSource](
+      ActorSource.actorRef[Protocol.WsMsgSource](
         completionMatcher = {
-          case WsMsgProtocol.CompleteMsgServer ⇒
+          case Protocol.CompleteMsgServer ⇒
         },
         failureMatcher = {
-          case WsMsgProtocol.FailMsgServer(e)  ⇒ e
+          case Protocol.FailMsgServer(e)  ⇒ e
         },
         bufferSize = 128,
         overflowStrategy = OverflowStrategy.dropHead
@@ -192,7 +192,7 @@ object UserActor {
   private def idle(
                     userInfo:PlayerInfo,
                     startTime:Long,
-                    frontActor: ActorRef[WsMsgProtocol.WsMsgSource]
+                    frontActor: ActorRef[Protocol.WsMsgSource]
                   )(
     implicit stashBuffer:StashBuffer[Command],
     sendBuffer:MiddleBufferInJvm,
@@ -251,7 +251,7 @@ object UserActor {
     */
   private def play(
                     userInfo:PlayerInfo,
-                    frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
+                    frontActor:ActorRef[Protocol.WsMsgSource],
                     roomActor: ActorRef[RoomActor.Command])(
                     implicit stashBuffer:StashBuffer[Command],
                     timer:TimerScheduler[Command],
@@ -304,7 +304,7 @@ object UserActor {
   private def watch(
                      userInfo:PlayerInfo,
                      roomId:Long,
-                     frontActor:ActorRef[WsMsgProtocol.WsMsgSource],
+                     frontActor:ActorRef[Protocol.WsMsgSource],
                      roomActor: ActorRef[RoomActor.Command]
                    )(
                      implicit stashBuffer:StashBuffer[Command],
@@ -343,7 +343,7 @@ object UserActor {
   private def replay(
                       recordId: Long,
                       userInfo:PlayerInfo,
-                      frontActor: ActorRef[WsMsgProtocol.WsMsgSource],
+                      frontActor: ActorRef[Protocol.WsMsgSource],
                       gamePlayer: ActorRef[GamePlayer.Command]
                     )(
     implicit stashBuffer:StashBuffer[Command],

@@ -22,7 +22,7 @@ import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
 import com.neo.sk.gypsy.holder.BotHolder
 import com.neo.sk.gypsy.scene.LayeredScene
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
+import .WsMsgSource
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 
 /**

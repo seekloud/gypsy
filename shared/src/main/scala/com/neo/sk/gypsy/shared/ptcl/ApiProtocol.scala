@@ -1,9 +1,27 @@
 package com.neo.sk.gypsy.shared.ptcl
 
+import game._
 /**
   * Created by wangchengyuan
   */
 object ApiProtocol {
+
+  trait CommonRsp {
+    val errCode: Int
+    val msg: String
+  }
+
+
+  final case class ErrorRsp(
+                             errCode: Int,
+                             msg: String
+                           ) extends CommonRsp
+
+  final case class SuccessRsp(
+                               errCode: Int = 0,
+                               msg: String = "ok"
+                             ) extends CommonRsp
+
 
   case class roomInfo(
                      roomId:Long
@@ -217,6 +235,51 @@ object ApiProtocol {
                          botId: Long,
                          botKey: String
                          )
+
+
+  case class UserRegisterInfo(
+                               name:String,
+                               password:String,
+                               headImg:String,
+                             )
+  case class UserLoginInfo(
+                            name:String,
+                            password:String,
+                          )
+  case class UserLoginRsqJson(
+                               id:String,
+                               name:String,
+                               headImg:String,
+                               score: Int
+                             )
+
+  case class UserLoginRsq(
+                           data:Option[UserLoginRsqJson],
+                           errCode: Int = 0,
+                           msg: String = "ok"
+                         )
+
+  case class UserMaxScore(
+                           id:String,
+                           score:Int
+                         )
+  case class CheckNameRsp(
+                           roomId:Long,
+                           errCode:Int=0,
+                           msg:String="ok"
+                         )
+  case class JoinGameWithRoomId(
+                                 playerId:String,
+                                 playerName:String,
+                                 roomId:Long,
+                                 accessCode:String
+                               )
+  case class JoinGame(
+                       playerId: String,
+                       playerName:String,
+                       accessCode:String
+                     )
+
 
 
 }

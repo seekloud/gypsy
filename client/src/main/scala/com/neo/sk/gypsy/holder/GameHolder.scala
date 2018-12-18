@@ -8,7 +8,6 @@ import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.StageContext

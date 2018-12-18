@@ -3,14 +3,14 @@ package com.neo.sk.gypsy.actor
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
-import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.gypsy
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
+import .WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot

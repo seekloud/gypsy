@@ -6,7 +6,7 @@ import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
+import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol}
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.utils.FpsComp

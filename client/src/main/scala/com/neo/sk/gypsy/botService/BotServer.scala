@@ -37,7 +37,7 @@ class BotServer(
     if(checkBotToken(request.credit.get.apiToken)){
       state = State.init_game
       log.info(s"createRoom Called by [$request")
-//      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？CreateRoom(request.playerId,request.apiToken)
+      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？CreateRoom()
       Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
       Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error"))

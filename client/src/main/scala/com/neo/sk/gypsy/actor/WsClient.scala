@@ -24,7 +24,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import io.circe.parser.decode
 import io.circe.generic.auto._
 import com.neo.sk.gypsy.common.Api4GameAgent._
