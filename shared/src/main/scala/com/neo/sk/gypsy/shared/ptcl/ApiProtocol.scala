@@ -134,6 +134,22 @@ object ApiProtocol {
                       wsUrl:String,
                       scanUrl:String
                     )
+
+  final case class LoginReq(
+                           email:String,
+                           password:String,
+                           )
+
+  final case class ESheepUserInfoRsp(
+                                      userName: String ,
+                                      userId: Long ,
+                                      headImg: String ,
+                                      token: String ,
+                                      gender: Int ,
+                                      errCode: Int = 0,
+                                      msg: String = "ok"
+                                    )
+
   case class LoginResponse(
                             data:LoginData,
                             errCode:Int = 0,
