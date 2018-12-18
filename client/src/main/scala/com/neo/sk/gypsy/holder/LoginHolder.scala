@@ -41,7 +41,7 @@ class LoginHolder(
       }
     }
 
-    override def onButtonBotConnect(botId:String,botKey:String): Unit = {
+    override def onButtonBotConnect(botId:Long,botKey:String): Unit = {
       botActor ! BotLogin(botId,botKey)
 
     }
