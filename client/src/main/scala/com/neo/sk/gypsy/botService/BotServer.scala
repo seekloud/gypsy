@@ -2,15 +2,15 @@ package com.neo.sk.gypsy.botService
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.actor.BotActor
-import com.neo.sk.gypsy.actor.BotActor._
 import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
-
 import scala.concurrent.{ExecutionContext, Future}
 import com.neo.sk.gypsy.utils.BotUtil._
 import org.slf4j.LoggerFactory
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 
 object BotServer {
 
@@ -37,7 +37,12 @@ class BotServer(
     if(checkBotToken(request.credit.get.apiToken)){
       state = State.init_game
       log.info(s"createRoom Called by [$request")
-      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？CreateRoom()
+      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？BotActor.CreateRoom(request.password, _)
+      getRoomIdRsp.map{
+        rsp =>
+          if (rsp.errCode == 0) CreateRoomRsp(rsp.roomId.toString, 0, state, "ok")
+          else CreateRoomRsp(rsp.roomId.toString, rsp.errCode, state,rsp.msg)
+      }
       Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
       Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error"))

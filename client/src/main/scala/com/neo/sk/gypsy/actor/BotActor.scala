@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.actor
 
+import java.net.URLEncoder
+
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.scaladsl.{Keep, Sink}
 import com.neo.sk.gypsy.botService.BotServer
@@ -11,7 +13,6 @@ import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSock
 import akka.stream.OverflowStrategy
 import akka.stream.typed.scaladsl.ActorSource
 import akka.util.{ByteString, ByteStringBuilder}
-import com.neo.sk.gypsy.shared.ptcl._
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
@@ -21,9 +22,10 @@ import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, t
 import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
 import com.neo.sk.gypsy.holder.BotHolder
 import com.neo.sk.gypsy.scene.LayeredScene
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import .WsMsgSource
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 
 /**
   * Created by wym on 2018/12/3.
@@ -39,7 +41,7 @@ object BotActor {
 
   case object Work extends Command
 
-  case class CreateRoom(playerId: String, apiToken: String) extends Command
+  case class CreateRoom(password:String,sender:ActorRef[JoinRoomRsp]) extends Command
 
   case class JoinRoom(roomId: String, playerId: String, apiToken: String) extends Command
 
@@ -113,7 +115,7 @@ object BotActor {
                  )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case CreateRoom(playerId, apiToken) =>
+        case CreateRoom(password, sender) =>
           val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(getCreateRoomWebSocketUri(playerId, apiToken)))
           val source = getSource
           val sink = getSink(gameClient)
@@ -247,18 +249,24 @@ object BotActor {
       ))
   }
 
-  def getJoinRoomWebSocketUri(roomId: String, playerId: String, accessCode: String): String = {
+  def getJoinRoomWebSocketUri(roomId: String, playerId: String, playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
-    val domain = "10.1.29.250:30371"
+//    val domain = "10.1.29.250:30371"
     //    val domain = "localhost:30371"
-    s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
+    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
+    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
+    s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
   }
 
-  def getCreateRoomWebSocketUri(playerId: String, accessCode: String): String = {
+  def getCreateRoomWebSocketUri(playerId: String,playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
-    val domain = "10.1.29.250:30371"
+//    val domain = "10.1.29.250:30371"
     //    val domain = "localhost:30371"
-    s"$wsProtocol://$domain/gypsy/joinGame4Client?id=$playerId&accessCode=$accessCode"
+    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
+    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
+    s"$wsProtocol://$domain/gypsy/api/createRoom?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
   }
 
 }
