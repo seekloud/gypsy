@@ -35,7 +35,7 @@ object BotActor {
 
   sealed trait Command
 
-  case class BotLogin(botId:String, botKey:String) extends Command
+  case class BotLogin(botId:Long, botKey:String) extends Command
 
   case object Work extends Command
 
