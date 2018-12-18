@@ -5,10 +5,11 @@ import java.io.ByteArrayInputStream
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.actor.WsClient
-import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.common.{AppSettings, StageContext}
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
-import com.neo.sk.gypsy.actor.WsClient.ConnectEsheep
+import com.neo.sk.gypsy.actor.WsClient.{ConnectEsheep, ConnectGame}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,6 +22,8 @@ class LoginHolder(
                    loginScene: LoginScene,
                    stageCtx: StageContext
                  ) {
+
+  private[this] val log = LoggerFactory.getLogger("LoginMessages")
 
   loginScene.setLoginListener(new LoginScene.LoginSceneListener {
     override def onButtonScanLogin: Unit = {
@@ -39,10 +42,23 @@ class LoginHolder(
     }
 
     override def onButtonEmailConnect(email:String,password:String): Unit = {
+      emailLogin(email,password).map{
+        case Right(userInfo)=>
+          val playerId=s"user+${userInfo.userId}"
+          linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
+            case Right(res)=>
+              WsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
+            case Left(error)=>
+              log.info(s"$error occured")
+          }
+        case Left(error)=>
+          log.info(s"$error occured")
+      }
 
     }
 
     override def onButtonBotLogin(): Unit = {
+      loginScene.drawBotLogin()
 
     }
 
