@@ -46,8 +46,8 @@ class LoginHolder(
         case Right(userInfo)=>
           val playerId=s"user+${userInfo.userId}"
           linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
-            case Right(res)=>
-              WsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
+            case Right(res) =>
+              wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
             case Left(error)=>
               log.info(s"$error occured")
           }
