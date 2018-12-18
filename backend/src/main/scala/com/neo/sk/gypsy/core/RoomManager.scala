@@ -1,11 +1,11 @@
 package com.neo.sk.gypsy.core
 
-import java.util.concurrent.atomic.{AtomicLong}
+import java.util.concurrent.atomic.AtomicLong
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.UserActor.{JoinRoom, JoinRoom4Watch}
+import com.neo.sk.gypsy.core.UserActor._
 import scala.collection.mutable
 
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -86,6 +86,15 @@ object RoomManager {
               case _  =>
             }
             Behaviors.same
+
+          case JoinRoomByCreate(playerInfo,userActor) =>
+            //TODO 创建房间
+            var roomId = roomIdGenerator.getAndIncrement()
+            while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
+            roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+
+            Behaviors.same
+
 
           case LeftRoom(playerInfo) =>
             roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match{

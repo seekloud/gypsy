@@ -34,6 +34,8 @@ object UserManager {
   final case class GetWatchWebSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, watchId:Option[String],roomId:Long, replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
   //回放
   final case class GetReplaySocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, recordId:Long,frame:Int,watchId:String,replyTo:ActorRef[Flow[Message,Message,Any]]) extends Command
+  //创建房间玩游戏
+  final case class GetCreateRoomSocketFlow(playerInfo: Option[ApiProtocol.PlayerInfo] = None, replyTo: ActorRef[Flow[Message,Message,Any]]) extends Command
 
   def create(): Behavior[Command] = {
     log.debug(s"UserManager start...")
@@ -76,9 +78,7 @@ object UserManager {
           userActor ! UserActor.StartWatch(roomId,watchIdOpt)
           Behaviors.same
 
-
         case GetReplaySocketFlow(playerInfoOpt,recordId,frame,watchId,replyTo) =>
-          log.info("Replay WS connecting =========")
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx,playerInfo.playerId) match{
             case Some(userActor)=>
@@ -88,6 +88,18 @@ object UserManager {
           val userActor = getUserActor(ctx,playerInfo)
           replyTo ! getWebSocketFlow(playerInfo,recordId,userActor)
           userActor ! UserActor.StartReply(recordId,watchId,frame)
+          Behaviors.same
+
+        case GetCreateRoomSocketFlow(playerInfoOpt, replyTo) =>
+          val playerInfo = playerInfoOpt.get
+          getUserActorOpt(ctx, playerInfo.playerId) match {
+            case Some(userActor) =>
+              userActor ! UserActor.ChangeBehaviorToInit
+            case None =>
+          }
+          val userActor = getUserActor(ctx,playerInfo)
+          replyTo ! getWebSocketFlow(playerInfo,0L,userActor)
+          userActor ! UserActor.CreateRoom()
           Behaviors.same
 
         case msg:GetUserInRecordMsg=>

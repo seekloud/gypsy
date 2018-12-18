@@ -36,6 +36,8 @@ object UserActor {
 
   case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
+  case class JoinRoomByCreate(playerInfo: PlayerInfo,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
+
   case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
   case class JoinRoomSuccess(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
@@ -70,6 +72,8 @@ object UserActor {
   case class TimeOut(msg: String) extends Command
 
   case class StartGame(roomId:Option[Long]) extends Command
+
+  case class CreateRoom(playerInfo: PlayerInfo) extends Command
 
   case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
 
@@ -212,6 +216,10 @@ object UserActor {
           getGameReply(ctx,recordId) ! GamePlayer.InitReplay(frontActor,watchId,frame)
           val gamePlayer = getGameReply(ctx,recordId)
           switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
+
+        case CreateRoom(playerInfo) =>
+          roomManager ! UserActor.JoinRoomByCreate(playerInfo,ctx.self)
+          Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
