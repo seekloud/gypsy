@@ -44,15 +44,20 @@ class LoginHolder(
     override def onButtonEmailConnect(email:String,password:String): Unit = {
       emailLogin(email,password).map{
         case Right(userInfo)=>
-          val playerId=s"user+${userInfo.userId}"
-          linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
-            case Right(res) =>
-              wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
-            case Left(error)=>
-              log.info(s"$error occured")
-          }
+            val playerId=s"user+${userInfo.userId}"
+            linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
+              case Right(res) =>
+                wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
+              case Left(error)=>
+                log.info(s"$error occured")
+            }
+
         case Left(error)=>
           log.info(s"$error occured")
+          ClientBoot.addToPlatform{
+              loginScene.ErrorTip.setText(error.msg)
+              loginScene.group.getChildren.add(loginScene.ErrorTip)
+            }
       }
 
     }
