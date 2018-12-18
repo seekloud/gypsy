@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.language.postfixOps
+import scala.concurrent.duration._
 
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
