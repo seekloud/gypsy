@@ -13,12 +13,14 @@ import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSock
 import akka.stream.OverflowStrategy
 import akka.stream.typed.scaladsl.ActorSource
 import akka.util.{ByteString, ByteStringBuilder}
+import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
 
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
+import com.neo.sk.gypsy.actor.BotActor.LeaveRoom
 import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
 import com.neo.sk.gypsy.holder.BotHolder
 import com.neo.sk.gypsy.scene.LayeredScene
@@ -108,7 +110,6 @@ object BotActor {
                 case Left(e) =>
               }
             case Left(e) =>
-
           }
           Behaviors.same
         case Work(stream) =>
