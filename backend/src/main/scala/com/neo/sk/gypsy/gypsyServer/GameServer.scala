@@ -1,30 +1,23 @@
 package com.neo.sk.gypsy.gypsyServer
 
 import java.util.concurrent.atomic.AtomicLong
-
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
-import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
-
 import scala.collection.mutable
-import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
 import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
-import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
-
-import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
-import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import scala.math.{Pi, abs, acos, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**
   * User: Taoz
@@ -580,8 +573,5 @@ class GameServer(override val boundary: Point) extends Grid {
     GameEventMap.getOrElse(frame,List.empty)
   }
 
-//  def getUserList(userList:mutable.ListBuffer[UserInfo])={
-//    userLists = userList
-//  }
 
 }

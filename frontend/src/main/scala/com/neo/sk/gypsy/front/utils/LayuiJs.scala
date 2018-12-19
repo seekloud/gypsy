@@ -92,8 +92,6 @@ object LayuiJs {
     def cancel: js.UndefOr[js.Function0[Any]] = js.undefined// 用户取消分享后执行的回调函数
   }
 
-
-
   @js.native
   @JSGlobal("layer")
   object layer extends js.Object{

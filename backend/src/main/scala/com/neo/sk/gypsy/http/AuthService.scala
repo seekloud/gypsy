@@ -3,17 +3,14 @@ package com.neo.sk.gypsy.http
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server
-import akka.stream.Materializer
-import akka.stream.scaladsl.Flow
-import akka.util.Timeout
 import akka.actor.typed.scaladsl.AskPattern._
-
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
 import com.neo.sk.gypsy.Boot.{esheepClient, executor, scheduler, timeout}
 import com.neo.sk.gypsy.core.EsheepSyncClient
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 /**
   * @author zhaoyin

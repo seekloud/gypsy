@@ -1,7 +1,8 @@
-package com.neo.sk.gypsy.bot
+package com.neo.sk.gypsy.botService
 
 import io.grpc.{ManagedChannel, ManagedChannelBuilder}
-import org.seekloud.esheepapi.pb.api.{CreateRoomRsp, Credit, ObservationRsp, SimpleRsp}
+import org.seekloud.esheepapi.pb.api
+import org.seekloud.esheepapi.pb.api.{CreateRoomReq, CreateRoomRsp, Credit, ObservationRsp}
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgentStub
 
@@ -22,9 +23,10 @@ class BotClient(
 
 
   //3.调用服务端的服务方法.相当于发送请求,并获取服务端的回应.
-  val credit = Credit(playerId = playerId, apiToken = apiToken)
+  val credit = Credit(apiToken = apiToken)
+  val createRoomReq = api.CreateRoomReq(Some(credit),"")
 
-  def createRoom(): Future[CreateRoomRsp] = esheepStub.createRoom(credit)
+  def createRoom(): Future[CreateRoomRsp] = esheepStub.createRoom(createRoomReq)
 
   def observation(): Future[ObservationRsp] = esheepStub.observation(credit)
 }

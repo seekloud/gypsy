@@ -4,11 +4,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
-
+import javafx.scene.layout._
 import com.neo.sk.gypsy.holder.GameHolder._
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
 import com.neo.sk.gypsy.utils.FpsComp
+import com.neo.sk.gypsy.common.Constant._
 
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 class LayeredScene {
   import GameScene._
@@ -16,50 +19,77 @@ class LayeredScene {
   val canvasWidth=1200
   val canvasHeight=600
   val window=Point(canvasWidth,canvasHeight)
-  val group = new Group()
-  val gameCanvas = new Canvas(canvasWidth,canvasHeight)
+
+  /**人类视图**/
+  val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
+  val gameCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
-  val middleCanvas = new Canvas(canvasWidth,canvasHeight)
+  val middleCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val middleCanvasCtx=middleCanvas.getGraphicsContext2D
-  val topCanvas = new Canvas(canvasWidth,canvasHeight)
+  val topCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val topCanvasCtx=topCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
-
-  //  offCanvas.setStyle("z-index: 1")
+  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,humanWindow)
+  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,humanWindow)
+  val topView=new GameCanvas(topCanvas,topCanvasCtx,humanWindow)
   gameCanvas.setStyle("z-index: 1")
   middleCanvas.setStyle("z-index: 2")
   topCanvas.setStyle("z-index: 3")
+  /**分层视图**/
+  val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
+  val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
+  val locationCanvasCtx = locationCanvas.getGraphicsContext2D
+  val locationView = new GameCanvas(locationCanvas,locationCanvasCtx,layerWindow)
+  val nonInteracCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //02视野中不可交互的元素（背景）
+  val nonInteracCanvasCtx = nonInteracCanvas.getGraphicsContext2D
+  val nonInteracView = new GameCanvas(nonInteracCanvas,nonInteracCanvasCtx,layerWindow)
+  val interactCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)//03视野内可交互的元素
+  val interactCanvasCtx = interactCanvas.getGraphicsContext2D
+  val interactView = new GameCanvas(interactCanvas,interactCanvasCtx,layerWindow)
+  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内包括自己的所有玩家
+  val allPlayerCanvasCtx = allPlayerCanvas.getGraphicsContext2D
+  val allPlayerView = new GameCanvas(allPlayerCanvas,allPlayerCanvasCtx,layerWindow)
+  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //05玩家自己
+  val playerCanvasCtx = playerCanvas.getGraphicsContext2D
+  val playerView = new GameCanvas(playerCanvas,playerCanvasCtx,layerWindow)
+  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //06面板状态信息
+  val informCanvasCtx = informCanvas.getGraphicsContext2D
+  val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
 
-
-  val scene = new Scene(group)
-  group.getChildren.add(gameCanvas)
-  group.getChildren.add(middleCanvas)
-  group.getChildren.add(topCanvas)
-
-  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
-  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
-  val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
+  /**javafx的布局**/
+  val flow = new FlowPane()
+  flow.setPrefWrapLength(400) // 预设FlowPane的宽度，使其能够显示两列
+  flow.setVgap(5)
+  flow.setHgap(5)
+  flow.getChildren.addAll(locationCanvas,nonInteracCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+  val group = new Group()
+  group.getChildren.addAll(gameCanvas,middleCanvas,topCanvas)
+  val border = new BorderPane()
+  border.setCenter(group)
+  border.setRight(flow)
+  val scene = new Scene(border)
+//  group.getChildren.add(gameCanvas)
+//  group.getChildren.add(middleCanvas)
+//  group.getChildren.add(topCanvas)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
-    //    //    val viewWidth = 1200//1800
-    //    //    val viewHeight = 750//900
-    //    //    val rankWidth = 1200//1800
-    //    //    val rankHeight = 250//300
-    //
-    //    rank.resetRankView(rankWidth, rankHeight)
-    //    view.resetScreen(viewWidth, viewHeight, rankWidth, rankHeight)
-
-    gameView.resetScreen(viewWidth,viewHeight)
-    middleView.resetScreen(viewWidth,viewHeight)
-    topView.resetScreen(viewWidth,viewHeight)
-    //
-    //    rankCanvas.setWidth(rankWidth)
-    //    rankCanvas.setHeight(rankHeight)
+    //TODO
+    /**人类视图**/
+    gameView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    middleView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    topView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    /**分层视图**/
+    locationView.resetScreen(viewWidth/4,viewHeight/3)
+    nonInteracView.resetScreen(viewWidth/4,viewHeight/3)
+    interactView.resetScreen(viewWidth/4,viewHeight/3)
+    allPlayerView.resetScreen(viewWidth/4,viewHeight/3)
+    playerView.resetScreen(viewWidth/4,viewHeight/3)
+    informView.resetScreen(viewWidth/4,viewHeight/3)
   }
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,window.x,window.y)
+    val data = grid.getGridData(myId,1200,600)
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false
@@ -71,8 +101,8 @@ class LayeredScene {
         var yMax = 0.0
         //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
+          val offx = cell.speedX * offsetTime.toDouble / frameRate
+          val offy = cell.speedY * offsetTime.toDouble / frameRate
           val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
           if (newX>xMax) xMax=newX

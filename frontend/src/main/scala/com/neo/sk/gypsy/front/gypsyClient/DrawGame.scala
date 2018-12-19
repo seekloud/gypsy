@@ -1,24 +1,24 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
-import java.util.concurrent.TimeUnit
-
-import com.neo.sk.gypsy.front.scalajs.DrawCircle
-
-//import scalatags.JsDom.short.{*, img,s}
 import scalatags.JsDom.short._
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
-import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
-import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
-import org.scalajs.dom.html.{Canvas, Image}
+import org.scalajs.dom.html.Canvas
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-
+import com.neo.sk.gypsy.front.utils.EchartsJs
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
+import io.circe.generic.auto._
+import io.circe.syntax._
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 /**
   * User: sky
   * Date: 2018/9/14
@@ -83,6 +83,7 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
+  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
 
 //  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
 
@@ -331,6 +332,7 @@ case class DrawGame(
   }
 
   def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,Player)])={
+
     if(isKill){
       val showTime = killList.head._1
       val killerId = killList.head._2
@@ -430,8 +432,8 @@ case class DrawGame(
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat / frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -487,8 +489,8 @@ case class DrawGame(
 //        val celly = if(cell.y!=cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate)
 //          cell.y + cell.speedY * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
 //        else cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -547,8 +549,8 @@ case class DrawGame(
       var yfix:Double=y
       if(speed>0){
         val(nx,ny)= normalization(tx,ty)
-        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x + nx*speed *offsetTime.toFloat / frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / frameRate
         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
@@ -642,6 +644,15 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+
+  def drawEcharts() = {
+    val myChart = EchartsJs.echarts.init(echarts)
+    val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line",AreaStyle()))).asJson
+//    myChart.setOption(option)
+    println(option)
+    ctx.drawImage(echarts,0,0,400,200)
   }
 
 

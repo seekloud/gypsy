@@ -2,25 +2,29 @@ package com.neo.sk.gypsy.core
 
 import java.awt.event.KeyEvent
 
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.shared.ptcl.{Boundary, Food, Point, Protocol, WsMsgProtocol, _}
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
 import com.neo.sk.gypsy.core.UserActor.{JoinRoomSuccess, JoinRoomSuccess4Watch}
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.CheckNameRsp
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
-
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.concurrent.duration._
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
+
 /**
   * User: sky
   * Date: 2018/8/11
@@ -84,7 +88,7 @@ object RoomActor {
             if (AppSettings.gameRecordIsWork) {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
-            timer.startPeriodicTimer(SyncTimeKey, Sync, WsMsgProtocol.frameRate millis)
+            timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
     }
@@ -114,9 +118,8 @@ object RoomActor {
             case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
             case None => userSyncMap.put(group,Set(playerInfo.playerId))
           }
-//          userSyncMap.put(playerInfo.playerId,grid.frameCount)
           grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
-          userActor ! JoinRoomSuccess(ctx.self)
+          userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
           dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
@@ -309,12 +312,6 @@ object RoomActor {
 //          }
 
           if (tickCount % 20 == 1) {
-//            val currentRankEvent = Protocol.CurrentRanks(grid.currentRank)
-//            grid.AddGameEvent(currentRankEvent)
-//            dispatch(subscribersMap)(Protocol.Ranks(grid.currentRank))
-
-//            val PerfectRanks = grid.currentRank.splitAt(10)
-//            val RestRanks = grid.currentRank.takeRight()
 
             val temp = grid.currentRank.zipWithIndex.splitAt(GameConfig.rankShowNum)
             val PerfectRanks = temp._1.map(r=>RankInfo(r._2+1,r._1))
@@ -323,7 +320,6 @@ object RoomActor {
 
             if(RestRanks.nonEmpty){
               RestRanks.foreach{rank=>
-//                val index = rank._2 + 1 + GameConfig.rankShowNum
                 dispatchTo(subscribersMap)(rank._1,Protocol.MyRank(rank._2))
               }
             }

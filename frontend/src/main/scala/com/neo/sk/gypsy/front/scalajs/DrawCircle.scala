@@ -1,6 +1,5 @@
 package com.neo.sk.gypsy.front.scalajs
 
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import org.scalajs
 import org.scalajs.dom
 

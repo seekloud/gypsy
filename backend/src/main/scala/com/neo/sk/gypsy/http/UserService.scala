@@ -20,7 +20,6 @@ import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{ KeyCode}
 import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
 import org.seekloud.byteobject._
 import org.slf4j.LoggerFactory

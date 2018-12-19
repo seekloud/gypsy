@@ -1,13 +1,15 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl._
-
+import game._
 object Protocol {
 
   /**
     * 后端发送的数据
     * */
+  trait WsMsgSource
+
+  case object CompleteMsgServer extends WsMsgSource
+  case class FailMsgServer(ex: Throwable) extends WsMsgSource
 
   sealed trait GameMessage extends WsMsgSource
 
@@ -65,8 +67,11 @@ object Protocol {
 
   case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
 
-
   case class PlayerJoin(id:String,player:Player) extends GameMessage
+
+  case class JoinRoomSuccess(playerId:String, roomId:Long) extends GameMessage
+
+  case class JoinRoomFailure(playerId:String,roomId:Long,errorCode:Int,msg:String) extends GameMessage
 
   /**
     * 前端发送的数据
@@ -93,6 +98,10 @@ object Protocol {
   case class Ping(timestamp: Long) extends UserAction
 
   case class ReLiveAck(id:String) extends UserAction
+
+  case object CreateRoom extends UserAction
+
+  case class JoinRoom(roomId:Option[Long]) extends UserAction
 
 
   /**

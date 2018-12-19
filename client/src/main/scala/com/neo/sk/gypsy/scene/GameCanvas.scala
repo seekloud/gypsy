@@ -6,16 +6,17 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
-
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
 import com.neo.sk.gypsy.common.Constant._
-
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 
 class GameCanvas(canvas: Canvas,
@@ -112,7 +113,7 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
 
   }
-  //绘制转圈动画
+/*  //绘制转圈动画
   var p =  ArrayBuffer()
   var particle = ArrayBuffer[Particle]()
   var angle = Math.PI/4
@@ -120,8 +121,8 @@ class GameCanvas(canvas: Canvas,
   var height = realWindow.y
   def getRandomInt(min:Double, max:Double):Double= {
     return min + Math.floor(Math.random() * (max - min + 1))
-  }
-  class Particle(x1:Double,y1:Double){
+  }*/
+/*  class Particle(x1:Double,y1:Double){
     var x= x1
     var y = y1
     var r = getRandomInt(10, 16)
@@ -158,17 +159,17 @@ class GameCanvas(canvas: Canvas,
       //      ctx.fillText(""+time+"s", 710, 350)
       //      clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
     }
-  }
+  }*/
 
-  def run(a:Double) {
+/*  def run(a:Double) {
     val r = 140
     val x = r * Math.sin(a) + width / 2
     val y = r * Math.cos(a) + ((height / 2)-80)
     val p = new Particle(x, y)
     particle.append(p)
-  }
+  }*/
 
-  def drawGameOn2()={
+/*  def drawGameOn2()={
     ctx.clearRect(0, 0, width, height)
     run(angle)
     for ( j <- 1 until particle.length) {
@@ -181,11 +182,11 @@ class GameCanvas(canvas: Canvas,
     } else {
       angle = 0
     }
-  }
+  }*/
 
 
-  var timeNum = 0
-  var clock1=0
+//  var timeNum = 0
+//  var clock1=0
 
   //绘制等待时间
  /* def drawClock():Unit={
@@ -210,7 +211,7 @@ class GameCanvas(canvas: Canvas,
   }*/
 
 
-  //欢迎文字
+  //欢迎文字（无）
   def drawGameWelcome(): Unit = {
     ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
@@ -235,7 +236,7 @@ class GameCanvas(canvas: Canvas,
   }
 
 
-  //离线提示文字
+  //离线提示文字（无）
   def drawGameLost: Unit = {
     ctx.setFill(Color.web("rgba(255,255,255,0"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
@@ -348,27 +349,19 @@ class GameCanvas(canvas: Canvas,
   //offScreenCanvas:Canvas
   def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
     //计算偏移量
-    val players = data.playerDetails
-    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
-    val masses = data.massDetails
-    val virus = data.virusDetails
-
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
-    //    println(s"zoom：$zoom")
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
-    //var scale = data.scale
-
-    //绘制背景
-    //    ctx.fillStyle = MyColors.background
-
+    centerScale(scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    centerScale(scale,realWindow.x/2,realWindow.y/2)
-
-    //TODO /2
+    val players = data.playerDetails
+    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
+    val masses = data.massDetails
+    val virus = data.virusDetails
+    //   /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
@@ -409,8 +402,8 @@ class GameCanvas(canvas: Canvas,
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat /frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -419,7 +412,6 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
-
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
           //经典星球
@@ -461,8 +453,8 @@ class GameCanvas(canvas: Canvas,
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell=>
 
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -516,15 +508,14 @@ class GameCanvas(canvas: Canvas,
         gird.playerMap += (id -> player)
       }
     }
-
     virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y
       if(speed>0){
         val(nx,ny)= normalization(tx,ty)
-        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x + nx*speed *offsetTime.toFloat / frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / frameRate
         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
@@ -547,9 +538,7 @@ class GameCanvas(canvas: Canvas,
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
     val currentRankBaseLine = 4
-//    var index = 0
     ctx.setFill(Color.web(MyColors.background))
-//    drawTextLine(s"————排行榜————", realWindow.x-200, index, currentRankBaseLine)
     drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
@@ -579,27 +568,6 @@ class GameCanvas(canvas: Canvas,
 
     }
 
-    /*currentRank.foreach { score =>
-      index += 1
-      val drawColor = index match {
-        case 1 => "#FFD700"
-        case 2 => "#D1D1D1"
-        case 3 => "#8B5A00"
-        case _ => "#CAE1FF"
-      }
-      val imgOpt = index match {
-        case 1 => Some(goldImg)
-        case 2 => Some(silverImg)
-        case 3 => Some(bronzeImg)
-        case _ => None
-      }
-      imgOpt.foreach{ img =>
-        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+32, 13, 13)
-      }
-      //      ctx3.strokeStyle = drawColor
-      //      ctx3.lineWidth = 18
-      drawTextLine(s"【$index】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index, currentRankBaseLine)
-    }*/
     //绘制小地图
 
     ctx.setFill(Color.web(MyColors.bigPlayer))

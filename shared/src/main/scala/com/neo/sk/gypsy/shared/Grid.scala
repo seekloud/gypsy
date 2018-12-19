@@ -3,19 +3,21 @@ package com.neo.sk.gypsy.shared
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
-
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
+import scala.collection.mutable.ListBuffer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
-
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.game._
+
 
 /**
   * User: Taoz
@@ -60,6 +62,11 @@ trait Grid {
   val bigPlayerMass = 500.0
 
   var deadPlayerMap=Map.empty[Long,Player]
+
+  //统计分数
+  var Compress_times = 1
+  var ScoreList = List.empty[Double]
+  var tempScoreList = ListBuffer.empty[Int]
 
   //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
@@ -124,11 +131,50 @@ trait Grid {
   def update() = {
     updateSpots()
     updatePlayer()
+    updateScoreList()
     actionMap -= frameCount
     mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
     GameEventMap -= (frameCount-5)
     frameCount += 1
+  }
+
+  //统计分数跟新
+  def updateScoreList() = {
+    if(playerMap.get(myId).isDefined){
+      val myInfo = playerMap(myId)
+      var myScore = 0
+      myInfo.cells.foreach{c=>
+        myScore += c.newmass.toInt
+      }
+      tempScoreList += myScore
+      if(tempScoreList.length > Compress_times){
+        var TotalScore = tempScoreList.sum.toDouble / Compress_times
+        tempScoreList.clear()
+        ScoreList ::= TotalScore
+      }
+
+      if(ScoreList.length > GameConfig.ScoreListMax){
+        var resultScore = List.empty[Double]
+        val evenScore = ScoreList.zipWithIndex.filter(_._2 %2 == 0)
+        val oddScore = ScoreList.zipWithIndex.filter(_._2 %2 == 1)
+        val a = Array.empty[Int]
+        resultScore = evenScore.map{temp =>
+          val index = temp._2
+          val EScore = temp._1
+          //这里用index来获取感觉有点危险
+          val OScore = oddScore(index)._2
+          (EScore+OScore)/2
+        }
+        ScoreList = resultScore
+        Compress_times *=2
+
+//        var tempList = ScoreList match {
+//          case a :: tail => (a+tail.head)/2 :: tail
+//        }
+      }
+
+    }
   }
 
   //食物更新
@@ -414,8 +460,8 @@ trait Grid {
               val massRadius = 4 + sqrt(shotMass) * 6
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-//              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+//              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
