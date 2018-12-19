@@ -24,4 +24,6 @@ object AppSettings {
   val gameHost = appConfig.getString("server.host")
   val gameDomain = appConfig.getString("server.domain")
   val botSecure =  appConfig.getString("botSecure.apiToken")
+  val isBot = appConfig.getBoolean("isBot")
+
 }

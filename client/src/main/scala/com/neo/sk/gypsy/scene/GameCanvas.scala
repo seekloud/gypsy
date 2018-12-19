@@ -6,13 +6,14 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
-
 import com.neo.sk.gypsy.ClientBoot
+import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
 import com.neo.sk.gypsy.common.Constant._
+import com.neo.sk.gypsy.utils.BotUtil
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
@@ -346,7 +347,9 @@ class GameCanvas(canvas: Canvas,
   }
 
   //offScreenCanvas:Canvas
-  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
+//  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
+  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient)= {
+    val foodMap = grid.food
     //计算偏移量
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
@@ -504,7 +507,7 @@ class GameCanvas(canvas: Canvas,
         val bottom = newcells.map(a => a.y - a.radius).min
         val top = newcells.map(a => a.y + a.radius).max
         val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
-        gird.playerMap += (id -> player)
+        grid.playerMap += (id -> player)
       }
     }
     virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
@@ -658,7 +661,7 @@ class GameCanvas(canvas: Canvas,
   /*********************分层视图400*200****************************/
 
   /*******************1.视野在整个地图中的位置***********************/
-  def drawLocation(uid:String,data:Protocol.GridDataSync)={
+  def drawLocation(uid:String,data:Protocol.GridDataSync,is2Byte:Boolean)={
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     data.playerDetails.foreach{player=>
@@ -667,11 +670,22 @@ class GameCanvas(canvas: Canvas,
         ctx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
       }
     }
+    if(is2Byte){
+      BotUtil.canvas2byteArray(canvas)
+    }else{
+      BotUtil.emptyArray
+    }
   }
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInterac() = {
+  def drawNonInterac(is2Byte:Boolean) = {
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    if(is2Byte){
+      BotUtil.canvas2byteArray(canvas)
+    }else{
+      BotUtil.emptyArray
+    }
+
   }
   /********************3.视野内可交互的元素（food，mass，virus）****************/
   def drawInteract(uid:String,offx:Double,offy:Double,scale:Double,food:List[Food],virus:List[Virus],mass:List[Mass])={
@@ -718,6 +732,8 @@ class GameCanvas(canvas: Canvas,
     virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
     }
+
+
   }
   /********************4.视野内包括自己的所有玩家******************************/
   def drawAllPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {

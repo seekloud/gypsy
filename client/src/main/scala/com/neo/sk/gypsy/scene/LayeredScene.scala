@@ -12,12 +12,16 @@ import com.neo.sk.gypsy.common.Constant._
 class LayeredScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
-  val canvasWidth=1200
-  val canvasHeight=600
-  val window=Point(canvasWidth,canvasHeight)
+//  val canvasWidth=1200
+//  val canvasHeight=600
+//  val window=Point(canvasWidth,canvasHeight)
 
   /**人类视图**/
   val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
+  val humanCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
+  val humanCtx = humanCanvas.getGraphicsContext2D
+  val humanView = new GameCanvas(humanCanvas,humanCtx,humanWindow)
+
   val gameCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
   val middleCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
@@ -54,7 +58,9 @@ class LayeredScene {
 
   /**javafx的布局**/
   val flow = new FlowPane()
-  flow.setPrefWrapLength(400) // 预设FlowPane的宽度，使其能够显示两列
+  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
+
+  //设置行列之间的间隙大小
   flow.setVgap(5)
   flow.setHgap(5)
   flow.getChildren.addAll(locationCanvas,nonInteracCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
@@ -112,8 +118,8 @@ class LayeredScene {
         val offx = sumX /p.cells.length
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
-        val foods=grid.food
-        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom,grid)
+//        val foods=grid.food
+        gameView.drawGrid(myId,data,offsetTime,basePoint,zoom,grid)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font(" Helvetica",24))

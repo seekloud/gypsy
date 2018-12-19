@@ -11,11 +11,12 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.common.StageContext
-import com.neo.sk.gypsy.scene.GameScene
+import com.neo.sk.gypsy.common.{AppSettings, StageContext}
+import com.neo.sk.gypsy.scene.{GameScene, LayeredDraw, LayeredScene}
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.GameClient.{ControllerInitial}
+import com.neo.sk.gypsy.actor.GameClient.ControllerInitial
 import java.awt.event.KeyEvent
+
 import javafx.scene.image.Image
 
 import scala.math.atan2
@@ -74,6 +75,7 @@ object GameHolder {
 class GameHolder(
                   stageCtx: StageContext,
                   gameScene: GameScene,
+                  layerScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
@@ -107,11 +109,18 @@ class GameHolder(
 
   def start()={
     println("start---!!!")
+    //TODO 这里改改
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
-        //游戏渲染
-        gameRender()
+        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
+        if(AppSettings.isBot){
+          val ld = new LayeredDraw(myId,layerScene,grid,false)
+          ld.drawLocation()
+        }else{
+          //游戏渲染
+          gameRender()
+        }
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
@@ -142,18 +151,25 @@ class GameHolder(
     }
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
-      //差不多每三秒同步一次
-      //不同步
-      if (!justSynced) {
-        update()
-      } else {
-        if (syncGridData.nonEmpty) {
-          //同步
-          grid.setSyncGridData(syncGridData.get)
-          syncGridData = None
-        }
-        justSynced = false
+    //差不多每三秒同步一次
+    //不同步
+    if (!justSynced) {
+      update()
+    } else {
+      if (syncGridData.nonEmpty) {
+        //同步
+        grid.setSyncGridData(syncGridData.get)
+        syncGridData = None
       }
+      justSynced = false
+    }
+
+    if(AppSettings.isBot){
+      ClientBoot.addToPlatform {
+
+      }
+    }
+
   }
 
   def gameRender() = {
