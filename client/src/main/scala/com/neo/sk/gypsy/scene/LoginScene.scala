@@ -131,11 +131,11 @@ class LoginScene {
     val botKey = botKeyInput.getText()
     if (botId == ""||botKey=="") {
       ClientBoot.addToPlatform{
-        alert.setContentText("BotId或BotKey不能为空");
-        alert.showAndWait();
+        alert.setContentText("BotId或BotKey不能为空")
+        alert.showAndWait()
       }
     } else {
-      loginSceneListener.onButtonBotConnect(botId, botKey)
+      loginSceneListener.onButtonBotConnect(botId.toLong, botKey)
     }
   }
 

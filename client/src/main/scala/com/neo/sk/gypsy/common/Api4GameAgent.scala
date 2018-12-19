@@ -7,8 +7,6 @@ import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

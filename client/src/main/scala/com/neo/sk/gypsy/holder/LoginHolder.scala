@@ -60,11 +60,8 @@ class LoginHolder(
         case Left(error)=>
           log.info(s"$error occured")
           ClientBoot.addToPlatform{
-//              loginScene.ErrorTip.setText(error.msg)
-//              loginScene.group.getChildren.add(loginScene.ErrorTip)
             loginScene.alert.setContentText(error.msg)
             loginScene.alert.showAndWait()
-
             }
       }
 
