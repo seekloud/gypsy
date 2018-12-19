@@ -3,22 +3,21 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-
 import scala.util.Random
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
-import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
-import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.front.scalajs.NetDelay
+import com.neo.sk.gypsy.front.utils.Shortcut
 import org.scalajs.dom
-import org.scalajs.dom.ext.{Color, KeyCode}
+import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
-
-
 import scala.math._
+
+
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**
   * User: sky
@@ -269,8 +268,8 @@ class GameHolder(replay:Boolean = false) {
           var yMin = 10000.0
           var yMax = 0.0
           p.cells.foreach { cell =>
-            val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-            val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
+            val offx = cell.speedX * offsetTime.toDouble / frameRate
+            val offy = cell.speedY * offsetTime.toDouble / frameRate
             val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
             val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
             if (newX>xMax) xMax=newX

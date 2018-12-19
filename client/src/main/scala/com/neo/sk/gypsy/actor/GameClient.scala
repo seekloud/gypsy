@@ -3,18 +3,20 @@ package com.neo.sk.gypsy.actor
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
-import com.neo.sk.gypsy.shared.ptcl
+import com.neo.sk.gypsy.shared.ptcl.Game._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.WsMsgSource
 import com.neo.sk.gypsy.holder.GameHolder._
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
+
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -54,6 +56,25 @@ object GameClient {
                      (implicit stashBuffer: StashBuffer[WsMsgSource]):Behavior[WsMsgSource]={
     Behaviors.receive[WsMsgSource]{ (ctx, msg) =>
       msg match {
+          //for bot
+        case Protocol.JoinRoomSuccess(id,roomId) =>
+          log.info(s"$id join room$roomId success")
+          ClientBoot.addToPlatform{
+            if(BotActor.SDKReplyTo != null){
+              BotActor.SDKReplyTo ! JoinRoomRsp(roomId)
+            }
+          }
+          Behaviors.same
+
+        case Protocol.JoinRoomFailure(_,_,errorCode,errMsg) =>
+          log.error(s"join room failed $errorCode: $errMsg")
+          ClientBoot.addToPlatform{
+            if(BotActor.SDKReplyTo != null){
+              BotActor.SDKReplyTo ! JoinRoomRsp(-1,errorCode,errMsg)
+            }
+          }
+          Behaviors.stopped
+
         case Protocol.Id(id) =>
           myId = id
           ClientMusic.playMusic("bg")
@@ -103,8 +124,6 @@ object GameClient {
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
           Behaviors.same
-
-
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
@@ -158,8 +177,6 @@ object GameClient {
             }
           }
           Behaviors.same
-
-
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadPlayer)=>

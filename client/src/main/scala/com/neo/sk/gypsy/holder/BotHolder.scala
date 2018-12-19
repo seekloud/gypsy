@@ -1,28 +1,25 @@
 package com.neo.sk.gypsy.holder
 
-import akka.actor.typed.ActorRef
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-import akka.actor.typed.scaladsl.adapter._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.scene.LayeredScene
 import com.neo.sk.gypsy.common.StageContext
-import com.neo.sk.gypsy.scene.GameScene
 import java.awt.event.KeyEvent
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.BotActor.MsgToService
 import com.neo.sk.gypsy.actor.GameClient._
-import com.neo.sk.gypsy.actor.{BotActor, GameClient}
 import org.seekloud.esheepapi.pb.actions._
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 object BotHolder {
   val bounds = Point(Boundary.w,Boundary.h)

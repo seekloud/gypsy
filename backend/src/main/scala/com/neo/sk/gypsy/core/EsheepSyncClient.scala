@@ -4,15 +4,14 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import akka.actor.typed.{ActorRef, Behavior}
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.ptcl.EsheepProtocol
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
 import com.neo.sk.gypsy.utils.EsheepClient
 import org.slf4j.LoggerFactory
-
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success}
-
 import scala.concurrent.ExecutionContext.Implicits.global
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 
 object EsheepSyncClient {
@@ -133,7 +132,6 @@ object EsheepSyncClient {
                     implicit stashBuffer:StashBuffer[Command],
                     timer:TimerScheduler[Command]
                   ): Behavior[Command] = {
-//    timer.startSingleTimer(RefreshTokenKey, RefreshToken, (tokenInfo.expireTime - System.currentTimeMillis()).millis)
     timer.startSingleTimer(RefreshTokenKey, RefreshToken, (tokenInfo.expireTime-2).seconds )
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {

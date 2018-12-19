@@ -4,12 +4,14 @@ import java.io.ByteArrayInputStream
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.ClientBoot
+import com.neo.sk.gypsy.actor.WsClient
+import com.neo.sk.gypsy.common.{AppSettings, StageContext}
 import com.neo.sk.gypsy.actor.BotActor._
 import com.neo.sk.gypsy.actor.{BotActor, WsClient}
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
-import com.neo.sk.gypsy.actor.WsClient.ConnectEsheep
+import com.neo.sk.gypsy.actor.WsClient.{ConnectEsheep, ConnectGame}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,7 +27,7 @@ class LoginHolder(
                    stageCtx: StageContext
                  ) {
 
-  private[this] val log = LoggerFactory.getLogger(this.getClass)
+  private[this] val log = LoggerFactory.getLogger("LoginMessages")
 
   loginScene.setLoginListener(new LoginScene.LoginSceneListener {
     override def onButtonScanLogin: Unit = {
@@ -39,25 +41,42 @@ class LoginHolder(
       }
     }
 
-    override def onButtonBotConnect(): Unit = {
-
-    }
-
-    override def onButtonEmailConnect(): Unit = {
-
-    }
-
-    override def onButtonBotLogin(botId: String, botKey: String): Unit = {
-      log.info(s"bot join")
+    override def onButtonBotConnect(botId:Long,botKey:String): Unit = {
       botActor ! BotLogin(botId,botKey)
+
+    }
+
+    override def onButtonEmailConnect(email:String,password:String): Unit = {
+      emailLogin(email,password).map{
+        case Right(userInfo)=>
+          val playerId=s"user+${userInfo.userId}"
+          linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
+            case Right(res) =>
+              wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
+            case Left(error)=>
+              log.info(s"$error occured")
+          }
+        case Left(error)=>
+          log.info(s"$error occured")
+      }
+
+    }
+
+    override def onButtonBotLogin(): Unit = {
+      loginScene.drawBotLogin()
     }
 
     override def onButtonEmailLogin(): Unit = {
+      loginScene.drawEmailLogin()
 
     }
 
     override def onButtonPlayerLogin(): Unit = {
       loginScene.drawLoginWay()
+    }
+
+    override def onButtonReturn(): Unit = {
+      loginScene.drawReturn()
     }
   })
 
