@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import game._
+import Game._
 object Protocol {
 
   /**
