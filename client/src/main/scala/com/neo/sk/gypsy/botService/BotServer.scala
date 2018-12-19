@@ -99,17 +99,17 @@ class BotServer(
     }
   }
 
+  //TODO
   override def observation(request: Credit): Future[ObservationRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.apiToken)){
-      //TODO
       val rsp = ObservationRsp()
       Future.successful(rsp)
     }else{
       Future.successful(ObservationRsp(errCode = 100006, state = State.unknown, msg = "auth error"))
     }
   }
-
+  //TODO
   override def inform(request: Credit): Future[InformRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.apiToken)){
@@ -122,7 +122,7 @@ class BotServer(
     }
 
   }
-
+  //TODO
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
     Future.successful(SimpleRsp(errCode = 100008, state = State.unknown, msg = "auth error"))
   }

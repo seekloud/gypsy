@@ -103,7 +103,7 @@ class LoginScene {
     } else if (botKey == "") {
       ErrorTip.setText("botKey不能为空")
     } else {
-      loginSceneListener.onButtonBotConnect(botId, botKey)
+      loginSceneListener.onButtonBotConnect(botId.toLong, botKey)
     }
   }
 
