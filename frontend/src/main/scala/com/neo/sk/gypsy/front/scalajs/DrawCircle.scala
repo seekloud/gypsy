@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 import org.scalajs
 import org.scalajs.dom
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 object DrawCircle {
 

@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
-import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
 
 /**
   * Created by hongruying on 2018/8/29

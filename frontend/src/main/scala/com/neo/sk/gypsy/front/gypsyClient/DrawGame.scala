@@ -16,7 +16,7 @@ import io.circe.syntax._
 
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**

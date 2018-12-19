@@ -20,7 +20,7 @@ import scala.concurrent.duration._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
-import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
