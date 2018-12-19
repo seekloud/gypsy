@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.botService
 
 import akka.actor.typed.ActorRef
+import akka.actor.typed.scaladsl.AskPattern._
 import com.neo.sk.gypsy.actor.BotActor
 import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
@@ -9,7 +10,7 @@ import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
 import scala.concurrent.{ExecutionContext, Future}
 import com.neo.sk.gypsy.utils.BotUtil._
 import org.slf4j.LoggerFactory
-
+import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, timeout}
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 
 object BotServer {
@@ -33,11 +34,10 @@ class BotServer(
   private var state: State = State.unknown
 
   override def createRoom(request: CreateRoomReq): Future[CreateRoomRsp] = {
-    //TODO
     if(checkBotToken(request.credit.get.apiToken)){
       state = State.init_game
       log.info(s"createRoom Called by [$request")
-      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？BotActor.CreateRoom(request.password, _)
+      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ? (BotActor.CreateRoom(_))
       getRoomIdRsp.map{
         rsp =>
           if (rsp.errCode == 0) CreateRoomRsp(rsp.roomId.toString, 0, state, "ok")
@@ -52,9 +52,13 @@ class BotServer(
   override def joinRoom(request: JoinRoomReq): Future[SimpleRsp] = {
     println(s"joinRoom Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
-//      botActor ! JoinRoom(request.roomId,request.credit.get.playerId,request.credit.get.apiToken)
-      val state = State.in_game
-      Future.successful(SimpleRsp(errCode = 102, state = state, msg = "ok"))
+      state = State.in_game
+      val joinRoomRsp: Future[JoinRoomRsp] = botActor ? (BotActor.JoinRoom(request.roomId, _))
+      joinRoomRsp.map{
+        rsp =>
+          if (rsp.errCode == 0) SimpleRsp(0, state, "ok")
+          else SimpleRsp(rsp.errCode, state, rsp.msg)
+      }
     }else{
       Future.successful(SimpleRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }
@@ -64,8 +68,8 @@ class BotServer(
   override def leaveRoom(request: Credit): Future[SimpleRsp] = {
     println(s"leaveRoom Called by [$request")
     if(checkBotToken(request.apiToken)){
-//      botActor ! LeaveRoom(request.playerId)
-      val state = State.ended
+      botActor ! BotActor.LeaveRoom
+      state = State.ended
       Future.successful(SimpleRsp(errCode = 103, state = state, msg = "ok"))
     }else{
       Future.successful(SimpleRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
@@ -85,9 +89,10 @@ class BotServer(
   override def action(request: ActionReq): Future[ActionRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
-      botHolder.gameActionReceiver(request.apply,request.swing)
-      val rsp = ActionRsp(frameIndex = botHolder.getFrameCount.toInt, errCode = 13, state = State.unknown, msg = "ok")
-      Future.successful(rsp)
+//      botHolder.gameActionReceiver(request.apply,request.swing)
+//      val rsp = ActionRsp(frameIndex = botHolder.getFrameCount.toInt, errCode = 13, state = State.unknown, msg = "ok")
+//      Future.successful(rsp)
+      Future.successful(ActionRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }else{
       Future.successful(ActionRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
     }

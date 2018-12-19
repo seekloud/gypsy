@@ -140,9 +140,8 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
       }
     }
   }
-
   //for bot
-  private def createRoom = (path("createRoom") & get){
+  private def playGameBot = (path("playGameBot") & get){
     parameter(
       'playerId.as[String],
       'playerName.as[String],
@@ -150,7 +149,7 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
     ){ case (playerId, playerName, accessCode) =>
         authPlatUser(accessCode){player =>
           val session = GypsySession(BaseUserInfo(UserRolesType.player, playerId, playerName, ""), System.currentTimeMillis()).toSessionMap
-          val flowFuture:Future[Flow[Message,Message,Any]]= userManager ? (UserManager.GetCreateRoomSocketFlow(Some(PlayerInfo(player.playerId,playerName)),_))
+          val flowFuture:Future[Flow[Message,Message,Any]]= userManager ? (UserManager.GetBotSocketFlow(Some(PlayerInfo(player.playerId,playerName)),_))
           dealFutureResult(
             flowFuture.map(r=>
               addSession(session) {
@@ -163,6 +162,6 @@ trait EsheepService  extends ServiceUtils with SessionBase with AuthService{
   }
 
   val esheepRoutes: Route = pathPrefix("api"){
-      playGame ~ watchGame ~ watchRecord
+      playGame ~ watchGame ~ watchRecord ~ playGameBot
     }
 }

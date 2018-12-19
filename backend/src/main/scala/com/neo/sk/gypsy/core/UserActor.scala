@@ -40,7 +40,9 @@ object UserActor {
 
   case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomSuccess(roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomSuccess(roomId:Long, roomActor: ActorRef[RoomActor.Command]) extends Command with RoomManager.Command
+
+  case class JoinRoomFailure(roomId: Long, errorCode: Int, msg: String) extends Command with RoomManager.Command
 
   case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
 
@@ -73,7 +75,7 @@ object UserActor {
 
   case class StartGame(roomId:Option[Long]) extends Command
 
-  case class CreateRoom(playerInfo: PlayerInfo) extends Command
+  case object CreateRoom extends Command
 
   case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
 
@@ -121,6 +123,12 @@ object UserActor {
 
                    case ReLiveAck(id) =>
                      UserReLiveAck(id)
+
+                   case Protocol.CreateRoom =>
+                     CreateRoom
+
+                   case Protocol.JoinRoom(roomIdOp) =>
+                     StartGame(roomIdOp)
 
                    case _=>
                      UnKnowAction
@@ -217,16 +225,21 @@ object UserActor {
           val gamePlayer = getGameReply(ctx,recordId)
           switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
 
-        case CreateRoom(playerInfo) =>
-          roomManager ! UserActor.JoinRoomByCreate(playerInfo,ctx.self)
+        case CreateRoom =>
+          roomManager ! UserActor.JoinRoomByCreate(userInfo,ctx.self)
           Behaviors.same
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
-        case JoinRoomSuccess(roomActor)=>
+        case JoinRoomSuccess(roomId,roomActor)=>
+          frontActor ! Protocol.JoinRoomSuccess(userInfo.playerId,roomId)
           switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
+
+        case JoinRoomFailure(roomId,errorCode,msg) =>
+          frontActor ! Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg)
+          Behaviors.same
 
         case JoinRoomSuccess4Watch(roomActor,roomId) =>
           switchBehavior(ctx,"watch",watch(userInfo,roomId,frontActor,roomActor))
