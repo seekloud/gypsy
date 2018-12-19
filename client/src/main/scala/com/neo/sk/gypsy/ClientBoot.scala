@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.actor.typed.scaladsl.adapter._
 import javafx.application.{Application, Platform}
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.actor.{GameClient, TokenActor, WsClient}
+import com.neo.sk.gypsy.actor.{BotActor, GameClient, TokenActor, WsClient}
 import com.neo.sk.gypsy.common.AppSettings._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.holder.LoginHolder
@@ -38,8 +38,9 @@ class ClientBoot extends javafx.application.Application{
   override def start(mainStage: Stage): Unit = {
     val context = new StageContext(mainStage)
     val wsClient = system.spawn(WsClient.create(gameClient,context,system,materializer,executor),"WsClient")
+    val botActor = system.spawn(BotActor.create(gameClient,context),"botActor")
     val loginScene = new LoginScene()
-    val loginHolder = new LoginHolder(wsClient,loginScene,context)
+    val loginHolder = new LoginHolder(wsClient,botActor,loginScene,context)
     loginHolder.showScene()
   }
 

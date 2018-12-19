@@ -1,122 +1,97 @@
 package com.neo.sk.gypsy.scene
 
 import java.util.concurrent.atomic.AtomicInteger
-
-import com.neo.sk.gypsy.common.AppSettings
 import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
+import javafx.scene.layout._
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
 import com.neo.sk.gypsy.utils.FpsComp
-
-
+import com.neo.sk.gypsy.common.Constant._
 class LayeredScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
+//  val canvasWidth=1200
+//  val canvasHeight=600
+//  val window=Point(canvasWidth,canvasHeight)
 
-  val group = new Group()
-  //TODO 为什么是1300*900 不是1600 * 900
-  val scene = new Scene(group, 1300,900)
+  /**人类视图**/
+  val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
+  val humanCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
+  val humanCtx = humanCanvas.getGraphicsContext2D
+  val humanView = new GameCanvas(humanCanvas,humanCtx,humanWindow)
 
-//  400*200
-  val layerWidth = AppSettings.layerCanvasW
-  val layerHeight = AppSettings.layerCanvasH
-
-//  800*400
-  val viewWidth = AppSettings.viewCanvasW
-  val viewHeight = AppSettings.viewCanvasH
-
-  val layerMapCanvas = new Canvas(layerWidth,layerHeight)
-  val layerInfoCanvas = new Canvas(layerWidth,layerHeight)
-  val layerBgCanvas = new Canvas(layerWidth,layerHeight)
-  val layerAppleCanvas = new Canvas(layerWidth,layerHeight)
-  val layerAllSnakesCanvas = new Canvas(layerWidth,layerHeight)
-  val layerMySnakeCanvas = new Canvas(layerWidth,layerHeight)
-
-//  人类视图
-  val viewCanvas = new Canvas(viewWidth,viewHeight)
-
-
-  /*
-   *  这里几个是设置布局位置
-   */
-//  TODO 调一调布局
-  layerBgCanvas.setLayoutX(800)
-  layerBgCanvas.setLayoutY(0)
-  layerInfoCanvas.setLayoutX(1200)
-  layerInfoCanvas.setLayoutY(0)
-  layerMySnakeCanvas.setLayoutX(800)
-  layerMySnakeCanvas.setLayoutY(400)
-  layerAllSnakesCanvas.setLayoutX(1200)
-  layerAllSnakesCanvas.setLayoutY(400)
-  layerMapCanvas.setLayoutX(800)
-  layerMapCanvas.setLayoutY(600)
-  layerAppleCanvas.setLayoutX(1200)
-  layerAppleCanvas.setLayoutY(600)
-
-  viewCanvas.setLayoutX(0)
-  viewCanvas.setLayoutY(100)
-
-//  把Canvas加进group
-  group.getChildren.add(viewCanvas)
-
-  group.getChildren.add(layerMapCanvas)
-  group.getChildren.add(layerInfoCanvas)
-  group.getChildren.add(layerBgCanvas)
-  group.getChildren.add(layerAllSnakesCanvas)
-  group.getChildren.add(layerAppleCanvas)
-  group.getChildren.add(layerMySnakeCanvas)
-
-
-
-
-
-  val canvasWidth=1200
-  val canvasHeight=600
-  val window=Point(canvasWidth,canvasHeight)
-  val gameCanvas = new Canvas(canvasWidth,canvasHeight)
+  val gameCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
-  val middleCanvas = new Canvas(canvasWidth,canvasHeight)
+  val middleCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val middleCanvasCtx=middleCanvas.getGraphicsContext2D
-  val topCanvas = new Canvas(canvasWidth,canvasHeight)
+  val topCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val topCanvasCtx=topCanvas.getGraphicsContext2D
   val actionSerialNumGenerator = new AtomicInteger(0)
-
-  //  offCanvas.setStyle("z-index: 1")
+  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,humanWindow)
+  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,humanWindow)
+  val topView=new GameCanvas(topCanvas,topCanvasCtx,humanWindow)
   gameCanvas.setStyle("z-index: 1")
   middleCanvas.setStyle("z-index: 2")
   topCanvas.setStyle("z-index: 3")
+  /**分层视图**/
+  val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
+  val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
+  val locationCanvasCtx = locationCanvas.getGraphicsContext2D
+  val locationView = new GameCanvas(locationCanvas,locationCanvasCtx,layerWindow)
+  val nonInteracCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //02视野中不可交互的元素（背景）
+  val nonInteracCanvasCtx = nonInteracCanvas.getGraphicsContext2D
+  val nonInteracView = new GameCanvas(nonInteracCanvas,nonInteracCanvasCtx,layerWindow)
+  val interactCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)//03视野内可交互的元素
+  val interactCanvasCtx = interactCanvas.getGraphicsContext2D
+  val interactView = new GameCanvas(interactCanvas,interactCanvasCtx,layerWindow)
+  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内包括自己的所有玩家
+  val allPlayerCanvasCtx = allPlayerCanvas.getGraphicsContext2D
+  val allPlayerView = new GameCanvas(allPlayerCanvas,allPlayerCanvasCtx,layerWindow)
+  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //05玩家自己
+  val playerCanvasCtx = playerCanvas.getGraphicsContext2D
+  val playerView = new GameCanvas(playerCanvas,playerCanvasCtx,layerWindow)
+  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //06面板状态信息
+  val informCanvasCtx = informCanvas.getGraphicsContext2D
+  val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
 
+  /**javafx的布局**/
+  val flow = new FlowPane()
+  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
 
-  group.getChildren.add(gameCanvas)
-  group.getChildren.add(middleCanvas)
-  group.getChildren.add(topCanvas)
-
-  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,window)
-  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,window)
-  val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
+  //设置行列之间的间隙大小
+  flow.setVgap(5)
+  flow.setHgap(5)
+  flow.getChildren.addAll(locationCanvas,nonInteracCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+  val group = new Group()
+  group.getChildren.addAll(gameCanvas,middleCanvas,topCanvas)
+  val border = new BorderPane()
+  border.setCenter(group)
+  border.setRight(flow)
+  val scene = new Scene(border)
+//  group.getChildren.add(gameCanvas)
+//  group.getChildren.add(middleCanvas)
+//  group.getChildren.add(topCanvas)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
-    //    //    val viewWidth = 1200//1800
-    //    //    val viewHeight = 750//900
-    //    //    val rankWidth = 1200//1800
-    //    //    val rankHeight = 250//300
-    //
-    //    rank.resetRankView(rankWidth, rankHeight)
-    //    view.resetScreen(viewWidth, viewHeight, rankWidth, rankHeight)
-
-    gameView.resetScreen(viewWidth,viewHeight)
-    middleView.resetScreen(viewWidth,viewHeight)
-    topView.resetScreen(viewWidth,viewHeight)
-    //
-    //    rankCanvas.setWidth(rankWidth)
-    //    rankCanvas.setHeight(rankHeight)
+    //TODO
+    /**人类视图**/
+    gameView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    middleView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    topView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
+    /**分层视图**/
+    locationView.resetScreen(viewWidth/4,viewHeight/3)
+    nonInteracView.resetScreen(viewWidth/4,viewHeight/3)
+    interactView.resetScreen(viewWidth/4,viewHeight/3)
+    allPlayerView.resetScreen(viewWidth/4,viewHeight/3)
+    playerView.resetScreen(viewWidth/4,viewHeight/3)
+    informView.resetScreen(viewWidth/4,viewHeight/3)
   }
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,window.x,window.y)
+    val data = grid.getGridData(myId,1200,600)
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false
@@ -143,8 +118,8 @@ class LayeredScene {
         val offx = sumX /p.cells.length
         val offy = sumY /p.cells.length
         val basePoint = (offx, offy)
-        val foods=grid.food
-        gameView.drawGrid(myId,data,foods,offsetTime,firstCome,basePoint,zoom,grid)
+//        val foods=grid.food
+        gameView.drawGrid(myId,data,offsetTime,basePoint,zoom,grid)
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font(" Helvetica",24))

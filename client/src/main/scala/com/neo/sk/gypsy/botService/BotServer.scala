@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy.bot
+package com.neo.sk.gypsy.botService
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.actor.BotActor
@@ -7,15 +7,15 @@ import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
+
 import scala.concurrent.{ExecutionContext, Future}
 import com.neo.sk.gypsy.utils.BotUtil._
+import org.slf4j.LoggerFactory
 
 object BotServer {
 
-  def build(port: Int, executionContext: ExecutionContext, botActor:  ActorRef[BotActor.Command]): Server = {
-
+  def build(port: Int, executionContext: ExecutionContext, botActor:ActorRef[BotActor.Command]): Server = {
     val service = new BotServer(botActor)
-
     ServerBuilder.forPort(port).addService(
       EsheepAgentGrpc.bindService(service, executionContext)
     ).build
@@ -25,13 +25,19 @@ object BotServer {
 }
 
 
-class BotServer(botActor:ActorRef[BotActor.Command]) extends EsheepAgent {
+class BotServer(
+                 botActor:ActorRef[BotActor.Command]
+               ) extends EsheepAgent {
+
+  private[this] val log = LoggerFactory.getLogger(this.getClass)
+  private var state: State = State.unknown
+
   override def createRoom(request: CreateRoomReq): Future[CreateRoomRsp] = {
     //TODO
-    println(s"createRoom Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
-//      botActor ! CreateRoom(request.playerId,request.apiToken)
-      val state = State.init_game
+      state = State.init_game
+      log.info(s"createRoom Called by [$request")
+//      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ？CreateRoom(request.playerId,request.apiToken)
       Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
       Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
