@@ -9,14 +9,17 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 
 class GameCanvas(canvas: Canvas,
@@ -404,8 +407,8 @@ class GameCanvas(canvas: Canvas,
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat /frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -455,8 +458,8 @@ class GameCanvas(canvas: Canvas,
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell=>
 
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -516,8 +519,8 @@ class GameCanvas(canvas: Canvas,
       var yfix:Double=y
       if(speed>0){
         val(nx,ny)= normalization(tx,ty)
-        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x + nx*speed *offsetTime.toFloat / frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / frameRate
         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }

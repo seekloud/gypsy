@@ -3,21 +3,21 @@ package com.neo.sk.gypsy.shared
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicInteger
-
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.{Point, WsMsgProtocol}
-
 import scala.collection.mutable.ListBuffer
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{GameAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KeyCode, MousePosition}
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils._
 import com.neo.sk.gypsy.shared.util.utils
-
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+
 
 /**
   * User: Taoz
@@ -460,8 +460,8 @@ trait Grid {
               val massRadius = 4 + sqrt(shotMass) * 6
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-//              massList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= ptcl.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+//              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
@@ -514,11 +514,17 @@ trait Grid {
               splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
               splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
               cellId = cellIdgenerator.getAndIncrement().toLong
+              List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
+                Cell(cellId,  cell.x, cell.y, 1, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
             }
+            else
+              {
+                List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+              }
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
 //            println(cell.mass + "   " + newMass)
-            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                 Cell(cellId,  cell.x, cell.y, 0, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+//            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
+//                 Cell(cellId,  cell.x, cell.y, 1, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
         }.filterNot(_.newmass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length

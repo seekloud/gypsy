@@ -7,7 +7,7 @@ import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -102,4 +102,25 @@ object Api4GameAgent extends HttpUtil{
     }
   }
 
+  def emailLogin(email:String,password:String)={
+    val methodName="GET"
+    val url = esheepProtocol + "://" + esheepDomain + "/esheep/rambler/login"
+    val data=LoginReq(email,password).asJson.noSpaces
+    postJsonRequestSend(methodName,url,Nil,data).map{
+      case Right(data) =>
+        decode[ESheepUserInfoRsp](data) match {
+          case Right(rsp) =>
+            if(rsp.errCode==0){
+              Right(rsp)
+            }
+            else{
+              Left(ErrorRsp(rsp.errCode,rsp.msg))
+            }
+          case Left(error)=>
+            Left(ErrorRsp(-1,error.getMessage))
+        }
+      case Left(error) =>
+        Left(ErrorRsp(-1,error.getMessage))
+    }
+  }
 }
