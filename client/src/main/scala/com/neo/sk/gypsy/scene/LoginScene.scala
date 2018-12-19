@@ -11,6 +11,7 @@ import javafx.scene.image.Image
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 import javafx.scene.text.FontPosture
+import scalafx.scene.control.Alert
 import scalafx.scene.text.Text
 /**
   * @author zhaoyin
@@ -42,7 +43,6 @@ class LoginScene {
   val EmailConnect = new Button("确定")
   val ReturnButton = new Button("返回")
   val BotConnectButton = new Button("开始训练")
-//  val BotReturn = new Button("返回")
 
   val accountLabel = new Label("账号:")
   val accountInput = new TextField()
@@ -54,51 +54,69 @@ class LoginScene {
   val botKeyLabel = new Label("BotKey:")
   val botKeyInput = new TextField()
 
-  val ErrorTip = new Text()
-  ErrorTip.setLayoutX(190)
-  ErrorTip.setLayoutY(310)
-  ErrorTip.setFill(Color.RED)
+//  val ErrorTip = new Text()
+//  ErrorTip.setLayoutX(190)
+//  ErrorTip.setLayoutY(310)
+//  ErrorTip.setFill(Color.RED)
 
+  val LoginBack = new Image(ClientBoot.getClass.getResourceAsStream("/img/LoginB1.JPG"))
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
 
   var loginSceneListener: LoginSceneListener=_
 
-  playerButton.setLayoutX(220)
+  ReturnButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0);-fx-font: 16 arial; -fx-base: #ee2211;")
+  playerButton.setLayoutX(210)
   playerButton.setLayoutY(180)
-  BotButton.setLayoutX(220)
+  playerButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0); -fx-font:16 Helvetica; -fx-font-weight: bold; -fx-font-posture:italic; -fx-base:#2486d6")
+  BotButton.setLayoutX(210)
   BotButton.setLayoutY(300)
-  EmailButton.setLayoutX(220)
+  BotButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0); -fx-font:16 Helvetica; -fx-font-weight: bold; -fx-font-posture:italic; -fx-base:#2486d6")
+  EmailButton.setLayoutX(210)
   EmailButton.setLayoutY(180)
-  ScanButton.setLayoutX(220)
+  EmailButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0); -fx-font:16 Helvetica; -fx-font-weight: bold; -fx-font-posture:italic; -fx-base:#2486d6")
+  ScanButton.setLayoutX(210)
   ScanButton.setLayoutY(300)
+  ScanButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0); -fx-font:16 Helvetica; -fx-font-weight: bold; -fx-font-posture:italic; -fx-base:#2486d6")
 
   accountLabel.setLayoutX(120)
-  accountLabel.setLayoutY(160)
+  accountLabel.setLayoutY(165)
+  accountLabel.setStyle("-fx-font: 16 arial;-fx-base:#000000")
   accountInput.setLayoutX(180)
   accountInput.setLayoutY(160)
 
   passwordLabel.setLayoutX(120)
-  passwordLabel.setLayoutY(250)
+  passwordLabel.setLayoutY(255)
+  passwordLabel.setStyle("-fx-font: 16 arial;-fx-base:#000000")
   pwdInput.setLayoutX(180)
   pwdInput.setLayoutY(250)
 
   botIdLabel.setLayoutX(120)
-  botIdLabel.setLayoutY(160)
+  botIdLabel.setLayoutY(165)
+  botIdLabel.setStyle("-fx-font: 16 arial;-fx-base:#ffffff")
   botIdInput.setLayoutX(180)
   botIdInput.setLayoutY(160)
 
   botKeyLabel.setLayoutX(120)
-  botKeyLabel.setLayoutY(250)
+  botKeyLabel.setLayoutY(255)
+  botKeyLabel.setStyle("-fx-font: 16 arial;-fx-base:#ffffff")
   botKeyInput.setLayoutX(180)
   botKeyInput.setLayoutY(250)
 
   EmailConnect.setLayoutX(190)
   EmailConnect.setLayoutY(320)
+  EmailConnect.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0);-fx-font: 16 arial; -fx-base: #76EE00;")
   BotConnectButton.setLayoutX(190)
   BotConnectButton.setLayoutY(320)
+  BotConnectButton.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropShadow(three-pass-box, #528B8B, 10.0, 0, 0, 0);-fx-font: 16 arial; -fx-base: #76EE00;")
 
-
+  val alert = new Alert(Alert.AlertType.Error)
+  alert.setTitle("错误警告")
+  alert.setHeaderText("登录信息错误")
+  ctx.drawImage(LoginBack,0,0,width,height)
+  ctx.setFill(Color.web("#eb5514"))
+  ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,34))
+  ctx.fillText("Gypsy",195,100)
   group.getChildren.add(canvas)
   group.getChildren.add(playerButton)
   group.getChildren.add(BotButton)
@@ -111,10 +129,11 @@ class LoginScene {
   BotConnectButton.setOnAction { _ =>
     val botId = botIdInput.getText()
     val botKey = botKeyInput.getText()
-    if (botId == "") {
-      ErrorTip.setText("botId不能为空")
-    } else if (botKey == "") {
-      ErrorTip.setText("botKey不能为空")
+    if (botId == ""||botKey=="") {
+      ClientBoot.addToPlatform{
+        alert.setContentText("BotId或BotKey不能为空");
+        alert.showAndWait();
+      }
     } else {
       loginSceneListener.onButtonBotConnect(botId, botKey)
     }
@@ -125,8 +144,8 @@ class LoginScene {
     val pwd = pwdInput.getText()
     if (account == ""||pwd=="") {
       ClientBoot.addToPlatform{
-        ErrorTip.setText("email或密码不能为空")
-        group.getChildren.add(ErrorTip)
+        alert.setContentText("邮箱或密码不能为空")
+        alert.showAndWait()
       }
     } else {
       loginSceneListener.onButtonEmailConnect(account, pwd)
@@ -147,11 +166,12 @@ class LoginScene {
       group.getChildren.remove(EmailButton)
       group.getChildren.remove(ScanButton)
       val image = new Image(imageStream)
-      ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,28))
+      clearCanvas()
+      ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,26))
       ctx.setFill(Color.BLACK)
-      ctx.drawImage(image,100,100)
+      ctx.drawImage(image,100,120)
       ctx.fillText("请扫码登录",180,70)
-      ReturnButton.setLayoutX(200)
+      ReturnButton.setLayoutX(225)
       ReturnButton.setLayoutY(400)
       group.getChildren.add(ReturnButton)
     }
@@ -209,8 +229,11 @@ class LoginScene {
     group.getChildren.remove(EmailConnect)
     group.getChildren.remove(BotConnectButton)
     group.getChildren.remove(ReturnButton)
-    group.getChildren.remove(ErrorTip)
     clearCanvas()
+    ctx.drawImage(LoginBack,0,0,width,height)
+    ctx.setFill(Color.web("#eb5514"))
+    ctx.setFont(Font.font("Helvetica", FontWeight.BOLD ,FontPosture.ITALIC,34))
+    ctx.fillText("Gypsy",195,100)
     group.getChildren.add(playerButton)
     group.getChildren.add(BotButton)
   }
