@@ -17,7 +17,6 @@ import com.neo.sk.gypsy.actor.GameClient._
 import org.seekloud.esheepapi.pb.actions._
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
-
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
@@ -36,7 +35,7 @@ object BotHolder {
 
   var exitFullScreen = false
 
-  var myId = ""
+  var botId = ""
   var usertype = 0
 
 
@@ -62,7 +61,7 @@ class BotHolder(
                   layeredScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
-  import GameHolder._
+  import BotHolder._
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
@@ -145,8 +144,8 @@ class BotHolder(
   def gameRender() = {
     val offsetTime=System.currentTimeMillis()-logicFrameTime
     gameState match {
-      case GameState.play if myId!= ""=>
-        layeredScene.draw(myId,offsetTime)
+      case GameState.play if botId!= ""=>
+        layeredScene.draw(botId,offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         layeredScene.drawWhenDead(deadInfo.get)
       case GameState.allopatry =>
@@ -178,16 +177,13 @@ class BotHolder(
   })
 
 
-
-
-
   /**BotService的功能**/
 
   def gameActionReceiver(key:Int, swing:Option[Swing]) = {
     if(key != 0){
       //使用E、F
-      val keyCode = Protocol.KeyCode(myId, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-      grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
+      val keyCode = Protocol.KeyCode(botId, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      grid.addActionWithFrame(botId, keyCode.copy(frame = grid.frameCount + delayFrame))
       //      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
       serverActor ! keyCode
     }
@@ -197,10 +193,10 @@ class BotHolder(
       }
       var FormerDegree = 0D
       val (x,y) = Constant.swingToXY(swing.get)
-      val mp = MousePosition(myId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(x,y)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(x,y)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame))
+        grid.addMouseActionWithFrame(botId, mp.copy(frame = grid.frameCount + delayFrame))
         serverActor ! mp
       }
     }
@@ -210,8 +206,8 @@ class BotHolder(
     grid.frameCount
   }
 
-  def getInform(playerId:String) = {
-    val player = grid.playerMap.find(_._1 == playerId).get._2
+  def getInform = {
+    val player = grid.playerMap.find(_._1 == botId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
     (score,kill)

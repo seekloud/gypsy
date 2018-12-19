@@ -2,7 +2,6 @@ package com.neo.sk.gypsy.actor
 
 import java.net.URLEncoder
 
-import akka.actor.FSM.State
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.scaladsl.{Keep, Sink}
 import com.neo.sk.gypsy.botService.BotServer
@@ -29,7 +28,7 @@ import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
-import org.seekloud.esheepapi.pb.api.ActionRsp
+import org.seekloud.esheepapi.pb.api.{ActionRsp, InformRsp}
 
 /**
   * Created by wym on 2018/12/3.
@@ -54,6 +53,8 @@ object BotActor {
   case object ActionSpace extends Command
 
   case class Action(key:Int, swing: Option[Swing],sender:ActorRef[ActionRsp]) extends Command
+
+  case class Inform(sender:ActorRef[InformRsp]) extends Command
 
   case class ReturnObservation(playerId: String) extends Command
 
@@ -89,7 +90,6 @@ object BotActor {
               val playerId = "bot" + botId
               linkGameAgent(gameId,playerId,value.token).map{
                 case Right(res) =>
-                  //TODO 建立webscoket连接
                   val accessCode = res.accessCode
                   val url = getWebSocketUri(playerId,value.botName,accessCode)
                   val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
@@ -103,7 +103,8 @@ object BotActor {
                   val connected = response.flatMap{ upgrade =>
                     if(upgrade.response.status == StatusCodes.SwitchingProtocols){
                       tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
-                      ctx.self ! Work(stream)
+                      stream ! Protocol.JoinRoom(None)
+//                    ctx.self ! Work(stream)
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
@@ -180,7 +181,11 @@ object BotActor {
           Behaviors.same
 
         case ReturnObservation(playerId) =>
+          //TODO
+          Behaviors.same
 
+        case Inform(sender) =>
+          sender ! InformRsp(score = botHolder.getInform._1.toInt, kills = botHolder.getInform._2)
           Behaviors.same
 
         case LeaveRoom =>
