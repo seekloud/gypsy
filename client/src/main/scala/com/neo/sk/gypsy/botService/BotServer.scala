@@ -43,9 +43,8 @@ class BotServer(
           if (rsp.errCode == 0) CreateRoomRsp(rsp.roomId.toString, 0, state, "ok")
           else CreateRoomRsp(rsp.roomId.toString, rsp.errCode, state,rsp.msg)
       }
-      Future.successful(CreateRoomRsp(errCode = 101, state = state, msg = "ok"))
     }else{
-      Future.successful(CreateRoomRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(CreateRoomRsp(errCode = 100001, state = State.unknown, msg = "auth error"))
     }
   }
 
@@ -70,31 +69,33 @@ class BotServer(
     if(checkBotToken(request.apiToken)){
       botActor ! BotActor.LeaveRoom
       state = State.ended
-      Future.successful(SimpleRsp(errCode = 103, state = state, msg = "ok"))
+      Future.successful(SimpleRsp(state = state, msg = "ok"))
     }else{
-      Future.successful(SimpleRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(SimpleRsp(errCode = 100003, state = State.unknown, msg = "auth error"))
     }
   }
 
   override def actionSpace(request: Credit): Future[ActionSpaceRsp] = {
     println(s"actionSpace Called by [$request")
     if(checkBotToken(request.apiToken)){
-      val rsp = ActionSpaceRsp(swing = true, apply = List(0, 69,70),fire = List(), move = List(), errCode = 13, state = State.unknown, msg = "ok")
+      val rsp = ActionSpaceRsp(swing = true, apply = List(0, 69,70),fire = List(), move = List(), state = state, msg = "ok")
       Future.successful(rsp)
     }else{
-      Future.successful(ActionSpaceRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(ActionSpaceRsp(errCode = 100004, state = State.unknown, msg = "auth error"))
     }
   }
 
   override def action(request: ActionReq): Future[ActionRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
-//      botHolder.gameActionReceiver(request.apply,request.swing)
-//      val rsp = ActionRsp(frameIndex = botHolder.getFrameCount.toInt, errCode = 13, state = State.unknown, msg = "ok")
-//      Future.successful(rsp)
-      Future.successful(ActionRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      val actionRsp: Future[ActionRsp] = botActor ? (BotActor.Action(request.apply, request.swing, _))
+      actionRsp.map{
+        rsp =>
+          if (rsp.errCode == 0) rsp
+          else ActionRsp(0,rsp.errCode,state,rsp.msg)
+      }
     }else{
-      Future.successful(ActionRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(ActionRsp(errCode = 100005, state = State.unknown, msg = "auth error"))
     }
   }
 
@@ -105,7 +106,7 @@ class BotServer(
       val rsp = ObservationRsp()
       Future.successful(rsp)
     }else{
-      Future.successful(ObservationRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(ObservationRsp(errCode = 100006, state = State.unknown, msg = "auth error"))
     }
   }
 
@@ -115,15 +116,15 @@ class BotServer(
 //      val rsp = InformRsp(score = botHolder.getInform(request.playerId)._1.toInt, kills = botHolder.getInform(request.playerId)._2,
 //        state = State.unknown, msg = "ok")
 //      Future.successful(rsp)
-      Future.successful(InformRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(InformRsp(state = State.unknown, msg = "auth error"))
     }else{
-      Future.successful(InformRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+      Future.successful(InformRsp(errCode = 100007, state = State.unknown, msg = "auth error"))
     }
 
   }
 
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
-    Future.successful(SimpleRsp(errCode = 100002, state = State.unknown, msg = "auth error"))
+    Future.successful(SimpleRsp(errCode = 100008, state = State.unknown, msg = "auth error"))
   }
 
 }
