@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.actor
 
 import java.net.URLEncoder
 
+import akka.actor.FSM.State
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream.scaladsl.{Keep, Sink}
 import com.neo.sk.gypsy.botService.BotServer
@@ -26,6 +27,7 @@ import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
+import org.seekloud.esheepapi.pb.api.ActionRsp
 
 /**
   * Created by wym on 2018/12/3.
@@ -49,7 +51,7 @@ object BotActor {
 
   case object ActionSpace extends Command
 
-  case class Action(swing: Swing) extends Command
+  case class Action(key:Int, swing: Option[Swing],sender:ActorRef[ActionRsp]) extends Command
 
   case class ReturnObservation(playerId: String) extends Command
 
@@ -58,6 +60,8 @@ object BotActor {
   case object Stop extends Command
 
   var SDKReplyTo:ActorRef[JoinRoomRsp] = _
+
+  var botHolder:BotHolder = _
 
 
   def create(
@@ -143,7 +147,7 @@ object BotActor {
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
           val layeredScene = new LayeredScene
-          val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream)
           botHolder.connectToGameServer()
           gaming(stream)
 
@@ -151,7 +155,7 @@ object BotActor {
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
           val layeredScene = new LayeredScene
-          val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream)
           botHolder.connectToGameServer()
           gaming(stream)
 
@@ -169,17 +173,16 @@ object BotActor {
             )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Action(swing) =>
-          val (x,y) = Constant.swingToXY(swing)
-          //if(actionNum != -1)
-          //actor ! Key
+        case Action(key,swing,sender) =>
+          botHolder.gameActionReceiver(key,swing)
+          sender ! ActionRsp(frameIndex = botHolder.getFrameCount.toInt, msg = "ok")
           Behaviors.same
 
         case ReturnObservation(playerId) =>
 
           Behaviors.same
 
-        case LeaveRoom(playerId) =>
+        case LeaveRoom =>
           log.info("BotActor now stop.")
           Behaviors.stopped
 
