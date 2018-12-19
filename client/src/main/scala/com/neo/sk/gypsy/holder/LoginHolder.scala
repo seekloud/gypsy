@@ -6,6 +6,9 @@ import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.actor.WsClient
 import com.neo.sk.gypsy.common.{AppSettings, StageContext}
+import com.neo.sk.gypsy.actor.BotActor._
+import com.neo.sk.gypsy.actor.{BotActor, WsClient}
+import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.scene.LoginScene
 import com.neo.sk.gypsy.common.Api4GameAgent._
 import com.neo.sk.gypsy.actor.WsClient.{ConnectEsheep, ConnectGame}
@@ -19,6 +22,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 class LoginHolder(
                    wsClient: ActorRef[WsClient.WsCommand],
+                   botActor: ActorRef[BotActor.Command],
                    loginScene: LoginScene,
                    stageCtx: StageContext
                  ) {
@@ -37,7 +41,8 @@ class LoginHolder(
       }
     }
 
-    override def onButtonBotConnect(botId:String,botKey:String): Unit = {
+    override def onButtonBotConnect(botId:Long,botKey:String): Unit = {
+      botActor ! BotLogin(botId,botKey)
 
     }
 
@@ -67,7 +72,6 @@ class LoginHolder(
 
     override def onButtonBotLogin(): Unit = {
       loginScene.drawBotLogin()
-
     }
 
     override def onButtonEmailLogin(): Unit = {

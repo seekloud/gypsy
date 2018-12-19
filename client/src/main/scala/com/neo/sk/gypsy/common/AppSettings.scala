@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
   */
 object AppSettings {
   val log = LoggerFactory.getLogger(this.getClass)
-  val config = ConfigFactory.parseResources("product.conf").withFallback(ConfigFactory.load())
+  val config = ConfigFactory.parseResources("productClient.conf").withFallback(ConfigFactory.load())
   val appConfig = config.getConfig("app")
   val httpInterface = appConfig.getString("http.interface")
   val httpPort = appConfig.getInt("http.port")
@@ -23,5 +23,5 @@ object AppSettings {
   val gameProtocol = appConfig.getString("server.protocol")
   val gameHost = appConfig.getString("server.host")
   val gameDomain = appConfig.getString("server.domain")
-  val botSecure = (appConfig.getString("botSecure.playerId"), appConfig.getString("botSecure.apiToken"))
+  val botSecure =  appConfig.getString("botSecure.apiToken")
 }

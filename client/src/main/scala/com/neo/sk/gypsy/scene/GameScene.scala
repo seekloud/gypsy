@@ -6,11 +6,12 @@ import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
-import com.neo.sk.gypsy.shared.ptcl.{Point, Protocol, WsMsgProtocol}
 import com.neo.sk.gypsy.holder.GameHolder._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.utils.FpsComp
 
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**
   * @author zhaoyin
@@ -28,7 +29,7 @@ class GameScene {
   var gameSceneListener: GameSceneListener = _
   val canvasWidth=1200
   val canvasHeight=600
-  val window=Point(canvasWidth,canvasHeight)
+  var window=Point(canvasWidth,canvasHeight)
   val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
@@ -54,25 +55,15 @@ class GameScene {
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
-//    //    val viewWidth = 1200//1800
-//    //    val viewHeight = 750//900
-//    //    val rankWidth = 1200//1800
-//    //    val rankHeight = 250//300
-//
-//    rank.resetRankView(rankWidth, rankHeight)
-//    view.resetScreen(viewWidth, viewHeight, rankWidth, rankHeight)
-
+    window = Point(viewWidth,viewHeight)
     gameView.resetScreen(viewWidth,viewHeight)
     middleView.resetScreen(viewWidth,viewHeight)
     topView.resetScreen(viewWidth,viewHeight)
-    //
-    //    rankCanvas.setWidth(rankWidth)
-    //    rankCanvas.setHeight(rankHeight)
   }
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,window.x,window.y)
+    val data = grid.getGridData(myId,1200,600)
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false
@@ -84,8 +75,8 @@ class GameScene {
         var yMax = 0.0
         //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-          val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
+          val offx = cell.speedX * offsetTime.toDouble / frameRate
+          val offy = cell.speedY * offsetTime.toDouble / frameRate
           val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
           val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
           if (newX>xMax) xMax=newX

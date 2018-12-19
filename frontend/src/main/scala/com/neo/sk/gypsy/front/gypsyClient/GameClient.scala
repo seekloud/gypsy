@@ -1,16 +1,14 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
-
 import scala.collection.mutable
 import scala.math._
-import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.game._
 
 /**
   * User: sky
@@ -232,7 +230,7 @@ class GameClient (override val boundary: Point) extends Grid {
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
   }
 
-  def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
+/*  def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
     val frame=gameAction.frame
     if(myId == id){
       uncheckActionWithFrame.get(gameAction.serialNum) match {
@@ -275,13 +273,13 @@ class GameClient (override val boundary: Point) extends Grid {
         }
       }
     }
-  }
+  }*/
 
-  def rollback2State(d:GridDataSync) = {
+/*  def rollback2State(d:GridDataSync) = {
     actionMap=actionMap.filterKeys(_>=frameCount)
     mouseActionMap=mouseActionMap.filterKeys(_>=frameCount)
     setSyncGridData(d)
-  }
+  }*/
 
   def setSyncGridData(data:GridDataSync): Unit = {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
@@ -300,7 +298,7 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
   //从第frame开始回滚到现在
-  def rollback(frame:Long) = {
+/*  def rollback(frame:Long) = {
     gameSnapshotMap.get(frame) match {
       case Some(state) =>
         val curFrame = frameCount
@@ -319,7 +317,7 @@ class GameClient (override val boundary: Point) extends Grid {
         }
       case None =>
     }
-  }
+  }*/
 
   def reStart={
     myId = ""

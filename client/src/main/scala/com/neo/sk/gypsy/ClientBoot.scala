@@ -6,11 +6,13 @@ import akka.stream.ActorMaterializer
 import akka.actor.typed.scaladsl.adapter._
 import javafx.application.{Application, Platform}
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.actor.{GameClient, TokenActor, WsClient}
+import akka.util.Timeout
+import com.neo.sk.gypsy.actor.{BotActor, GameClient, TokenActor, WsClient}
 import com.neo.sk.gypsy.common.AppSettings._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.holder.LoginHolder
 import com.neo.sk.gypsy.scene.LoginScene
+import concurrent.duration._
 
 /**
   * @author zhaoyin
@@ -24,8 +26,10 @@ object ClientBoot{
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val scheduler: Scheduler = system.scheduler
   val gameClient= system.spawn(GameClient.create(),"gameHolder")
+  implicit val timeout: Timeout = Timeout(20.seconds) // for actor ask
   val tokenActor:ActorRef[TokenActor.Command] = system.spawn(TokenActor.create(),"esheepSyncClient")
 
+  /**保证线程安全**/
   def addToPlatform(fun: => Unit) = {
     Platform.runLater(() => fun)
   }
@@ -38,8 +42,9 @@ class ClientBoot extends javafx.application.Application{
   override def start(mainStage: Stage): Unit = {
     val context = new StageContext(mainStage)
     val wsClient = system.spawn(WsClient.create(gameClient,context,system,materializer,executor),"WsClient")
+    val botActor = system.spawn(BotActor.create(gameClient,context),"botActor")
     val loginScene = new LoginScene()
-    val loginHolder = new LoginHolder(wsClient,loginScene,context)
+    val loginHolder = new LoginHolder(wsClient,botActor,loginScene,context)
     loginHolder.showScene()
   }
 

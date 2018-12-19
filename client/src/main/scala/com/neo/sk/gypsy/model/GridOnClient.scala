@@ -1,15 +1,14 @@
 package com.neo.sk.gypsy.model
 
 import com.neo.sk.gypsy.shared._
-//import com.neo.sk.gypsy.shared.ptcl.GameConfig.{coverRate, foodPool}
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
-import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-
 import scala.collection.mutable
 import scala.math._
+
+import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
 /**
   * @author zhaoyin
   *  2018/10/30  1:53 PM
@@ -404,7 +403,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
   }
 
   //从第frame开始回滚到现在
-  def rollback(frame:Long) = {
+/*  def rollback(frame:Long) = {
     gameSnapshotMap.get(frame) match {
       case Some(state) =>
         val curFrame = frameCount
@@ -423,7 +422,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         }
       case None =>
     }
-  }
+  }*/
 
   def reStart={
     myId = ""
