@@ -39,13 +39,13 @@ object BotActor {
 
   case class BotLogin(botId:Long, botKey:String) extends Command
 
-  case object Work extends Command
+  case class Work(stream: ActorRef[Protocol.WsSendMsg]) extends Command
 
-  case class CreateRoom(password:String,sender:ActorRef[JoinRoomRsp]) extends Command
+  case class CreateRoom(sender:ActorRef[JoinRoomRsp]) extends Command
 
-  case class JoinRoom(roomId: String, playerId: String, apiToken: String) extends Command
+  case class JoinRoom(roomId: String,sender:ActorRef[JoinRoomRsp] ) extends Command
 
-  case class LeaveRoom(playerId: String) extends Command
+  case object LeaveRoom extends Command
 
   case object ActionSpace extends Command
 
@@ -55,6 +55,10 @@ object BotActor {
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
+  case object Stop extends Command
+
+  var SDKReplyTo:ActorRef[JoinRoomRsp] = _
+
 
   def create(
               gameClient: ActorRef[WsMsgSource],
@@ -63,7 +67,6 @@ object BotActor {
     Behaviors.setup[Command] { ctx =>
       implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
       Behaviors.withTimers { implicit timer =>
-        ctx.self ! Work
         waitingGaming(gameClient,stageCtx)
       }
     }
@@ -80,15 +83,35 @@ object BotActor {
               val playerId = "bot" + botId
               linkGameAgent(gameId,playerId,value.token).map{
                 case Right(res) =>
-                  tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
-                  ctx.self ! Work
+                  //TODO 建立webscoket连接
+                  val accessCode = res.accessCode
+                  val url = getWebSocketUri(playerId,value.botName,accessCode)
+                  val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
+                  val source = getSource(ctx.self)
+                  val sink = getSink(gameClient)
+                  val (stream, response) =
+                    source
+                        .viaMat(webSocketFlow)(Keep.both)
+                        .toMat(sink)(Keep.left)
+                        .run()
+                  val connected = response.flatMap{ upgrade =>
+                    if(upgrade.response.status == StatusCodes.SwitchingProtocols){
+                      tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
+                      ctx.self ! Work(stream)
+                      Future.successful("BotActor webscoket connect success.")
+                    }else{
+                      throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
+                    }
+                  }
+                  connected.onComplete(i => log.info(i.toString))
+
                 case Left(e) =>
               }
             case Left(e) =>
 
           }
           Behaviors.same
-        case Work =>
+        case Work(stream) =>
           //启动BotService
           val port = 5321
           val server = BotServer.build(port, executor, ctx.self)
@@ -101,7 +124,7 @@ object BotActor {
           }
 //          server.awaitTermination()
 //          log.debug("DONE.")
-          waitingGame(gameClient,stageCtx)
+          waitingGame(gameClient,stageCtx,stream)
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -111,63 +134,29 @@ object BotActor {
   }
 
   def waitingGame(gameClient: ActorRef[WsMsgSource],
-                  stageCtx: StageContext
+                  stageCtx: StageContext,
+                  stream: ActorRef[Protocol.WsSendMsg]
                  )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case CreateRoom(password, sender) =>
-          val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(getCreateRoomWebSocketUri(playerId, apiToken)))
-          val source = getSource
-          val sink = getSink(gameClient)
-          val ((stream, response), closed) =
-            source
-              .viaMat(webSocketFlow)(Keep.both) // keep the materialized Future[WebSocketUpgradeResponse]
-              .toMat(sink)(Keep.both) // also keep the Future[Done]
-              .run()
-
-          val connected = response.flatMap { upgrade =>
-            if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-              val layeredScene = new LayeredScene
-              val botHolder = new BotHolder(stageCtx,layeredScene,stream)
-              botHolder.connectToGameServer()
-              Future.successful("connect success")
-            } else {
-              throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-            }
-          } //ws建立
-
-          closed.onComplete { _ =>
-            log.info("connect to service closed!")
-          } //ws断开
-          connected.onComplete(i => log.info(i.toString))
+        case CreateRoom(sender) =>
+          SDKReplyTo = sender
+          stream ! Protocol.CreateRoom
+          val layeredScene = new LayeredScene
+          val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder.connectToGameServer()
           gaming(stream)
 
-        case JoinRoom(roomId, playerId, apiToken) =>
-          val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(getJoinRoomWebSocketUri(roomId, playerId, apiToken)))
-          val source = getSource
-          val sink = getSink(gameClient)
-          val ((stream, response), closed) =
-            source
-              .viaMat(webSocketFlow)(Keep.both) // keep the materialized Future[WebSocketUpgradeResponse]
-              .toMat(sink)(Keep.both) // also keep the Future[Done]
-              .run()
-
-          val connected = response.flatMap { upgrade =>
-            if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-              val layeredScene = new LayeredScene
-              val botHolder = new BotHolder(stageCtx,layeredScene,stream)
-              botHolder.connectToGameServer()
-              Future.successful("connect success")
-            } else {
-              throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-            }
-          } //ws建立
-
-          closed.onComplete { _ =>
-            log.info("connect to service closed!")
-          } //ws断开
-          connected.onComplete(i => log.info(i.toString))
+        case JoinRoom(roomId, sender) =>
+          SDKReplyTo = sender
+          stream ! Protocol.JoinRoom(Some(roomId.toLong))
+          val layeredScene = new LayeredScene
+          val botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder.connectToGameServer()
           gaming(stream)
+
+        case Stop =>
+          Behaviors.stopped
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -192,6 +181,9 @@ object BotActor {
 
         case LeaveRoom(playerId) =>
           log.info("BotActor now stop.")
+          Behaviors.stopped
+
+        case Stop =>
           Behaviors.stopped
 
         case unknown@_ =>
@@ -233,9 +225,11 @@ object BotActor {
         log.debug(s"i receiver an unknown message:$unknown")
     }
 
-  private[this] def getSource = ActorSource.actorRef[WsSendMsg](
+  private[this] def getSource(botActor: ActorRef[Command]) = ActorSource.actorRef[WsSendMsg](
     completionMatcher = {
       case WsSendComplete =>
+        log.info("webscoket complete")
+        botActor ! Stop
     }, failureMatcher = {
       case WsSendFailed(ex) ⇒ ex
     },
@@ -249,7 +243,7 @@ object BotActor {
       ))
   }
 
-  def getJoinRoomWebSocketUri(roomId: String, playerId: String, playerName:String, accessCode: String): String = {
+  def getWebSocketUri(playerId: String, playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
 //    val domain = "10.1.29.250:30371"
     //    val domain = "localhost:30371"

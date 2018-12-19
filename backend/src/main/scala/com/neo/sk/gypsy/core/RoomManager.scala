@@ -55,8 +55,11 @@ object RoomManager {
             roomIdOpt match{
               case Some(roomId) =>
                 roomInUse.get(roomId) match{
-                  case Some(ls) => roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
-                  case None => roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+                  case Some(ls) =>
+                    //TODO 考虑Bot加入时人数满上限的情况 返回加入失败消息
+                    roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
+                  case None =>
+                    roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
                 }
                 getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
               case None =>
@@ -88,11 +91,10 @@ object RoomManager {
             Behaviors.same
 
           case JoinRoomByCreate(playerInfo,userActor) =>
-            //TODO 创建房间
             var roomId = roomIdGenerator.getAndIncrement()
             while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
             roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
-
+            getRoomActor(ctx, roomId) ! RoomActor.JoinRoom(playerInfo, roomId, userActor)
             Behaviors.same
 
 

@@ -118,9 +118,8 @@ object RoomActor {
             case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
             case None => userSyncMap.put(group,Set(playerInfo.playerId))
           }
-//          userSyncMap.put(playerInfo.playerId,grid.frameCount)
           grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
-          userActor ! JoinRoomSuccess(ctx.self)
+          userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
           dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
