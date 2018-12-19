@@ -113,10 +113,12 @@ class BotServer(
   override def inform(request: Credit): Future[InformRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.apiToken)){
-//      val rsp = InformRsp(score = botHolder.getInform(request.playerId)._1.toInt, kills = botHolder.getInform(request.playerId)._2,
-//        state = State.unknown, msg = "ok")
-//      Future.successful(rsp)
-      Future.successful(InformRsp(state = State.unknown, msg = "auth error"))
+      val informRsp: Future[InformRsp] = botActor ? (BotActor.Inform(_))
+      informRsp.map{
+        rsp =>
+          if (rsp.errCode == 0) rsp
+          else InformRsp(errCode = 100007, state = State.unknown, msg = "auth error")
+      }
     }else{
       Future.successful(InformRsp(errCode = 100007, state = State.unknown, msg = "auth error"))
     }
