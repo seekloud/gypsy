@@ -12,6 +12,7 @@ import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 import javafx.scene.text.FontPosture
 import scalafx.scene.control.Alert
+import scalafx.scene.image.ImageView
 import scalafx.scene.text.Text
 /**
   * @author zhaoyin
@@ -60,6 +61,8 @@ class LoginScene {
 //  ErrorTip.setFill(Color.RED)
 
   val LoginBack = new Image(ClientBoot.getClass.getResourceAsStream("/img/LoginB1.JPG"))
+  val peopleHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/people.jpg"))
+  val BotHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/bot.jpg"))
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
 
