@@ -210,8 +210,8 @@ class BotHolder(
     grid.frameCount
   }
 
-  def getInform(playerId:String) = {
-    val player = grid.playerMap.find(_._1 == playerId).get._2
+  def getInform = {
+    val player = grid.playerMap.find(_._1 == myId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
     (score,kill)
