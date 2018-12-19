@@ -96,13 +96,13 @@ class LoginScene {
 
   botIdLabel.setLayoutX(120)
   botIdLabel.setLayoutY(165)
-  botIdLabel.setStyle("-fx-font: 16 arial;-fx-base:#ffffff")
+  botIdLabel.setStyle("-fx-font: 16 arial;-fx-base:#000000")
   botIdInput.setLayoutX(180)
   botIdInput.setLayoutY(160)
 
   botKeyLabel.setLayoutX(120)
   botKeyLabel.setLayoutY(255)
-  botKeyLabel.setStyle("-fx-font: 16 arial;-fx-base:#ffffff")
+  botKeyLabel.setStyle("-fx-font: 16 arial;-fx-base:#000000")
   botKeyInput.setLayoutX(180)
   botKeyInput.setLayoutY(250)
 
