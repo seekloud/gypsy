@@ -87,7 +87,6 @@ object BotActor {
               val playerId = "bot" + botId
               linkGameAgent(gameId,playerId,value.token).map{
                 case Right(res) =>
-                  //TODO 建立webscoket连接
                   val accessCode = res.accessCode
                   val url = getWebSocketUri(playerId,value.botName,accessCode)
                   val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
@@ -101,7 +100,8 @@ object BotActor {
                   val connected = response.flatMap{ upgrade =>
                     if(upgrade.response.status == StatusCodes.SwitchingProtocols){
                       tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
-                      ctx.self ! Work(stream)
+                      stream ! Protocol.JoinRoom(None)
+//                    ctx.self ! Work(stream)
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
