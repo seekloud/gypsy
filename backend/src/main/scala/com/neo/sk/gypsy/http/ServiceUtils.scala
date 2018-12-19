@@ -5,7 +5,7 @@ import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ValidationRejection
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import com.neo.sk.gypsy.utils.{CirceSupport, SecureUtil}
 import com.sun.xml.internal.ws.encoding.soap.DeserializationException

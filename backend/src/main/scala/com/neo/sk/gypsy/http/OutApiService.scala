@@ -19,7 +19,7 @@ import akka.util.Timeout
 import com.neo.sk.gypsy.Boot.{executor, roomManager, timeout, userManager}
 import com.neo.sk.gypsy.models.Dao.RecordDao
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-import com.neo.sk.gypsy.shared.ptcl.{CommonRsp, ErrorRsp}
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 

@@ -16,7 +16,7 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.ptcl.game._
+import com.neo.sk.gypsy.shared.ptcl.Game._
 
 
 /**
@@ -461,7 +461,7 @@ trait Grid {
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
 //              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)

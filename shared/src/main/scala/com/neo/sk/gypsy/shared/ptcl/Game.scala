@@ -7,7 +7,7 @@ import scala.math._
   * Date: 8/29/2016
   * Time: 9:48 PM
   */
-object game {
+object Game {
 
 
 ////排行榜信息

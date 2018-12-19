@@ -46,7 +46,7 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
               getFromResource("html/gypsy.html")
             case None=>
               log.info("guest comeIn withOut session")
-              addSession( GypsySession(BaseUserInfo(UserRolesType.guest,"","",""),System.currentTimeMillis()).toSessionMap){
+              addSession( GypsySession(BaseUserInfo(UserRolesType.player,"","",""),System.currentTimeMillis()).toSessionMap){
                 ctx=>
                   ctx.redirect("/gypsy",StatusCodes.SeeOther)
               }
