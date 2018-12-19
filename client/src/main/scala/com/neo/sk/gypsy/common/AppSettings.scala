@@ -23,14 +23,7 @@ object AppSettings {
   val gameProtocol = appConfig.getString("server.protocol")
   val gameHost = appConfig.getString("server.host")
   val gameDomain = appConfig.getString("server.domain")
-  val botSecure = (appConfig.getString("botSecure.playerId"), appConfig.getString("botSecure.apiToken"))
-  val isLayer = appConfig.getBoolean("isLayer")
-
-  //分层视图大小
-  val layerCanvasW = appConfig.getInt("layerCanvas.w")
-  val layerCanvasH = appConfig.getInt("layerCanvas.h")
-
-  val viewCanvasW = appConfig.getInt("viewCanvas.w")
-  val viewCanvasH = appConfig.getInt("viewCanvas.h")
+  val botSecure =  appConfig.getString("botSecure.apiToken")
+  val isBot = appConfig.getBoolean("isBot")
 
 }

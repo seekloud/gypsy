@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy.bot
+package com.neo.sk.gypsy.botService
 
 import io.grpc.{ManagedChannel, ManagedChannelBuilder}
 import org.seekloud.esheepapi.pb.api
