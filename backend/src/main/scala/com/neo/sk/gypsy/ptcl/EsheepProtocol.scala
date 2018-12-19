@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.ptcl
 
-import com.neo.sk.gypsy.shared.ptcl.CommonRsp
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 object EsheepProtocol {
 

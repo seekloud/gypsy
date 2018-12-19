@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.ptcl
 
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.core.{GamePlayer, UserActor, UserManager}
-import com.neo.sk.gypsy.shared.ptcl.CommonRsp
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 
 /**
   * User: sky
