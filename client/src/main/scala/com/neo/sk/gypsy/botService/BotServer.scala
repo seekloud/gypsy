@@ -95,7 +95,7 @@ class BotServer(
           else ActionRsp(0,rsp.errCode,state,rsp.msg)
       }
     }else{
-      Future.successful(ActionRsp(errCode = 100005, state = State.unknown, msg = "auth error"))
+      Future.successful(ActionRsp(errCode = 100005, state = state, msg = "auth error"))
     }
   }
 
@@ -103,30 +103,35 @@ class BotServer(
   override def observation(request: Credit): Future[ObservationRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.apiToken)){
-      val rsp = ObservationRsp()
-      Future.successful(rsp)
+      val observationRsp: Future[ObservationRsp] = botActor ? (BotActor.ReturnObservation(_))
+      observationRsp.map {
+        observation =>
+          observation
+      }
     }else{
-      Future.successful(ObservationRsp(errCode = 100006, state = State.unknown, msg = "auth error"))
+      Future.successful(ObservationRsp(errCode = 100006, state = state, msg = "auth error"))
     }
   }
-  //TODO
+
   override def inform(request: Credit): Future[InformRsp] = {
     println(s"action Called by [$request")
     if(checkBotToken(request.apiToken)){
       val informRsp: Future[InformRsp] = botActor ? (BotActor.Inform(_))
       informRsp.map{
         rsp =>
+          //score kill health:0代表死亡
           if (rsp.errCode == 0) rsp
-          else InformRsp(errCode = 100007, state = State.unknown, msg = "auth error")
+          else InformRsp(errCode = rsp.errCode, state = state, msg = rsp.msg)
       }
     }else{
-      Future.successful(InformRsp(errCode = 100007, state = State.unknown, msg = "auth error"))
+      Future.successful(InformRsp(errCode = 100007, state = state, msg = "auth error"))
     }
 
   }
-  //TODO
+
+  //TODO 按空格键复活
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
-    Future.successful(SimpleRsp(errCode = 100008, state = State.unknown, msg = "auth error"))
+    Future.successful(SimpleRsp(errCode = 100008, state = state, msg = "auth error"))
   }
 
 }
