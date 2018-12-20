@@ -123,7 +123,6 @@ object GameClient {
           Behaviors.same
 
         case Protocol.FeedApples(foods) =>
-          log.info("ClientFood:  " + foods)
           ClientBoot.addToPlatform{
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
