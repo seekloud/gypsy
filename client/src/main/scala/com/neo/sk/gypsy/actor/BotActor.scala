@@ -29,7 +29,7 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.observations.{ImgData, LayeredObservation}
-import com.google.protobuf.ByteString
+//import com.google.protobuf.ByteString
 
 
 /**
@@ -184,15 +184,7 @@ object BotActor {
 
         case ReturnObservation(sender) =>
           //TODO
-//          val layer = LayeredObservation(
-//            Some(ImgData(400, 200, mapByte.length,ByteString.copyFrom())),
-//            Some(ImgData(400, 200, bgByte.length, ByteString.copyFrom())),
-//            Some(ImgData(400, 200, appleByte.length, ByteString.copyFrom())),
-//            Some(ImgData(400, 200, allSnakesByte.length, ByteString.copyFrom())),
-//            Some(ImgData(400, 200, mySnakeByte.length, ByteString.copyFrom())),
-//            Some(ImgData(400, 200, infoByte.length, ByteString.copyFrom())))
-//          val observation = ObservationRsp(Some(layer), Some(ImgData(800, 400, 0, ByteString.copyFrom())))
-          val observation = ObservationRsp()
+          val observation = botHolder.getObservation
           sender ! observation
           Behaviors.same
 
