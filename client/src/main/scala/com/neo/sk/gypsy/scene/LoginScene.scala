@@ -12,7 +12,7 @@ import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 import javafx.scene.text.FontPosture
 import scalafx.scene.control.Alert
-import scalafx.scene.image.ImageView
+import javafx.scene.image.ImageView
 import scalafx.scene.text.Text
 /**
   * @author zhaoyin
@@ -36,6 +36,8 @@ class LoginScene {
 
   val width = 500
   val height = 500
+  val peopleHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/people.jpg"))
+  val BotHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/bot.jpg"))
   val group = new Group
   val playerButton = new Button("娱乐模式")
   val BotButton = new Button("训练模式")
@@ -61,8 +63,6 @@ class LoginScene {
 //  ErrorTip.setFill(Color.RED)
 
   val LoginBack = new Image(ClientBoot.getClass.getResourceAsStream("/img/LoginB1.JPG"))
-  val peopleHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/people.jpg"))
-  val BotHeader = new Image(ClientBoot.getClass.getResourceAsStream("/img/bot.jpg"))
   val canvas = new Canvas(width,height)
   val ctx = canvas.getGraphicsContext2D
 
@@ -176,7 +176,7 @@ class LoginScene {
       ctx.fillText("请扫码登录",180,70)
       ReturnButton.setLayoutX(225)
       ReturnButton.setLayoutY(400)
-      group.getChildren.add(ReturnButton)
+      //group.getChildren.add(ReturnButton)
     }
   }
   def drawLoginWay()={
