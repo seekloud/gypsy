@@ -131,7 +131,7 @@ trait Grid {
   def update() = {
     updateSpots()
     updatePlayer()
-    updateScoreList()
+//    updateScoreList()
     actionMap -= frameCount
     mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
