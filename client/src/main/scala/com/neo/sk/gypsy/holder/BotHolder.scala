@@ -38,6 +38,10 @@ object BotHolder {
   var botId = ""
   var usertype = 0
 
+  sealed trait Command
+
+  case class GetByte() extends Command
+
 
   val watchKeys = Set(
     KeyCode.E,
@@ -65,6 +69,8 @@ class BotHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
+
+  var getByte: GetByte = _
 
 
   def getActionSerialNum=layeredScene.actionSerialNumGenerator.getAndIncrement()
@@ -139,6 +145,11 @@ class BotHolder(
       }
       justSynced = false
     }
+
+    //TODO 生成分层视图数据
+    ClientBoot.addToPlatform{
+      getByte = GetByte()
+    }
   }
 
   def gameRender() = {
@@ -210,7 +221,8 @@ class BotHolder(
     val player = grid.playerMap.find(_._1 == botId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
-    (score,kill)
+    val health = if(gameState == GameState.dead) 0 else 1
+    (score,kill,health)
   }
 
 
