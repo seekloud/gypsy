@@ -107,7 +107,7 @@ class BotHolder(
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
         //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
-        val ld = new LayeredDraw(myId, layeredScene, grid, false)
+        val ld = new LayeredDraw(botId, layeredScene, grid, false)
         ld.drawLayered()
       }
     }
