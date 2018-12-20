@@ -97,7 +97,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   val startLen = (newRadius + cellRadius) * 1.2*3
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 0, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
