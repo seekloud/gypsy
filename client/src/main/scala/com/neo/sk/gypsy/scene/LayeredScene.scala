@@ -44,9 +44,9 @@ class LayeredScene {
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
   val locationCanvasCtx = locationCanvas.getGraphicsContext2D
   val locationView = new GameCanvas(locationCanvas,locationCanvasCtx,layerWindow)
-  val nonInteracCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //02视野中不可交互的元素（背景）
-  val nonInteracCanvasCtx = nonInteracCanvas.getGraphicsContext2D
-  val nonInteracView = new GameCanvas(nonInteracCanvas,nonInteracCanvasCtx,layerWindow)
+  val nonInteractCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //02视野中不可交互的元素（背景）
+  val nonInteractCanvasCtx = nonInteractCanvas.getGraphicsContext2D
+  val nonInteractView = new GameCanvas(nonInteractCanvas,nonInteractCanvasCtx,layerWindow)
   val interactCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)//03视野内可交互的元素
   val interactCanvasCtx = interactCanvas.getGraphicsContext2D
   val interactView = new GameCanvas(interactCanvas,interactCanvasCtx,layerWindow)
@@ -67,7 +67,7 @@ class LayeredScene {
   //设置行列之间的间隙大小
   flow.setVgap(5)
   flow.setHgap(5)
-  flow.getChildren.addAll(locationCanvas,nonInteracCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
   val group = new Group()
   group.getChildren.addAll(gameCanvas,middleCanvas,topCanvas)
   val border = new BorderPane()
@@ -86,7 +86,7 @@ class LayeredScene {
     topView.resetScreen(viewWidth/2,viewHeight * 2 / 3)
     /**分层视图**/
     locationView.resetScreen(viewWidth/4,viewHeight/3)
-    nonInteracView.resetScreen(viewWidth/4,viewHeight/3)
+    nonInteractView.resetScreen(viewWidth/4,viewHeight/3)
     interactView.resetScreen(viewWidth/4,viewHeight/3)
     allPlayerView.resetScreen(viewWidth/4,viewHeight/3)
     playerView.resetScreen(viewWidth/4,viewHeight/3)

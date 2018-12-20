@@ -7,17 +7,17 @@ import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.LayeredScene
-import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.scene.{LayeredDraw, LayeredScene}
+import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
 import java.awt.event.KeyEvent
-import com.neo.sk.gypsy.common.Constant
+
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient._
 import org.seekloud.esheepapi.pb.actions._
+
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
-
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
@@ -88,20 +88,23 @@ class BotHolder(
   }
 
   def init() = {
+
     layeredScene.gameView.drawGameOn()
     layeredScene.middleView.drawRankMap()
   }
 
   def start()={
+    //TODO 这里改改
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
-        //游戏渲染
-        gameRender()
+        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
+        val ld = new LayeredDraw(myId, layeredScene, grid, false)
+        ld.drawLayered()
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(frameRate),{ _ =>
       //游戏循环
       gameLoop()
     })
@@ -111,7 +114,7 @@ class BotHolder(
   }
 
   def gameLoop(): Unit = {
-    if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+    /*if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
       layeredScene.resetScreen(1200,600)
       stageCtx.getStage.setWidth(1200)
       stageCtx.getStage.setHeight(600)
@@ -125,7 +128,10 @@ class BotHolder(
       stageCtx.getStage.setWidth(stageWidth)
       stageCtx.getStage.setHeight(stageHeight)
       layeredScene.middleView.drawRankMap()
-    }
+    }*/
+
+
+
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
     //差不多每三秒同步一次
