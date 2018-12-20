@@ -105,7 +105,11 @@ object BotActor {
                   val connected = response.flatMap{ upgrade =>
                     if(upgrade.response.status == StatusCodes.SwitchingProtocols){
                       tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
+                      //暂时用普通玩家登陆流程
                       stream ! Protocol.JoinRoom(None)
+                      val layeredScene = new LayeredScene
+                      botHolder = new BotHolder(stageCtx,layeredScene,stream)
+                      botHolder.connectToGameServer()
 //                    ctx.self ! Work(stream)
                       Future.successful("BotActor webscoket connect success.")
                     }else{

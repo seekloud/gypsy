@@ -357,6 +357,9 @@ class GameCanvas(canvas: Canvas,
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
+
+    println("scale:  " + scale)
+
     centerScale(scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
