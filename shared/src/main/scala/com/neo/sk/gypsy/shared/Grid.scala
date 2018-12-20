@@ -519,7 +519,7 @@ trait Grid {
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
 //            println(cell.mass + "   " + newMass)
             List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                Cell(cellId,  cell.x, cell.y, 1, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+                Cell(cellId,  cell.x, cell.y, 0, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
         }.filterNot(_.newmass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
