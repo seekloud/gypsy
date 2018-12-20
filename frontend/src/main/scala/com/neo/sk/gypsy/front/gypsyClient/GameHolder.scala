@@ -290,7 +290,7 @@ class GameHolder(replay:Boolean = false) {
           ctx.save()
           ctx.font = "34px Helvetica"
           ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
+          ctx.fillText(s"SCORE: ${p.cells.map(_.newmass).sum.toInt}", window.x * 0.18 + 180, 10)
           ctx.restore()
           renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
