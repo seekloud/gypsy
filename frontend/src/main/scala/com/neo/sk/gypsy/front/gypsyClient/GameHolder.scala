@@ -267,6 +267,8 @@ class GameHolder(replay:Boolean = false) {
           var xMin = 10000.0
           var yMin = 10000.0
           var yMax = 0.0
+          var kill = ""
+          var Score = ""
           p.cells.foreach { cell =>
             val offx = cell.speedX * offsetTime.toDouble / frameRate
             val offy = cell.speedY * offsetTime.toDouble / frameRate
@@ -283,14 +285,16 @@ class GameHolder(replay:Boolean = false) {
           val offx = sumX /p.cells.length
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
-
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
           ctx.save()
           ctx.font = "34px Helvetica"
-          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.newmass).sum.toInt}", window.x * 0.18 + 180, 10)
+          kill=s"KILL: ${p.kill}"
+          Score=s"SCORE: ${p.cells.map(_.newmass).sum.toInt}"
+          val killWidth=ctx.measureText(kill).width
+          ctx.fillText(kill, window.x * 0.18 + 30 , 10)
+          ctx.fillText(Score, window.x * 0.18 + 50 + killWidth, 10)
           ctx.restore()
           renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
