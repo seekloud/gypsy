@@ -321,7 +321,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 0, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
