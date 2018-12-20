@@ -92,8 +92,13 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
   def drawNonInteract() = {
 //    ls.nonInteractCanvasCtx
-    ls.nonInteractCanvasCtx.setFill(Color.BLACK)
-    ls.nonInteractCanvasCtx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    val ctx = ls.nonInteractCanvasCtx
+    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    ctx.setFill(Color.GRAY)
+    ctx.fillRect(0, 0, 1600, 800)
+    ctx.setFill(Color.BLACK)
+    //TODO 偏移要看
+    ls.nonInteractCanvasCtx.fillRect(layeredOffX, layeredOffY, layeredCanvasWidth, layeredCanvasHeight)
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.nonInteractCanvas)
     }else{
