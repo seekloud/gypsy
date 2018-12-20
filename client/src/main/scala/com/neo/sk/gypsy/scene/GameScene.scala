@@ -29,7 +29,7 @@ class GameScene {
   var gameSceneListener: GameSceneListener = _
   val canvasWidth=1200
   val canvasHeight=600
-  var window=Point(canvasWidth,canvasHeight)
+  val window=Point(canvasWidth,canvasHeight)
   val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
   val gameCanvasCtx=gameCanvas.getGraphicsContext2D
@@ -55,7 +55,6 @@ class GameScene {
   val topView=new GameCanvas(topCanvas,topCanvasCtx,window)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
-    window = Point(viewWidth,viewHeight)
     gameView.resetScreen(viewWidth,viewHeight)
     middleView.resetScreen(viewWidth,viewHeight)
     topView.resetScreen(viewWidth,viewHeight)

@@ -129,6 +129,7 @@ class GameHolder(
 
   def gameLoop(): Unit = {
     if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+      //从全屏模式退出
       gameScene.resetScreen(1200,600)
       stageCtx.getStage.setWidth(1200)
       stageCtx.getStage.setHeight(600)
