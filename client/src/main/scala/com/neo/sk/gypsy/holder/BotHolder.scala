@@ -10,15 +10,18 @@ import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.scene.LayeredScene
 import com.neo.sk.gypsy.common.StageContext
 import java.awt.event.KeyEvent
+
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient._
 import org.seekloud.esheepapi.pb.actions._
+
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import org.seekloud.esheepapi.pb.api.ObservationRsp
 
 object BotHolder {
   val bounds = Point(Boundary.w,Boundary.h)
@@ -37,6 +40,10 @@ object BotHolder {
 
   var botId = ""
   var usertype = 0
+
+  sealed trait Command
+
+  case class GetByte() extends Command
 
 
   val watchKeys = Set(
@@ -65,6 +72,8 @@ class BotHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
+
+  var getByte: GetByte = _
 
 
   def getActionSerialNum=layeredScene.actionSerialNumGenerator.getAndIncrement()
@@ -139,6 +148,11 @@ class BotHolder(
       }
       justSynced = false
     }
+
+    //TODO 生成分层视图数据
+    ClientBoot.addToPlatform{
+      getByte = GetByte()
+    }
   }
 
   def gameRender() = {
@@ -210,7 +224,21 @@ class BotHolder(
     val player = grid.playerMap.find(_._1 == botId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
-    (score,kill)
+    val health = if(gameState == GameState.dead) 0 else 1
+    (score,kill,health)
+  }
+
+  //TODO
+  def getObservation = {
+    //          val layer = LayeredObservation(
+    //            Some(ImgData(400, 200, mapByte.length,ByteString.copyFrom())),
+    //            Some(ImgData(400, 200, bgByte.length, ByteString.copyFrom())),
+    //            Some(ImgData(400, 200, appleByte.length, ByteString.copyFrom())),
+    //            Some(ImgData(400, 200, allSnakesByte.length, ByteString.copyFrom())),
+    //            Some(ImgData(400, 200, mySnakeByte.length, ByteString.copyFrom())),
+    //            Some(ImgData(400, 200, infoByte.length, ByteString.copyFrom())))
+    //          val observation = ObservationRsp(Some(layer), Some(ImgData(800, 400, 0, ByteString.copyFrom())))
+    ObservationRsp()
   }
 
 

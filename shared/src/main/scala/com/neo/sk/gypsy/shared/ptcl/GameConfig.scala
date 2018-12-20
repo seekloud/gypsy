@@ -44,9 +44,10 @@ object GameConfig {
   val virusSpeedDecayRate = 0.3
   // 排行版显示玩家数
   val rankShowNum = 10
-  // 统计分数时候存的最大容量（按一分钟多少帧来记 现在是400）
+
   val frameRate = 150  //ms
 
+  // 统计分数时候存的最大容量（按一分钟多少帧来记 现在是400）
   val ScoreListMax = 60*1000 / frameRate
 
   val advanceFrame = 0 //客户端提前的帧数

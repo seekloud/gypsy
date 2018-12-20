@@ -17,7 +17,6 @@ import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
-
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
 import com.neo.sk.gypsy.actor.BotActor.LeaveRoom
@@ -28,7 +27,10 @@ import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
-import org.seekloud.esheepapi.pb.api.{ActionRsp, InformRsp}
+import org.seekloud.esheepapi.pb.api._
+import org.seekloud.esheepapi.pb.observations.{ImgData, LayeredObservation}
+//import com.google.protobuf.ByteString
+
 
 /**
   * Created by wym on 2018/12/3.
@@ -56,7 +58,7 @@ object BotActor {
 
   case class Inform(sender:ActorRef[InformRsp]) extends Command
 
-  case class ReturnObservation(playerId: String) extends Command
+  case class ReturnObservation(sender:ActorRef[ObservationRsp]) extends Command
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
@@ -180,12 +182,14 @@ object BotActor {
           sender ! ActionRsp(frameIndex = botHolder.getFrameCount.toInt, msg = "ok")
           Behaviors.same
 
-        case ReturnObservation(playerId) =>
+        case ReturnObservation(sender) =>
           //TODO
+          val observation = botHolder.getObservation
+          sender ! observation
           Behaviors.same
 
         case Inform(sender) =>
-          sender ! InformRsp(score = botHolder.getInform._1.toInt, kills = botHolder.getInform._2)
+          sender ! InformRsp(score = botHolder.getInform._1.toInt, kills = botHolder.getInform._2,heath = botHolder.getInform._3)
           Behaviors.same
 
         case LeaveRoom =>
