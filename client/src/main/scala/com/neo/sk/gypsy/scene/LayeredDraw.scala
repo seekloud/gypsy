@@ -2,14 +2,17 @@ package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.Constant.{ColorsSetting, informWidth, layeredCanvasHeight, layeredCanvasWidth}
-import com.neo.sk.gypsy.holder.GameHolder._
+import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils.MTime2HMS
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text}
+import com.neo.sk.gypsy.common.Constant._
 
 import scala.math.{pow, sqrt}
 
@@ -87,12 +90,12 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInterac() = {
-//    ls.nonInteracCanvasCtx
-    ls.nonInteracCanvasCtx.setFill(Color.BLACK)
-    ls.nonInteracCanvasCtx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+  def drawNonInteract() = {
+//    ls.nonInteractCanvasCtx
+    ls.nonInteractCanvasCtx.setFill(Color.BLACK)
+    ls.nonInteractCanvasCtx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.nonInteracCanvas)
+      BotUtil.canvas2byteArray(ls.nonInteractCanvas)
     }else{
       BotUtil.emptyArray
     }
@@ -331,7 +334,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   /********************* 人类视图：800*400 ***********************************/
 
-  def draw(offsetTime:Long)={
+  def drawPlayState()={
     var zoom = (30.0, 30.0)
 //    val data = grid.getGridData(myId,1200,600)
     val MyBallOpt = player.find(_.id == uid)
@@ -349,7 +352,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       ls.humanCtx.fillText(s"SCORE: ${myScore}", 400, 10)
       ls.humanCtx.restore()
 
-
     }else{
       ls.humanView.drawGameWait(firstCome)
     }
@@ -364,8 +366,85 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
 
+  def drawDeadState(msg:Protocol.UserDeadMessage) = {
+    val ctx = ls.humanCtx
+
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0, 0, humanCanvasWidth , humanCanvasHeight )
+//    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
+    ctx.setFont(Font.font("Helvetica",50))
+    ctx.setFill(Color.web("#CD3700"))
+    val Width = humanCanvasWidth
+    val Height = humanCanvasHeight
+    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+
+    ctx.setFont(Font.font("Comic Sans MS",Window.w *0.02))
+
+    var DrawLeft = Width*0.35
+    var DrawHeight = Height*0.3
+    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
+    ctx.setFill(Color.WHITE)
+    //    DrawLeft = Width*0.56+Width*0.12
+    DrawLeft = Width*0.56
+    //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
+    ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(ls.humanCanvas)
+    }else{
+      BotUtil.emptyArray
+    }
+  }
 
 
+  def drawFinishState() = {
+    val ctx = ls.humanCtx
+    val msg = "存在异地登录"
+
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0,0,humanCanvasWidth,humanCanvasHeight)
+    //这里1600是窗口的长以后换
+    ctx.setFont(Font.font("Helvetica",30 * humanCanvasWidth / 1600))
+    ctx.setFill(Color.web("#fff"))
+    val txt = new Text(msg)
+    ctx.fillText(msg, humanCanvasWidth * 0.5 - txt.getLayoutBounds.getWidth* 0.5,humanCanvasHeight * 0.5)
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(ls.humanCanvas)
+    }else{
+      BotUtil.emptyArray
+    }
+  }
+
+
+  def drawViewByState() ={
+    gameState match {
+      case GameState.play =>
+        drawPlayState()
+      case GameState.dead =>
+        drawDeadState(deadInfo.get)
+      case GameState.allopatry =>
+        drawFinishState()
+      case _ =>
+        BotUtil.emptyArray
+    }
+  }
+
+  def drawLayered():Unit={
+    drawLocation()
+    drawNonInteract()
+    drawInteract()
+    drawAllPlayer()
+    drawPlayer()
+    drawInform()
+    drawViewByState()
+  }
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)

@@ -111,22 +111,14 @@ class GameHolder(
 
   def start()={
     println("start---!!!")
-    //TODO 这里改改
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
-        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
-        if(AppSettings.isBot){
-          val ld = new LayeredDraw(myId,layerScene,grid,false)
-          ld.drawLocation()
-        }else{
-          //游戏渲染
-          gameRender()
-        }
+        gameRender()
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(frameRate),{ _ =>
       //游戏循环
       gameLoop()
     })
@@ -166,11 +158,11 @@ class GameHolder(
       justSynced = false
     }
 
-    if(AppSettings.isBot){
-      ClientBoot.addToPlatform {
-
-      }
-    }
+//    if(AppSettings.isBot){
+//      ClientBoot.addToPlatform {
+//
+//      }
+//    }
 
   }
 

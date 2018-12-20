@@ -9,7 +9,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS}
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
@@ -644,23 +644,23 @@ class GameCanvas(canvas: Canvas,
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
   }
 
-  def MTime2HMS(time:Long)={
-    var ts = (time/1000)
-    //    println(s"一共有 $ts 秒！")
-    var result = ""
-    if(ts/3600>0){
-      result += s"${ts/3600}小时"
-    }
-    ts = ts % 3600
-    //    println(s"第一次 $ts 秒！")
-    if(ts/60>0){
-      result += s"${ts/60}分"
-    }
-    ts = ts % 60
-    //    println(s"第二次 $ts 秒！")
-    result += s"${ts}秒"
-    result
-  }
+//  def MTime2HMS(time:Long)={
+//    var ts = (time/1000)
+//    //    println(s"一共有 $ts 秒！")
+//    var result = ""
+//    if(ts/3600>0){
+//      result += s"${ts/3600}小时"
+//    }
+//    ts = ts % 3600
+//    //    println(s"第一次 $ts 秒！")
+//    if(ts/60>0){
+//      result += s"${ts/60}分"
+//    }
+//    ts = ts % 60
+//    //    println(s"第二次 $ts 秒！")
+//    result += s"${ts}秒"
+//    result
+//  }
   /*********************分层视图400*200****************************/
 
   /*******************1.视野在整个地图中的位置***********************/
@@ -680,7 +680,7 @@ class GameCanvas(canvas: Canvas,
     }
   }
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInterac(is2Byte:Boolean) = {
+  def drawNonInteract(is2Byte:Boolean) = {
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     if(is2Byte){
