@@ -348,22 +348,23 @@ class GameCanvas(canvas: Canvas,
 
   //offScreenCanvas:Canvas
   def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
+    val players = data.playerDetails
+    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
+    val masses = data.massDetails
+    val virus = data.virusDetails
     //计算偏移量
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
 
-    println("scale:  " + scale)
-
-    centerScale(scale,realWindow.x/2,realWindow.y/2)
-
+    /**这两部分代码不能交换，否则视图会无限缩小or放大**/
+    //01
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    val players = data.playerDetails
-    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
-    val masses = data.massDetails
-    val virus = data.virusDetails
+    //02
+    centerScale(scale,realWindow.x/2,realWindow.y/2)
+
     //   /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色

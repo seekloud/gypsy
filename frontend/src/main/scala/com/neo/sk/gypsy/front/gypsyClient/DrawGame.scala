@@ -385,14 +385,12 @@ case class DrawGame(
     val offy =this.canvas.height/2 - basePoint._2
 
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
     ctx.save()
     centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
-    //TODO /2
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
