@@ -309,8 +309,6 @@ case class DrawGame(
     ctx.fillRect(this.canvas.width - 200,20,160,56+GameConfig.rankShowNum*14)
 
     //绘制小地图
-    println("littleMap:   " + littleMap)
-    println("canvas:   " + this.canvas.width)
     ctx.font = "12px Helvetica"
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
