@@ -235,11 +235,13 @@ object UserActor {
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case JoinRoomSuccess(roomId,roomActor)=>
-          frontActor ! Protocol.JoinRoomSuccess(userInfo.playerId,roomId)
+          frontActor ! Protocol.Wrap(Protocol.JoinRoomSuccess(userInfo.playerId,roomId).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+//          frontActor ! Protocol.JoinRoomSuccess(userInfo.playerId,roomId)
           switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
 
         case JoinRoomFailure(roomId,errorCode,msg) =>
-          frontActor ! Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg)
+          frontActor ! Protocol.Wrap(Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
+//          frontActor ! Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg)
           Behaviors.same
 
         case JoinRoomSuccess4Watch(roomActor,roomId) =>
@@ -297,6 +299,7 @@ object UserActor {
           Behavior.same
 
         case DispatchMsg(m)=>
+          log.info(s"bot:    $m")
           frontActor ! m
           Behaviors.same
 

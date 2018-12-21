@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.actor
 import java.net.URLEncoder
 
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.stream.scaladsl.{Keep, Sink}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
 import com.neo.sk.gypsy.botService.BotServer
 import org.slf4j.LoggerFactory
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
@@ -11,12 +11,13 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketRequest}
 import akka.stream.OverflowStrategy
-import akka.stream.typed.scaladsl.ActorSource
+import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import akka.util.{ByteString, ByteStringBuilder}
 import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
+
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
 import com.neo.sk.gypsy.actor.BotActor.LeaveRoom
@@ -211,36 +212,22 @@ object BotActor {
   }
 
   private[this] def getSink(gameClient: ActorRef[WsMsgSource]) =
-    Sink.foreach[Message] {
+    Flow[Message].collect{
       case TextMessage.Strict(msg) =>
-        log.debug(s"msg from webSocket: $msg")
+        log.debug(s"msg from websocket: $msg")
+        ErrorWsMsgFront(msg)
 
       case BinaryMessage.Strict(bMsg) =>
-        //decode process.
         val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
-        bytesDecode[GameMessage](buffer) match {
-          case Right(v) =>
-          case Left(e) =>
-            println(s"decode error: ${e.message}")
-        }
-
-      case msg:BinaryMessage.Streamed =>
-        val f = msg.dataStream.runFold(new ByteStringBuilder().result()){
-          case (s, str) => s.++(str)
-        }
-
-        f.map { bMsg =>
-          val buffer = new MiddleBufferInJvm(bMsg.asByteBuffer)
+        val msg =
           bytesDecode[GameMessage](buffer) match {
-            case Right(v) =>
+            case Right(v) => v
             case Left(e) =>
               println(s"decode error: ${e.message}")
+              ErrorWsMsgFront(e.message)
           }
-        }
-
-      case unknown@_ =>
-        log.debug(s"i receiver an unknown message:$unknown")
-    }
+        msg
+    }.to(ActorSink.actorRef[WsMsgSource](gameClient, CompleteMsgServer, FailMsgServer))
 
   private[this] def getSource(botActor: ActorRef[Command]) = ActorSource.actorRef[WsSendMsg](
     completionMatcher = {
@@ -263,8 +250,8 @@ object BotActor {
   def getWebSocketUri(playerId: String, playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
 //    val domain = "10.1.29.250:30371"
-    //    val domain = "localhost:30371"
-    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+    val domain = "localhost:30371"
+//    val domain = AppSettings.gameDomain  //部署到服务器上用这个
     val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
     val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
     s"$wsProtocol://$domain/gypsy/api/playGameBot?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
