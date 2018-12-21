@@ -128,6 +128,7 @@ object UserActor {
                      CreateRoom
 
                    case Protocol.JoinRoom(roomIdOp) =>
+                     log.info("JoinRoom!!!!!!")
                      StartGame(roomIdOp)
 
                    case _=>
