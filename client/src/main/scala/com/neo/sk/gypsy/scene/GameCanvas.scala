@@ -358,7 +358,6 @@ class GameCanvas(canvas: Canvas,
     val offy =realWindow.y/2 - basePoint._2
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
 
-    println("scale:  " + scale)
 
     centerScale(scale,realWindow.x/2,realWindow.y/2)
 

@@ -139,8 +139,6 @@ class BotHolder(
       layeredScene.middleView.drawRankMap()
     }*/
 
-
-
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
     //差不多每三秒同步一次
