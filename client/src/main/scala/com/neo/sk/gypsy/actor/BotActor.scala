@@ -93,7 +93,7 @@ object BotActor {
               linkGameAgent(gameId,playerId,value.token).map{
                 case Right(res) =>
                   val accessCode = res.accessCode
-                  val url = getWebSocketUri(playerId,value.botName,accessCode)
+                  val url = getBotWebSocketUri(playerId,value.botName,accessCode)
                   val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
                   val source = getSource(ctx.self)
                   val sink = getSink(gameClient)
@@ -269,6 +269,18 @@ object BotActor {
     val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
     s"$wsProtocol://$domain/gypsy/api/playGame?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
   }
+
+  def getBotWebSocketUri(playerId: String, playerName:String, accessCode: String): String = {
+    val wsProtocol = "ws"
+    //    val domain = "10.1.29.250:30371"
+    //    val domain = "localhost:30371"
+    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+    val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
+    val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
+    s"$wsProtocol://$domain/gypsy/api/playGameBot?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"
+  }
+
+
 
   def getCreateRoomWebSocketUri(playerId: String,playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
