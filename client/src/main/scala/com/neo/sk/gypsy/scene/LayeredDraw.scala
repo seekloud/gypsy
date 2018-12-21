@@ -287,31 +287,33 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     //自己放第一个
+    if(ranks.nonEmpty){
+      val maxScore = ranks.map(_.score.score).max
+      val maxKill = ranks.map(_.score.k).max
 
-    val maxScore = ranks.map(_.score.score).max
-    val maxKill = ranks.map(_.score.k).max
+      val myRank = ranks.filter(_.score.id == uid).head.score
+      val myScore = myRank.score
+      val myKill = myRank.k
 
-    val myRank = ranks.filter(_.score.id == uid).head.score
-    val myScore = myRank.score
-    val myKill = myRank.k
+      def drawScoreKill(score: Double,kill: Int, index:Int) = {
+        //score
+        ctx.setFill(ColorsSetting.scoreColor)
+        ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
+          (280 * score / maxScore).toInt)
+        //kill
+        ctx.setFill(ColorsSetting.killColor)
+        ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+      }
+      drawScoreKill(myScore,myKill,0)
 
-    def drawScoreKill(score: Double,kill: Int, index:Int) = {
-      //score
-      ctx.setFill(ColorsSetting.scoreColor)
-      ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
-        (280 * score / maxScore).toInt)
-      //kill
-      ctx.setFill(ColorsSetting.killColor)
-      ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+      val othersRank = ranks.filterNot(_.score.id == uid)
+      //currentRanks 本身的长度就是不超过11的
+      for(i<-0 until othersRank.length){
+        val playerRank = othersRank(i).score
+        drawScoreKill(playerRank.score, playerRank.k, i+1)
+      }
     }
-    drawScoreKill(myScore,myKill,0)
 
-    val othersRank = ranks.filterNot(_.score.id == uid)
-    //currentRanks 本身的长度就是不超过11的
-    for(i<-0 until othersRank.length){
-      val playerRank = othersRank(i).score
-      drawScoreKill(playerRank.score, playerRank.k, i+1)
-    }
 
 /*    val sortedPlayerLists = grid.playerMap.filterNot(_._1 == id).values.toList.sortBy(_.cells.map(_.newmass).sum)
     if(sortedPlayerLists.length <= 10){
