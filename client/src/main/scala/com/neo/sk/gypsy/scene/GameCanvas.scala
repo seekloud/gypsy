@@ -359,12 +359,14 @@ class GameCanvas(canvas: Canvas,
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
 
 
-    centerScale(scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    val players = data.playerDetails
+
+  centerScale(scale,realWindow.x/2,realWindow.y/2)
+
+  val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
     val masses = data.massDetails
     val virus = data.virusDetails

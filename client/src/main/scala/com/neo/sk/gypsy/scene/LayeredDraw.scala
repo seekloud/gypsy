@@ -301,8 +301,10 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
           (280 * score / maxScore).toInt)
         //kill
-        ctx.setFill(ColorsSetting.killColor)
-        ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+        if(maxKill >0) {
+          ctx.setFill(ColorsSetting.killColor)
+          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+        }
       }
       drawScoreKill(myScore,myKill,0)
 
