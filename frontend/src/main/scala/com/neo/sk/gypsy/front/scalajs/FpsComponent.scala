@@ -25,7 +25,6 @@ object FpsComponent{
       renderTimes = 0
     }
   }
-
    def renderFps(ctx:dom.CanvasRenderingContext2D,ping:Long,newWindowX:Int) = {
     addFps()
     if(isRenderFps){
