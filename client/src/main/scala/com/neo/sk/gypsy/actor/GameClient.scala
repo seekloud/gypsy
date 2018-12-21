@@ -46,6 +46,7 @@ object GameClient {
           switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
         case ControllerInitialBot(botHolder) =>
           grid = BotHolder.grid
+          println("runningBot")
           switchBehavior(ctx,"runningBot",runningBot(playerId,roomId,botHolder))
         case x =>
           stashBuffer.stash(x)
@@ -60,25 +61,6 @@ object GameClient {
                         (implicit stashBuffer: StashBuffer[WsMsgSource]):Behavior[WsMsgSource]={
     Behaviors.receive[WsMsgSource]{ (ctx, msg) =>
       msg match {
-        //for bot
-        case Protocol.JoinRoomSuccess(id,roomId) =>
-          log.info(s"$id join room$roomId success")
-          ClientBoot.addToPlatform{
-            if(BotActor.SDKReplyTo != null){
-              BotActor.SDKReplyTo ! JoinRoomRsp(roomId)
-            }
-          }
-          Behaviors.same
-
-        case Protocol.JoinRoomFailure(_,_,errorCode,errMsg) =>
-          log.error(s"join room failed $errorCode: $errMsg")
-          ClientBoot.addToPlatform{
-            if(BotActor.SDKReplyTo != null){
-              BotActor.SDKReplyTo ! JoinRoomRsp(-1,errorCode,errMsg)
-            }
-          }
-          Behaviors.stopped
-
         case Protocol.Id(id) =>
           GameHolder.myId = id
           ClientMusic.playMusic("bg")
