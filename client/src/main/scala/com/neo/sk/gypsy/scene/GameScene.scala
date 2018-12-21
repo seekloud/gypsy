@@ -8,10 +8,10 @@ import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.scene.text.Font
 import com.neo.sk.gypsy.holder.GameHolder._
 import com.neo.sk.gypsy.utils.FpsComp
-
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import scalafx.scene.text.Text
 
 /**
   * @author zhaoyin
@@ -72,6 +72,8 @@ class GameScene {
         var xMin = 10000.0
         var yMin = 10000.0
         var yMax = 0.0
+        var kill = ""
+        var Score = ""
         //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
         p.cells.foreach { cell =>
           val offx = cell.speedX * offsetTime.toDouble / frameRate
@@ -94,8 +96,12 @@ class GameScene {
         topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font(" Helvetica",24))
+        kill=s"KILL: ${p.kill}"
+        Score=s"SCORE: ${p.cells.map(_.newmass).sum.toInt}"
+        val txt=new Text(kill)
+        val killWidth=txt.getLayoutBounds.getWidth
         gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
-        gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
+        gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.newmass).sum.toInt}", 280+killWidth, 10)
         gameCanvasCtx.restore()
  //       renderFps(topCanvas,NetDelay.latency)
         //todo 解决返回值问题
