@@ -518,7 +518,7 @@ case class DrawGame(
 
         /**膨胀、缩小效果**/
         var newcell = cell
-//        println(cell.mass +"  "+cell.newmass)
+
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
@@ -526,7 +526,7 @@ case class DrawGame(
           newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
         }
         newcell
-      }
+      }.filterNot(e=> e.mass<=0 && e.newmass <=0)
         if(cellDifference){
           //改变player的x,y
           val length = newcells.length

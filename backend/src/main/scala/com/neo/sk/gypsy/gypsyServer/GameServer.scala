@@ -175,7 +175,7 @@ class GameServer(override val boundary: Point) extends Grid {
             }
 //            println(cell.mass + "   " + newMass)
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
-        }.filterNot(_.newmass <= 0)
+        }.filterNot(e=> e.newmass <= 0 && e.mass <=0)
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
             case Some(killerPlayer) =>
@@ -263,12 +263,14 @@ class GameServer(override val boundary: Point) extends Grid {
                     newMass = 0
                     newRadius = 0
                     deleteCells = cell :: deleteCells
+//                    cellX = cell2.x
+//                    cellY = cell2.y
                   }
                 }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }.filterNot(_.newmass <= 0 )
+        }.filterNot(e=> e.newmass <= 0 && e.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -483,7 +485,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     playerMap = playerMap.map{
       item =>
-        val  newcells  = item._2.cells.map(cell => cell.copy(mass = cell.newmass))
+        val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
         playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
