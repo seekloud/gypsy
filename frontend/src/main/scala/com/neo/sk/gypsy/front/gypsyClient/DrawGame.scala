@@ -1,5 +1,7 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
+import com.neo.sk.gypsy.front.scalajs.NetDelay
+
 import scalatags.JsDom.short._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
@@ -9,15 +11,16 @@ import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
 import com.neo.sk.gypsy.front.utils.EchartsJs
+
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
 import io.circe.generic.auto._
 import io.circe.syntax._
-
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.front.scalajs.FpsComponent.renderFps
 
 /**
   * User: sky
@@ -374,7 +377,7 @@ case class DrawGame(
 
   var frame=1
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -559,6 +562,13 @@ case class DrawGame(
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
+
+    ctx.save()
+    ctx.font = "34px Helvetica"
+    ctx.fillText(s"KILL: ${p.kill}", this.canvas.width * 0.18 + 30 , 10)
+    ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", this.canvas.width * 0.18 + 180, 10)
+    ctx.restore()
+    renderFps(ctx,NetDelay.latency,this.canvas.width)
   }
 
   //ctx3
