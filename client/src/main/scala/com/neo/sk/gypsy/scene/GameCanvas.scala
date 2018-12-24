@@ -276,6 +276,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(realWindow.x-200,20,150,250)
 
+
     println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
     ctx.setFont(Font.font("Helvetica",12))
@@ -646,6 +647,41 @@ class GameCanvas(canvas: Canvas,
 
   def cleanCtx()={
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
+  }
+
+//  分层时候背景以及排行版等黑色蒙版
+  def drawLayeredBg() = {
+    ctx.setFill(Color.web("rgba(0,0,0,0.5)"))
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
+
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(realWindow.x-200,20,150,250)
+
+    //绘制小地图
+    ctx.setFont(Font.font("Helvetica",12))
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.setStroke(Color.web("rgba(0,0,0,0)"))
+
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
+    }
+    val margin = littleMap/3
+    ctx.setFill(Color.web(MyColors.background))
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+
   }
 
 //  def MTime2HMS(time:Long)={

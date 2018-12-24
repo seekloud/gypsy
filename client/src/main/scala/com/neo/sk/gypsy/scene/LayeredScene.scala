@@ -69,16 +69,42 @@ class LayeredScene {
   flow.setVgap(5)
   flow.setHgap(5)
   flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+//  val group = new Group()
+//  group.getChildren.addAll(humanCanvas)
+//  val border = new BorderPane()
+//  border.setCenter(group)
+//  border.setRight(flow)
+//  val scene = new Scene(border)
+
   val group = new Group()
-  group.getChildren.addAll(humanCanvas)
-//  group.getChildren.addAll(gameCanvas,middleCanvas,topCanvas)
-  val border = new BorderPane()
-  border.setCenter(group)
-  border.setRight(flow)
-  val scene = new Scene(border)
-//  group.getChildren.add(gameCanvas)
-//  group.getChildren.add(middleCanvas)
-//  group.getChildren.add(topCanvas)
+  val scene = new Scene(group,1600,800)
+  humanCanvas.setLayoutX(0)
+  humanCanvas.setLayoutY(100)
+  group.getChildren.add(humanCanvas)
+
+  //设置分层的布局
+  locationCanvas
+  nonInteractCanvas
+  interactCanvas
+  allPlayerCanvas
+  playerCanvas
+  informCanvas
+
+  locationCanvas.setLayoutX(805)
+  locationCanvas.setLayoutY(0)
+  nonInteractCanvas.setLayoutX(1210)
+  nonInteractCanvas.setLayoutY(0)
+  interactCanvas.setLayoutX(805)
+  interactCanvas.setLayoutY(205)
+  allPlayerCanvas.setLayoutX(1210)
+  allPlayerCanvas.setLayoutY(205)
+  playerCanvas.setLayoutX(805)
+  playerCanvas.setLayoutY(410)
+  informCanvas.setLayoutX(1210)
+  informCanvas.setLayoutY(410)
+
+  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
+    allPlayerCanvas,playerCanvas,informCanvas)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
     //TODO

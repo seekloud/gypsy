@@ -349,12 +349,13 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     val MyBallOpt = player.find(_.id == uid)
     if(MyBallOpt.isDefined){
       val myInfo = MyBallOpt.get
-      val myRank = ranks.filter(_.score.id == uid).head.score
-      val myScore = myRank.score
-      val myKill = myRank.k
+      val myRank = ranks.find(_.score.id == uid)
+      val myScore = if(myRank.isDefined) myRank.get.score.score else 0
+      val myKill = if(myRank.isDefined) myRank.get.score.k else 0
       firstCome = false
-      ls.humanView.drawGrid(uid,data,0l,(X,Y),(myInfo.width,myInfo.height),grid)
+//      ls.humanView.drawLayeredBg()
       ls.humanView.drawRankMapData(uid,ranks,data.playerDetails,(X,Y),data.playersPosition)
+      ls.humanView.drawGrid(uid,data,0l,(X,Y),(myInfo.width,myInfo.height),grid)
       ls.humanCtx.save()
       ls.humanCtx.setFont(Font.font(" Helvetica",24))
       ls.humanCtx.fillText(s"KILL: ${myKill}", 250, 10)
