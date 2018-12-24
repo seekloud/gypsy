@@ -52,6 +52,8 @@ object RoomActor {
 
   case class JoinRoom4Watch(playerInfo: PlayerInfo,watchId: Option[String],userActor:ActorRef[UserActor.Command]) extends Command
 
+  case class JoinRoom4Bot(playerInfo: PlayerInfo, botActor:ActorRef[BotActor.Command]) extends Command
+
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
   private case class ReStart(id: String) extends Command
@@ -405,5 +407,12 @@ object RoomActor {
     }.upcast[GameRecorder.Command]
   }
 
+  private def getBotActor(ctx:ActorContext[Command],botId: String) = {
+    val childName = botId
+    ctx.child(childName).getOrElse {
+      val actor = ctx.spawn(BotActor.create(botId), childName)
+      actor
+    }.upcast[BotActor.Command]
+  }
 
 }
