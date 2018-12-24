@@ -268,7 +268,7 @@ class GameServer(override val boundary: Point) extends Grid {
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }.filterNot(_.mass <= 0)
+        }.filterNot(_.newmass <= 0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
