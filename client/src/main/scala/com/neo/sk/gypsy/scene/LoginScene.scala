@@ -132,6 +132,7 @@ class LoginScene {
   BotConnectButton.setOnAction { _ =>
     val botId = botIdInput.getText()
     val botKey = botKeyInput.getText()
+    println(s"Id ：$botId  Key:$botKey ")
     if (botId == ""||botKey=="") {
       ClientBoot.addToPlatform{
         alert.setContentText("BotId或BotKey不能为空")
