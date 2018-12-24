@@ -139,7 +139,7 @@ class LoginScene {
         alert.showAndWait()
       }
     } else {
-      loginSceneListener.onButtonBotConnect(botId.toLong, botKey)
+      loginSceneListener.onButtonBotConnect(botId.trim.toLong, botKey.trim)
     }
   }
 
