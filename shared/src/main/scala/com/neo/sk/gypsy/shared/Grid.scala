@@ -295,7 +295,6 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    println("update playerMove")
     val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
