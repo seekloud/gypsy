@@ -267,6 +267,8 @@ class GameHolder(replay:Boolean = false) {
           var xMin = 10000.0
           var yMin = 10000.0
           var yMax = 0.0
+          var kill = ""
+          var Score = ""
           p.cells.foreach { cell =>
             val offx = cell.speedX * offsetTime.toDouble / frameRate
             val offy = cell.speedY * offsetTime.toDouble / frameRate
@@ -285,14 +287,14 @@ class GameHolder(replay:Boolean = false) {
           val basePoint = (offx, offy)
 
           val foods = grid.food
-          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
+          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
-          ctx.save()
-          ctx.font = "34px Helvetica"
-          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
-          ctx.restore()
-          renderFps(ctx3,NetDelay.latency,window.x)
+//          ctx.save()
+//          ctx.font = "34px Helvetica"
+//          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
+//          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
+//          ctx.restore()
+//          renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
           val paraBack = drawGameView.drawKill(myId,grid,isDead,killList)
           killList=paraBack._1

@@ -47,8 +47,6 @@ class ClientBoot extends javafx.application.Application{
     val loginHolder = new LoginHolder(wsClient,botActor,loginScene,context)
     loginHolder.showScene()
   }
-
-
 }
 
 
