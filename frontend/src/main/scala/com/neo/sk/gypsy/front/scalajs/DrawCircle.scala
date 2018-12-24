@@ -62,7 +62,6 @@ object DrawCircle {
         p=>
           Point(p.x,normalizeRate*(p.y-minY))
       }
-      println("pointList"+pointList.size)
     }else{
       pointList=pointList.map{
         p=>

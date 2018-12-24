@@ -677,19 +677,19 @@ case class DrawGame(
     ctx.translate(-x,-y)
   }
 
-  def MTime2HMS(time:Long)={
-    var ts = (time/1000)
-    var result = ""
-    if(ts/3600>0){
-      result += s"${ts/3600}小时"
-    }
-    ts = ts % 3600
-    if(ts/60>0){
-      result += s"${ts/60}分"
-    }
-    ts = ts % 60
-    result += s"${ts}秒"
-    result
-  }
+//  def MTime2HMS(time:Long)={
+//    var ts = (time/1000)
+//    var result = ""
+//    if(ts/3600>0){
+//      result += s"${ts/3600}小时"
+//    }
+//    ts = ts % 3600
+//    if(ts/60>0){
+//      result += s"${ts/60}分"
+//    }
+//    ts = ts % 60
+//    result += s"${ts}秒"
+//    result
+//  }
 
 }

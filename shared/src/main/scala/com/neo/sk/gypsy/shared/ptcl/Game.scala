@@ -33,7 +33,7 @@ object Game {
     def %(other: Point) = Point(x % other.x, y % other.y)
   }
 
-
+//TODO 可以把里面的X，y改成Double
   case class Player(
                    id:String,
                    name:String,

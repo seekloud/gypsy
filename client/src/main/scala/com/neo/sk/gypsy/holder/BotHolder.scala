@@ -7,8 +7,8 @@ import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.LayeredScene
-import com.neo.sk.gypsy.common.StageContext
+import com.neo.sk.gypsy.scene.{LayeredDraw, LayeredScene}
+import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.common.Constant
@@ -24,15 +24,15 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import org.seekloud.esheepapi.pb.api.ObservationRsp
 
 object BotHolder {
-  val bounds = Point(Boundary.w,Boundary.h)
+  val bounds = Point(Boundary.w, Boundary.h)
   val grid = new GridOnClient(bounds)
   var justSynced = false
   var isDead = false
-  var firstCome=true
+  var firstCome = true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
-  var killList = List.empty[(Int,String,Player)]
-  var deadInfo :Option[Protocol.UserDeadMessage] = None
+  var killList = List.empty[(Int, String, Player)]
+  var deadInfo: Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
   val timeline = new Timeline()
 
@@ -63,11 +63,12 @@ object BotHolder {
   }
 
 }
+
 class BotHolder(
-                  stageCtx: StageContext,
-                  layeredScene: LayeredScene,
-                  serverActor: ActorRef[Protocol.WsSendMsg]
-                ) {
+  stageCtx: StageContext,
+  layeredScene: LayeredScene,
+  serverActor: ActorRef[Protocol.WsSendMsg]
+) {
   import BotHolder._
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
@@ -76,10 +77,10 @@ class BotHolder(
   var getByte: GetByte = _
 
 
-  def getActionSerialNum=layeredScene.actionSerialNumGenerator.getAndIncrement()
+  def getActionSerialNum = layeredScene.actionSerialNumGenerator.getAndIncrement()
 
   def connectToGameServer() = {
-    ClientBoot.addToPlatform{
+    ClientBoot.addToPlatform {
       //显示人类视图+分层视图
       showScene()
       //启动GameClient
@@ -92,34 +93,37 @@ class BotHolder(
   }
 
   def showScene() = {
-    stageCtx.showScene(layeredScene.scene,"BotGaming",false)
+    stageCtx.showScene(layeredScene.scene, "BotGaming", false)
   }
 
   def init() = {
-    layeredScene.gameView.drawGameOn()
-    layeredScene.middleView.drawRankMap()
+
+    //    layeredScene.gameView.drawGameOn()
+    //    layeredScene.middleView.drawRankMap()
   }
 
-  def start()={
+  def start() = {
+    //TODO 这里改改
     init()
-    val animationTimer = new AnimationTimer() {
-      override def handle(now: Long): Unit = {
-        //游戏渲染
-        gameRender()
-      }
-    }
+    //    val animationTimer = new AnimationTimer() {
+    //      override def handle(now: Long): Unit = {
+    //        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
+    //        val ld = new LayeredDraw(botId, layeredScene, grid, false)
+    //        ld.drawLayered()
+    //      }
+    //    }
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(150),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(frameRate), { _ =>
       //游戏循环
       gameLoop()
     })
     timeline.getKeyFrames.add(keyFrame)
-    animationTimer.start()
+    //    animationTimer.start()
     timeline.play()
   }
 
   def gameLoop(): Unit = {
-    if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+    /*if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
       layeredScene.resetScreen(1200,600)
       stageCtx.getStage.setWidth(1200)
       stageCtx.getStage.setHeight(600)
@@ -133,7 +137,8 @@ class BotHolder(
       stageCtx.getStage.setWidth(stageWidth)
       stageCtx.getStage.setHeight(stageHeight)
       layeredScene.middleView.drawRankMap()
-    }
+    }*/
+
     serverActor ! Protocol.Ping(System.currentTimeMillis())
     logicFrameTime = System.currentTimeMillis()
     //差不多每三秒同步一次
@@ -150,24 +155,26 @@ class BotHolder(
     }
 
     //TODO 生成分层视图数据
-    ClientBoot.addToPlatform{
-      getByte = GetByte()
+    ClientBoot.addToPlatform {
+      val ld = new LayeredDraw(botId, layeredScene, grid, false)
+      ld.drawLayered()
+//      getByte = GetByte()
     }
   }
 
-  def gameRender() = {
-    val offsetTime=System.currentTimeMillis()-logicFrameTime
-    gameState match {
-      case GameState.play if botId!= ""=>
-        layeredScene.draw(botId,offsetTime)
-      case GameState.dead if deadInfo.isDefined =>
-        layeredScene.drawWhenDead(deadInfo.get)
-      case GameState.allopatry =>
-        layeredScene.drawWhenFinish("存在异地登录")
-        gameClose
-      case _ =>
-    }
-  }
+  /*  def gameRender() = {
+      val offsetTime=System.currentTimeMillis()-logicFrameTime
+      gameState match {
+        case GameState.play if botId!= ""=>
+          layeredScene.draw(botId,offsetTime)
+        case GameState.dead if deadInfo.isDefined =>
+          layeredScene.drawWhenDead(deadInfo.get)
+        case GameState.allopatry =>
+          layeredScene.drawWhenFinish("存在异地登录")
+          gameClose
+        case _ =>
+      }
+    }*/
 
   def update(): Unit = {
     grid.update()
@@ -183,6 +190,7 @@ class BotHolder(
     //停止背景音乐
     ClientMusic.stopMusic()
   }
+
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {
       serverActor ! WsSendComplete
@@ -191,25 +199,28 @@ class BotHolder(
   })
 
 
-  /**BotService的功能**/
+  /** BotService的功能 **/
 
-  def gameActionReceiver(key:Int, swing:Option[Swing]) = {
-    if(key != 0){
+  def gameActionReceiver(key: Int, swing: Option[Swing]) = {
+    if (key != 0) {
       //使用E、F
       val keyCode = Protocol.KeyCode(botId, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       grid.addActionWithFrame(botId, keyCode.copy(frame = grid.frameCount + delayFrame))
       //      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
       serverActor ! keyCode
     }
-    if(swing.nonEmpty){
-      def getDegree(x:Double,y:Double)={
-        atan2(y -layeredScene.gameView.realWindow.x/2,x - layeredScene.gameView.realWindow.y/2 )
+    if (swing.nonEmpty) {
+      def getDegree(x: Double, y: Double) = {
+        //        atan2(y -layeredScene.gameView.realWindow.x/2,x - layeredScene.gameView.realWindow.y/2 )
+        atan2(y, x)
       }
+
       var FormerDegree = 0D
-      val (x,y) = Constant.swingToXY(swing.get)
-      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(x,y)-FormerDegree)*180/math.Pi>5){
-        FormerDegree = getDegree(x,y)
+      val (x, y) = Constant.swingToXY(swing.get)
+      //      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(botId, x.toFloat, y.toFloat, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      if (math.abs(getDegree(x, y) - FormerDegree) * 180 / math.Pi > 5) {
+        FormerDegree = getDegree(x, y)
         grid.addMouseActionWithFrame(botId, mp.copy(frame = grid.frameCount + delayFrame))
         serverActor ! mp
       }
@@ -224,8 +235,8 @@ class BotHolder(
     val player = grid.playerMap.find(_._1 == botId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
-    val health = if(gameState == GameState.dead) 0 else 1
-    (score,kill,health)
+    val health = if (gameState == GameState.dead) 0 else 1
+    (score, kill, health)
   }
 
   //TODO
@@ -240,8 +251,6 @@ class BotHolder(
     //          val observation = ObservationRsp(Some(layer), Some(ImgData(800, 400, 0, ByteString.copyFrom())))
     ObservationRsp()
   }
-
-
 
 
 }
