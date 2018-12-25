@@ -93,6 +93,8 @@ object Protocol {
 
   case class KeyCode(id: String,keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction with GameMessage
 
+  case object PressSpace extends UserAction
+
   case class WatchChange(id:String, watchId: String) extends UserAction
 
   case class Ping(timestamp: Long) extends UserAction
