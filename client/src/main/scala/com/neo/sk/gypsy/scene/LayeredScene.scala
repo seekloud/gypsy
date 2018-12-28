@@ -62,14 +62,15 @@ class LayeredScene {
   val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
 
   /**javafx的布局**/
-  val flow = new FlowPane()
-  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
+//  val flow = new FlowPane()
+//  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
 
   //设置行列之间的间隙大小
-  flow.setVgap(5)
-  flow.setHgap(5)
-  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
-//  val group = new Group()
+//  flow.setVgap(5)
+//  flow.setHgap(5)
+//  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+
+  //  val group = new Group()
 //  group.getChildren.addAll(humanCanvas)
 //  val border = new BorderPane()
 //  border.setCenter(group)
@@ -77,7 +78,8 @@ class LayeredScene {
 //  val scene = new Scene(border)
 
   val group = new Group()
-  val scene = new Scene(group,2000,800)
+//  val scene = new Scene(group,2000,800)
+  val scene = new Scene(group)
   humanCanvas.setLayoutX(0)
   humanCanvas.setLayoutY(100)
   group.getChildren.add(humanCanvas)

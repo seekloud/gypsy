@@ -44,7 +44,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   val ls = layeredScene
 //  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
-  val data = grid.getGridData(uid,layeredCanvasWidth,layeredCanvasHeight)
+  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
   val screeScale = if( layeredCanvasWidth / Window.w > layeredCanvasHeight / Window.h) layeredCanvasHeight / Window.h else layeredCanvasWidth / Window.w
   var scale = data.scale * screeScale
 //  val scale2 = getZoomRate(zoom._1,zoom._2,layeredCanvasWidth/2,layeredCanvasHeight/2) * screeScale
@@ -97,15 +97,13 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   def drawNonInteract() = {
 //    ls.nonInteractCanvasCtx
     val ctx = ls.nonInteractCanvasCtx
-    ctx.setFill(Color.BLACK)
+    ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     ctx.save()
     centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
-    ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, 1600, 800)
     ctx.setFill(Color.BLACK)
     //TODO 偏移要看
-    ls.nonInteractCanvasCtx.fillRect(layeredOffX, layeredOffY, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     ctx.restore()
     if(is2Byte){
@@ -118,12 +116,16 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   /********************3.视野内可交互的元素（food，mass，virus）是否包含边界****************/
   def drawInteract()={
     val ctx = ls.interactCanvasCtx
-    ctx.setFill(Color.BLACK)
+    ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+
     ctx.save()
     centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
 
-    println(s" ${food.size} ")
+    ctx.setFill(Color.BLACK)
+    //    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+
 //    val viewFood = food.filter()
     food.groupBy(_.color).foreach{a=>
       val foodColor = a._1 match{
@@ -165,7 +167,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
 
     virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
-      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius*2,radius*2)
+      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius,radius)
     }
 
     ctx.restore()
