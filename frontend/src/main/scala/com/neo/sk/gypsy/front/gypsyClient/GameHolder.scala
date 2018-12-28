@@ -368,6 +368,7 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap ++= virus
 
       case data: Protocol.GridDataSync =>
+        println("获取全量数据  get ALL GRID===================")
         syncGridData = Some(data)
         justSynced = true
 
@@ -376,6 +377,7 @@ class GameHolder(replay:Boolean = false) {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case Protocol.PlayerRestart(id) =>
+        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
         Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
