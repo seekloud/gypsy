@@ -77,7 +77,7 @@ class LayeredScene {
 //  val scene = new Scene(border)
 
   val group = new Group()
-  val scene = new Scene(group,1600,800)
+  val scene = new Scene(group,2000,800)
   humanCanvas.setLayoutX(0)
   humanCanvas.setLayoutY(100)
   group.getChildren.add(humanCanvas)
