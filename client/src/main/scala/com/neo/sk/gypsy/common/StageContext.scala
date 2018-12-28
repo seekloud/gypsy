@@ -23,14 +23,16 @@ class StageContext(stage: Stage) {
     stage.setTitle(title)
     stage.sizeToScene()
     stage.centerOnScreen()
+    stage.setResizable(true)
 //    if(AppSettings.isBot){
 //      stage.setResizable(false)
 //      println(s"Bot模式下无法改变窗口大小")
 //    }
+
     if(flag){
       stage.setFullScreen(true)
     }
-    stage.getWidth
+//    stage.getWidth
     stage.show()
   }
 
