@@ -80,6 +80,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 //    ls.locationCanvasCtx
     ls.locationCanvasCtx.setFill(Color.BLACK)
     ls.locationCanvasCtx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    //TODO 视野缩放
     data.playerDetails.foreach{player=>
       if(player.id == uid){
         ls.locationCanvasCtx.setFill(Color.GRAY)
