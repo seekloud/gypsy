@@ -97,12 +97,17 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   def drawNonInteract() = {
 //    ls.nonInteractCanvasCtx
     val ctx = ls.nonInteractCanvasCtx
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.save()
     centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, 1600, 800)
     ctx.setFill(Color.BLACK)
     //TODO 偏移要看
     ls.nonInteractCanvasCtx.fillRect(layeredOffX, layeredOffY, layeredCanvasWidth, layeredCanvasHeight)
+
+    ctx.restore()
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.nonInteractCanvas)
     }else{
