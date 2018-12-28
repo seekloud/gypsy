@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils.MTime2HMS
+import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, getZoomRate}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
@@ -43,8 +43,12 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   import LayeredDraw._
 
   val ls = layeredScene
-  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
-  val scale = data.scale
+//  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
+  val data = grid.getGridData(uid,layeredCanvasWidth,layeredCanvasHeight)
+  val screeScale = if( layeredCanvasWidth / Window.w > layeredCanvasHeight / Window.h) layeredCanvasHeight / Window.h else layeredCanvasWidth / Window.w
+  var scale = data.scale * screeScale
+//  val scale2 = getZoomRate(zoom._1,zoom._2,layeredCanvasWidth/2,layeredCanvasHeight/2) * screeScale
+
   val food = grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
   val virus = data.virusDetails.values.toList
   val mass = data.massDetails
@@ -106,11 +110,16 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
   }
 
-  /********************3.视野内可交互的元素（food，mass，virus）****************/
+  /********************3.视野内可交互的元素（food，mass，virus）是否包含边界****************/
   def drawInteract()={
     val ctx = ls.interactCanvasCtx
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.save()
     centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
 
+    println(s" ${food.size} ")
+//    val viewFood = food.filter()
     food.groupBy(_.color).foreach{a=>
       val foodColor = a._1 match{
         case 0 => "#f3456d"
@@ -127,7 +136,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         //        ctx.beginPath()
         //        ctx.arc(x + offx,y + offy,10,10,0,360)
         //        ctx.fill()
-        ctx.fillRect(x + layeredOffX,y + layeredOffY,16,16)
+        ctx.fillRect(x + layeredOffX,y + layeredOffY,10,10)
       }
     }
 
@@ -153,6 +162,8 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
       ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius*2,radius*2)
     }
+
+    ctx.restore()
 
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.interactCanvas)
@@ -354,7 +365,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       val myKill = if(myRank.isDefined) myRank.get.score.k else 0
       firstCome = false
 //      ls.humanView.drawLayeredBg()
-      ls.humanView.drawRankMapData(uid,ranks,data.playerDetails,(X,Y),data.playersPosition)
+//      ls.humanView.drawRankMapData(uid,ranks,data.playerDetails,(X,Y),data.playersPosition)
       ls.humanView.drawGrid(uid,data,0l,(X,Y),(myInfo.width,myInfo.height),grid)
       ls.humanCtx.save()
       ls.humanCtx.setFont(Font.font(" Helvetica",24))
@@ -366,7 +377,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       ls.humanView.drawGameWait(firstCome)
     }
 //    FpsComp.renderFps(gameCanvasCtx, 550, 10)
-
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.humanCanvas)
     }else{
