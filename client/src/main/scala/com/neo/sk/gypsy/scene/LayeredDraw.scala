@@ -16,7 +16,7 @@ import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
 import javafx.geometry.VPos
 
-import scala.math.{pow, sqrt}
+import scala.math.{abs, pow, sqrt}
 
 /**
   * Created by YXY on Date: 2018/12/18
@@ -51,6 +51,10 @@ object LayeredDraw{
   val  star23 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-23.png"))
   val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
 
+  private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
+  private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
+  private val bronzeImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/cooper.png"))
+
   case object MyColors {
     val halo = "rgba(181, 211, 49, 0.51)"
     val rankList = "rgba(0, 0, 0, 0.64)"
@@ -62,6 +66,13 @@ object LayeredDraw{
     val otherBody = "#696969"
     val bigPlayer = "#FF8C69"
   }
+
+  val littleMap = 120
+  val mapMargin = 20
+  val mapLeft = 160
+
+  //文本高度
+  val textLineHeight = 14
 
 }
 
@@ -419,20 +430,20 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     val MyBallOpt = player.find(_.id == uid)
     if(MyBallOpt.isDefined){
       val myInfo = MyBallOpt.get
-      val myRank = ranks.find(_.score.id == uid)
-      val myScore = if(myRank.isDefined) myRank.get.score.score else 0
-      val myKill = if(myRank.isDefined) myRank.get.score.k else 0
+//      val myRank = ranks.find(_.score.id == uid)
+//      val myScore = if(myRank.isDefined) myRank.get.score.score else 0
+//      val myKill = if(myRank.isDefined) myRank.get.score.k else 0
       firstCome = false
 //      ls.humanView.drawLayeredBg()
 //      ls.humanView.drawRankMapData(uid,ranks,data.playerDetails,(X,Y),data.playersPosition)
 //      ls.humanView.drawGrid(uid,data,0l,(X,Y),(myInfo.width,myInfo.height),grid)
       drawPlayView(uid,data,(X,Y),(myInfo.width,myInfo.height),grid)
 
-      ls.humanCtx.save()
-      ls.humanCtx.setFont(Font.font(" Helvetica",24))
-      ls.humanCtx.fillText(s"KILL: ${myKill}", 250, 10)
-      ls.humanCtx.fillText(s"SCORE: ${myScore}", 400, 10)
-      ls.humanCtx.restore()
+//      ls.humanCtx.save()
+//      ls.humanCtx.setFont(Font.font(" Helvetica",24))
+//      ls.humanCtx.fillText(s"KILL: ${myKill}", 250, 10)
+//      ls.humanCtx.fillText(s"SCORE: ${myScore}", 400, 10)
+//      ls.humanCtx.restore()
 
     }else{
       ls.humanView.drawGameWait(firstCome)
@@ -446,9 +457,14 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   }
 
-
   def drawPlayView(uid: String, data: GridDataSync,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient) = {
     val ctx = ls.humanCtx
+
+    /*
+    正常游戏绘图
+     */
+
+
     val players = data.playerDetails
     val foods =  grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
     val masses = data.massDetails
@@ -560,11 +576,11 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         val txt4=new Text(playermass.toString)
         val nameWidth = txt3.getLayoutBounds.getWidth
         val massWidth = txt4.getLayoutBounds.getWidth
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + offx - nameWidth / 2, cell.y + offy - (nameFont.toInt / 2))
+//        ctx.setStroke(Color.web("grey"))
+//        ctx.strokeText(s"$name", cell.x + offx - nameWidth / 2, cell.y + offy - (nameFont.toInt / 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"${playermass.toString}",cell.x + offx - massWidth / 2, cell.y + offy + nameFont.toInt/2)
-        ctx.fillText(s"$name", cell.x + offx- nameWidth / 2, cell.y + offy - (nameFont.toInt / 2))
+        ctx.fillText(s"${playermass.toString}",cell.x + offx - massWidth /2 -6, cell.y + offy + nameFont.toInt/2)
+        ctx.fillText(s"$name", cell.x + offx- nameWidth /2 -6, cell.y + offy - (nameFont.toInt / 2))
         ctx.restore()
         /**膨胀、缩小效果**/
         var newcell = cell
@@ -601,6 +617,118 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setTextAlign(TextAlignment.LEFT)
     ctx.setTextBaseline(VPos.TOP)
+
+    drawSmallMap()
+    drawRankMap(players,basePoint)
+
+  }
+
+  def drawSmallMap()= {
+    val ctx = ls.humanCtx
+    /*
+  小地图，排行版蒙版
+   */
+    ctx.save()
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(humanCanvasWidth-mapLeft,20,150,250)
+
+    //绘制小地图
+    ctx.setFont(Font.font("Helvetica",12))
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.setStroke(Color.web("rgba(255,255,255,0)"))
+
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
+    }
+    val margin = littleMap/3
+    ctx.setFill(Color.web(MyColors.background))
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
+    }
+
+    ctx.restore()
+  }
+
+  def drawRankMap(players:List[Game.Player],basePoint:(Double,Double)) = {
+    val ctx = ls.humanCtx
+    //绘制当前排行
+    ctx.setFont(Font.font("Helvetica",12))
+    val currentRankBaseLine = 3
+    ctx.setFill(Color.web(MyColors.background))
+    drawTextLine(s"————排行榜————", humanCanvasWidth-mapLeft, 0, currentRankBaseLine)
+
+    //这里过滤是为了防止回放的时候传全量的排行版数据
+    ranks.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+      val score = rank._1.score
+      //      val index = rank._2+1
+      val index = rank._1.index
+
+      val imgOpt = index match {
+        case 1 => Some(goldImg)
+        case 2 => Some(silverImg)
+        case 3 => Some(bronzeImg)
+        case _ => None
+      }
+      imgOpt.foreach{ img =>
+        ctx.drawImage(img, humanCanvasWidth-mapLeft, index * textLineHeight+30, 13, 13)
+      }
+      if(score.id == uid){
+        ctx.save()
+        ctx.setFont(Font.font("Helvetica",12))
+        ctx.setFill(Color.web("#FFFF33"))
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", humanCanvasWidth-mapLeft + 7, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        ctx.restore()
+
+        ctx.save()
+        ctx.setFont(Font.font(" Helvetica",24))
+        ctx.fillText(s"KILL: ${score.k}", 250, 10)
+        ctx.fillText(s"SCORE: ${score.score}", 400, 10)
+        ctx.restore()
+
+
+      }else{
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", humanCanvasWidth-mapLeft + 7, index , currentRankBaseLine)
+      }
+
+    }
+
+    //绘制小地图
+
+    //    ctx.setFill(Color.web(MyColors.bigPlayer))
+    //    bigPlayerPosition.filterNot(_.id==uid).map{player=>
+    //      val offx = player.x.toDouble
+    //      val offy = player.y.toDouble
+    //      ctx.beginPath()
+    //      ctx.arc(mapMargin + (offx/bounds.x) * littleMap,mapMargin + offy/bounds.y * littleMap,8,8,0,360)
+    //      ctx.fill()
+    //    }
+
+    ctx.setFill(Color.web(MyColors.myHeader))
+    players.find(_.id == uid) match {
+      case Some(player)=>
+        ctx.beginPath()
+        ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap, mapMargin + basePoint._2/bounds.y * littleMap,8,8,0,360)
+        ctx.fill()
+      //        ctx.fillArc(mapMargin + (basePoint._1/bounds.x) * littleMap, mapMargin + basePoint._2/bounds.y * littleMap,10,10,0,360,ArcType.CHORD)
+      case None=>
+      // println(s"${basePoint._1},  ${basePoint._2}")
+    }
+  }
+
+  //绘制一条信息
+  def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
+    ls.humanCtx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
   }
 
 
