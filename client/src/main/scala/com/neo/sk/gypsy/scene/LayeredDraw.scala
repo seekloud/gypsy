@@ -83,7 +83,8 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     data.playerDetails.foreach{player=>
       if(player.id == uid){
         ls.locationCanvasCtx.setFill(Color.GRAY)
-        ls.locationCanvasCtx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
+//        ls.locationCanvasCtx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
+        ls.locationCanvasCtx.fillRect((player.x-Window.w/2)/(Boundary.w/layeredCanvasWidth),(player.y - Window.h/2)/(Boundary.h/layeredCanvasHeight),layeredCanvasWidth*(Window.w/Boundary.w),layeredCanvasHeight*(Window.h/Boundary.h))
       }
     }
     if(is2Byte){
@@ -161,7 +162,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
 
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,r,r,0,360)
+        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5,r*0.5,0,360)
         ctx.fill()
       }
     }
