@@ -299,7 +299,7 @@ object UserActor {
           Behavior.same
 
         case DispatchMsg(m)=>
-          log.info(s"bot:    $m")
+//          log.info(s"bot:    $m")
           frontActor ! m
           Behaviors.same
 
