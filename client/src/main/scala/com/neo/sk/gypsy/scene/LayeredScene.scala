@@ -92,18 +92,35 @@ class LayeredScene {
   playerCanvas
   informCanvas
 
-  locationCanvas.setLayoutX(805)
+  val canvasSpace = 5
+
+//  locationCanvas.setLayoutX(805)
+//  locationCanvas.setLayoutY(0)
+//  nonInteractCanvas.setLayoutX(1210)
+//  nonInteractCanvas.setLayoutY(0)
+//  interactCanvas.setLayoutX(805)
+//  interactCanvas.setLayoutY(205)
+//  allPlayerCanvas.setLayoutX(1210)
+//  allPlayerCanvas.setLayoutY(205)
+//  playerCanvas.setLayoutX(805)
+//  playerCanvas.setLayoutY(410)
+//  informCanvas.setLayoutX(1210)
+//  informCanvas.setLayoutY(410)
+
+
+  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
   locationCanvas.setLayoutY(0)
-  nonInteractCanvas.setLayoutX(1210)
+  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
   nonInteractCanvas.setLayoutY(0)
-  interactCanvas.setLayoutX(805)
-  interactCanvas.setLayoutY(205)
-  allPlayerCanvas.setLayoutX(1210)
-  allPlayerCanvas.setLayoutY(205)
-  playerCanvas.setLayoutX(805)
-  playerCanvas.setLayoutY(410)
-  informCanvas.setLayoutX(1210)
-  informCanvas.setLayoutY(410)
+  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  allPlayerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  allPlayerCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  playerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+  informCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  informCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+
 
   group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
     allPlayerCanvas,playerCanvas,informCanvas)

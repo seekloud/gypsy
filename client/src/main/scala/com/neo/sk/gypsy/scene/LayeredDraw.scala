@@ -384,7 +384,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         if(maxKill > 0) {
           ctx.setFill(ColorsSetting.killColor)
 //          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
-          ctx.fillRect(index * 35 + informWidth, 0, informWidth, 280 * kill / maxKill)
+          ctx.fillRect(index * 35 + informWidth, 0, informWidth, layeredCanvasHeight * kill / maxKill)
         }
       }
       drawScoreKill(myScore,myKill,0)
@@ -430,25 +430,13 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     val MyBallOpt = player.find(_.id == uid)
     if(MyBallOpt.isDefined){
       val myInfo = MyBallOpt.get
-//      val myRank = ranks.find(_.score.id == uid)
-//      val myScore = if(myRank.isDefined) myRank.get.score.score else 0
-//      val myKill = if(myRank.isDefined) myRank.get.score.k else 0
       firstCome = false
-//      ls.humanView.drawLayeredBg()
-//      ls.humanView.drawRankMapData(uid,ranks,data.playerDetails,(X,Y),data.playersPosition)
-//      ls.humanView.drawGrid(uid,data,0l,(X,Y),(myInfo.width,myInfo.height),grid)
       drawPlayView(uid,data,(X,Y),(myInfo.width,myInfo.height),grid)
-
-//      ls.humanCtx.save()
-//      ls.humanCtx.setFont(Font.font(" Helvetica",24))
-//      ls.humanCtx.fillText(s"KILL: ${myKill}", 250, 10)
-//      ls.humanCtx.fillText(s"SCORE: ${myScore}", 400, 10)
-//      ls.humanCtx.restore()
 
     }else{
       ls.humanView.drawGameWait(firstCome)
     }
-//    FpsComp.renderFps(gameCanvasCtx, 550, 10)
+
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.humanCanvas)
     }else{
