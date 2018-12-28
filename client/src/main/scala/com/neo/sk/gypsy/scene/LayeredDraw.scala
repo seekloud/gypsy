@@ -306,8 +306,10 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     //自己放第一个
     if(ranks.nonEmpty){
-      val maxScore = ranks.map(_.score.score).max
-      val maxKill = ranks.map(_.score.k).max
+      //面板中最大分值的数值的显示占比
+      val infoScale = 4.0/3.0
+      val maxScore = ranks.map(_.score.score).max * infoScale
+      val maxKill = ranks.map(_.score.k).max * infoScale
 
       val myRank = ranks.filter(_.score.id == uid).head.score
       val myScore = myRank.score
@@ -316,12 +318,14 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       def drawScoreKill(score: Double,kill: Int, index:Int) = {
         //score
         ctx.setFill(ColorsSetting.scoreColor)
-        ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
-          (280 * score / maxScore).toInt)
+//        ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
+        ctx.fillRect(index * 35, 0, informWidth,
+          (layeredCanvasHeight * score / maxScore).toInt)
         //kill
         if(maxKill > 0) {
           ctx.setFill(ColorsSetting.killColor)
-          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+//          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
+          ctx.fillRect(index * 35 + informWidth, 0, informWidth, 280 * kill / maxKill)
         }
       }
       drawScoreKill(myScore,myKill,0)
