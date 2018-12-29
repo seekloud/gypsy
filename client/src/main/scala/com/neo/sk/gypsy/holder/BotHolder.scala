@@ -181,9 +181,9 @@ class BotHolder(
     grid.update()
   }
 
-  def reLive(id: String) = {
-    serverActor ! ReLiveAck(id)
-  }
+//  def reLive(id: String) = {
+//    serverActor ! ReLiveAck(id)
+//  }
 
   def gameClose = {
     //停止gameLoop

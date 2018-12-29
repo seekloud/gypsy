@@ -192,7 +192,10 @@ class GameHolder(
         gameClose
       } else if (watchKeys.contains(key)) {
         if (key == KeyCode.SPACE) {
-          println(s"down+${e.toString}")
+          println(s"down+ Space ReLive Press!")
+          val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+          serverActor ! reliveMsg
+//          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
           val keyCode = Protocol.KeyCode(myId, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
@@ -225,9 +228,9 @@ class GameHolder(
     gameScene.topView.cleanCtx()
   }
 
-  def reLive(id: String) = {
-    serverActor ! ReLiveAck(id)
-  }
+//  def reLive(id: String) = {
+//    serverActor ! ReLiveAck(id)
+//  }
 
   def gameClose = {
     //停止gameLoop
