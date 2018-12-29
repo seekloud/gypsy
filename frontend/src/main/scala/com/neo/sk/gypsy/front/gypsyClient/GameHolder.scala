@@ -207,7 +207,9 @@ class GameHolder(replay:Boolean = false) {
         } else if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Space) {
-            println(s"down+${e.keyCode.toString}")
+            println(s"down+${e.keyCode.toString} ReLive Press!")
+            val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+            webSocketClient.sendMsg(reliveMsg)
           } else {
             println(s"down+${e.keyCode.toString}")
             val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
@@ -389,7 +391,7 @@ class GameHolder(replay:Boolean = false) {
         if(myId == id){
           if(gameState == GameState.dead){
             println(s"发送复活确认")
-            webSocketClient.sendMsg(ReLiveAck(id))
+//            webSocketClient.sendMsg(ReLiveAck(id))
             gameState = GameState.play
           }
           drawTopView.cleanCtx()
