@@ -398,21 +398,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
 
 
-/*    val sortedPlayerLists = grid.playerMap.filterNot(_._1 == id).values.toList.sortBy(_.cells.map(_.newmass).sum)
-    if(sortedPlayerLists.length <= 10){
-      for(i<-0 until sortedPlayerLists.length){
-        val player = sortedPlayerLists(i)
-        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
-      }
-    } else {
-      //选前十个
-      val sortedPlayerListsT = sortedPlayerLists.take(10)
-      for(i<-0 until sortedPlayerListsT.length){
-        val player = sortedPlayerListsT(i)
-        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
-      }
-    }*/
-
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.informCanvas)
     }else{
@@ -790,14 +775,16 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
   }
 
-  def drawLayered():Unit={
-    drawLocation()
-    drawNonInteract()
-    drawInteract()
-    drawAllPlayer()
-    drawPlayer()
-    drawInform()
-    drawViewByState()
+  def drawLayered() = {
+    val localByte = drawLocation()
+    val noninteractByte = drawNonInteract()
+    val interactByte = drawInteract()
+    val allplayerByte = drawAllPlayer()
+    val playerByte = drawPlayer()
+    val infoByte = drawInform()
+    val humanByte = drawViewByState()
+
+    (localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte)
   }
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {

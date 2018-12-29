@@ -14,6 +14,8 @@ import java.awt.event.KeyEvent
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.ClientBoot.gameClient
+import com.neo.sk.gypsy.actor.BotActor
+import com.neo.sk.gypsy.actor.BotActor.GetByte
 import com.neo.sk.gypsy.actor.GameClient._
 import org.seekloud.esheepapi.pb.actions._
 
@@ -43,8 +45,6 @@ object BotHolder {
 
   sealed trait Command
 
-  case class GetByte() extends Command
-
 
   val watchKeys = Set(
     KeyCode.E,
@@ -67,14 +67,15 @@ object BotHolder {
 class BotHolder(
   stageCtx: StageContext,
   layeredScene: LayeredScene,
-  serverActor: ActorRef[Protocol.WsSendMsg]
+  serverActor: ActorRef[Protocol.WsSendMsg],
+  botActor:ActorRef[BotActor.Command]
 ) {
   import BotHolder._
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
 
-  var getByte: GetByte = _
+//  var getByte: GetByte = _
 
 
   def getActionSerialNum = layeredScene.actionSerialNumGenerator.getAndIncrement()
@@ -157,8 +158,8 @@ class BotHolder(
     //TODO 生成分层视图数据
     ClientBoot.addToPlatform {
       val ld = new LayeredDraw(botId, layeredScene, grid, false)
-      ld.drawLayered()
-//      getByte = GetByte()
+      val ByteInfo = ld.drawLayered()
+      botActor ! GetByte(ByteInfo._1,ByteInfo._2,ByteInfo._3,ByteInfo._4,ByteInfo._5,ByteInfo._6,ByteInfo._7)
     }
   }
 
