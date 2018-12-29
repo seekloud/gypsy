@@ -12,7 +12,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketRequest}
 import akka.stream.OverflowStrategy
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import akka.util.{ByteString, ByteStringBuilder}
+import akka.util.{ByteStringBuilder}
 import com.google.protobuf.ByteString
 import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
