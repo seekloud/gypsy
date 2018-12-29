@@ -144,7 +144,7 @@ object GameClient {
             grid.playerMap += (id -> player)
             if(GameHolder.myId == id){
               if(GameHolder.gameState == GameState.dead){
-                gameHolder.reLive(id)
+//                gameHolder.reLive(id)
                 GameHolder.gameState = GameState.play
               }
               gameHolder.cleanCtx()
@@ -335,7 +335,7 @@ object GameClient {
             grid.playerMap += (id -> player)
             if(BotHolder.botId == id){
               if(BotHolder.gameState == GameState.dead){
-                botHolder.reLive(id)
+//                botHolder.reLive(id)
                 BotHolder.gameState = GameState.play
               }
 //              botHolder.cleanCtx()
