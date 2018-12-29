@@ -1,27 +1,26 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
-import java.util.concurrent.TimeUnit
+import com.neo.sk.gypsy.front.scalajs.NetDelay
 
-import com.neo.sk.gypsy.front.scalajs.DrawCircle
-
-//import scalatags.JsDom.short.{*, img,s}
 import scalatags.JsDom.short._
-//import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.GridDataSync
-import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
-import com.neo.sk.gypsy.shared.ptcl._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
-import org.scalajs.dom.html.{Canvas, Image}
+import org.scalajs.dom.html.Canvas
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
 import com.neo.sk.gypsy.front.utils.EchartsJs
+
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
 import io.circe.generic.auto._
-import io.circe.parser.decode
 import io.circe.syntax._
+import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.front.scalajs.FpsComponent.renderFps
 
 /**
   * User: sky
@@ -310,8 +309,6 @@ case class DrawGame(
     ctx.fillRect(this.canvas.width - 200,20,160,56+GameConfig.rankShowNum*14)
 
     //绘制小地图
-    println("littleMap:   " + littleMap)
-    println("canvas:   " + this.canvas.width)
     ctx.font = "12px Helvetica"
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
@@ -378,7 +375,7 @@ case class DrawGame(
 
   var frame=1
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -389,14 +386,12 @@ case class DrawGame(
     val offy =this.canvas.height/2 - basePoint._2
 
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
     ctx.save()
     centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
-    //TODO /2
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
@@ -436,8 +431,8 @@ case class DrawGame(
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat / frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -483,7 +478,6 @@ case class DrawGame(
         case 22=>star22 //(243,69,109)   b30e35
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
-      println(s"frame:$frame,x:$x,y:$y")
       frame+=1
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell =>
@@ -493,8 +487,8 @@ case class DrawGame(
 //        val celly = if(cell.y!=cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate)
 //          cell.y + cell.speedY * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
 //        else cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -553,8 +547,8 @@ case class DrawGame(
       var yfix:Double=y
       if(speed>0){
         val(nx,ny)= normalization(tx,ty)
-        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x + nx*speed *offsetTime.toFloat / frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / frameRate
         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
@@ -566,6 +560,13 @@ case class DrawGame(
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
+
+    ctx.save()
+    ctx.font = "34px Helvetica"
+    ctx.fillText(s"KILL: ${p.kill}", this.canvas.width * 0.18 + 30 , 10)
+    ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", this.canvas.width * 0.18 + 180, 10)
+    ctx.restore()
+    renderFps(ctx,NetDelay.latency,this.canvas.width)
   }
 
   //ctx3
@@ -676,19 +677,19 @@ case class DrawGame(
     ctx.translate(-x,-y)
   }
 
-  def MTime2HMS(time:Long)={
-    var ts = (time/1000)
-    var result = ""
-    if(ts/3600>0){
-      result += s"${ts/3600}小时"
-    }
-    ts = ts % 3600
-    if(ts/60>0){
-      result += s"${ts/60}分"
-    }
-    ts = ts % 60
-    result += s"${ts}秒"
-    result
-  }
+//  def MTime2HMS(time:Long)={
+//    var ts = (time/1000)
+//    var result = ""
+//    if(ts/3600>0){
+//      result += s"${ts/3600}小时"
+//    }
+//    ts = ts % 3600
+//    if(ts/60>0){
+//      result += s"${ts/60}分"
+//    }
+//    ts = ts % 60
+//    result += s"${ts}秒"
+//    result
+//  }
 
 }

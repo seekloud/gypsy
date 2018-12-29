@@ -3,12 +3,9 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.model.GridOnClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.{AppSettings, StageContext}
@@ -18,9 +15,14 @@ import com.neo.sk.gypsy.actor.GameClient.ControllerInitial
 import java.awt.event.KeyEvent
 
 import javafx.scene.image.Image
-
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.ClientMusic
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 
 /**
   * @author zhaoyin
@@ -109,22 +111,14 @@ class GameHolder(
 
   def start()={
     println("start---!!!")
-    //TODO 这里改改
     init()
     val animationTimer = new AnimationTimer() {
       override def handle(now: Long): Unit = {
-        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
-        if(AppSettings.isBot){
-          val ld = new LayeredDraw(myId,layerScene,grid,false)
-          ld.drawLocation()
-        }else{
-          //游戏渲染
-          gameRender()
-        }
+        gameRender()
       }
     }
     timeline.setCycleCount(Animation.INDEFINITE)
-    val keyFrame = new KeyFrame(Duration.millis(WsMsgProtocol.frameRate),{ _ =>
+    val keyFrame = new KeyFrame(Duration.millis(frameRate),{ _ =>
       //游戏循环
       gameLoop()
     })
@@ -135,6 +129,7 @@ class GameHolder(
 
   def gameLoop(): Unit = {
     if(!stageCtx.getStage.isFullScreen && !exitFullScreen) {
+      //从全屏模式退出
       gameScene.resetScreen(1200,600)
       stageCtx.getStage.setWidth(1200)
       stageCtx.getStage.setHeight(600)
@@ -164,11 +159,11 @@ class GameHolder(
       justSynced = false
     }
 
-    if(AppSettings.isBot){
-      ClientBoot.addToPlatform {
-
-      }
-    }
+//    if(AppSettings.isBot){
+//      ClientBoot.addToPlatform {
+//
+//      }
+//    }
 
   }
 

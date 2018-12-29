@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.directives.BasicDirectives
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.common.Constant.UserRolesType
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
-import com.neo.sk.gypsy.shared.ptcl.ErrorRsp
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.utils.{CirceSupport, SessionSupport}
 import org.slf4j.LoggerFactory
 import io.circe.generic.auto._

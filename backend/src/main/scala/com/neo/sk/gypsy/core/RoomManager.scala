@@ -1,17 +1,15 @@
 package com.neo.sk.gypsy.core
 
-import java.util.concurrent.atomic.{AtomicLong}
-
+import java.util.concurrent.atomic.AtomicLong
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import org.slf4j.LoggerFactory
-
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.UserActor.{JoinRoom, JoinRoom4Watch}
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol.{CheckNameRsp}
-
+import com.neo.sk.gypsy.core.UserActor._
 import scala.collection.mutable
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+
 /**
   * User: sky
   * Date: 2018/7/23
@@ -57,8 +55,11 @@ object RoomManager {
             roomIdOpt match{
               case Some(roomId) =>
                 roomInUse.get(roomId) match{
-                  case Some(ls) => roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
-                  case None => roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+                  case Some(ls) =>
+                    //TODO 考虑Bot加入时人数满上限的情况 返回加入失败消息
+                    roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
+                  case None =>
+                    roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
                 }
                 getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
               case None =>
@@ -88,6 +89,14 @@ object RoomManager {
               case _  =>
             }
             Behaviors.same
+
+          case JoinRoomByCreate(playerInfo,userActor) =>
+            var roomId = roomIdGenerator.getAndIncrement()
+            while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
+            roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+            getRoomActor(ctx, roomId) ! RoomActor.JoinRoom(playerInfo, roomId, userActor)
+            Behaviors.same
+
 
           case LeftRoom(playerInfo) =>
             roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match{

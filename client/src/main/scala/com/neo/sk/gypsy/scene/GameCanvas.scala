@@ -9,14 +9,17 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS}
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 
 class GameCanvas(canvas: Canvas,
@@ -273,6 +276,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(realWindow.x-200,20,150,250)
 
+
     println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
     ctx.setFont(Font.font("Helvetica",12))
@@ -346,23 +350,27 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  //offScreenCanvas:Canvas
+
 //  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
   def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient)= {
-    val foodMap = grid.food
+    //offScreenCanvas:Canvas
+    val players = data.playerDetails
+    val foods =  grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
+    val masses = data.massDetails
+    val virus = data.virusDetails
     //计算偏移量
     val offx= realWindow.x/2 - basePoint._1
     val offy =realWindow.y/2 - basePoint._2
     val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screeScale
-    centerScale(scale,realWindow.x/2,realWindow.y/2)
 
+    /**这两部分代码不能交换，否则视图会无限缩小or放大**/
+    //01
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
-    val players = data.playerDetails
-    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
-    val masses = data.massDetails
-    val virus = data.virusDetails
+    //02
+    centerScale(scale,realWindow.x/2,realWindow.y/2)
+
     //   /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
     //为不同分值的苹果填充不同颜色
@@ -404,8 +412,8 @@ class GameCanvas(canvas: Canvas,
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
 
-        val cellx = x +xPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x +xPlus*offsetTime.toFloat /frameRate
+        val celly = y  +yPlus*offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
         val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
         //centerScale(scale,window.x/2,window.y/2)
@@ -455,8 +463,8 @@ class GameCanvas(canvas: Canvas,
       var cellDifference = false
       val newcells = cells.sortBy(_.id).map{ cell=>
 
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -516,8 +524,8 @@ class GameCanvas(canvas: Canvas,
       var yfix:Double=y
       if(speed>0){
         val(nx,ny)= normalization(tx,ty)
-        val cellx = x + nx*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
-        val celly = y + ny*speed *offsetTime.toFloat / WsMsgProtocol.frameRate
+        val cellx = x + nx*speed *offsetTime.toFloat / frameRate
+        val celly = y + ny*speed *offsetTime.toFloat / frameRate
         xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         yfix = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
       }
@@ -641,23 +649,58 @@ class GameCanvas(canvas: Canvas,
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
   }
 
-  def MTime2HMS(time:Long)={
-    var ts = (time/1000)
-    //    println(s"一共有 $ts 秒！")
-    var result = ""
-    if(ts/3600>0){
-      result += s"${ts/3600}小时"
+//  分层时候背景以及排行版等黑色蒙版
+  def drawLayeredBg() = {
+    ctx.setFill(Color.web("rgba(0,0,0,0.5)"))
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
+
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(realWindow.x-200,20,150,250)
+
+    //绘制小地图
+    ctx.setFont(Font.font("Helvetica",12))
+    ctx.setFill(Color.web(MyColors.rankList))
+    ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
+    ctx.setStroke(Color.web("rgba(0,0,0,0)"))
+
+    for (i<- 0 to 3){
+      ctx.beginPath()
+      ctx.moveTo(mapMargin + i * littleMap/3, mapMargin)
+      ctx.lineTo(mapMargin + i * littleMap/3,mapMargin+littleMap)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(mapMargin , mapMargin+ i * littleMap/3)
+      ctx.lineTo(mapMargin+littleMap ,mapMargin+ i * littleMap/3)
+      ctx.stroke()
     }
-    ts = ts % 3600
-    //    println(s"第一次 $ts 秒！")
-    if(ts/60>0){
-      result += s"${ts/60}分"
+    val margin = littleMap/3
+    ctx.setFill(Color.web(MyColors.background))
+    for(i <- 0 to 2){
+      for (j <- 1 to 3){
+        ctx.fillText((i*3+j).toString,mapMargin + abs(j-1)*margin+0.5*margin,mapMargin + i*margin+0.5*margin)
+      }
     }
-    ts = ts % 60
-    //    println(s"第二次 $ts 秒！")
-    result += s"${ts}秒"
-    result
+
   }
+
+//  def MTime2HMS(time:Long)={
+//    var ts = (time/1000)
+//    //    println(s"一共有 $ts 秒！")
+//    var result = ""
+//    if(ts/3600>0){
+//      result += s"${ts/3600}小时"
+//    }
+//    ts = ts % 3600
+//    //    println(s"第一次 $ts 秒！")
+//    if(ts/60>0){
+//      result += s"${ts/60}分"
+//    }
+//    ts = ts % 60
+//    //    println(s"第二次 $ts 秒！")
+//    result += s"${ts}秒"
+//    result
+//  }
   /*********************分层视图400*200****************************/
 
   /*******************1.视野在整个地图中的位置***********************/
@@ -677,7 +720,7 @@ class GameCanvas(canvas: Canvas,
     }
   }
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInterac(is2Byte:Boolean) = {
+  def drawNonInteract(is2Byte:Boolean) = {
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     if(is2Byte){

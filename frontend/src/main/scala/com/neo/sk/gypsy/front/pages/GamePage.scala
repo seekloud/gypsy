@@ -3,9 +3,8 @@ package com.neo.sk.gypsy.front.pages
 import com.neo.sk.gypsy.front.common.Page
 import com.neo.sk.gypsy.front.gypsyClient.GameHolder
 import com.neo.sk.gypsy.front.utils.Http
-import com.neo.sk.gypsy.shared.ptcl.UserProtocol._
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
-import com.neo.sk.gypsy.shared.ptcl.{UserProtocol, _}
+import com.neo.sk.gypsy.shared.ptcl.{_}
 import com.neo.sk.gypsy.front.utils.Shortcut
 import scala.concurrent.ExecutionContext.Implicits.global
 

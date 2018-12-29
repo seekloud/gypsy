@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.front.scalajs
 
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
-import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Game._
 
 /**
   * Created by hongruying on 2018/8/29
@@ -25,7 +25,6 @@ object FpsComponent{
       renderTimes = 0
     }
   }
-
    def renderFps(ctx:dom.CanvasRenderingContext2D,ping:Long,newWindowX:Int) = {
     addFps()
     if(isRenderFps){

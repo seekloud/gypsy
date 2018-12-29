@@ -1,30 +1,23 @@
 package com.neo.sk.gypsy.gypsyServer
 
 import java.util.concurrent.atomic.AtomicLong
-
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
-import com.neo.sk.gypsy.shared._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl
 import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
 import org.slf4j.LoggerFactory
-
 import scala.collection.mutable
-import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
 import scala.util.Random
 import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
-import com.neo.sk.gypsy.core.RoomActor.{UserInfo, dispatch, dispatchTo}
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
-
-import scala.math.{Pi, abs, acos, atan2, cos, pow, sin, sqrt}
-import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import scala.math.{Pi, abs, acos, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
+
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**
   * User: Taoz
@@ -275,7 +268,7 @@ class GameServer(override val boundary: Point) extends Grid {
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }.filterNot(_.newmass <= 0)
+        }.filterNot(_.newmass <= 0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -328,7 +321,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 0, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
@@ -580,8 +573,5 @@ class GameServer(override val boundary: Point) extends Grid {
     GameEventMap.getOrElse(frame,List.empty)
   }
 
-//  def getUserList(userList:mutable.ListBuffer[UserInfo])={
-//    userLists = userList
-//  }
 
 }
