@@ -177,7 +177,7 @@ object GameClient {
                 GameHolder.killList :+=(200,killerId,deadPlayer)
               }
             }else{
-              ClientMusic.playMusic("shutdownM")
+              ClientMusic.playMusic("shutdown")
             }
             if(killerId == GameHolder.myId){
               grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
@@ -186,8 +186,8 @@ object GameClient {
                 case 3 => ClientMusic.playMusic("3Kill")
                 case 4 => ClientMusic.playMusic("4Kill")
                 case 5 => ClientMusic.playMusic("5Kill")
-                case 6 => ClientMusic.playMusic("godlikeM")
-                case 7 => ClientMusic.playMusic("legendaryM")
+                case 6 => ClientMusic.playMusic("godlike")
+                case 7 => ClientMusic.playMusic("legendary")
                 case _ => ClientMusic.playMusic("unstop")
               }
             }
