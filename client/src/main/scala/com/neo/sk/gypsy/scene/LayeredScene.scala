@@ -16,9 +16,7 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 class LayeredScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
-//  val canvasWidth=1200
-//  val canvasHeight=600
-//  val window=Point(canvasWidth,canvasHeight)
+
 
   /**人类视图**/
   val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
@@ -28,18 +26,6 @@ class LayeredScene {
 
     val actionSerialNumGenerator = new AtomicInteger(0)
 
-//  val gameCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val gameCanvasCtx=gameCanvas.getGraphicsContext2D
-//  val middleCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val middleCanvasCtx=middleCanvas.getGraphicsContext2D
-//  val topCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val topCanvasCtx=topCanvas.getGraphicsContext2D
-//  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,humanWindow)
-//  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,humanWindow)
-//  val topView=new GameCanvas(topCanvas,topCanvasCtx,humanWindow)
-//  gameCanvas.setStyle("z-index: 1")
-//  middleCanvas.setStyle("z-index: 2")
-//  topCanvas.setStyle("z-index: 3")
   /**分层视图**/
   val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
