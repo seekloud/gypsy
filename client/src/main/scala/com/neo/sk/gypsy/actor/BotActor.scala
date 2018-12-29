@@ -258,6 +258,8 @@ object BotActor {
     overflowStrategy = OverflowStrategy.fail
   ).collect {
     case message: UserAction =>
+      // akka.util.ByteString 防止同google  protobuffer的 ByteString 冲突
+      import akka.util.ByteString
       val sendBuffer = new MiddleBufferInJvm(409600)
       BinaryMessage.Strict(ByteString(
         message.fillMiddleBuffer(sendBuffer).result()
