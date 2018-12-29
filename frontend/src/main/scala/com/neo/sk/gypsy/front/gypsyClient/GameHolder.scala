@@ -3,22 +3,21 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
-import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
-
 import scala.util.Random
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
-import com.neo.sk.gypsy.front.scalajs.{DeadPage, LoginPage, NetDelay}
-import com.neo.sk.gypsy.front.utils.{JsFunc, Shortcut}
-import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.front.scalajs.NetDelay
+import com.neo.sk.gypsy.front.utils.Shortcut
 import org.scalajs.dom
-import org.scalajs.dom.ext.{Color, KeyCode}
+import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
-
-
 import scala.math._
+
+
+import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
+import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 /**
   * User: sky
@@ -156,7 +155,7 @@ class GameHolder(replay:Boolean = false) {
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
-        drawTopView.drawEcharts()
+//        drawTopView.drawEcharts()
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
         gameClose
@@ -268,9 +267,11 @@ class GameHolder(replay:Boolean = false) {
           var xMin = 10000.0
           var yMin = 10000.0
           var yMax = 0.0
+          var kill = ""
+          var Score = ""
           p.cells.foreach { cell =>
-            val offx = cell.speedX * offsetTime.toDouble / WsMsgProtocol.frameRate
-            val offy = cell.speedY * offsetTime.toDouble / WsMsgProtocol.frameRate
+            val offx = cell.speedX * offsetTime.toDouble / frameRate
+            val offy = cell.speedY * offsetTime.toDouble / frameRate
             val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
             val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
             if (newX>xMax) xMax=newX
@@ -286,14 +287,14 @@ class GameHolder(replay:Boolean = false) {
           val basePoint = (offx, offy)
 
           val foods = grid.food
-          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid)
+          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
-          ctx.save()
-          ctx.font = "34px Helvetica"
-          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
-          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
-          ctx.restore()
-          renderFps(ctx3,NetDelay.latency,window.x)
+//          ctx.save()
+//          ctx.font = "34px Helvetica"
+//          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
+//          ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", window.x * 0.18 + 180, 10)
+//          ctx.restore()
+//          renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
           val paraBack = drawGameView.drawKill(myId,grid,isDead,killList)
           killList=paraBack._1
@@ -367,6 +368,7 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap ++= virus
 
       case data: Protocol.GridDataSync =>
+        println("获取全量数据  get ALL GRID===================")
         syncGridData = Some(data)
         justSynced = true
 
@@ -375,6 +377,7 @@ class GameHolder(replay:Boolean = false) {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case Protocol.PlayerRestart(id) =>
+        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
         Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>

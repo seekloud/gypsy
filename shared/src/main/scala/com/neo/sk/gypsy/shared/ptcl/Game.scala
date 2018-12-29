@@ -1,4 +1,4 @@
-package com.neo.sk.gypsy.shared
+package com.neo.sk.gypsy.shared.ptcl
 
 import scala.math._
 
@@ -7,34 +7,7 @@ import scala.math._
   * Date: 8/29/2016
   * Time: 9:48 PM
   */
-package object ptcl {
-
-//  /**
-//    * WsMsgServer、WsMsgFront、WsMsgSource
-//    * */
-//
-//
-//  trait WsMsgSource
-//  case class CompleteMsgServer() extends WsMsgSource
-//  case class FailMsgServer(ex: Exception) extends WsMsgSource
-//
-//  trait WsMsgFront extends WsMsgSource
-//  trait WsMsgServer extends WsMsgSource
-  trait CommonRsp {
-    val errCode: Int
-    val msg: String
-  }
-
-
-  final case class ErrorRsp(
-                             errCode: Int,
-                             msg: String
-                           ) extends CommonRsp
-
-  final case class SuccessRsp(
-                               errCode: Int = 0,
-                               msg: String = "ok"
-                             ) extends CommonRsp
+object Game {
 
 
 ////排行榜信息
@@ -194,11 +167,5 @@ package object ptcl {
                                series:List[SeriesItem]
                              )
 
-//  object UserState{
-//    val waiting = 0
-//    val play = 1
-//    val watch = 2
-//    val replay = 3
-//  }
 
 }

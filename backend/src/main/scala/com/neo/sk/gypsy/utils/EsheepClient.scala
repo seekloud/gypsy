@@ -2,12 +2,11 @@ package com.neo.sk.gypsy.utils
 
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.Boot.executor
-import com.neo.sk.gypsy.shared.ptcl.{ErrorRsp, SuccessRsp}
-import com.neo.sk.gypsy.utils.SecureUtil.PostEnvelope
 import org.slf4j.LoggerFactory
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
+
+import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
+
 
 /**
   * Created by hongruying on 2018/10/16
