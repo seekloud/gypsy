@@ -168,16 +168,18 @@ class GameServer(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
-              p._2.cells.filterNot(_.newmass == 0).foreach { otherCell =>
+              p._2.cells.foreach { otherCell =>
                 if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
                   //被吃了
                   p2pCrash = true
                   newMass = 0
+                  println(s"id:${player.id} was EATEN")
                   killer = p._1
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
                   //吃掉别人了
                   p2pCrash = true
                   newMass += otherCell.newmass
+                  println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
                 }else{
                   println(s" enter the else ")
