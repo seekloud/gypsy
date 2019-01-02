@@ -33,9 +33,6 @@ class GridOnClient(override val boundary: Point) extends Grid {
     GridDataSync(0l, Nil, Nil, Map.empty, 1.0, Nil)
   }
 
-  override def massDecrease(player: Player) = {
-    player
-  }
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false

@@ -33,17 +33,6 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
 
-  override def massDecrease(player: Player) = {
-//    player
-        val newCells=player.cells.map{cell=>
-          var newMass = cell.newmass
-          if(cell.newmass > decreaseLimit)
-            newMass = cell.newmass * decreaseRate
-          cell.copy(newmass = newMass)
-        }
-        player.copy(cells = newCells)
-  }
-
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
