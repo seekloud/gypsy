@@ -150,13 +150,13 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-//    println(s"===========BEGIN============${frameCount} ")
-//    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-//      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-//      }
-//    }
+    println(s"===========BEGIN============${frameCount} ")
+    playerMap.values.foreach{p=>
+      println(s"&&&&& size: ${p.cells.size}")
+      p.cells.foreach{c=>
+        println(s"playId:${p.id} mass:${c.newmass}  ")
+      }
+    }
 
     var p2pCrash = false
     val newPlayerMap = playerMap.values.map {
@@ -169,18 +169,50 @@ class GameServer(override val boundary: Point) extends Grid {
             var newRadius = cell.radius
             playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
               p._2.cells.foreach { otherCell =>
-                if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
-                  //被吃了
-                  p2pCrash = true
-                  newMass = 0
-                  newRadius = 0
-                  killer = p._1
-                } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
-                  //吃掉别人了
-                  p2pCrash = true
-                  newMass += otherCell.newmass
-                  newRadius = 4 + sqrt(newMass) * 6
+
+                if(cell.radius < otherCell.radius){
+                  if (cell.radius * 1.1 < otherCell.radius && !player.protect) {
+                    if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8)){
+                      //被吃了
+                      p2pCrash = true
+                      newMass = 0
+                      newRadius = 0
+                      killer = p._1
+                      println(s" ${player.id} is eaten by ${p._1}")
+                    }else{
+                      println(s" ${player.id} is almost eaten by ${p._1}")
+                    }
+                  }
+                }else{
+                  if(cell.radius > otherCell.radius * 1.1 ){
+                    if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)){
+                      //吃掉别人了
+                      p2pCrash = true
+                      newMass += otherCell.newmass
+                      newRadius = 4 + sqrt(newMass) * 6
+                      println(s" ${player.id} ADD through ${p._1} ")
+                    }
+                  }
+
                 }
+
+
+//                if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
+//                  //被吃了
+//                  p2pCrash = true
+//                  newMass = 0
+//                  newRadius = 0
+//                  killer = p._1
+//                  println(s" ${player.id} is eaten by ${p._1}")
+//                }
+
+//                if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+//                  //吃掉别人了
+//                  p2pCrash = true
+//                  newMass += otherCell.newmass
+//                  newRadius = 4 + sqrt(newMass) * 6
+//                  println(s" ${player.id} ADD through ${p._1} ")
+//                }
               }
             }
 //            println(cell.mass + "   " + newMass)
@@ -218,13 +250,13 @@ class GameServer(override val boundary: Point) extends Grid {
       case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
 
-//    println(s"===========AFTER============ ")
-//    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-//      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-//      }
-//    }
+    println(s"===========AFTER============ ")
+    playerMap.values.foreach{p=>
+      println(s"&&&&& size: ${p.cells.size}")
+      p.cells.foreach{c=>
+        println(s"playId:${p.id} mass:${c.newmass}  ")
+      }
+    }
 
     newPlayerMap.foreach {
       case Left(killId) =>
