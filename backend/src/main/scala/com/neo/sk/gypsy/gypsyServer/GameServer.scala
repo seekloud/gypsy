@@ -150,13 +150,13 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-    println(s"===========BEGIN============${frameCount} ")
-    playerMap.values.foreach{p=>
-      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
+//    println(s"===========BEGIN============${frameCount} ")
+//    playerMap.values.foreach{p=>
+//      println(s"&&&&& size: ${p.cells.size}")
+//      p.cells.foreach{c=>
+//        println(s"playId:${p.id} mass:${c.newmass}  ")
+//      }
+//    }
 
     var p2pCrash = false
     val newPlayerMap = playerMap.values.map {
@@ -174,16 +174,12 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
-                  println(s"id:${player.id} was EATEN")
                   killer = p._1
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
                   //吃掉别人了
                   p2pCrash = true
                   newMass += otherCell.newmass
-                  println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
-                }else{
-                  println(s" enter the else ")
                 }
               }
             }
@@ -222,13 +218,13 @@ class GameServer(override val boundary: Point) extends Grid {
       case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
 
-    println(s"===========AFTER============ ")
-    playerMap.values.foreach{p=>
-      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
+//    println(s"===========AFTER============ ")
+//    playerMap.values.foreach{p=>
+//      println(s"&&&&& size: ${p.cells.size}")
+//      p.cells.foreach{c=>
+//        println(s"playId:${p.id} mass:${c.newmass}  ")
+//      }
+//    }
 
     newPlayerMap.foreach {
       case Left(killId) =>
