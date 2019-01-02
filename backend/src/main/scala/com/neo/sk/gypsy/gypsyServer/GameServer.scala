@@ -222,7 +222,9 @@ class GameServer(override val boundary: Point) extends Grid {
               }
             }
 //            println(cell.mass + "   " + newMass)
-            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
+            //TODO MASS 要改
+            cell.copy(mass = newMass,newmass = newMass,radius = newRadius)
+//            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
         }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
