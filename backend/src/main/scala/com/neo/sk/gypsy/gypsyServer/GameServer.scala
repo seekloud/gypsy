@@ -173,6 +173,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   //被吃了
                   p2pCrash = true
                   newMass = 0
+                  newRadius = 0
                   println(s"id:${player.id} was EATEN")
                   killer = p._1
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
@@ -187,7 +188,7 @@ class GameServer(override val boundary: Point) extends Grid {
               }
             }
 //            println(cell.mass + "   " + newMass)
-            Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
+            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
         }.filterNot(_.newmass <= 0)
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
