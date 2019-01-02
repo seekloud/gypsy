@@ -150,8 +150,9 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-      println(s"===========BEGIN============${frameCount} ")
+    println(s"===========BEGIN============${frameCount} ")
     playerMap.values.foreach{p=>
+      println(s"&&&&& size: ${p.cells.size}")
       p.cells.foreach{c=>
         println(s"playId:${p.id} mass:${c.newmass}  ")
       }
@@ -167,7 +168,7 @@ class GameServer(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
-              p._2.cells.foreach { otherCell =>
+              p._2.cells.filterNot(_.newmass == 0).foreach { otherCell =>
                 if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
                   //被吃了
                   p2pCrash = true
@@ -178,6 +179,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass += otherCell.newmass
                   newRadius = 4 + sqrt(newMass) * 6
+                }else{
+                  println(s" enter the else ")
                 }
               }
             }
@@ -218,6 +221,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
     println(s"===========AFTER============ ")
     playerMap.values.foreach{p=>
+      println(s"&&&&& size: ${p.cells.size}")
       p.cells.foreach{c=>
         println(s"playId:${p.id} mass:${c.newmass}  ")
       }
