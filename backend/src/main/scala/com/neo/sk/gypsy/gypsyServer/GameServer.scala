@@ -182,6 +182,8 @@ class GameServer(override val boundary: Point) extends Grid {
                     }else{
                       println(s" ${player.id} is almost eaten by ${p._1}")
                     }
+                  }else{
+                    println("00000000000000000")
                   }
                 }else{
                   if(cell.radius > otherCell.radius * 1.1 ){
@@ -191,7 +193,11 @@ class GameServer(override val boundary: Point) extends Grid {
                       newMass += otherCell.newmass
                       newRadius = 4 + sqrt(newMass) * 6
                       println(s" ${player.id} ADD through ${p._1} ")
+                    }else{
+                      println("22222222222222")
                     }
+                  }else{
+                    println("1111111111111111111111")
                   }
 
                 }
@@ -217,7 +223,7 @@ class GameServer(override val boundary: Point) extends Grid {
             }
 //            println(cell.mass + "   " + newMass)
             Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
-        }.filterNot(_.newmass <= 0)
+        }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
             case Some(killerPlayer) =>
