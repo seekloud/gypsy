@@ -248,16 +248,17 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
       }
       ctx.setFill(Color.web(circleColor))
+      println(s"name: ${name}  has cell num:${cells.size} ")
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(x+layeredOffX,y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
@@ -266,9 +267,9 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
         ctx.restore()
       }
     }
