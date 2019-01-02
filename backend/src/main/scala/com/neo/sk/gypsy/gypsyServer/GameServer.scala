@@ -150,6 +150,13 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
+      println(s"===========BEGIN============${frameCount} ")
+    playerMap.values.foreach{p=>
+      p.cells.foreach{c=>
+        println(s"playId:${p.id} mass:${c.newmass}  ")
+      }
+    }
+
     var p2pCrash = false
     val newPlayerMap = playerMap.values.map {
       player =>
@@ -205,15 +212,23 @@ class GameServer(override val boundary: Point) extends Grid {
         }
     }
     playerMap = newPlayerMap.map {
-      case Right(s) => (s.id, s)
+      case Right(s) => (s.id, s.copy(kill = s.kill + 1))
       case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
-    newPlayerMap.foreach {
-      case Left(killId) =>
-        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
-        playerMap += (killId -> a.copy(kill = a.kill + 1))
-      case Right(_) =>
+
+    println(s"===========AFTER============ ")
+    playerMap.values.foreach{p=>
+      p.cells.foreach{c=>
+        println(s"playId:${p.id} mass:${c.newmass}  ")
+      }
     }
+
+//    newPlayerMap.foreach {
+//      case Left(killId) =>
+//        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+//        playerMap += (killId -> a.copy(kill = a.kill + 1))
+//      case Right(_) =>
+//    }
     if(p2pCrash){
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
