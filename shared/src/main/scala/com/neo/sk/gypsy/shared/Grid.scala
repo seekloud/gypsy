@@ -466,7 +466,7 @@ trait Grid {
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
-        }.filterNot(_.newmass <= 0)
+        }.filterNot(e=>e.newmass <= 0 && e.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -518,8 +518,8 @@ trait Grid {
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
 //            println(cell.mass + "   " + newMass)
             List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                Cell(cellId,  cell.x, cell.y, 1, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
-        }.filterNot(_.newmass <= 0)
+                Cell(cellId,  cell.x, cell.y, 0, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+        }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -538,7 +538,7 @@ trait Grid {
       var newMass = cell.newmass
       if(cell.newmass > decreaseLimit)
         newMass = cell.newmass * decreaseRate
-      cell.copy(newmass = newMass)
+      cell.copy(mass = newMass,newmass = newMass)
     }
     player.copy(cells = newCells)
   }
@@ -554,7 +554,7 @@ trait Grid {
     val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     val width = winWidth / scale / 2
     val height = winHeight / scale / 2
-    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.mass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
+    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{

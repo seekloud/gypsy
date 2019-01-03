@@ -38,6 +38,14 @@ object AppSettings {
   val httpInterface = appConfig.getString("http.interface")
   val httpPort = appConfig.getInt("http.port")
 
+  val botMap = {
+    import collection.JavaConverters._
+    val botIdList = appConfig.getStringList("bot.botId").asScala
+    val botNames = appConfig.getStringList("bot.botName").asScala
+    require(botIdList.length == botNames.length, "botIdList.length and botNames.length not equel.")
+    botIdList.zip(botNames).toMap
+  }
+
 
   val slickConfig = config.getConfig("slick.db")
   val slickUrl = slickConfig.getString("url")

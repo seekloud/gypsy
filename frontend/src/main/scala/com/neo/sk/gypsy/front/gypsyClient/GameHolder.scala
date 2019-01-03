@@ -397,6 +397,11 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
+      case Protocol.PlayerSpilt(player) =>
+        player.keys.foreach(item =>
+          grid.playerMap += (item -> player(item))
+        )
+
         //只针对某个死亡玩家发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){

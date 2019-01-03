@@ -32,18 +32,18 @@ object FpsComponent{
       ctx.fillStyle = Color.White.toString()
       val fpsString = "fps : "
       val pingString = "ping: "
-      ctx.fillText(fpsString, newWindowX * 0.6, 30)
-      ctx.fillText(pingString, newWindowX * 0.6 + ctx.measureText(fpsString).width + 50, 30)
+      ctx.fillText(fpsString, newWindowX * 0.6, 10)
+      ctx.fillText(pingString, newWindowX * 0.6 + ctx.measureText(fpsString).width + 50, 10)
       //fps
       ctx.strokeStyle = "black"
-      ctx.strokeText(lastRenderTimes.toString, newWindowX * 0.6 + ctx.measureText(fpsString).width, 30)
+      ctx.strokeText(lastRenderTimes.toString, newWindowX * 0.6 + ctx.measureText(fpsString).width, 10)
       ctx.fillStyle = if (lastRenderTime < 50) Color.Red.toString() else Color.Green.toString()
-      ctx.fillText(lastRenderTimes.toString, newWindowX * 0.6 + ctx.measureText(fpsString).width, 30)
+      ctx.fillText(lastRenderTimes.toString, newWindowX * 0.6 + ctx.measureText(fpsString).width, 10)
       //ping
       ctx.strokeStyle = "black"
-      ctx.strokeText(s"${ping}ms", newWindowX * 0.6 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 30)
+      ctx.strokeText(s"${ping}ms", newWindowX * 0.6 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 10)
       ctx.fillStyle = if (ping <= 100) Color.Green.toString() else if (ping > 100 && ping <= 200) Color.Yellow.toString() else Color.Red.toString()
-      ctx.fillText(s"${ping}ms", newWindowX * 0.6 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 30)
+      ctx.fillText(s"${ping}ms", newWindowX * 0.6 + ctx.measureText(fpsString).width + ctx.measureText(pingString).width + 60, 10)
     }
   }
 
