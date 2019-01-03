@@ -480,7 +480,7 @@ class GameCanvas(canvas: Canvas,
           ctx.fill()
         }
 
-        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+        var nameFont: Double = cell.radius * 1.5 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.setFont(Font.font("Helvetica",nameFont))
 //        var playermass=cell.mass.toInt
@@ -501,7 +501,7 @@ class GameCanvas(canvas: Canvas,
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
+          val massSpeed = if(cell.mass < cell.newmass) 1 else if(cell.mass>cell.newmass) -1 else 0
           newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
         }
         newcell
