@@ -6,14 +6,14 @@ import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.RoomActor.ReStartAck
+import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReLive}
 import com.neo.sk.gypsy.Boot.roomManager
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+
 import scala.concurrent.duration._
 import scala.language.implicitConversions
-
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
@@ -56,7 +56,9 @@ object UserActor {
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
 
-  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
+//  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
+
+  case class UserReLiveMsg(id: String,frame: Long) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
@@ -121,8 +123,11 @@ object UserActor {
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
 
-                   case ReLiveAck(id) =>
-                     UserReLiveAck(id)
+                   case ReLiveMsg(id,frame) =>
+                      UserReLiveMsg(id,frame)
+
+//                   case ReLiveAck(id) =>
+//                     UserReLiveAck(id)
 
                    case Protocol.CreateRoom =>
                      CreateRoom
@@ -290,16 +295,21 @@ object UserActor {
 
         case Mouse(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          roomActor !  Mouse(id,x,y,frame,n)
+          roomActor ! Mouse(id,x,y,frame,n)
           Behaviors.same
 
-        case UserReLiveAck(id) =>
-          println(s"UserActor got $id relive Ack ")
-          roomActor ! ReStartAck(id)
-          Behavior.same
+//        case UserReLiveAck(id) =>
+//          println(s"UserActor got $id relive Ack ")
+//          roomActor ! ReStartAck(id)
+//          Behaviors.same
+
+        case UserReLiveMsg(id,frame) =>
+          println(s"UserActor got $id relive Msg")
+          roomActor ! UserReLive(id,frame)
+          Behaviors.same
 
         case DispatchMsg(m)=>
-          log.info(s"bot:    $m")
+//          log.info(s"bot:    $m")
           frontActor ! m
           Behaviors.same
 

@@ -56,9 +56,11 @@ object RoomActor {
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
+  case class UserReLive(id:String,frame:Long) extends Command
+
   private case class ReStart(id: String) extends Command
 
-  case class ReStartAck(id: String) extends Command
+//  case class ReStartAck(id: String) extends Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
@@ -172,18 +174,25 @@ object RoomActor {
           dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           //复活时发送全量消息
           dispatchTo(subscribersMap)(id,grid.getAllGridData)
-          Behavior.same
+          Behaviors.same
 
-        case ReStartAck(id) =>
-          //确认复活接收
+
+        case UserReLive(id,frame) =>
           log.info(s"RoomActor Receive Relive Ack from $id *******************")
-          grid.ReLiveMap -= id
-          Behavior.same
+          ctx.self ! ReStart(id)
+          Behaviors.same
+
+//        case ReStartAck(id) =>
+//          //确认复活接收
+//          log.info(s"RoomActor Receive Relive Ack from $id *******************")
+//          grid.ReLiveMap -= id
+//          Behavior.same
 
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
-          //复活列表清除
-          grid.ReLiveMap -= playerInfo.playerId
+
+//          //复活列表清除
+//          grid.ReLiveMap -= playerInfo.playerId
           grid.removePlayer(playerInfo.playerId)
           dispatch(subscribersMap)(Protocol.PlayerLeft(playerInfo.playerId, playerInfo.nickname))
           try{
@@ -272,15 +281,16 @@ object RoomActor {
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
           }
 
-          if(grid.ReLiveMap.nonEmpty){
-            val curTime = System.currentTimeMillis()
-            val ToReLive = grid.ReLiveMap.filter(i=> (curTime - i._2) >AppSettings.reliveTime*1000)
-            val newReLive = ToReLive.map{live =>
-              ctx.self ! ReStart(live._1)
-              (live._1,curTime)
-            }
-            grid.ReLiveMap ++= newReLive
-          }
+//          复活列表
+//          if(grid.ReLiveMap.nonEmpty){
+//            val curTime = System.currentTimeMillis()
+//            val ToReLive = grid.ReLiveMap.filter(i=> (curTime - i._2) >AppSettings.reliveTime*1000)
+//            val newReLive = ToReLive.map{live =>
+//              ctx.self ! ReStart(live._1)
+//              (live._1,curTime)
+//            }
+//            grid.ReLiveMap ++= newReLive
+//          }
 
           //错峰发送全量数据 与 苹果数据
           val group = tickCount % AppSettings.SyncCount

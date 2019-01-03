@@ -16,9 +16,7 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 class LayeredScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
-//  val canvasWidth=1200
-//  val canvasHeight=600
-//  val window=Point(canvasWidth,canvasHeight)
+
 
   /**人类视图**/
   val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
@@ -28,18 +26,6 @@ class LayeredScene {
 
     val actionSerialNumGenerator = new AtomicInteger(0)
 
-//  val gameCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val gameCanvasCtx=gameCanvas.getGraphicsContext2D
-//  val middleCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val middleCanvasCtx=middleCanvas.getGraphicsContext2D
-//  val topCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
-//  val topCanvasCtx=topCanvas.getGraphicsContext2D
-//  val gameView=new GameCanvas(gameCanvas,gameCanvasCtx,humanWindow)
-//  val middleView=new GameCanvas(middleCanvas,middleCanvasCtx,humanWindow)
-//  val topView=new GameCanvas(topCanvas,topCanvasCtx,humanWindow)
-//  gameCanvas.setStyle("z-index: 1")
-//  middleCanvas.setStyle("z-index: 2")
-//  topCanvas.setStyle("z-index: 3")
   /**分层视图**/
   val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
@@ -62,23 +48,68 @@ class LayeredScene {
   val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
 
   /**javafx的布局**/
-  val flow = new FlowPane()
-  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
+//  val flow = new FlowPane()
+//  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
 
   //设置行列之间的间隙大小
-  flow.setVgap(5)
-  flow.setHgap(5)
-  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+//  flow.setVgap(5)
+//  flow.setHgap(5)
+//  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
+
+  //  val group = new Group()
+//  group.getChildren.addAll(humanCanvas)
+//  val border = new BorderPane()
+//  border.setCenter(group)
+//  border.setRight(flow)
+//  val scene = new Scene(border)
+
   val group = new Group()
-  group.getChildren.addAll(humanCanvas)
-//  group.getChildren.addAll(gameCanvas,middleCanvas,topCanvas)
-  val border = new BorderPane()
-  border.setCenter(group)
-  border.setRight(flow)
-  val scene = new Scene(border)
-//  group.getChildren.add(gameCanvas)
-//  group.getChildren.add(middleCanvas)
-//  group.getChildren.add(topCanvas)
+//  val scene = new Scene(group,2000,800)
+  val scene = new Scene(group)
+  humanCanvas.setLayoutX(0)
+  humanCanvas.setLayoutY(100)
+  group.getChildren.add(humanCanvas)
+
+  //设置分层的布局
+  locationCanvas
+  nonInteractCanvas
+  interactCanvas
+  allPlayerCanvas
+  playerCanvas
+  informCanvas
+
+  val canvasSpace = 5
+
+//  locationCanvas.setLayoutX(805)
+//  locationCanvas.setLayoutY(0)
+//  nonInteractCanvas.setLayoutX(1210)
+//  nonInteractCanvas.setLayoutY(0)
+//  interactCanvas.setLayoutX(805)
+//  interactCanvas.setLayoutY(205)
+//  allPlayerCanvas.setLayoutX(1210)
+//  allPlayerCanvas.setLayoutY(205)
+//  playerCanvas.setLayoutX(805)
+//  playerCanvas.setLayoutY(410)
+//  informCanvas.setLayoutX(1210)
+//  informCanvas.setLayoutY(410)
+
+
+  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  locationCanvas.setLayoutY(0)
+  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  nonInteractCanvas.setLayoutY(0)
+  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  allPlayerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  allPlayerCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  playerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+  informCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  informCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+
+
+  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
+    allPlayerCanvas,playerCanvas,informCanvas)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
     //TODO

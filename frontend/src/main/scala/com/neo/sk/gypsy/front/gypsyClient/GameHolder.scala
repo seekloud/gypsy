@@ -155,7 +155,7 @@ class GameHolder(replay:Boolean = false) {
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
-        drawTopView.drawEcharts()
+//        drawTopView.drawEcharts()
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
         gameClose
@@ -207,7 +207,9 @@ class GameHolder(replay:Boolean = false) {
         } else if (watchKeys.contains(e.keyCode)) {
           println(s"key down: [${e.keyCode}]")
           if (e.keyCode == KeyCode.Space) {
-            println(s"down+${e.keyCode.toString}")
+            println(s"down+${e.keyCode.toString} ReLive Press!")
+            val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+            webSocketClient.sendMsg(reliveMsg)
           } else {
             println(s"down+${e.keyCode.toString}")
             val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
@@ -368,6 +370,7 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap ++= virus
 
       case data: Protocol.GridDataSync =>
+        println("获取全量数据  get ALL GRID===================")
         syncGridData = Some(data)
         justSynced = true
 
@@ -376,6 +379,7 @@ class GameHolder(replay:Boolean = false) {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case Protocol.PlayerRestart(id) =>
+        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
         Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
@@ -387,7 +391,7 @@ class GameHolder(replay:Boolean = false) {
         if(myId == id){
           if(gameState == GameState.dead){
             println(s"发送复活确认")
-            webSocketClient.sendMsg(ReLiveAck(id))
+//            webSocketClient.sendMsg(ReLiveAck(id))
             gameState = GameState.play
           }
           drawTopView.cleanCtx()

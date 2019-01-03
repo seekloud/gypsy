@@ -2,6 +2,8 @@ package com.neo.sk.gypsy.shared.ptcl
 
 import scala.math._
 
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 /**
   * User: Taoz
   * Date: 8/29/2016
@@ -75,9 +77,9 @@ object Game {
                    id:Long,
                    x:Int,
                    y:Int,
-                   mass:Double = 50,  //小球体重
-                   newmass:Double = 50,
-                   radius:Double = 4 + sqrt(50)*6,
+                   mass:Double = initMass,  //小球体重
+                   newmass:Double = initMass,
+                   radius:Double = 4 + sqrt(initMass)*6,
                    speed:Double = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
