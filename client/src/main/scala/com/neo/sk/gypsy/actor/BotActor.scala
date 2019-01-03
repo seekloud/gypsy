@@ -12,7 +12,8 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketRequest}
 import akka.stream.OverflowStrategy
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import akka.util.{ByteString, ByteStringBuilder}
+import akka.util.{ByteStringBuilder}
+import com.google.protobuf.ByteString
 import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
@@ -22,7 +23,9 @@ import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
 import com.neo.sk.gypsy.actor.BotActor.LeaveRoom
 import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
+import com.neo.sk.gypsy.common.Constant.{layeredCanvasHeight, layeredCanvasWidth}
 import com.neo.sk.gypsy.holder.BotHolder
+import com.neo.sk.gypsy.holder.BotHolder.Command
 import com.neo.sk.gypsy.scene.LayeredScene
 import org.seekloud.esheepapi.pb.actions.{Move, Swing}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
@@ -62,6 +65,8 @@ object BotActor {
   case class ReturnObservation(sender:ActorRef[ObservationRsp]) extends Command
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
+
+  case class GetByte(localByte:Array[Byte],noninteractByte:Array[Byte],interactByte:Array[Byte],allplayerByte:Array[Byte],playerByte:Array[Byte],infoByte:Array[Byte],humanByte:Array[Byte]) extends Command
 
   case object Stop extends Command
 
@@ -109,7 +114,7 @@ object BotActor {
                       //暂时用普通玩家登陆流程
                       stream ! Protocol.JoinRoom(None)
                       val layeredScene = new LayeredScene
-                      botHolder = new BotHolder(stageCtx,layeredScene,stream)
+                      botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
                       botHolder.connectToGameServer()
 //                    ctx.self ! Work(stream)
                       Future.successful("BotActor webscoket connect success.")
@@ -156,17 +161,17 @@ object BotActor {
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
           val layeredScene = new LayeredScene
-          botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
           botHolder.connectToGameServer()
-          gaming(stream)
+          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
         case JoinRoom(roomId, sender) =>
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
           val layeredScene = new LayeredScene
-          botHolder = new BotHolder(stageCtx,layeredScene,stream)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
           botHolder.connectToGameServer()
-          gaming(stream)
+          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
         case Stop =>
           Behaviors.stopped
@@ -178,7 +183,7 @@ object BotActor {
     }
   }
 
-  def gaming(actor: ActorRef[Protocol.WsSendMsg]
+  def gaming(actor: ActorRef[Protocol.WsSendMsg],byteInfo: (Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte])
             )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
@@ -187,9 +192,21 @@ object BotActor {
           sender ! ActionRsp(frameIndex = botHolder.getFrameCount.toInt, msg = "ok")
           Behaviors.same
 
+
+        case GetByte(localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte) =>
+          gaming(actor,(localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte))
+
         case ReturnObservation(sender) =>
           //TODO
-          val observation = botHolder.getObservation
+          val layerInfo = LayeredObservation(
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._1.length,ByteString.copyFrom(byteInfo._1))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._2.length,ByteString.copyFrom(byteInfo._2))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._3.length,ByteString.copyFrom(byteInfo._3))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._4.length,ByteString.copyFrom(byteInfo._4))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._5.length,ByteString.copyFrom(byteInfo._5))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6)))
+          )
+          val observation = ObservationRsp(Some(layerInfo),Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._7.length,ByteString.copyFrom(byteInfo._7))))
           sender ! observation
           Behaviors.same
 
@@ -241,6 +258,8 @@ object BotActor {
     overflowStrategy = OverflowStrategy.fail
   ).collect {
     case message: UserAction =>
+      // akka.util.ByteString 防止同google  protobuffer的 ByteString 冲突
+      import akka.util.ByteString
       val sendBuffer = new MiddleBufferInJvm(409600)
       BinaryMessage.Strict(ByteString(
         message.fillMiddleBuffer(sendBuffer).result()
@@ -250,8 +269,8 @@ object BotActor {
   def getWebSocketUri(playerId: String, playerName:String, accessCode: String): String = {
     val wsProtocol = "ws"
 //    val domain = "10.1.29.250:30371"
-    val domain = "localhost:30371"
-//    val domain = AppSettings.gameDomain  //部署到服务器上用这个
+//    val domain = "localhost:30371"
+    val domain = AppSettings.gameDomain  //部署到服务器上用这个
     val playerIdEncoder = URLEncoder.encode(playerId, "UTF-8")
     val playerNameEncoder = URLEncoder.encode(playerName, "UTF-8")
     s"$wsProtocol://$domain/gypsy/api/playGameBot?playerId=$playerIdEncoder&playerName=$playerNameEncoder&accessCode=$accessCode"

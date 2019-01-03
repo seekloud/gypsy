@@ -64,7 +64,7 @@ object GameClient {
         case Protocol.Id(id) =>
           GameHolder.myId = id
           ClientMusic.playMusic("bg")
-          println(s"myID:$GameHolder.myId")
+          println(s"myID:${GameHolder.myId}")
           Behaviors.same
 
         case m:Protocol.KeyCode =>
@@ -144,7 +144,7 @@ object GameClient {
             grid.playerMap += (id -> player)
             if(GameHolder.myId == id){
               if(GameHolder.gameState == GameState.dead){
-                gameHolder.reLive(id)
+//                gameHolder.reLive(id)
                 GameHolder.gameState = GameState.play
               }
               gameHolder.cleanCtx()
@@ -177,7 +177,7 @@ object GameClient {
                 GameHolder.killList :+=(200,killerId,deadPlayer)
               }
             }else{
-              ClientMusic.playMusic("shutdownM")
+              ClientMusic.playMusic("shutdown")
             }
             if(killerId == GameHolder.myId){
               grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
@@ -186,8 +186,8 @@ object GameClient {
                 case 3 => ClientMusic.playMusic("3Kill")
                 case 4 => ClientMusic.playMusic("4Kill")
                 case 5 => ClientMusic.playMusic("5Kill")
-                case 6 => ClientMusic.playMusic("godlikeM")
-                case 7 => ClientMusic.playMusic("legendaryM")
+                case 6 => ClientMusic.playMusic("godlike")
+                case 7 => ClientMusic.playMusic("legendary")
                 case _ => ClientMusic.playMusic("unstop")
               }
             }
@@ -295,7 +295,7 @@ object GameClient {
           Behaviors.same
 
         case Protocol.FeedApples(foods) =>
-          log.info("ClientFood:  " + foods)
+//          log.info("ClientFood:  " + foods)
           ClientBoot.addToPlatform{
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
@@ -335,7 +335,7 @@ object GameClient {
             grid.playerMap += (id -> player)
             if(BotHolder.botId == id){
               if(BotHolder.gameState == GameState.dead){
-                botHolder.reLive(id)
+//                botHolder.reLive(id)
                 BotHolder.gameState = GameState.play
               }
 //              botHolder.cleanCtx()
