@@ -199,7 +199,7 @@ class GameServer(override val boundary: Point) extends Grid {
               changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
             }
             Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
-        }.filterNot(_.newmass <= 0)
+        }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
             case Some(killerPlayer) =>
@@ -207,6 +207,9 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
+////          加入待复活列表
+//          ReLiveMap += (player.id -> System.currentTimeMillis())
+
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
@@ -228,7 +231,7 @@ class GameServer(override val boundary: Point) extends Grid {
         }
     }
     playerMap = newPlayerMap.map {
-      case Right(s) => (s.id, s.copy(kill = s.kill + 1))
+      case Right(s) => (s.id, s)
       case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
 
@@ -240,12 +243,12 @@ class GameServer(override val boundary: Point) extends Grid {
       }
     }
 
-//    newPlayerMap.foreach {
-//      case Left(killId) =>
-//        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
-//        playerMap += (killId -> a.copy(kill = a.kill + 1))
-//      case Right(_) =>
-//    }
+    newPlayerMap.foreach {
+      case Left(killId) =>
+        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        playerMap += (killId -> a.copy(kill = a.kill + 1))
+      case Right(_) =>
+    }
     if(p2pCrash){
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)

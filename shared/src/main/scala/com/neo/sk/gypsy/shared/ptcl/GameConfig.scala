@@ -55,4 +55,8 @@ object GameConfig {
   val delayFrame = 1 //延时帧数，抵消网络延时
 
   val maxDelayFrame = 3
+
+//  初始质量
+  val initMass = 150
+
 }
