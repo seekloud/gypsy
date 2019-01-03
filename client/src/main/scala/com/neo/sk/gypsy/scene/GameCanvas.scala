@@ -480,14 +480,14 @@ class GameCanvas(canvas: Canvas,
           ctx.fill()
         }
 
-        var nameFont: Double = cell.radius * 1.5 / sqrt(4 + pow(name.length, 2))
+        val txt3=new Text(name)
+        val nameWidth = txt3.getLayoutBounds.getWidth
+        var nameFont: Double = cell.radius * 1.5 / sqrt(pow(nameWidth, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.setFont(Font.font("Helvetica",nameFont))
 //        var playermass=cell.mass.toInt
         var playermass=cell.newmass.toInt
-        val txt3=new Text(name)
         val txt4=new Text(playermass.toString)
-        val nameWidth = txt3.getLayoutBounds.getWidth
         val massWidth = txt4.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
         ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
