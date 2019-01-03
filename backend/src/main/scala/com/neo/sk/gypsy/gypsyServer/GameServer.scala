@@ -49,7 +49,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private var roomId = 0l
 
-  var ReLiveMap = Map.empty[String,Long]   //(id -> 时间)
+  var ReLiveMap = Map.empty[String,Long]   //(BotId -> 时间)
 
 
   def setRoomId(id:Long)={
@@ -206,8 +206,10 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-////          加入待复活列表
-//          ReLiveMap += (player.id -> System.currentTimeMillis())
+//          加入待复活列表
+          if(player.id.startsWith("bot_")){
+            ReLiveMap += (player.id -> System.currentTimeMillis())
+          }
 
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
