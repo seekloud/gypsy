@@ -34,6 +34,7 @@ class GameClient (override val boundary: Point) extends Grid {
 
 
 
+//  override def checkCellMerge(): Boolean = {false}
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
     val newPlayerMap = playerMap.values.map {
