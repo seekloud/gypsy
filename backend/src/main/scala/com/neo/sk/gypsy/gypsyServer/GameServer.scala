@@ -150,11 +150,11 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-    println(s"===========BEGIN============${frameCount} ")
+//    println(s"===========BEGIN============${frameCount} ")
     playerMap.values.foreach{p=>
-      println(s"&&&&& size: ${p.cells.size}")
+//      println(s"&&&&& size: ${p.cells.size}")
       p.cells.foreach{c=>
-        println(s"playId:${p.id} mass:${c.newmass}  ")
+//        println(s"playId:${p.id} mass:${c.newmass}  ")
       }
     }
 
@@ -235,11 +235,11 @@ class GameServer(override val boundary: Point) extends Grid {
       case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
 
-    println(s"===========AFTER============ ")
+//    println(s"===========AFTER============ ")
     playerMap.values.foreach{p=>
-      println(s"&&&&& size: ${p.cells.size}")
+//      println(s"&&&&& size: ${p.cells.size}")
       p.cells.foreach{c=>
-        println(s"playId:${p.id} mass:${c.newmass}  ")
+//        println(s"playId:${p.id} mass:${c.newmass}  ")
       }
     }
 
@@ -301,12 +301,14 @@ class GameServer(override val boundary: Point) extends Grid {
                     newMass = 0
                     newRadius = 0
                     deleteCells = cell :: deleteCells
+//                    cellX = cell2.x
+//                    cellY = cell2.y
                   }
                 }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }.filterNot(_.newmass <= 0 )
+        }.filterNot(e=> e.newmass <= 0 && e.mass <= 0)
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length
@@ -332,8 +334,10 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
+    var splitPlayer = Map.empty[String,Player]
     val newPlayerMap = playerMap.values.map {
       player =>
+        var split = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -344,8 +348,8 @@ class GameServer(override val boundary: Point) extends Grid {
             virusMap.foreach { vi =>
               val v = vi._2
               if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+                split = true
                 removeVirus += (vi._1->vi._2)
-//                virus = virus.filterNot(_ == v)
                 val cellMass = (newMass / (v.splitNumber + 1)).toInt
                 val cellRadius = 4 + sqrt(cellMass) * mass2rRate
                 newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
@@ -356,7 +360,6 @@ class GameServer(override val boundary: Point) extends Grid {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
                   val startLen = (newRadius + cellRadius) * 1.2 * 3
-                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
                   vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
@@ -373,16 +376,19 @@ class GameServer(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
+        val newplayer = player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        if(split){
+          splitPlayer += (player.id->newplayer)
+        }
+        newplayer
     }
     virusMap --= removeVirus.keySet.toList
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    if(removeVirus.nonEmpty){
-//      dispatch(subscriber,ReduceVirus(virusMap))
+    if(removeVirus.nonEmpty && splitPlayer.nonEmpty){
       val event2 = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event2)
-      dispatch(subscriber)(PlayerSpilt(playerMap))
+      //只发送改变的玩家
+      dispatch(subscriber)(PlayerSpilt(splitPlayer))
     }
   }
 
@@ -521,7 +527,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     playerMap = playerMap.map{
       item =>
-        val  newcells  = item._2.cells.map(cell => cell.copy(mass = cell.newmass))
+        val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
         playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
