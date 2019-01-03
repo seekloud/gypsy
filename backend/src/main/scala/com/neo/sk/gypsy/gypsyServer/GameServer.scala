@@ -182,7 +182,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   println(s"id:${player.id} was EATEN")
                   killer = p._1
                   cellChange = true
-                } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
+                } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
                   //吃掉别人了
                   playerChange = true
                   p2pCrash = true
@@ -190,15 +190,16 @@ class GameServer(override val boundary: Point) extends Grid {
                   println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
                   cellChange = true
-                }else{
-                  println(s" enter the else ")
                 }
               }
             }
-            if(cellChange == true){
-              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
+            val newCell = cell.copy(newmass = newMass,radius = newRadius)
+            if(cellChange){
+//              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
+              changedCells = newCell :: changedCells
             }
-            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
+//            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
+            newCell
         }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
           playerMap.get(killer) match {
