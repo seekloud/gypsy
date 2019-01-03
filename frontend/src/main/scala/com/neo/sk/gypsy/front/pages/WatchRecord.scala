@@ -13,7 +13,7 @@ import io.circe.syntax._
 import scala.xml.Elem
 /**
   * @author zhaoyin
-  * @date 2018/10/26  下午4:48
+  *  2018/10/26  下午4:48
   */
 class WatchRecord(recordId:Long,playerId:String,frame:Int,accessCode:String) extends Page{
 
@@ -24,7 +24,6 @@ class WatchRecord(recordId:Long,playerId:String,frame:Int,accessCode:String) ext
   private val offScreen = <canvas id="offScreen" style="width:3600px;height:1800px; display:none" tabindex="4"></canvas>
 
   def init()={
-//    println(s" &&&&&&&&&&&&&&&&&&&&&& INIT!!!!!!!!!!!!!!  ")
     val gameHolder = new GameHolder(true)
     gameHolder.init()
     //直接建立websocket连接
