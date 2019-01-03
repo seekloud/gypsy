@@ -1,6 +1,8 @@
 package com.neo.sk.gypsy.shared.ptcl
 
 import Game._
+
+import scala.collection.mutable
 object Protocol {
 
   /**
@@ -57,6 +59,8 @@ object Protocol {
   case class MatchRoomError() extends GameMessage
 
   case class UserMerge(id:String,player: Player)extends GameMessage
+
+  case class UserCrash(crashMap:Map[String,List[Cell]]) extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage
 

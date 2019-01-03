@@ -438,6 +438,19 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap = grid.playerMap - id + (id->player)
         }
 
+      case Protocol.UserCrash(crashMap)=>
+        crashMap.map{p=>
+          if(grid.playerMap.get(p._1).nonEmpty){
+            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+            var newCells = newPlayer.cells
+            p._2.map{cell=>
+              newCells = cell :: newCells.filterNot(_.id == cell.id)
+            }
+            newPlayer = newPlayer.copy(cells = newCells)
+            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+          }
+        }
+
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
         gameState = GameState.allopatry
