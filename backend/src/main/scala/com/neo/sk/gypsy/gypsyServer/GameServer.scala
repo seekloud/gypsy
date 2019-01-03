@@ -159,35 +159,45 @@ class GameServer(override val boundary: Point) extends Grid {
     }
 
     var p2pCrash = false
+    var changedPlayers = Map[String,List[Cell]]()
     val newPlayerMap = playerMap.values.map {
       player =>
+        var playerChange = false
         var killer = ""
         val score = player.cells.map(_.mass).sum
+        var changedCells = List[Cell]()
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
+            var cellChange = false
             var newMass = cell.newmass
             var newRadius = cell.radius
             playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
               p._2.cells.foreach { otherCell =>
                 if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
                   //被吃了
+                  playerChange = true
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
                   println(s"id:${player.id} was EATEN")
                   killer = p._1
+                  cellChange = true
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)) {
                   //吃掉别人了
+                  playerChange = true
                   p2pCrash = true
                   newMass += otherCell.newmass
                   println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
+                  cellChange = true
                 }else{
                   println(s" enter the else ")
                 }
               }
             }
-//            println(cell.mass + "   " + newMass)
+            if(cellChange == true){
+              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
+            }
             Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
         }.filterNot(_.newmass <= 0)
         if (newCells.isEmpty) {
@@ -197,9 +207,6 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-////          加入待复活列表
-//          ReLiveMap += (player.id -> System.currentTimeMillis())
-
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
@@ -207,6 +214,9 @@ class GameServer(override val boundary: Point) extends Grid {
           AddGameEvent(event)
           Left(killer)
         } else {
+          if (playerChange == true){
+            changedPlayers+=(player.id->changedCells)
+          }
           val length = newCells.length
           val newX = newCells.map(_.x).sum / length
           val newY = newCells.map(_.y).sum / length
@@ -239,6 +249,7 @@ class GameServer(override val boundary: Point) extends Grid {
     if(p2pCrash){
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
+      dispatch(subscriber)(UserCrash(changedPlayers))
     }
   }
 
