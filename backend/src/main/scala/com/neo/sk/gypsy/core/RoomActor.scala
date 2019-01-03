@@ -48,6 +48,8 @@ object RoomActor {
 
   private case object TimeOut extends Command
 
+  case class botAction(botId:String,action:Protocol.UserAction) extends Command
+
   case class JoinRoom(playerInfo: PlayerInfo,roomId:Long,userActor:ActorRef[UserActor.Command]) extends Command
 
   case class JoinRoom4Watch(playerInfo: PlayerInfo,watchId: Option[String],userActor:ActorRef[UserActor.Command]) extends Command
@@ -92,6 +94,10 @@ object RoomActor {
             if (AppSettings.gameRecordIsWork) {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
+            AppSettings.botMap.foreach{b =>
+            val id = "bot_"+roomId + b._1
+            getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
+          }
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
@@ -134,6 +140,26 @@ object RoomActor {
           grid.AddGameEvent(event)
           Behaviors.same
 
+        case JoinRoom4Bot(botInfo,botActor)=>
+          val createBallId = ballId.incrementAndGet()
+          //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
+          val group = tickCount % AppSettings.SyncCount
+          userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
+          userSyncMap.get(group) match{
+            case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
+            case None => userSyncMap.put(group,Set(botInfo.playerId))
+          }
+          grid.addPlayer(botInfo.playerId, botInfo.nickname)
+          //userActor ! JoinRoomSuccess(roomId,ctx.self)
+
+          dispatchTo(subscribersMap)(botInfo.playerId, Protocol.Id(botInfo.playerId))
+          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
+          val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
+          dispatchTo(subscribersMap)(botInfo.playerId,Protocol.FeedApples(foodlists))
+
+          val event = UserWsJoin(roomId, botInfo.playerId, botInfo.nickname, createBallId, grid.frameCount,-1)
+          grid.AddGameEvent(event)
+          Behaviors.same
 
         case JoinRoom4Watch(playerInfo,watchId,userActor) =>
           subscribersMap.put(playerInfo.playerId,userActor)
@@ -269,6 +295,25 @@ object RoomActor {
           log.debug(s"gor $msg")
           grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+          Behaviors.same
+
+
+        case botAction(id,userAction)=>
+        userAction match{
+          case KeyCode(id,keyCode,frame,n) =>
+            if (keyCode == KeyEvent.VK_SPACE) {
+              grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
+              dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
+            } else {
+              grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+              dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+            }
+
+          case MousePosition(id,x,y,frame,n) =>
+            grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+
+        }
           Behaviors.same
 
         case Sync =>

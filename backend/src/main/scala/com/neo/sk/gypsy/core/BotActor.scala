@@ -3,11 +3,15 @@ package com.neo.sk.gypsy.core
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
+import com.neo.sk.gypsy.common.AppSettings
+import com.neo.sk.gypsy.core.RoomActor.botAction
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
-import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
+import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, PressSpace}
+
 import concurrent.duration._
 import scala.util.Random
 
@@ -62,6 +66,10 @@ object BotActor {
         case ChoseAction =>
           timer.startSingleTimer(ChoseActionKey, ChoseAction, (1 + scala.util.Random.nextInt(20)) * frameRate.millis)
           //TODO 选择一个动作发给roomActor
+          val px =  new Random(System.nanoTime()).nextInt(1200)- 600
+          val py =  new Random(System.nanoTime()).nextInt(600)- 300
+          val mp = MousePosition(botId,px.toDouble,py.toDouble,grid.frameCount, -1)
+          roomActor ! botAction(botId,mp)
           Behaviors.same
 
         case BotDead =>
@@ -89,6 +97,8 @@ object BotActor {
       msg match {
         case Space =>
           //TODO 复活
+          val spaceKeyCode=32
+          roomActor ! botAction(botId, KeyCode(botId,spaceKeyCode,grid.frameCount,-1))
           Behaviors.same
 
         case KillBot =>
