@@ -163,46 +163,56 @@ class GameServer(override val boundary: Point) extends Grid {
       player =>
         var killer = ""
         val score = player.cells.map(_.mass).sum
+        println(s"=============${player.id} ")
+        var count = 0
         val newCells = player.cells.sortBy(_.radius).reverse.map {
           cell =>
+            println(s"count:  $count ")
+            count+=1
             var newMass = cell.newmass
             var newRadius = cell.radius
-            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+            playerMap.filterNot(a => a._1 == player.id).foreach { p =>
               p._2.cells.foreach { otherCell =>
 
-                if(cell.radius < otherCell.radius){
-                  if (cell.radius * 1.1 < otherCell.radius && !player.protect) {
-                    if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8)){
-                      //被吃了
-                      p2pCrash = true
-                      newMass = 0
-                      newRadius = 0
-                      killer = p._1
-                      println(s" ${player.id} is eaten by ${p._1}")
+                if(cell.newmass < otherCell.newmass){
+                  if(!player.protect){
+                    if (cell.radius * 1.1 < otherCell.radius) {
+                      if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8)){
+                        //被吃了
+                        p2pCrash = true
+                        newMass = 0
+                        newRadius = 0
+                        killer = p._1
+                        println(s" ${player.id} is eaten by ${p._1}")
+                      }else{
+//                        println(s" ${player.id} is almost eaten by ${p._1}")
+                      }
                     }else{
-                      println(s" ${player.id} is almost eaten by ${p._1}")
+//                      println("00000000000000000")
                     }
                   }else{
-                    println("00000000000000000")
+//                    println(s"444444444444444444444444 ")
                   }
+
                 }else{
-                  if(cell.radius > otherCell.radius * 1.1 ){
-                    if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)){
-                      //吃掉别人了
-                      p2pCrash = true
-                      newMass += otherCell.newmass
-                      newRadius = 4 + sqrt(newMass) * 6
-                      println(s" ${player.id} ADD through ${p._1} ")
+                  if(!p._2.protect){
+                    if(cell.radius > otherCell.radius * 1.1 ){
+                      if(sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8)){
+                        //吃掉别人了
+                        p2pCrash = true
+                        newMass += otherCell.newmass
+                        newRadius = 4 + sqrt(newMass) * 6
+                        println(s" ${player.id} ADD through ${p._1} ")
+                      }else{
+//                        println("22222222222222")
+                      }
                     }else{
-                      println("22222222222222")
+//                      println("1111111111111111111111")
                     }
                   }else{
-                    println("1111111111111111111111")
+//                    println("55555555555555")
                   }
-
                 }
-
-
 //                if (cell.radius * 1.1 < otherCell.radius && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
 //                  //被吃了
 //                  p2pCrash = true
