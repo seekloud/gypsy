@@ -450,7 +450,6 @@ class GameHolder(replay:Boolean = false) {
             grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
           }
         }
-
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
         gameState = GameState.allopatry
