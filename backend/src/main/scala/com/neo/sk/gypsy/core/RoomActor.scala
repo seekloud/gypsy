@@ -94,10 +94,14 @@ object RoomActor {
             if (AppSettings.gameRecordIsWork) {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
-            AppSettings.botMap.foreach{b =>
-            val id = "bot_"+roomId + b._1
-            getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
-          }
+
+            if(AppSettings.addBotPlayer) {
+              AppSettings.botMap.foreach{b =>
+                val id = "bot_"+roomId + b._1
+                getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
+              }
+            }
+
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
