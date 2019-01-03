@@ -155,7 +155,7 @@ object GameClient {
         case Protocol.PlayerSpilt(player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
-              grid.playerMap += (item -> player.get(item))
+              grid.playerMap += (item -> player(item))
             )
           }
           Behaviors.same
@@ -354,7 +354,7 @@ object GameClient {
         case Protocol.PlayerSpilt(player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
-              grid.playerMap += (item -> player.get(item))
+              grid.playerMap += (item -> player(item))
             )
           }
           Behaviors.same

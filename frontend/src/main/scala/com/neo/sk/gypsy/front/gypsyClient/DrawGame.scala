@@ -304,11 +304,13 @@ case class DrawGame(
   //ctx2
   def drawRankMap():Unit = {
     //绘制当前排行
-    val littleMap = this.canvas.width * 0.18  // 200
+    val rankWidth = this.canvas.width * 0.14
+
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - 200,20,160,56+GameConfig.rankShowNum*14)
+    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth,56+GameConfig.rankShowNum*14)
 
     //绘制小地图
+    val littleMap = this.canvas.width * 0.18  // 200
     ctx.font = "12px Helvetica"
     ctx.fillStyle = MyColors.rankList
     ctx.fillRect(mapMargin,mapMargin,littleMap,littleMap)
@@ -561,11 +563,10 @@ case class DrawGame(
     ctx.fillStyle = "rgba(99, 99, 99, 1)"
     ctx.textAlign = "left"
     ctx.textBaseline = "top"
-
     ctx.save()
-    ctx.font = "34px Helvetica"
+    ctx.font = s"${ 34 * this.canvas.width / Window.w }px Helvetica"
     ctx.fillText(s"KILL: ${p.kill}", this.canvas.width * 0.18 + 30 , 10)
-    ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", this.canvas.width * 0.18 + 180, 10)
+    ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", this.canvas.width * 0.18 + 180 * this.canvas.width / Window.w , 10)
     ctx.restore()
     renderFps(ctx,NetDelay.latency,this.canvas.width)
   }
@@ -576,10 +577,10 @@ case class DrawGame(
 
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
-    ctx.font = "12px Helvetica"
+    ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
     val currentRankBaseLine = 4
     ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", this.canvas.width-200, 0, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", (this.canvas.width- this.canvas.width * 0.17).toInt, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
@@ -593,16 +594,16 @@ case class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, this.canvas.width-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+32, 13, 13)
       }
       if(score.id == uid){
         ctx.save()
-        ctx.font = "12px Helvetica"
+        ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
         ctx.fillStyle = "#FFFF33"
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-193 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", this.canvas.width-193, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-193 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
 
     }
