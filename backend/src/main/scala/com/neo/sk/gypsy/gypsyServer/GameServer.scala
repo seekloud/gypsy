@@ -179,7 +179,6 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
-                  println(s"id:${player.id} was EATEN")
                   killer = p._1
                   cellChange = true
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
@@ -187,7 +186,6 @@ class GameServer(override val boundary: Point) extends Grid {
                   playerChange = true
                   p2pCrash = true
                   newMass += otherCell.newmass
-                  println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
                   cellChange = true
                 }
