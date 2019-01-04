@@ -595,16 +595,20 @@ case class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+33, 13, 13)
       }
       if(score.id == uid){
         ctx.save()
         ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
         ctx.fillStyle = "#FFFF33"
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-193 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-193 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
 
     }

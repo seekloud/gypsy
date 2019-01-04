@@ -49,7 +49,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private var roomId = 0l
 
-  var ReLiveMap = Map.empty[String,Long]   //(id -> 时间)
+  var ReLiveMap = Map.empty[String,Long]   //(BotId -> 时间)
 
 
   def setRoomId(id:Long)={
@@ -179,7 +179,6 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
-                  println(s"id:${player.id} was EATEN")
                   killer = p._1
                   cellChange = true
                 } else if (cell.radius > otherCell.radius * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
@@ -187,7 +186,6 @@ class GameServer(override val boundary: Point) extends Grid {
                   playerChange = true
                   p2pCrash = true
                   newMass += otherCell.newmass
-                  println(s"id:${p._1} was ADD")
                   newRadius = 4 + sqrt(newMass) * 6
                   cellChange = true
                 }
@@ -208,8 +206,10 @@ class GameServer(override val boundary: Point) extends Grid {
             case _ =>
               player.killerName = "unknown"
           }
-////          加入待复活列表
-//          ReLiveMap += (player.id -> System.currentTimeMillis())
+//          加入待复活列表
+          if(player.id.startsWith("bot_")){
+            ReLiveMap += (player.id -> System.currentTimeMillis())
+          }
 
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
@@ -350,19 +350,22 @@ class GameServer(override val boundary: Point) extends Grid {
               if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 split = true
                 removeVirus += (vi._1->vi._2)
-                val cellMass = (newMass / (v.splitNumber + 1)).toInt
-                val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-                newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
-                newRadius = 4 + sqrt(newMass) * mass2rRate
-                newSplitTime = System.currentTimeMillis()
-                val baseAngle = 2 * Pi / v.splitNumber
-                for (i <- 0 until v.splitNumber) {
-                  val degX = cos(baseAngle * i)
-                  val degY = sin(baseAngle * i)
-                  val startLen = (newRadius + cellRadius) * 1.2 * 3
-                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
+                val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
+                if(splitNum>0){
+                  val cellMass = (newMass / (splitNum + 1)).toInt
+                  val cellRadius = 4 + sqrt(cellMass) * mass2rRate
+                  newMass = (newMass / (splitNum + 1)).toInt + (v.mass * 0.5).toInt
+                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newSplitTime = System.currentTimeMillis()
+                  val baseAngle = 2 * Pi / splitNum
+                  for (i <- 0 until splitNum) {
+                    val degX = cos(baseAngle * i)
+                    val degY = sin(baseAngle * i)
+                    val startLen = (newRadius + cellRadius) * 1.2 * 3
+                    val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
+                    val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                    vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  }
                 }
               }
             }
