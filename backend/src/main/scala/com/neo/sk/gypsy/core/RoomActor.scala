@@ -94,10 +94,14 @@ object RoomActor {
             if (AppSettings.gameRecordIsWork) {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
-            AppSettings.botMap.foreach{b =>
-            val id = "bot_"+roomId + b._1
-            getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
-          }
+
+            if(AppSettings.addBotPlayer) {
+              AppSettings.botMap.foreach{b =>
+                val id = "bot_"+roomId + b._1
+                getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
+              }
+            }
+
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
@@ -193,7 +197,7 @@ object RoomActor {
           Behaviors.same
 
         case ReStart(id) =>
-          log.info(s"RoomActor Restart Send!++++++++++++++")
+          log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
 //          timer.cancel(ReliveTimeOutKey)
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
@@ -212,13 +216,14 @@ object RoomActor {
 //          //确认复活接收
 //          log.info(s"RoomActor Receive Relive Ack from $id *******************")
 //          grid.ReLiveMap -= id
-//          Behavior.same
+//          Behaviors.same
 
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
 
-//          //复活列表清除
-//          grid.ReLiveMap -= playerInfo.playerId
+//          //复活列表清除(Bot感觉不用)
+          grid.ReLiveMap -= playerInfo.playerId
+
           grid.removePlayer(playerInfo.playerId)
           dispatch(subscribersMap)(Protocol.PlayerLeft(playerInfo.playerId, playerInfo.nickname))
           try{
@@ -336,6 +341,14 @@ object RoomActor {
 //            }
 //            grid.ReLiveMap ++= newReLive
 //          }
+
+          if(grid.ReLiveMap.nonEmpty){
+            grid.ReLiveMap.foreach{live =>
+              ctx.self ! ReStart(live._1)
+            }
+            grid.ReLiveMap = Map.empty
+          }
+
 
           //错峰发送全量数据 与 苹果数据
           val group = tickCount % AppSettings.SyncCount

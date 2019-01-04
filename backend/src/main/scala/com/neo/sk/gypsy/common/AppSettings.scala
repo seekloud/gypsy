@@ -108,7 +108,7 @@ object AppSettings {
   val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
   val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
   val gameTest = appConfig.getBoolean("gameTest")
-
+  val addBotPlayer = appConfig.getBoolean("addBotPlayer")
 
   val essfMapKeyName = "essfMap"
 
