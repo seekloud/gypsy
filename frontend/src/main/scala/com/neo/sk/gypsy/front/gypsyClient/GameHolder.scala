@@ -202,23 +202,41 @@ class GameHolder(replay:Boolean = false) {
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
         println(s"keydown: ${e.keyCode}")
-        if (e.keyCode == KeyCode.Escape && !isDead) {
-          gameClose
-        } else if (watchKeys.contains(e.keyCode)) {
-          println(s"key down: [${e.keyCode}]")
+        if(isDead){
           if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString} ReLive Press!")
             val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
             webSocketClient.sendMsg(reliveMsg)
-          } else {
+          }
+        }else{
+          if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
             println(s"down+${e.keyCode.toString}")
             val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
             grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
             grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
             webSocketClient.sendMsg(keyCode)
           }
-          e.preventDefault()
         }
+
+        e.preventDefault()
+
+//        if (e.keyCode == KeyCode.Escape && !isDead) {
+//          gameClose
+//        } else if (watchKeys.contains(e.keyCode)) {
+//          println(s"key down: [${e.keyCode}]")
+//          if (e.keyCode == KeyCode.Space) {
+//            println(s"down+${e.keyCode.toString} ReLive Press!")
+//            val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+//            webSocketClient.sendMsg(reliveMsg)
+//          } else {
+//            println(s"down+${e.keyCode.toString}")
+//            val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+//            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+//            webSocketClient.sendMsg(keyCode)
+//          }
+//          e.preventDefault()
+//        }
       }
     }
     //在画布上监听鼠标事件

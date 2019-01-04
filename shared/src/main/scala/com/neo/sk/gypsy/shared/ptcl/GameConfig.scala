@@ -57,6 +57,6 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass = 50
+  val initMass = 10
 
 }
