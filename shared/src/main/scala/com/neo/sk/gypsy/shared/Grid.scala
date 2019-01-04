@@ -67,6 +67,7 @@ trait Grid {
   var Compress_times = 1
   var ScoreList = List.empty[Double]
   var tempScoreList = ListBuffer.empty[Int]
+  var Scale=1.0
 
   //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
 
@@ -551,9 +552,15 @@ trait Grid {
     myId = id
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
-    val width = winWidth / scale / 2
-    val height = winHeight / scale / 2
+//    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+//    val width = winWidth / scale / 2
+//    val height = winHeight / scale / 2
+    if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
+      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+    }
+    val width = winWidth / Scale / 2
+    val height = winHeight / Scale / 2
+
     val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
@@ -568,7 +575,8 @@ trait Grid {
       playerDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
-      scale,
+//      scale,
+      Scale,
       allPlayerPosition
     )
   }
