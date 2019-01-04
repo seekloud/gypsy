@@ -27,14 +27,28 @@ object utils {
 //计算缩放比例
   def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
     var scale = 1.0
-    if(width < newCWidth/2 && height < newCHeight/2){
-
-    }else{
+    if(width*height>=newCHeight*newCWidth/4){
+      scale =(newCHeight*newCWidth)/4/(width*height)
+    }else if(width >= newCWidth/2 || height >= newCHeight/2){
       scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
 //      scale = List(300.0/height,600.0/width).min
     }
     scale
   }
+
+  /*def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
+    var scale = 1.0
+    //    if(width < newCWidth/2 && height < newCHeight/2){
+    //
+    //    }else{
+    //      scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
+    //      scale = List(300.0/height,600.0/width).min
+    //    }
+    if(width*height>=newCWidth*newCHeight/2){
+      scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
+    }
+    scale
+  }*/
 
 
   //检查物体是否在屏幕内
