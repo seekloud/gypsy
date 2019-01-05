@@ -510,13 +510,12 @@ case class DrawGame(
           ctx.fill()
         }
 
-
-        var nameFont: Double = cell.radius * 2 / sqrt(pow(ctx.measureText(name).width, 2))
+        var nameFont = sqrt(cell.newmass*3)+3
+        //var nameFont: Double = cell.radius * 2 / sqrt(pow(ctx.measureText(name).width, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-//        var playermass=cell.mass.toInt
-        val playermass= cell.newmass.toInt
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width
+        val playermass= cell.newmass.toInt
         val massWidth = ctx.measureText(playermass.toString).width
         ctx.strokeStyle = "grey"
         ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
