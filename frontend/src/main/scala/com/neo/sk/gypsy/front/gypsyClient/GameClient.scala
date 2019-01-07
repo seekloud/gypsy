@@ -119,7 +119,7 @@ class GameClient (override val boundary: Point) extends Grid {
               case (p, color) =>
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
-                  newMass += foodMass
+                  newMass = (newMass+foodMass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   food -= p
                   if (newProtected)
@@ -152,7 +152,7 @@ class GameClient (override val boundary: Point) extends Grid {
             massList.foreach {
               case p: Mass =>
                 if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass += p.mass
+                  newMass = (newMass + p.mass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   massList = massList.filterNot(l => l == p)
                 }

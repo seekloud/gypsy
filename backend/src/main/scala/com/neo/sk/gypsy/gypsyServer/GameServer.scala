@@ -78,9 +78,9 @@ class GameServer(override val boundary: Point) extends Grid {
 
   implicit val scoreOrdering = new Ordering[Score] {
     override def compare(x: Score, y: Score): Int = {
-      var r = (y.score - x.score).toInt
+      var r = y.score - x.score
       if (r == 0) {
-        r = (y.k - x.k).toInt
+        r = y.k - x.k
       }
       r
     }
@@ -185,7 +185,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   //吃掉别人了
                   playerChange = true
                   p2pCrash = true
-                  newMass += otherCell.newmass
+                  newMass = (newMass + otherCell.newmass).toShort
                   newRadius = 4 + sqrt(newMass) * 6
                   cellChange = true
                 }
@@ -292,7 +292,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     //被融合的细胞不能再被其他细胞融合
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
                       playerIsMerge=true
-                      newMass += cell2.newmass
+                      newMass = (newMass + cell2.newmass).toShort
                       newRadius = 4 + sqrt(newMass) * mass2rRate
                       mergeCells = cell2 :: mergeCells
                     }
@@ -352,9 +352,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 removeVirus += (vi._1->vi._2)
                 val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
                 if(splitNum>0){
-                  val cellMass = (newMass / (splitNum + 1)).toInt
+                  val cellMass = (newMass / (splitNum + 1)).toShort
                   val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-                  newMass = (newMass / (splitNum + 1)).toInt + (v.mass * 0.5).toInt
+                  newMass = ( (newMass / (splitNum + 1)) + (v.mass * 0.5) ).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   newSplitTime = System.currentTimeMillis()
                   val baseAngle = 2 * Pi / splitNum
@@ -407,7 +407,7 @@ class GameServer(override val boundary: Point) extends Grid {
               case (p, color) =>
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
-                  newMass += foodMass
+                  newMass = (newMass+foodMass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   food -= p
                   eatenFoods+=(p->color)
@@ -442,7 +442,7 @@ class GameServer(override val boundary: Point) extends Grid {
             massList.foreach {
               case p: Mass =>
                 if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass += p.mass
+                  newMass = (newMass + p.mass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   massList = massList.filterNot(l => l == p)
                 }

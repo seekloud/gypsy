@@ -521,8 +521,9 @@ case class DrawGame(
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
-          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else -1
+          val tempMass:Short = (cell.mass + massSpeed).toShort
+          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
         }
         newcell
       }.filterNot(e=> e.mass<=0 && e.newmass <=0)

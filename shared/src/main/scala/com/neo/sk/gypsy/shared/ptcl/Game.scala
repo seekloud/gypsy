@@ -3,6 +3,7 @@ package com.neo.sk.gypsy.shared.ptcl
 import scala.math._
 
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.util.utils._
 
 /**
   * User: Taoz
@@ -13,7 +14,7 @@ object Game {
 
 
 ////排行榜信息
-  case class Score(id: String, n: String, k: Int, score: Double, t: Option[Long] = None)
+  case class Score(id: String, n: String, k: Int, score: Short)
 
   case class RankInfo(
           index:Int, //排名
@@ -77,9 +78,9 @@ object Game {
                    id:Long,
                    x:Int,
                    y:Int,
-                   mass:Double = initMass,  //小球体重
-                   newmass:Double = initMass,
-                   radius:Double = 4 + sqrt(initMass)*6,
+                   mass:Short = initMass,  //小球体重
+                   newmass:Short = initMass,
+                   radius:Double = Mass2Radius(initMass),
                    speed:Double = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
@@ -93,7 +94,7 @@ object Game {
                  targetX:Int,
                  targetY:Int,
                  color:Int,
-                 mass:Double,
+                 mass:Short,
                  radius:Double,
                  speed:Double
                  )
