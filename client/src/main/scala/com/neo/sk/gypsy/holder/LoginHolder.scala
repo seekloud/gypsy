@@ -28,8 +28,8 @@ class LoginHolder(
                  ) {
 
   private[this] val log = LoggerFactory.getLogger("LoginMessages")
-
-  loginScene.setLoginListener(new LoginScene.LoginSceneListener {
+if(AppSettings.isView){  loginScene.setLoginListener(
+  new LoginScene.LoginSceneListener {
     override def onButtonScanLogin: Unit = {
       getLoginResponseFromEs().map {
         case Right(r) =>
@@ -49,20 +49,20 @@ class LoginHolder(
     override def onButtonEmailConnect(email:String,password:String): Unit = {
       emailLogin(email,password).map{
         case Right(userInfo)=>
-            val playerId=s"user+${userInfo.userId}"
-            linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
-              case Right(res) =>
-                wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
-              case Left(error)=>
-                log.info(s"$error occured")
-            }
+          val playerId=s"user+${userInfo.userId}"
+          linkGameAgent(AppSettings.gameId,playerId,userInfo.token).map{
+            case Right(res) =>
+              wsClient ! ConnectGame(playerId,userInfo.userName,res.accessCode)
+            case Left(error)=>
+              log.info(s"$error occured")
+          }
 
         case Left(error)=>
           log.info(s"$error occured")
           ClientBoot.addToPlatform{
             loginScene.alert.setContentText(error.msg)
             loginScene.alert.showAndWait()
-            }
+          }
       }
 
     }
@@ -83,7 +83,14 @@ class LoginHolder(
     override def onButtonReturn(): Unit = {
       loginScene.drawReturn()
     }
-  })
+  }
+)
+}else
+  {
+    botActor ! BotLogin(AppSettings.botInfo._1.toLong, AppSettings.botInfo._2)
+
+  }
+
 
 
 
