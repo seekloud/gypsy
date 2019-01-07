@@ -218,7 +218,7 @@ class GameHolder(replay:Boolean = false) {
           }
         }
 
-        e.preventDefault()
+        //e.preventDefault()
 
 //        if (e.keyCode == KeyCode.Escape && !isDead) {
 //          gameClose
