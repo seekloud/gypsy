@@ -67,17 +67,8 @@ case class DrawGame(
   private[this] val  star22 = dom.document.getElementById("yuzhouxingqiu-22").asInstanceOf[HTMLElement]
   private[this] val  star23 = dom.document.getElementById("yuzhouxingqiu-23").asInstanceOf[HTMLElement]
   private[this] val  star24 = dom.document.getElementById("yuzhouxingqiu-24").asInstanceOf[HTMLElement]
-  private[this] val  kill = dom.document.getElementById("kill").asInstanceOf[HTMLElement]
   private[this] val  youkill = dom.document.getElementById("youkill").asInstanceOf[HTMLElement]
-  private[this] val  shutdown = dom.document.getElementById("shutdown").asInstanceOf[HTMLElement]
-  private[this] val  killingspree = dom.document.getElementById("killingspree").asInstanceOf[HTMLElement]
-  private[this] val  dominating = dom.document.getElementById("dominating").asInstanceOf[HTMLElement]
-  private[this] val  unstoppable = dom.document.getElementById("unstoppable").asInstanceOf[HTMLElement]
-  private[this] val  godlike = dom.document.getElementById("godlike").asInstanceOf[HTMLElement]
-  private[this] val  legendary = dom.document.getElementById("legendary").asInstanceOf[HTMLElement]
-//  private[this] val  background1 = dom.document.getElementById("background1").asInstanceOf[HTMLElement]
   private[this] val  background1 = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/b2.jpg").render
-  private[this] val  massImg = dom.document.getElementById("mass").asInstanceOf[HTMLElement]
   private val goldImg = dom.document.createElement("img").asInstanceOf[html.Image]
   goldImg.setAttribute("src", "/gypsy/static/img/gold.png")
   private val silverImg = dom.document.createElement("img").asInstanceOf[html.Image]
@@ -86,7 +77,7 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
-  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
+//  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
 
 //  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
 
@@ -343,14 +334,14 @@ case class DrawGame(
       val deadPlayer = killList.head._3
       val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
-      val killImg = if (deadPlayer.kill > 3) shutdown
+/*      val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
       else if (killerId == myId) youkill
-      else kill
+      else kill*/
       if (showTime > 0) {
         ctx.save()
         ctx.font = "25px Helvetica"
@@ -359,7 +350,7 @@ case class DrawGame(
         ctx.strokeText(killerName, this.canvas.width * 0.5 - allWidth, this.canvas.height * 0.15)
         ctx.fillStyle = "#f27c02"
         ctx.fillText(killerName, this.canvas.width * 0.5 - allWidth, this.canvas.height * 0.15)
-        ctx.drawImage(killImg, this.canvas.width * 0.5 - allWidth + ctx.measureText(s"$killerName ").width + 25,this.canvas.height * 0.15,32,32)
+        ctx.drawImage(youkill, this.canvas.width * 0.5 - allWidth + ctx.measureText(s"$killerName ").width + 25,this.canvas.height * 0.15,32,32)
         ctx.strokeStyle = "#f32705"
         ctx.strokeText(deadName, this.canvas.width * 0.5 -allWidth + ctx.measureText(s"$killerName  ").width+ 32 + 50, this.canvas.height * 0.15)
         ctx.fillStyle = "#f27c02"
@@ -606,12 +597,12 @@ case class DrawGame(
         ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
         ctx.fillStyle = "#FFFF33"
 //        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
 //        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
 
@@ -663,13 +654,13 @@ case class DrawGame(
   }
 
 
-  def drawEcharts() = {
+/*  def drawEcharts() = {
     val myChart = EchartsJs.echarts.init(echarts)
     val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line",AreaStyle()))).asJson
 //    myChart.setOption(option)
     println(option)
     ctx.drawImage(echarts,0,0,400,200)
-  }
+  }*/
 
 
   def drawWhenFinish(msg:String)={
