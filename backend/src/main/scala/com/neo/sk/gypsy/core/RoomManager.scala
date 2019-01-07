@@ -66,7 +66,8 @@ object RoomManager {
 //                val a= roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(a=>a._1)
 //                val b= roomInUse.find(p => p._2.length < AppSettings.limitCount)
 //                roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(_._1).headOption match{
-                roomInUse.find(p => p._2.length < AppSettings.limitCount) match{
+                val botNum = if(AppSettings.addBotPlayer) AppSettings.botNum else 0
+                roomInUse.find(p => p._2.length + botNum < AppSettings.limitCount) match{
                   case Some(t) =>
                     log.info(s"RoomSize :  ${t._2.length} ======== ")
                     roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match {
