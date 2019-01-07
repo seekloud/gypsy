@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.shared.util
 
 import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 import scala.math._
 object utils {
@@ -85,6 +86,11 @@ object utils {
     //    println(s"第二次 $ts 秒！")
     result += s"${ts}秒"
     result
+  }
+
+
+  def Mass2Radius(mass:Short) ={
+    4 + sqrt(mass) * mass2rRate
   }
 
 }

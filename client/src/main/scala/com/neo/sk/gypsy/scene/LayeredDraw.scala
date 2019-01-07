@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, getZoomRate, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, getZoomRate, normalization, Mass2Radius}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
@@ -563,8 +563,9 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
-          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else -1
+          val tempMass:Short = (cell.mass + massSpeed).toShort
+          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
         }
         newcell
       }

@@ -9,7 +9,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS}
+import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
@@ -397,8 +397,9 @@ class GameCanvas(canvas: Canvas,
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else if(cell.mass>cell.newmass) -1 else 0
-          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else if(cell.mass>cell.newmass) -1 else 0
+          val tempMass:Short = (cell.mass + massSpeed).toShort
+          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
         }
         newcell
       }
