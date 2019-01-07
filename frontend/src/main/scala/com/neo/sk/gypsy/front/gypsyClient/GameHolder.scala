@@ -50,7 +50,7 @@ class GameHolder(replay:Boolean = false) {
     * 状态值*/
 
   private[this] var justSynced = false
-  var isDead = false
+  var isDead = false   //判断该帧内有无玩家死亡
   var isTest = false
   private[this] var firstCome=true
 
@@ -201,8 +201,8 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-        println(s"keydown: ${e.keyCode}")
-        if(isDead){
+        println(s"keydown: ${e.keyCode} ${gameState} ")
+        if(gameState == GameState.dead){
           if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString} ReLive Press!")
             val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
@@ -420,11 +420,12 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap += (item -> player(item))
         )
 
-        //只针对某个死亡玩家发送的死亡消息
+        //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
           deadInfo = Some(msg)
           gameState = GameState.dead
+//          isDead = true
           grid.removePlayer(id)
         }
 
@@ -440,11 +441,13 @@ class GameHolder(replay:Boolean = false) {
           }else{
             killList :+=(200,killerId,deadPlayer)
           }
-        }else{
-          Shortcut.playMusic("shutdownM")
         }
+//        else{
+//          Shortcut.playMusic("shutdownM")
+//        }
         if(killerId == myId){
-          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+          Shortcut.playMusic("godlikeM")
+/*          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
             case 1 => Shortcut.playMusic("1Blood")
             case 2 => Shortcut.playMusic("2Kill")
             case 3 => Shortcut.playMusic("3Kill")
@@ -453,7 +456,7 @@ class GameHolder(replay:Boolean = false) {
             case 6 => Shortcut.playMusic("godlikeM")
             case 7 => Shortcut.playMusic("legendaryM")
             case _ => Shortcut.playMusic("unstop")
-          }
+          }*/
         }
 
       case Protocol.UserMerge(id,player)=>
@@ -552,7 +555,8 @@ class GameHolder(replay:Boolean = false) {
             killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
           }
           if(killMsg.killerId == myId){
-            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+            Shortcut.playMusic("godlikeM")
+/*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
               case 1 => Shortcut.playMusic("1Blood")
               case 2 => Shortcut.playMusic("2Kill")
               case 3 => Shortcut.playMusic("3Kill")
@@ -561,7 +565,7 @@ class GameHolder(replay:Boolean = false) {
               case 6 => Shortcut.playMusic("godlikeM")
               case 7 => Shortcut.playMusic("legendaryM")
               case _ => Shortcut.playMusic("unstop")
-            }
+            }*/
           }
         }else{
           val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
@@ -569,7 +573,7 @@ class GameHolder(replay:Boolean = false) {
           gameState = GameState.dead
           //TODO 商榷
           grid.removePlayer(myId)
-          Shortcut.playMusic("shutdownM")
+//          Shortcut.playMusic("shutdownM")
         }
 
       case e:Protocol.PongEvent =>
