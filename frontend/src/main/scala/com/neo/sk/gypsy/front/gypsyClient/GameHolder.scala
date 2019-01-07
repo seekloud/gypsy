@@ -440,11 +440,13 @@ class GameHolder(replay:Boolean = false) {
           }else{
             killList :+=(200,killerId,deadPlayer)
           }
-        }else{
-          Shortcut.playMusic("shutdownM")
         }
+//        else{
+//          Shortcut.playMusic("shutdownM")
+//        }
         if(killerId == myId){
-          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+          Shortcut.playMusic("godlikeM")
+/*          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
             case 1 => Shortcut.playMusic("1Blood")
             case 2 => Shortcut.playMusic("2Kill")
             case 3 => Shortcut.playMusic("3Kill")
@@ -453,7 +455,7 @@ class GameHolder(replay:Boolean = false) {
             case 6 => Shortcut.playMusic("godlikeM")
             case 7 => Shortcut.playMusic("legendaryM")
             case _ => Shortcut.playMusic("unstop")
-          }
+          }*/
         }
 
       case Protocol.UserMerge(id,player)=>
@@ -552,7 +554,8 @@ class GameHolder(replay:Boolean = false) {
             killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
           }
           if(killMsg.killerId == myId){
-            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+            Shortcut.playMusic("godlikeM")
+/*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
               case 1 => Shortcut.playMusic("1Blood")
               case 2 => Shortcut.playMusic("2Kill")
               case 3 => Shortcut.playMusic("3Kill")
@@ -561,7 +564,7 @@ class GameHolder(replay:Boolean = false) {
               case 6 => Shortcut.playMusic("godlikeM")
               case 7 => Shortcut.playMusic("legendaryM")
               case _ => Shortcut.playMusic("unstop")
-            }
+            }*/
           }
         }else{
           val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
@@ -569,7 +572,7 @@ class GameHolder(replay:Boolean = false) {
           gameState = GameState.dead
           //TODO 商榷
           grid.removePlayer(myId)
-          Shortcut.playMusic("shutdownM")
+//          Shortcut.playMusic("shutdownM")
         }
 
       case e:Protocol.PongEvent =>
