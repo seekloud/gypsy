@@ -50,7 +50,7 @@ class GameHolder(replay:Boolean = false) {
     * 状态值*/
 
   private[this] var justSynced = false
-  var isDead = false
+  var isDead = false   //判断该帧内有无玩家死亡
   var isTest = false
   private[this] var firstCome=true
 
@@ -201,8 +201,8 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-        println(s"keydown: ${e.keyCode}")
-        if(isDead){
+        println(s"keydown: ${e.keyCode} ${gameState} ")
+        if(gameState == GameState.dead){
           if (e.keyCode == KeyCode.Space) {
             println(s"down+${e.keyCode.toString} ReLive Press!")
             val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
@@ -420,11 +420,12 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap += (item -> player(item))
         )
 
-        //只针对某个死亡玩家发送的死亡消息
+        //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
         if(id==myId){
           deadInfo = Some(msg)
           gameState = GameState.dead
+//          isDead = true
           grid.removePlayer(id)
         }
 
