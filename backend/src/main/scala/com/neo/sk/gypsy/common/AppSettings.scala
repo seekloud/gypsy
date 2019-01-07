@@ -46,6 +46,11 @@ object AppSettings {
     botIdList.zip(botNames).toMap
   }
 
+  val botConfig = appConfig.getConfig("bot")
+  val starNames = botConfig.getStringList("starName")
+  val botNum = botConfig.getInt("botNum")
+  val addBotPlayer = botConfig.getBoolean("addBotPlayer")
+
 
   val slickConfig = config.getConfig("slick.db")
   val slickUrl = slickConfig.getString("url")
@@ -108,7 +113,7 @@ object AppSettings {
   val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
   val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
   val gameTest = appConfig.getBoolean("gameTest")
-  val addBotPlayer = appConfig.getBoolean("addBotPlayer")
+//  val addBotPlayer = appConfig.getBoolean("addBotPlayer")
 
   val essfMapKeyName = "essfMap"
 
