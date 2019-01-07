@@ -222,7 +222,7 @@ object UserManager {
                   s"SYNC:$sync" +
                   s"FOOD:$food" +
                   s"VIRUS:$virus" +
-                  s"MOUSE：$mouse" +
+                  s"MOUSE:$mouse" +
                   s"KEY:$key" +
                   s"CONNECT:$connect" +
                   s"PING:$ping" +
