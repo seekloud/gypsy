@@ -207,7 +207,7 @@ class GameCanvas(canvas: Canvas,
       //      println("kk"+killerId)
       //      println("dd"+deadPlayer)
       //      println("gg"+grid.playerMap)
-      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
+      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", " ", 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val txt1=new Text(killerName)
       val txt2=new Text(deadName)
@@ -319,7 +319,7 @@ class GameCanvas(canvas: Canvas,
       }
     }
     players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
-      val circleImg = color.toInt match{
+      val circleImg = color match{
           //经典星球
 //        case 0 => circle //(243,69,109)   b30e35
 //        case 1 => circle1 //(244, 153, 48)  a65d0a

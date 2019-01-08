@@ -39,7 +39,7 @@ trait Grid {
 
   var frameCount = 0l
   //食物列表
-  var food = Map[Point, Int]()
+  var food = Map[Point, Short]()
 //  //病毒列表
 //  var virus = List[Virus]()
   //病毒map (ID->Virus)
@@ -462,7 +462,7 @@ trait Grid {
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
 //              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
