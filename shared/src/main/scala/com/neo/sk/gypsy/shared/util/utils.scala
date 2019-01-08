@@ -90,7 +90,7 @@ object utils {
 
 
   def Mass2Radius(mass:Short) ={
-    4 + sqrt(mass) * mass2rRate
+    (4 + sqrt(mass) * mass2rRate).toShort
   }
 
 }

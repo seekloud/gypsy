@@ -179,8 +179,8 @@ object UserManager {
       }.via(UserActor.flow(playerInfo.playerId,playerInfo.nickname,recordId,userActor))
       .map{
         case t:Protocol.Wrap =>
-          val a = ByteString(t.ws)
-          val buffer = new MiddleBufferInJvm(a.asByteBuffer)
+          val b = ByteString(t.ws)
+          val buffer = new MiddleBufferInJvm(b.asByteBuffer)
           val msg = bytesDecode[Protocol.GameMessage](buffer) match{
             case Right(req) =>
               val sendBuffer = new MiddleBufferInJvm(409600)
