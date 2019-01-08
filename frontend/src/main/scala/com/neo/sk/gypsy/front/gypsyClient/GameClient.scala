@@ -67,8 +67,8 @@ class GameClient (override val boundary: Point) extends Grid {
                     //被融合的细胞不能再被其他细胞融合
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
                       playerIsMerge=true
-                      newMass += cell2.newmass
-                      newRadius = 4 + sqrt(newMass) * mass2rRate
+                      newMass = (newMass + cell2.newmass).toShort
+                      newRadius = Mass2Radius(newMass)
                       mergeCells = cell2 :: mergeCells
                     }
                   }
