@@ -277,6 +277,8 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, 1200, 600)
+      println(data.playerDetails.filterNot(_.id.startsWith("bot_")).map(_.id))
+      println("myId:   "+myId)
 //      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
@@ -320,7 +322,10 @@ class GameHolder(replay:Boolean = false) {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
-          drawGameView.drawGameWait(firstCome,myId)
+//          println("gameState:   "+gameState)
+          if(firstCome){
+            drawGameView.drawGameWait(myId)
+          }
       }
     }else{
       drawGameView.drawGameLost
@@ -530,8 +535,8 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap ++= e.virus
 
       case e: Protocol.UserJoinRoom =>
-        gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
+        gameState = GameState.play
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
