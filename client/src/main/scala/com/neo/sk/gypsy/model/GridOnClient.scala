@@ -9,6 +9,8 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.util.utils._
+
 /**
   * @author zhaoyin
   *  2018/10/30  1:53 PM
@@ -107,10 +109,10 @@ class GridOnClient(override val boundary: Point) extends Grid {
               if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 //                virus = virus.filterNot(_ == v)
                 removeVirus += (vi._1->vi._2)
-                val cellMass = (newMass / (v.splitNumber + 1)).toInt
-                val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-                newMass = (newMass / (v.splitNumber + 1)).toInt + (v.mass * 0.5).toInt
-                newRadius = 4 + sqrt(newMass) * mass2rRate
+                val cellMass = (newMass / (v.splitNumber + 1)).toShort
+                val cellRadius = Mass2Radius(cellMass)
+                newMass = ((newMass / (v.splitNumber + 1)) + (v.mass * 0.5)).toShort
+                newRadius = Mass2Radius(newMass)
                 newSplitTime = System.currentTimeMillis()
                 val baseAngle = 2 * Pi / v.splitNumber
                 for (i <- 0 until v.splitNumber) {
@@ -120,7 +122,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
@@ -155,7 +157,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
               case (p, color) =>
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
-                  newMass += foodMass
+                  newMass = (newMass+foodMass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   food -= p
                   if (newProtected)
@@ -292,7 +294,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
             hasMoved =true
             newMass += p.mass
-            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
             newTargetX = vx
             newTargetY = vy
@@ -300,8 +302,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
           }
       }
       if(newMass>virusMassLimit){
-        newMass = newMass/2
-        newRadius = 4 + sqrt(newMass) * mass2rRate
+        newMass = (newMass/2).toShort
+        newRadius = Mass2Radius(newMass)
         //      val newX2 = newX + (nx*newRadius*2).toInt
         //      val newY2 = newY + (ny*newRadius*2).toInt
         //分裂后新生成两个(多的那个由后台发)

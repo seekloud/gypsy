@@ -13,16 +13,18 @@ import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
+
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.concurrent.duration._
-
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
+import scala.util.Random
 
 
 /**
@@ -96,11 +98,20 @@ object RoomActor {
             }
 
             if(AppSettings.addBotPlayer) {
-              AppSettings.botMap.foreach{b =>
-                val id = "bot_"+roomId + b._1
-                getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
+              for(b <- 1 to AppSettings.botNum ){
+                val id = "bot_"+roomId + "_100"+ b
+                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size()),b)
+                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
               }
+
             }
+
+//            if(AppSettings.addBotPlayer) {
+//              AppSettings.botMap.foreach{b =>
+//                val id = "bot_"+roomId + b._1
+//                getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
+//              }
+//            }
 
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
@@ -416,7 +427,7 @@ object RoomActor {
         case TimeOut=>
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
-            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
+            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum,overTime-p._2.startTime))
           }
           timer.cancel(SyncTimeKey)
           roomManager ! RemoveRoom(roomId)
@@ -481,6 +492,12 @@ object RoomActor {
       val actor = ctx.spawn(BotActor.create(botId), childName)
       actor
     }.upcast[BotActor.Command]
+  }
+
+  private def getStarName(nameNum:Int,index:Int) = {
+    AppSettings.starNames.get(nameNum)+"-"+index
+
+
   }
 
 }

@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization, Mass2Radius}
 import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.util.Random
@@ -78,9 +78,9 @@ class GameServer(override val boundary: Point) extends Grid {
 
   implicit val scoreOrdering = new Ordering[Score] {
     override def compare(x: Score, y: Score): Int = {
-      var r = (y.score - x.score).toInt
+      var r = y.score - x.score
       if (r == 0) {
-        r = (y.k - x.k).toInt
+        r = y.k - x.k
       }
       r
     }
@@ -126,7 +126,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var addNewVirus = Map.empty[Long,Virus]
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
-      val mass = 50 + random.nextInt(50)
+      val mass = (50 + random.nextInt(50)).toShort
       val radius = 4 + sqrt(mass) * mass2rRate
       val vid = VirusId.getAndIncrement()
       val newVirus = Virus(vid,p.x,p.y,mass,radius)
@@ -185,7 +185,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   //吃掉别人了
                   playerChange = true
                   p2pCrash = true
-                  newMass += otherCell.newmass
+                  newMass = (newMass + otherCell.newmass).toShort
                   newRadius = 4 + sqrt(newMass) * 6
                   cellChange = true
                 }
@@ -211,10 +211,10 @@ class GameServer(override val boundary: Point) extends Grid {
             ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killer,player,score.toInt,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killer,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
           Left(killer)
         } else {
@@ -292,7 +292,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     //被融合的细胞不能再被其他细胞融合
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
                       playerIsMerge=true
-                      newMass += cell2.newmass
+                      newMass = (newMass + cell2.newmass).toShort
                       newRadius = 4 + sqrt(newMass) * mass2rRate
                       mergeCells = cell2 :: mergeCells
                     }
@@ -352,9 +352,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 removeVirus += (vi._1->vi._2)
                 val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
                 if(splitNum>0){
-                  val cellMass = (newMass / (splitNum + 1)).toInt
+                  val cellMass = (newMass / (splitNum + 1)).toShort
                   val cellRadius = 4 + sqrt(cellMass) * mass2rRate
-                  newMass = (newMass / (splitNum + 1)).toInt + (v.mass * 0.5).toInt
+                  newMass = ( (newMass / (splitNum + 1)) + (v.mass * 0.5) ).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   newSplitTime = System.currentTimeMillis()
                   val baseAngle = 2 * Pi / splitNum
@@ -407,7 +407,7 @@ class GameServer(override val boundary: Point) extends Grid {
               case (p, color) =>
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
-                  newMass += foodMass
+                  newMass = (newMass+foodMass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   food -= p
                   eatenFoods+=(p->color)
@@ -442,7 +442,7 @@ class GameServer(override val boundary: Point) extends Grid {
             massList.foreach {
               case p: Mass =>
                 if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass += p.mass
+                  newMass = (newMass + p.mass).toShort
                   newRadius = 4 + sqrt(newMass) * mass2rRate
                   massList = massList.filterNot(l => l == p)
                 }
@@ -483,8 +483,8 @@ class GameServer(override val boundary: Point) extends Grid {
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
             hasMoved =true
-            newMass += p.mass
-            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newMass = (newMass + p.mass).toShort
+            newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
             newTargetX = vx
             newTargetY = vy
@@ -492,8 +492,8 @@ class GameServer(override val boundary: Point) extends Grid {
           }
       }
       if(newMass > virusMassLimit){
-        newMass = newMass/2
-        newRadius = 4 + sqrt(newMass) * mass2rRate
+        newMass = (newMass/2).toShort
+        newRadius = Mass2Radius(newMass)
         val newX2 = newX + (nx*newRadius*2).toInt
         val newY2 = newY + (ny*newRadius*2).toInt
         //分裂后新生成两个

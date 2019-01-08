@@ -1,6 +1,7 @@
 package com.neo.sk.gypsy.shared.util
 
 import com.neo.sk.gypsy.shared.ptcl.Game._
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 import scala.math._
 object utils {
@@ -25,16 +26,33 @@ object utils {
     else(0,0)
   }
 //计算缩放比例
+
   def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
     var scale = 1.0
-    if(width < newCWidth/2 && height < newCHeight/2){
-
-    }else{
-      scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
-//      scale = List(300.0/height,600.0/width).min
+    if (width * height >= newCHeight * newCWidth / 4) {
+      scale = (newCHeight * newCWidth) / 4 / (width * height)
+    } else if (width >= newCWidth / 2 || height >= newCHeight / 2) {
+      scale = if (newCWidth / 2 / width > newCHeight / 2 / height) {
+        newCHeight / 2 / height
+      } else {
+        newCWidth / 2 / width
+      }
+      //      scale = List(300.0/height,600.0/width).min
     }
     scale
   }
+
+
+//  def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
+//    var scale = 1.0
+//    if(width < newCWidth/2 && height < newCHeight/2){
+//
+//    }else{
+//      scale = if(newCWidth/2/width > newCHeight/2/height){newCHeight/2/height}else{newCWidth/2/width}
+////      scale = List(300.0/height,600.0/width).min
+//    }
+//    scale
+//  }
 
 
   //检查物体是否在屏幕内
@@ -68,6 +86,11 @@ object utils {
     //    println(s"第二次 $ts 秒！")
     result += s"${ts}秒"
     result
+  }
+
+
+  def Mass2Radius(mass:Short) ={
+    4 + sqrt(mass) * mass2rRate
   }
 
 }
