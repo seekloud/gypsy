@@ -68,7 +68,8 @@ case class WebSocketClient(
                 val middleDataInJs = new MiddleBufferInJs(buf)
 //                val data = bytesDecode[Protocol.GameMessage](middleDataInJs).right.get
                 val data = bytesDecode[Protocol.GameMessage](middleDataInJs) match {
-                  case Right(msg) => println(s"Right:${msg}");msg
+//                  case Right(msg) => println(s"Right:${msg}");msg
+                  case Right(msg) => msg
 //                  case Left(e) => println(s"Error####:${e.message}")
                 }
 //                val data = bytesDecode[Protocol.GameMessage](middleDataInJs).right.get

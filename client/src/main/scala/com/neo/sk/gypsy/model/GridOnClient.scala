@@ -158,7 +158,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
                   newMass = (newMass+foodMass).toShort
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newRadius = Mass2Radius(newMass)
                   food -= p
                   if (newProtected)
                   //吃食物后取消保护
@@ -191,8 +191,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
             massList.foreach {
               case p: Mass =>
                 if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass += p.mass
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newMass = (newMass + p.mass).toShort
+                  newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
                 }
             }
