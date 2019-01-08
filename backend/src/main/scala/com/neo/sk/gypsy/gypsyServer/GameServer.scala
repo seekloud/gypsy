@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization, Mass2Radius}
 import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.util.Random
@@ -126,7 +126,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var addNewVirus = Map.empty[Long,Virus]
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
-      val mass = 50 + random.nextInt(50)
+      val mass = (50 + random.nextInt(50)).toShort
       val radius = 4 + sqrt(mass) * mass2rRate
       val vid = VirusId.getAndIncrement()
       val newVirus = Virus(vid,p.x,p.y,mass,radius)
@@ -211,10 +211,10 @@ class GameServer(override val boundary: Point) extends Grid {
             ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score.toInt,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killer,player))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killer,player,score.toInt,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killer,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
           Left(killer)
         } else {
@@ -483,8 +483,8 @@ class GameServer(override val boundary: Point) extends Grid {
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
             hasMoved =true
-            newMass += p.mass
-            newRadius = 4 + sqrt(newMass) * mass2rRate
+            newMass = (newMass + p.mass).toShort
+            newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
             newTargetX = vx
             newTargetY = vy
@@ -492,8 +492,8 @@ class GameServer(override val boundary: Point) extends Grid {
           }
       }
       if(newMass > virusMassLimit){
-        newMass = newMass/2
-        newRadius = 4 + sqrt(newMass) * mass2rRate
+        newMass = (newMass/2).toShort
+        newRadius = Mass2Radius(newMass)
         val newX2 = newX + (nx*newRadius*2).toInt
         val newY2 = newY + (ny*newRadius*2).toInt
         //分裂后新生成两个

@@ -102,7 +102,7 @@ object Game {
                   vid:Long,
                   x:Int,
                   y:Int,
-                  mass:Double,  //质量
+                  mass:Short,  //质量
                   radius:Double,
                   splitNumber:Int = 13,
                   targetX:Double = 0.0,
