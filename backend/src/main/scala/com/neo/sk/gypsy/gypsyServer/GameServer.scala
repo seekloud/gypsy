@@ -72,6 +72,7 @@ class GameServer(override val boundary: Point) extends Grid {
       println(s" ${id} 加入事件！！  ${frameCount+2}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
       dispatch(subscriber)(PlayerJoin(id,player))
+      dispatchTo(subscriber)(id,getAllGridData)
     }
     waitingJoin = Map.empty[String, String]
   }

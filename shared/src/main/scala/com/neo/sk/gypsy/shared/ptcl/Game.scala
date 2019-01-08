@@ -140,10 +140,10 @@ object Game {
 
 
   object GameState{
-    val waiting:Int = 0
-    val play:Int = 1
-    val dead:Int = 2
-    val allopatry:Int = 3
+//    val waiting:Int = 0
+    val play:Int = 0
+    val dead:Int = 1
+    val allopatry:Int = 2
   }
 
   case class XAxis(
