@@ -2,6 +2,7 @@ package com.neo.sk.gypsy.core
 
 
 import java.util.concurrent.atomic.AtomicLong
+
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.stream.scaladsl.Flow
@@ -13,6 +14,7 @@ import akka.stream.{ActorAttributes, Supervision}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol.userInRecordRsp
+import com.neo.sk.gypsy.shared.ptcl.Protocol._
 
 /**
   * @author zhaoyin
@@ -55,6 +57,8 @@ object UserManager {
     Behaviors.receive[Command]{(ctx, msg) =>
       msg match {
         case GetWebSocketFlow(playerInfoOpt,roomIdOpt,replyTo) =>
+          log.info(s" ROOM: ${roomIdOpt} ============= ")
+
           val playerInfo = playerInfoOpt.get
           getUserActorOpt(ctx, playerInfo.playerId) match {
             case Some(userActor) =>
@@ -122,6 +126,19 @@ object UserManager {
     }
   }
 
+  var sync = 0.0
+  var food = 0.0
+  var connect = 0.0
+  var rank = 0.0
+  var merge = 0.0
+  var crash = 0.0
+  var virus = 0.0
+  var ping = 0.0
+  var mouse = 0.0
+  var key = 0.0
+  var other = 0.0
+  var timer = System.currentTimeMillis()
+  val period = 30 * 1000
   //三种共用
   private def getWebSocketFlow(playerInfo: ApiProtocol.PlayerInfo,recordId:Long,userActor: ActorRef[UserActor.Command]):Flow[Message,Message,Any] = {
     import scala.language.implicitConversions
@@ -162,6 +179,72 @@ object UserManager {
       }.via(UserActor.flow(playerInfo.playerId,playerInfo.nickname,recordId,userActor))
       .map{
         case t:Protocol.Wrap =>
+          val a = ByteString(t.ws)
+          val buffer = new MiddleBufferInJvm(a.asByteBuffer)
+          val msg = bytesDecode[Protocol.GameMessage](buffer) match{
+            case Right(req) =>
+              val sendBuffer = new MiddleBufferInJvm(409600)
+              val a = req.fillMiddleBuffer(sendBuffer).result()
+              req match{
+                case m:GridDataSync=>
+                  sync = sync + a.length
+                case m:FeedApples=>
+                  food = food + a.length
+                case m:Id =>
+                  connect = connect + a.length
+                case m:PlayerJoin =>
+                  connect = connect + a.length
+                case m:Ranks =>
+                  rank = rank + a.length
+                case m:MyRank =>
+                  rank = rank + a.length
+                case m:UserMerge=>
+                  merge = merge + a.length
+                case m:UserCrash=>
+                  crash = crash + a.length
+                case m:Pong =>
+                  ping = ping + a.length
+                case m:MousePosition =>
+                  mouse = mouse + a.length
+                case m:KeyCode=>
+                  key = key + a.length
+
+                case x =>
+                  other = other + a.length
+
+              }
+              if(System.currentTimeMillis() - timer > period){
+                timer = System.currentTimeMillis()
+                val total =  sync + food + connect + rank + merge +crash +virus + ping + mouse + key + other
+
+                log.info(s"STATISTICS:" +
+                  s"TOTAL:$total" +
+                  s"SYNC:$sync" +
+                  s"FOOD:$food" +
+                  s"VIRUS:$virus" +
+                  s"MOUSE：$mouse" +
+                  s"KEY:$key" +
+                  s"CONNECT:$connect" +
+                  s"PING:$ping" +
+                  s"RANK:$rank" +
+                  s"MERGE:$merge" +
+                  s"CRASH:$crash" +
+                  s"OTHER:$other")
+                sync = 0.0
+                food = 0.0
+                connect = 0.0
+                rank = 0.0
+                merge = 0.0
+                crash = 0.0
+                virus = 0.0
+                ping = 0.0
+                mouse = 0.0
+                key = 0.0
+                other = 0.0
+              }
+
+            case Left(e) =>
+          }
           BinaryMessage.Strict(ByteString(t.ws))
         case t: Protocol.ReplayFrameData =>
           BinaryMessage.Strict(ByteString(t.ws))

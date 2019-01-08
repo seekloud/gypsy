@@ -9,7 +9,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS}
+import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
@@ -57,14 +57,7 @@ class GameCanvas(canvas: Canvas,
   val  star22 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-22.png"))
   val  star23 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-23.png"))
   val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
-  val  kill = new Image(ClientBoot.getClass.getResourceAsStream("/img/kill.png"))
   val  youkill = new Image(ClientBoot.getClass.getResourceAsStream("/img/youkill.png"))
-  val  shutdown = new Image(ClientBoot.getClass.getResourceAsStream("/img/shutdown.png"))
-  val  killingspree = new Image(ClientBoot.getClass.getResourceAsStream("/img/killingspree.png"))
-  val  dominating = new Image(ClientBoot.getClass.getResourceAsStream("/img/dominating.png"))
-  val  unstoppable = new Image(ClientBoot.getClass.getResourceAsStream("/img/unstoppable.png"))
-  val  godlike = new Image(ClientBoot.getClass.getResourceAsStream("/img/godlike.png"))
-  val  legendary = new Image(ClientBoot.getClass.getResourceAsStream("/img/legendary.png"))
   val  background1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/b2small.jpg"))
 //  val  massImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/mass.png"))
   val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
@@ -116,103 +109,6 @@ class GameCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
 
   }
-/*  //绘制转圈动画
-  var p =  ArrayBuffer()
-  var particle = ArrayBuffer[Particle]()
-  var angle = Math.PI/4
-  var width = realWindow.x
-  var height = realWindow.y
-  def getRandomInt(min:Double, max:Double):Double= {
-    return min + Math.floor(Math.random() * (max - min + 1))
-  }*/
-/*  class Particle(x1:Double,y1:Double){
-    var x= x1
-    var y = y1
-    var r = getRandomInt(10, 16)
-    var vx:Double = 0
-    var vy:Double= 0
-    var ax:Double = 0
-    var ay:Double = 0
-    var al:Double = 1
-
-    def update()={
-      this.ax = getRandomInt(-0.001, 0.001)
-      this.ay = getRandomInt(0.01, 0.02)
-      this.vx =this.vx+this.ax
-      this.vy =this.vy+this.ay
-      this.x+=this.vx
-      this.y+=this.vy
-
-      if (this.r >= 0.01) {
-        this.r -= 0.2
-        this.al =this.al-0.001
-      } else {
-        this.r = 0
-        this.al = 0
-      }
-    }
-
-    def draw(): Unit ={
-      ctx.setFill(Color.web("rgba(0,0,255," + this.al + ")"))
-      ctx.beginPath()
-      ctx.arc(this.x, this.y, this.r,this.r, 0, 2 * Math.PI)
-      ctx.fill()
-      //      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      //      ctx.font = "60px Helvetica"
-      //      ctx.fillText(""+time+"s", 710, 350)
-      //      clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
-    }
-  }*/
-
-/*  def run(a:Double) {
-    val r = 140
-    val x = r * Math.sin(a) + width / 2
-    val y = r * Math.cos(a) + ((height / 2)-80)
-    val p = new Particle(x, y)
-    particle.append(p)
-  }*/
-
-/*  def drawGameOn2()={
-    ctx.clearRect(0, 0, width, height)
-    run(angle)
-    for ( j <- 1 until particle.length) {
-      val p = particle(j)
-      p.update()
-      p.draw()
-    }
-    if (angle <= 2 * Math.PI) {
-      angle += 0.04
-    } else {
-      angle = 0
-    }
-  }*/
-
-
-//  var timeNum = 0
-//  var clock1=0
-
-  //绘制等待时间
- /* def drawClock():Unit={
-    clock1 = dom.window.setInterval(()=>clock(timeNum),1000)
-  }
-
-  def clock(time:Int):Unit={
-    ctx.fillStyle = Color.White.toString()
-    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
-    ctx.fillStyle = "rgba(99, 19, 99, 1)"
-    ctx.font = "36px Helvetica"
-    ctx.fillText("正在等待玩家进入", 640, 100)
-    ctx.fillStyle = "rgba(99, 99, 99, 1)"
-    ctx.font = "70px Helvetica"
-    ctx.fillText(""+time+"s", 718, 350)
-    timeNum = timeNum+1
-    println(timeNum)
-  }
-  //清除计数
-  def cleanClock():Unit={
-    dom.window.clearInterval(clock1)
-  }*/
-
 
   //欢迎文字（无）
   def drawGameWelcome(): Unit = {
@@ -318,14 +214,14 @@ class GameCanvas(canvas: Canvas,
       val killNameLength=txt1.getLayoutBounds.getWidth
       val deadNameLength=txt2.getLayoutBounds.getWidth
       val allWidth = (killNameLength + deadNameLength + 32 + 25 + 50)/2
-      val killImg = if (deadPlayer.kill > 3) shutdown
+     /* val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
       else if (killerId == myId) youkill
-      else kill
+      else kill*/
       if (showTime > 0) {
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))
@@ -333,7 +229,7 @@ class GameCanvas(canvas: Canvas,
         ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
         ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
-        ctx.drawImage(killImg,realWindow.x * 0.5 -allWidth + killNameLength + 25,realWindow.y*0.15,32,32)
+        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 25,realWindow.y*0.15,32,32)
         ctx.setStroke(Color.web("#f32705"))
         ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
@@ -501,8 +397,9 @@ class GameCanvas(canvas: Canvas,
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else if(cell.mass>cell.newmass) -1 else 0
-          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else if(cell.mass>cell.newmass) -1 else 0
+          val tempMass:Short = (cell.mass + massSpeed).toShort
+          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
         }
         newcell
       }

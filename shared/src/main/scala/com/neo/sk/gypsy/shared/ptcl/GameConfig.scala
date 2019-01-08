@@ -23,14 +23,14 @@ object GameConfig {
   //分裂初始速度
   val splitBaseSpeed = 40
   //食物质量
-  val foodMass = 1
+  val foodMass:Short = 1
   //食物池
   var foodPool = 300
   //病毒数量
   var virusNum:Int = 8
   //病毒质量上限
   var virusMassLimit:Int = 200
-  val shotMass = 10
+  val shotMass:Short = 10
   val shotSpeed = 100
   //最大分裂个数
   val maxCellNum = 16
@@ -57,6 +57,6 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass = 50
+  val initMass:Short = 10
 
 }
