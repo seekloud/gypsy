@@ -502,7 +502,7 @@ trait Grid {
             var splitX = 0
             var splitY = 0
             var splitMass:Short = 0
-            var splitRadius = 0.0
+            var splitRadius:Short = 0
             var splitSpeed = 0.0
             var cellId = 0L
             if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {

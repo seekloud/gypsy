@@ -127,7 +127,7 @@ class GameServer(override val boundary: Point) extends Grid {
     while(virusNeeded > 0){
       val p =randomEmptyPoint()
       val mass = (50 + random.nextInt(50)).toShort
-      val radius = 4 + sqrt(mass) * mass2rRate
+      val radius = Mass2Radius(mass)
       val vid = VirusId.getAndIncrement()
       val newVirus = Virus(vid,p.x,p.y,mass,radius)
       addNewVirus += (vid->newVirus)
@@ -186,7 +186,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   playerChange = true
                   p2pCrash = true
                   newMass = (newMass + otherCell.newmass).toShort
-                  newRadius = 4 + sqrt(newMass) * 6
+                  newRadius = Mass2Radius(newMass)
                   cellChange = true
                 }
               }
@@ -293,7 +293,7 @@ class GameServer(override val boundary: Point) extends Grid {
                     if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
                       playerIsMerge=true
                       newMass = (newMass + cell2.newmass).toShort
-                      newRadius = 4 + sqrt(newMass) * mass2rRate
+                      newRadius = Mass2Radius(newMass)
                       mergeCells = cell2 :: mergeCells
                     }
                   }
@@ -353,9 +353,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
                 if(splitNum>0){
                   val cellMass = (newMass / (splitNum + 1)).toShort
-                  val cellRadius = 4 + sqrt(cellMass) * mass2rRate
+                  val cellRadius = Mass2Radius(cellMass)
                   newMass = ( (newMass / (splitNum + 1)) + (v.mass * 0.5) ).toShort
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newRadius = Mass2Radius(newMass)
                   newSplitTime = System.currentTimeMillis()
                   val baseAngle = 2 * Pi / splitNum
                   for (i <- 0 until splitNum) {
@@ -408,7 +408,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 if (checkCollision(Point(cell.x, cell.y), p, cell.radius, 4, -1)) {
                   //食物被吃掉
                   newMass = (newMass+foodMass).toShort
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newRadius = Mass2Radius(newMass)
                   food -= p
                   eatenFoods+=(p->color)
                   if (newProtected)
@@ -443,7 +443,7 @@ class GameServer(override val boundary: Point) extends Grid {
               case p: Mass =>
                 if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
                   newMass = (newMass + p.mass).toShort
-                  newRadius = 4 + sqrt(newMass) * mass2rRate
+                  newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
                 }
             }
