@@ -131,7 +131,7 @@ object Protocol {
   case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
   case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
-  case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
+  case class GenerateApples(apples:Map[Point, Short], override val frame:Long) extends GameEvent
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
   case class KillMsg(killerId:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Long) extends GameEvent
   case class CurrentRanks(currentRank: List[RankInfo]) extends GameEvent
@@ -170,7 +170,5 @@ object Protocol {
                                   //     boundary: ,
                                   //     window:
                                 )
-
-
 
 }
