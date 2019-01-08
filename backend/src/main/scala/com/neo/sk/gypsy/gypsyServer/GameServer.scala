@@ -35,8 +35,8 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   private[this] var waitingJoin = Map.empty[String, String]
-  private[this] var newFoods = Map[Point, Int]() // p -> color
-  private[this] var eatenFoods = Map[Point, Int]()
+  private[this] var newFoods = Map[Point, Short]() // p -> color
+  private[this] var eatenFoods = Map[Point, Short]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
   var currentRank = List.empty[Score]
@@ -65,7 +65,7 @@ class GameServer(override val boundary: Point) extends Grid {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(24)
-      val player = Player(id,name,color.toString,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
+      val player = Player(id,name,color.toShort,center.x,center.y,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x,center.y)),System.currentTimeMillis())
       playerMap += id -> player
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
@@ -112,7 +112,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var appleNeeded = appleCount
     while (appleNeeded > 0) {
       val p = randomEmptyPoint()
-      val color = random.nextInt(7)
+      val color = random.nextInt(7).toShort
       newFoods += (p->color)
       food += (p->color)
       appleNeeded -= 1
@@ -233,7 +233,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
     playerMap = newPlayerMap.map {
       case Right(s) => (s.id, s)
-      case Left(_) => ("", Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+      case Left(_) => ("", Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
 
 //    println(s"===========AFTER============ ")
@@ -246,7 +246,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
     newPlayerMap.foreach {
       case Left(killId) =>
-        val a = playerMap.getOrElse(killId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        val a = playerMap.getOrElse(killId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         playerMap += (killId -> a.copy(kill = a.kill + 1))
       case Right(_) =>
     }
@@ -540,8 +540,8 @@ class GameServer(override val boundary: Point) extends Grid {
       case (p,mass) =>
         eatenFoodDetails ::= Food(mass, p.x, p.y)
     }
-    newFoods=Map[Point, Int]().empty
-    eatenFoods = Map[Point, Int]().empty
+    newFoods=Map[Point, Short]().empty
+    eatenFoods = Map[Point, Short]().empty
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
