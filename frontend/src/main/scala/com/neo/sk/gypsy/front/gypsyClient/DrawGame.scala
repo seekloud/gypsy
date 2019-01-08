@@ -10,7 +10,7 @@ import org.scalajs.dom.html.Canvas
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-import com.neo.sk.gypsy.front.utils.EchartsJs
+//import com.neo.sk.gypsy.front.utils.EchartsJs
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
