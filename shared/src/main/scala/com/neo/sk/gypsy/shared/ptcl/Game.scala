@@ -80,7 +80,7 @@ object Game {
                    y:Int,
                    mass:Short = initMass,  //小球体重
                    newmass:Short = initMass,
-                   radius:Double = Mass2Radius(initMass),
+                   radius:Short = Mass2Radius(initMass),
                    speed:Double = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
@@ -95,7 +95,7 @@ object Game {
                  targetY:Int,
                  color:Short,
                  mass:Short,
-                 radius:Double,
+                 radius:Short,
                  speed:Double
                  )
   case class Virus(
@@ -103,16 +103,13 @@ object Game {
                   x:Int,
                   y:Int,
                   mass:Short,  //质量
-                  radius:Double,
+                  radius:Short,
                   splitNumber:Int = 13,
                   targetX:Double = 0.0,
                   targetY:Double = 0.0,
                   speed:Double = 0
                   )
-  case class Int2(
-                 i:Int,
-                 j:Int
-                 )
+
   object Boundary{
     val w = 4800
     val h = 2400
