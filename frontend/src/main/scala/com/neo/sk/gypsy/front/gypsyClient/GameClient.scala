@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization, Mass2Radius}
 import scala.collection.mutable
 import scala.math._
 
@@ -191,8 +191,8 @@ class GameClient (override val boundary: Point) extends Grid {
           val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
           val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
           hasMoved =true
-          newMass += p.mass
-          newRadius = 4 + sqrt(newMass) * mass2rRate
+          newMass = (newMass + p.mass).toShort
+          newRadius = Mass2Radius(newMass)
           newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
           newTargetX = vx
           newTargetY = vy
@@ -200,8 +200,8 @@ class GameClient (override val boundary: Point) extends Grid {
         }
     }
     if(newMass>virusMassLimit){
-      newMass = newMass/2
-      newRadius = 4 + sqrt(newMass) * mass2rRate
+      newMass = (newMass/2).toShort
+      newRadius = Mass2Radius(newMass)
       //分裂后新生成两个(多的那个由后台发)
       val v1 = vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
       List(v1)

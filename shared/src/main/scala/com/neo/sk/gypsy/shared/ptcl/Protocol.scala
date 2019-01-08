@@ -48,13 +48,13 @@ object Protocol {
 
   case class PlayerRestart(id:String) extends GameMessage
 
-  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
+  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Short,lifeTime:Long) extends GameMessage
 
   case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
 
   case class KillMessage(killerId:String,deadPlayer:Player) extends GameMessage
 
-  case class GameOverMessage(id:String,killNum:Int,score:Int,lifeTime:Long) extends GameMessage
+  case class GameOverMessage(id:String,killNum:Int,score:Short,lifeTime:Long) extends GameMessage
 
   case class MatchRoomError() extends GameMessage
 
@@ -133,7 +133,7 @@ object Protocol {
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
   case class GenerateApples(apples:Map[Point, Int], override val frame:Long) extends GameEvent
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
-  case class KillMsg(killerId:String,deadPlayer:Player,score:Int,lifeTime:Long, override val frame: Long) extends GameEvent
+  case class KillMsg(killerId:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Long) extends GameEvent
   case class CurrentRanks(currentRank: List[RankInfo]) extends GameEvent
   case class PongEvent(timestamp: Long)extends GameEvent
 

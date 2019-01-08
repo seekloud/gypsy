@@ -427,7 +427,7 @@ object RoomActor {
         case TimeOut=>
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
-            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
+            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum,overTime-p._2.startTime))
           }
           timer.cancel(SyncTimeKey)
           roomManager ! RemoveRoom(roomId)
