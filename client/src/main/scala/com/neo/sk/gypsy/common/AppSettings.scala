@@ -19,6 +19,10 @@ object AppSettings {
   val esheepHost = appConfig.getString("esheep.host")
   val esheepDomain = appConfig.getString("esheep.domain")
   val gameId = appConfig.getLong("esheep.gameId")
+  val isView = appConfig.getBoolean("isView")
+  val botInfo = if(!isView) {
+    (appConfig.getString("botInfo.botId"), appConfig.getString("botInfo.botKey"))
+  } else("","")
 
   val gameProtocol = appConfig.getString("server.protocol")
   val gameHost = appConfig.getString("server.host")

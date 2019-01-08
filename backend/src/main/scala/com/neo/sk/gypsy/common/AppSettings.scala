@@ -93,6 +93,7 @@ object AppSettings {
   val reliveTime = gameConfig.getInt("reliveTime")
   val SyncCount = gameConfig.getInt("SyncCount")
 
+
   val esheepConfig = appConfig.getConfig("esheep")
   val esheepAppId = esheepConfig.getString("appId")
   val esheepSecureKey = esheepConfig.getString("secureKey")
