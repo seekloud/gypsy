@@ -147,7 +147,7 @@ object RoomActor {
           userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
-          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
+//          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
 
@@ -168,7 +168,7 @@ object RoomActor {
           //userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(botInfo.playerId, Protocol.Id(botInfo.playerId))
-          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
+//          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(botInfo.playerId,Protocol.FeedApples(foodlists))
 
@@ -214,7 +214,7 @@ object RoomActor {
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
           dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           //复活时发送全量消息
-          dispatchTo(subscribersMap)(id,grid.getAllGridData)
+//          dispatchTo(subscribersMap)(id,grid.getAllGridData)
           Behaviors.same
 
 
