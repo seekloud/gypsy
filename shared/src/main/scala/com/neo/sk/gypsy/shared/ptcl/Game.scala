@@ -21,7 +21,7 @@ object Game {
           score:Score //分数
   )
 
-  case class Food(color:Int, x:Int, y:Int)
+  case class Food(color:Short, x:Int, y:Int)
 
 
 //网格上的一个点
@@ -40,7 +40,7 @@ object Game {
   case class Player(
                    id:String,
                    name:String,
-                   color:String,
+                   color:Short,
                    x:Int,
                    y:Int,
                    targetX:Int = 0,//运动方向，大部分做了归一化
@@ -93,7 +93,7 @@ object Game {
                  y:Int,
                  targetX:Int,
                  targetY:Int,
-                 color:Int,
+                 color:Short,
                  mass:Short,
                  radius:Short,
                  speed:Double
