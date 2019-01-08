@@ -255,10 +255,6 @@ case class DrawGame(
       ctx.fillStyle = "rgba(99, 99, 99, 1)"
       ctx.font = "36px Helvetica"
       ctx.fillText("Please wait.", 350, 180)
-    } else {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, Loading....", 350, 250)
     }
   }
 
