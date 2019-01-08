@@ -240,14 +240,12 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
+  def drawGameWait(myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
-    if(firstCome) {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Please wait.", 350, 180)
-    }
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
+    ctx.font = "36px Helvetica"
+    ctx.fillText("Please wait.", 350, 180)
   }
 
 
