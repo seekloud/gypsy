@@ -246,8 +246,9 @@ class GameHolder(replay:Boolean = false) {
 
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(myId, (e.pageX - window.x.toFloat / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toFloat / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+//        println(s" ${grid.frameCount}: (x:${e.pageX},y:${e.pageY})  ")
         FormerDegree = getDegree(e.pageX,e.pageY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
@@ -266,7 +267,7 @@ class GameHolder(replay:Boolean = false) {
   def testSend = {
     val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
     val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
-    val mp = MousePosition(myId,px.toDouble,py.toDouble,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+    val mp = MousePosition(myId,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
     grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
     grid.addUncheckActionWithFrame(myId, mp, mp.frame)
     webSocketClient.sendMsg(mp)
@@ -277,8 +278,8 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, 1200, 600)
-      println(data.playerDetails.filterNot(_.id.startsWith("bot_")).map(_.id))
-      println("myId:   "+myId)
+//      println(data.playerDetails.filterNot(_.id.startsWith("bot_")).map(_.id))
+//      println("myId:   "+myId)
 //      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
