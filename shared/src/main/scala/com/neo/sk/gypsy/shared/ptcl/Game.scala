@@ -14,7 +14,7 @@ object Game {
 
 
 ////排行榜信息
-  case class Score(id: String, n: String, k: Int, score: Short)
+  case class Score(id: String, n: String, k: Short, score: Short)
 
   case class RankInfo(
           index:Int, //排名
@@ -45,7 +45,7 @@ object Game {
                    y:Int,
                    targetX:Int = 0,//运动方向，大部分做了归一化
                    targetY:Int = 0,
-                   kill:Int = 0,
+                   kill:Short = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
                    var killerName:String= "",

@@ -248,7 +248,7 @@ class GameServer(override val boundary: Point) extends Grid {
     newPlayerMap.foreach {
       case Left(killId) =>
         val a = playerMap.getOrElse(killId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        playerMap += (killId -> a.copy(kill = a.kill + 1))
+        playerMap += (killId -> a.copy(kill = (a.kill + 1).toShort ))
       case Right(_) =>
     }
     if(p2pCrash){
