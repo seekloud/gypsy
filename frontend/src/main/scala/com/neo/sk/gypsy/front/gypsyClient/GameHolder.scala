@@ -205,7 +205,7 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-        println(s"keydown: ${e.keyCode} ${gameState} ")
+//        println(s"keydown: ${e.keyCode} ${gameState} ")
         if(keyInFlame == false){
           if(gameState == GameState.dead){
             if (e.keyCode == KeyCode.Space) {
