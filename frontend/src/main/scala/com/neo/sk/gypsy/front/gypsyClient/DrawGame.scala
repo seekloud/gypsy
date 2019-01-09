@@ -10,7 +10,7 @@ import org.scalajs.dom.html.Canvas
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-import com.neo.sk.gypsy.front.utils.EchartsJs
+//import com.neo.sk.gypsy.front.utils.EchartsJs
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
@@ -240,18 +240,12 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
+  def drawGameWait(myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
-    if(firstCome) {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Please wait.", 350, 180)
-    } else {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, Loading....", 350, 250)
-    }
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
+    ctx.font = "36px Helvetica"
+    ctx.fillText("Please wait.", 350, 180)
   }
 
 
@@ -332,7 +326,7 @@ case class DrawGame(
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).name
+      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
 /*      val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
@@ -369,7 +363,7 @@ case class DrawGame(
 
   var frame=1
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Short], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -521,8 +515,9 @@ case class DrawGame(
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
-          newcell = cell.copy(mass = cell.mass + massSpeed, radius = 4 + sqrt(cell.mass + massSpeed) * 6)
+          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else -1
+          val tempMass:Short = (cell.mass + massSpeed).toShort
+          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
         }
         newcell
       }.filterNot(e=> e.mass<=0 && e.newmass <=0)

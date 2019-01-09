@@ -3,6 +3,7 @@ package com.neo.sk.gypsy.shared.ptcl
 import scala.math._
 
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.util.utils._
 
 /**
   * User: Taoz
@@ -13,14 +14,14 @@ object Game {
 
 
 ////排行榜信息
-  case class Score(id: String, n: String, k: Int, score: Double, t: Option[Long] = None)
+  case class Score(id: String, n: String, k: Int, score: Short)
 
   case class RankInfo(
           index:Int, //排名
           score:Score //分数
   )
 
-  case class Food(color:Int, x:Int, y:Int)
+  case class Food(color:Short, x:Int, y:Int)
 
 
 //网格上的一个点
@@ -39,7 +40,7 @@ object Game {
   case class Player(
                    id:String,
                    name:String,
-                   color:String,
+                   color:Short,
                    x:Int,
                    y:Int,
                    targetX:Int = 0,//运动方向，大部分做了归一化
@@ -77,9 +78,9 @@ object Game {
                    id:Long,
                    x:Int,
                    y:Int,
-                   mass:Double = initMass,  //小球体重
-                   newmass:Double = initMass,
-                   radius:Double = 4 + sqrt(initMass)*6,
+                   mass:Short = initMass,  //小球体重
+                   newmass:Short = initMass,
+                   radius:Short = Mass2Radius(initMass),
                    speed:Double = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
@@ -92,26 +93,23 @@ object Game {
                  y:Int,
                  targetX:Int,
                  targetY:Int,
-                 color:Int,
-                 mass:Double,
-                 radius:Double,
+                 color:Short,
+                 mass:Short,
+                 radius:Short,
                  speed:Double
                  )
   case class Virus(
                   vid:Long,
                   x:Int,
                   y:Int,
-                  mass:Double,  //质量
-                  radius:Double,
+                  mass:Short,  //质量
+                  radius:Short,
                   splitNumber:Int = 13,
                   targetX:Double = 0.0,
                   targetY:Double = 0.0,
                   speed:Double = 0
                   )
-  case class Int2(
-                 i:Int,
-                 j:Int
-                 )
+
   object Boundary{
     val w = 4800
     val h = 2400
@@ -142,10 +140,10 @@ object Game {
 
 
   object GameState{
-    val waiting:Int = 0
-    val play:Int = 1
-    val dead:Int = 2
-    val allopatry:Int = 3
+//    val waiting:Int = 0
+    val play:Int = 0
+    val dead:Int = 1
+    val allopatry:Int = 2
   }
 
   case class XAxis(

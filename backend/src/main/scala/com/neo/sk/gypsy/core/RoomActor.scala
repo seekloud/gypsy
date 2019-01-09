@@ -100,7 +100,7 @@ object RoomActor {
             if(AppSettings.addBotPlayer) {
               for(b <- 1 to AppSettings.botNum ){
                 val id = "bot_"+roomId + "_100"+ b
-                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size()),b)
+                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
                 getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
               }
 
@@ -147,7 +147,7 @@ object RoomActor {
           userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
-          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
+//          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
 
@@ -168,7 +168,7 @@ object RoomActor {
           //userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(botInfo.playerId, Protocol.Id(botInfo.playerId))
-          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
+//          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(botInfo.playerId,Protocol.FeedApples(foodlists))
 
@@ -214,7 +214,7 @@ object RoomActor {
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
           dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           //复活时发送全量消息
-          dispatchTo(subscribersMap)(id,grid.getAllGridData)
+//          dispatchTo(subscribersMap)(id,grid.getAllGridData)
           Behaviors.same
 
 
@@ -427,7 +427,7 @@ object RoomActor {
         case TimeOut=>
           val overTime=System.currentTimeMillis()
           grid.playerMap.foreach{p=>
-            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum.toInt,overTime-p._2.startTime))
+            dispatchTo(subscribersMap)(p._1,Protocol.GameOverMessage(p._1,p._2.kill,p._2.cells.map(_.mass).sum,overTime-p._2.startTime))
           }
           timer.cancel(SyncTimeKey)
           roomManager ! RemoveRoom(roomId)
@@ -495,8 +495,13 @@ object RoomActor {
   }
 
   private def getStarName(nameNum:Int,index:Int) = {
-    AppSettings.starNames.get(nameNum)+"-"+index
-
+    if(AppSettings.starNames.isEmpty){
+      "Star"+"-"+index
+    }else if(nameNum < AppSettings.starNames.length){
+      AppSettings.starNames(nameNum)+"-"+index
+    }else{
+      AppSettings.starNames.head+"-"+index
+    }
 
   }
 

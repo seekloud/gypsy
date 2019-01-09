@@ -39,7 +39,7 @@ trait Grid {
 
   var frameCount = 0l
   //食物列表
-  var food = Map[Point, Int]()
+  var food = Map[Point, Short]()
 //  //病毒列表
 //  var virus = List[Virus]()
   //病毒map (ID->Virus)
@@ -296,7 +296,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -441,7 +441,7 @@ trait Grid {
     //TODO 这里写下有哪些是分裂的
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
@@ -456,13 +456,13 @@ trait Grid {
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
             var newMassList =  List.empty[Mass]
             if (shot && newMass > shotMass * 3) {
-              newMass -= shotMass
-              newRadius = 4 + sqrt(newMass) * 6
-              val massRadius = 4 + sqrt(shotMass) * 6
+              newMass = (newMass - shotMass).toShort
+              newRadius = Mass2Radius(newMass)
+              val massRadius = Mass2Radius(shotMass)
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
 //              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
@@ -486,7 +486,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
@@ -501,16 +501,16 @@ trait Grid {
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
             var splitX = 0
             var splitY = 0
-            var splitMass = 0.0
-            var splitRadius = 0.0
+            var splitMass:Short = 0
+            var splitRadius:Short = 0
             var splitSpeed = 0.0
             var cellId = 0L
             if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
               newSplitTime = System.currentTimeMillis()
-              splitMass = (newMass / 2).toInt
-              newMass = newMass - splitMass
-              splitRadius = 4 + sqrt(splitMass) * 6
-              newRadius = 4 + sqrt(newMass) * 6
+              splitMass = (newMass / 2).toShort
+              newMass = (newMass- splitMass).toShort
+              splitRadius = Mass2Radius(splitMass)
+              newRadius = Mass2Radius(newMass)
               splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
               splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
               splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
@@ -538,7 +538,7 @@ trait Grid {
     val newCells=player.cells.map{cell=>
       var newMass = cell.newmass
       if(cell.newmass > decreaseLimit)
-        newMass = cell.newmass * decreaseRate
+        newMass = (cell.newmass * decreaseRate).toShort
       cell.copy(mass = newMass,newmass = newMass)
     }
     player.copy(cells = newCells)
