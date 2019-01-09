@@ -240,18 +240,12 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
+  def drawGameWait(myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
-    if(firstCome) {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Please wait.", 350, 180)
-    } else {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, Loading....", 350, 250)
-    }
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
+    ctx.font = "36px Helvetica"
+    ctx.fillText("Please wait.", 350, 180)
   }
 
 
@@ -369,7 +363,7 @@ case class DrawGame(
 
   var frame=1
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Short], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2.toShort,f._1.x,f._1.y)).toList
