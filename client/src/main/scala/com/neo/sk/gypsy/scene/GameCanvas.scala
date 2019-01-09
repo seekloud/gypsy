@@ -207,7 +207,7 @@ class GameCanvas(canvas: Canvas,
       //      println("kk"+killerId)
       //      println("dd"+deadPlayer)
       //      println("gg"+grid.playerMap)
-      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", " ", 0, 0, cells = List(Cell(0L, 0, 0)))).name
+      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", 0, 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val txt1=new Text(killerName)
       val txt2=new Text(deadName)
