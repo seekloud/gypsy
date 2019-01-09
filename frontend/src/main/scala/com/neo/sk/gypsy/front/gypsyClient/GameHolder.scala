@@ -277,7 +277,7 @@ class GameHolder(replay:Boolean = false) {
   def testSend = {
     val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
     val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
-    val mp = MousePosition(myId,px.toDouble,py.toDouble,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+    val mp = MousePosition(myId,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
     grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
     grid.addUncheckActionWithFrame(myId, mp, mp.frame)
     webSocketClient.sendMsg(mp)
@@ -331,6 +331,7 @@ class GameHolder(replay:Boolean = false) {
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
+//          println("gameState:   "+gameState)
           drawGameView.drawGameWait(firstCome,myId)
       }
     }else{
@@ -443,7 +444,7 @@ class GameHolder(replay:Boolean = false) {
       //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
-        val a = grid.playerMap.getOrElse(killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
         if(deadPlayer.id != myId){
           if(!isDead){
@@ -478,7 +479,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.UserCrash(crashMap)=>
         crashMap.map{p=>
           if(grid.playerMap.get(p._1).nonEmpty){
-            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             var newCells = newPlayer.cells
             p._2.map{cell=>
               newCells = cell :: newCells.filterNot(_.id == cell.id)
@@ -541,8 +542,8 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap ++= e.virus
 
       case e: Protocol.UserJoinRoom =>
-        gameState = GameState.play
         grid.playerMap += e.playState.id -> e.playState
+        gameState = GameState.play
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
@@ -556,7 +557,7 @@ class GameHolder(replay:Boolean = false) {
 
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
-        val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+        val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killMsg.killerId -> a.copy(kill = a.kill + 1))
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){

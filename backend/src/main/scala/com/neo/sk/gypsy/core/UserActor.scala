@@ -52,7 +52,7 @@ object UserActor {
 
   case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
 
-  case class Mouse(id: String, clientX:Double,clientY:Double,frame:Long,n:Int) extends Command with RoomActor.Command
+  case class Mouse(id: String, clientX:Short,clientY:Short,frame:Long,n:Int) extends Command with RoomActor.Command
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
 

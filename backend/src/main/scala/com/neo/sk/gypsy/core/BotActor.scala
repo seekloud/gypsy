@@ -68,7 +68,7 @@ object BotActor {
           //TODO 选择一个动作发给roomActor
           val px =  new Random(System.nanoTime()).nextInt(1200)- 600
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
-          val mp = MousePosition(botId,px.toDouble,py.toDouble,grid.frameCount, -1)
+          val mp = MousePosition(botId,px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
           Behaviors.same
 

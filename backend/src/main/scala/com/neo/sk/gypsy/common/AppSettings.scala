@@ -38,16 +38,17 @@ object AppSettings {
   val httpInterface = appConfig.getString("http.interface")
   val httpPort = appConfig.getInt("http.port")
 
-  val botMap = {
-    import collection.JavaConverters._
-    val botIdList = appConfig.getStringList("bot.botId").asScala
-    val botNames = appConfig.getStringList("bot.botName").asScala
-    require(botIdList.length == botNames.length, "botIdList.length and botNames.length not equel.")
-    botIdList.zip(botNames).toMap
-  }
+//  val botMap = {
+//    import collection.JavaConverters._
+//    val botIdList = appConfig.getStringList("bot.botId").asScala
+//    val botNames = appConfig.getStringList("bot.botName").asScala
+//    require(botIdList.length == botNames.length, "botIdList.length and botNames.length not equel.")
+//    botIdList.zip(botNames).toMap
+//  }
 
   val botConfig = appConfig.getConfig("bot")
-  val starNames = botConfig.getStringList("starName")
+//  val starNames = botConfig.getStringList("starName")
+  val starNames = List("水星", "金星", "火星", "木星", "土星", "地球","M78","天王星","海王星","摩羯座","水瓶座")
   val botNum = botConfig.getInt("botNum")
   val addBotPlayer = botConfig.getBoolean("addBotPlayer")
 
