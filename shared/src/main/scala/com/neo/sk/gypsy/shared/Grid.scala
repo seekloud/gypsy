@@ -296,7 +296,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -441,7 +441,7 @@ trait Grid {
     //TODO 这里写下有哪些是分裂的
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
@@ -486,7 +486,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX, player.targetY,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false

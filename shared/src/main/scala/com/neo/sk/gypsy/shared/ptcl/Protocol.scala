@@ -93,7 +93,7 @@ object Protocol {
 
 //  case class TextInfo(msg:String) extends UserAction
 
-  case class MousePosition(id: String,clientX:Double,clientY:Double, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
+  case class MousePosition(id: String,clientX:Short,clientY:Short, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
 
   case class KeyCode(id: String,keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction with GameMessage
 
@@ -129,7 +129,7 @@ object Protocol {
   case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
   case class UserLeftRoom(userId:String,userName:String,ballId:Long,roomId:Long, override val frame:Long) extends GameEvent
   case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
-  case class MouseMove(userId:String,direct:(Double,Double), override val frame:Long, override val serialNum:Int) extends GameEvent
+  case class MouseMove(userId:String,direct:(Short,Short), override val frame:Long, override val serialNum:Int) extends GameEvent
   case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
   case class GenerateApples(apples:Map[Point, Short], override val frame:Long) extends GameEvent
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
