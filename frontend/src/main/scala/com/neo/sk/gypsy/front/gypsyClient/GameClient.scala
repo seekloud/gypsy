@@ -109,11 +109,15 @@ class GameClient (override val boundary: Point) extends Grid {
             var vSplitCells = List[Cell]()
             var newMass = cell.newmass
             var newRadius = cell.radius
-            //病毒碰撞检测
-            virusMap.foreach { vi =>
+            //病毒碰撞检测: 一个cell只能让一个病毒消失
+            var isremoveVirus = false
+            val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
+              toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
+            newvirusMap.foreach { vi =>
               val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && !isremoveVirus) {
                 removeVirus += (vi._1->vi._2)
+                isremoveVirus = true
               }
             }
             List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
