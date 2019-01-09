@@ -100,7 +100,7 @@ object RoomActor {
             if(AppSettings.addBotPlayer) {
               for(b <- 1 to AppSettings.botNum ){
                 val id = "bot_"+roomId + "_100"+ b
-                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size()),b)
+                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
                 getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
               }
 
@@ -495,8 +495,13 @@ object RoomActor {
   }
 
   private def getStarName(nameNum:Int,index:Int) = {
-    AppSettings.starNames.get(nameNum)+"-"+index
-
+    if(AppSettings.starNames.isEmpty){
+      "Star"+"-"+index
+    }else if(nameNum < AppSettings.starNames.length){
+      AppSettings.starNames(nameNum)+"-"+index
+    }else{
+      AppSettings.starNames.head+"-"+index
+    }
 
   }
 
