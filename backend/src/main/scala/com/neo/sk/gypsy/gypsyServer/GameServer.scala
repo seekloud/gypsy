@@ -346,9 +346,13 @@ class GameServer(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
-            virusMap.foreach { vi =>
+            var isremoveVirus = false
+            val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
+              toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
+            newvirusMap.foreach { vi =>
               val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && isremoveVirus) {
+                isremoveVirus = true
                 split = true
                 removeVirus += (vi._1->vi._2)
                 val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
