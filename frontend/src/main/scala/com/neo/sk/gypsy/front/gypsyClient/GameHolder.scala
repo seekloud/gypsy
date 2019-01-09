@@ -60,6 +60,8 @@ class GameHolder(replay:Boolean = false) {
   var nextFrame = 0
   var nextInt = 0
   var FormerDegree = 0D
+  var mouseInFlame = false
+  var keyInFlame = false
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
@@ -114,6 +116,8 @@ class GameHolder(replay:Boolean = false) {
       //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
+        mouseInFlame = false
+        keyInFlame = false
         update()
       } else {
         if (syncGridData.nonEmpty) {
@@ -202,22 +206,25 @@ class GameHolder(replay:Boolean = false) {
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
         println(s"keydown: ${e.keyCode} ${gameState} ")
-        if(gameState == GameState.dead){
-          if (e.keyCode == KeyCode.Space) {
-            println(s"down+${e.keyCode.toString} ReLive Press!")
-            val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
-            webSocketClient.sendMsg(reliveMsg)
-          }
-        }else{
-          if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
-            println(s"down+${e.keyCode.toString}")
-            val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
-            webSocketClient.sendMsg(keyCode)
+        if(keyInFlame == false){
+          if(gameState == GameState.dead){
+            if (e.keyCode == KeyCode.Space) {
+              println(s"down+${e.keyCode.toString} ReLive Press!")
+              keyInFlame = true
+              val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+              webSocketClient.sendMsg(reliveMsg)
+            }
+          }else{
+            if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
+              println(s"down+${e.keyCode.toString}")
+              keyInFlame = true
+              val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+              grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              webSocketClient.sendMsg(keyCode)
+            }
           }
         }
-
         //e.preventDefault()
 
 //        if (e.keyCode == KeyCode.Escape && !isDead) {
@@ -245,15 +252,19 @@ class GameHolder(replay:Boolean = false) {
     }
 
     if( !isTest){
-      canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-        FormerDegree = getDegree(e.pageX,e.pageY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-        webSocketClient.sendMsg(mp)
-      }
-      }
+      canvas3.onmousemove = { (e: dom.MouseEvent) =>
+        if(mouseInFlame == false){
+          {
+            val mp = MousePosition(myId, e.pageX - window.x / 2 - canvas3.offsetLeft, e.pageY - canvas3.offsetTop - window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+            if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+              mouseInFlame = true
+              FormerDegree = getDegree(e.pageX,e.pageY)
+              grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+              grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+              webSocketClient.sendMsg(mp)
+            }
+          }
+        }
       }
     }else  {
       dom.window.setTimeout(() =>
