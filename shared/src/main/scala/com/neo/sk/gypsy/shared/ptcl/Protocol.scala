@@ -48,13 +48,13 @@ object Protocol {
 
   case class PlayerRestart(id:String) extends GameMessage
 
-  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Int,score:Short,lifeTime:Long) extends GameMessage
+  case class UserDeadMessage(id:String,killerId:String,killerName:String,killNum:Short,score:Short,lifeTime:Long) extends GameMessage
 
   case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
 
   case class KillMessage(killerId:String,deadPlayer:Player) extends GameMessage
 
-  case class GameOverMessage(id:String,killNum:Int,score:Short,lifeTime:Long) extends GameMessage
+  case class GameOverMessage(id:String,killNum:Short,score:Short,lifeTime:Long) extends GameMessage
 
   case class MatchRoomError() extends GameMessage
 
