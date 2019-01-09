@@ -41,10 +41,10 @@ object Game {
                    id:String,
                    name:String,
                    color:Short,
-                   x:Int,
-                   y:Int,
-                   targetX:Int = 0,//运动方向，大部分做了归一化
-                   targetY:Int = 0,
+                   x:Short,
+                   y:Short,
+                   targetX:Short = 0,//运动方向，大部分做了归一化
+                   targetY:Short = 0,
                    kill:Short = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
@@ -76,8 +76,8 @@ object Game {
 //                 )
   case class Cell(
                    id:Long,
-                   x:Int,
-                   y:Int,
+                   x:Short,
+                   y:Short,
                    mass:Short = initMass,  //小球体重
                    newmass:Short = initMass,
                    radius:Short = Mass2Radius(initMass),
@@ -89,10 +89,10 @@ object Game {
                  )
 //吐出的小球
   case class Mass(
-                 x:Int,
-                 y:Int,
-                 targetX:Int,
-                 targetY:Int,
+                 x:Short,
+                 y:Short,
+                 targetX:Short,
+                 targetY:Short,
                  color:Short,
                  mass:Short,
                  radius:Short,
@@ -100,13 +100,13 @@ object Game {
                  )
   case class Virus(
                   vid:Long,
-                  x:Int,
-                  y:Int,
+                  x:Short,
+                  y:Short,
                   mass:Short,  //质量
                   radius:Short,
                   splitNumber:Int = 13,
-                  targetX:Double = 0.0,
-                  targetY:Double = 0.0,
+                  targetX:Short = 0,
+                  targetY:Short = 0,
                   speed:Double = 0
                   )
 
@@ -134,8 +134,8 @@ object Game {
                         )
 
   case class Position(
-                       clientX:Double,
-                       clientY:Double
+                       clientX:Short,
+                       clientY:Short
                      )
 
 

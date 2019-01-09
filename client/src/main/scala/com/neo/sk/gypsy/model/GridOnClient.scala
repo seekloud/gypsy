@@ -85,7 +85,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     mergeInFlame
@@ -122,7 +122,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toInt, (cell.y + startLen * degY).toInt, cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
+                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort , (cell.y + startLen * degY).toShort , cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
                 }
               }
             }
@@ -136,7 +136,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -174,7 +174,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -205,7 +205,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -296,8 +296,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
             newMass += p.mass
             newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
-            newTargetX = vx
-            newTargetY = vy
+            newTargetX = vx.toShort
+            newTargetY = vy.toShort
             massList = massList.filterNot(l => l == p)
           }
       }

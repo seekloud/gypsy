@@ -528,7 +528,7 @@ case class DrawGame(
           val right = newcells.map(a => a.x + a.radius).max
           val bottom = newcells.map(a => a.y - a.radius).min
           val top = newcells.map(a => a.y + a.radius).max
-          val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
           gird.playerMap += (id -> player)
         }
     }
