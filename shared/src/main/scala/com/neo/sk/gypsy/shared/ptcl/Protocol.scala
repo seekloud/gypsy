@@ -42,6 +42,10 @@ object Protocol {
   case class Id(id: String) extends GameMessage
 
 //  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
+
+  case class MousePositionB(id:String, clientX:Short,clientY:Short, override val frame:Long, override val serialNum:Int) extends GameMessage
+
+  case class KeyCodeB(id:String, keyCode: Int, override val frame:Long,override val serialNum:Int) extends GameMessage
   case class Ranks(currentRank: List[RankInfo]) extends GameMessage
 
   case class MyRank(rank:RankInfo) extends GameMessage
@@ -93,9 +97,9 @@ object Protocol {
 
 //  case class TextInfo(msg:String) extends UserAction
 
-  case class MousePosition(id: String,clientX:Short,clientY:Short, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
+  case class MousePositionF(clientX:Short,clientY:Short, override val frame:Long, override val serialNum:Int) extends UserAction
 
-  case class KeyCode(id: String,keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction with GameMessage
+  case class KeyCodeF(keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction
 
   case object PressSpace extends UserAction
 
