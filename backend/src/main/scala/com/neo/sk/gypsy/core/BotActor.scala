@@ -110,7 +110,6 @@ object BotActor {
 
             }
           }
-
           Behaviors.same
 
         case BotDead =>
