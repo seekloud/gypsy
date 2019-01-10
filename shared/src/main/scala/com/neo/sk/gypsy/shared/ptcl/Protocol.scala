@@ -30,7 +30,7 @@ object Protocol {
                            massDetails: List[Mass],
                            virusDetails: Map[Long,Virus],
                            scale: Double, //缩放比例
-                           playersPosition: List[PlayerPosition],
+//                           playersPosition: List[PlayerPosition],
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
@@ -41,7 +41,6 @@ object Protocol {
 
   case class Id(id: String) extends GameMessage
 
-//  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
   case class Ranks(currentRank: List[RankInfo]) extends GameMessage
 
   case class MyRank(rank:RankInfo) extends GameMessage
@@ -91,8 +90,6 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-//  case class TextInfo(msg:String) extends UserAction
-
   case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
 
   case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
@@ -104,8 +101,6 @@ object Protocol {
   case class WatchChange(watchId: String) extends UserAction
 
   case class Ping(timestamp: Long) extends UserAction
-
-//  case class ReLiveAck(id:String) extends UserAction
 
   case object CreateRoom extends UserAction
 
@@ -140,7 +135,7 @@ object Protocol {
 
   case class PlayerInfoChange(player: Map[String,Player], override val frame:Int) extends GameEvent
   //  缩放放到
-  case class ShowScale( override val frame:Int,scale:Double) extends GameEvent
+  case class ShowScale(override val frame:Int,scale:Double) extends GameEvent
 
   sealed trait GameSnapshot
 
@@ -160,15 +155,6 @@ object Protocol {
 
   final case class GameInformation(
                                     gameStartTime:Long
-//                                    gypsyConfig: GypsyGameConfigImpl
                                   )
-
-  //配置数据以后补上
-  final case class GypsyGameConfigImpl(
-                                  x:Int = 100,
-                                  y:Int = 200
-                                  //     boundary: ,
-                                  //     window:
-                                )
 
 }
