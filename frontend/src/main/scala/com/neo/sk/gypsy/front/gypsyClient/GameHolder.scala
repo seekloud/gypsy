@@ -258,7 +258,7 @@ class GameHolder(replay:Boolean = false) {
           {
             val mp = MousePosition(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-              println(s"帧号${grid.frameCount},动作：$mp")
+//              println(s"帧号${grid.frameCount},动作：$mp")
               mouseInFlame = true
               FormerDegree = getDegree(e.pageX,e.pageY)
               grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
