@@ -27,12 +27,12 @@ class GridOnClient(override val boundary: Point) extends Grid {
   var currentRank = List.empty[RankInfo]
   //fixme 此处变量未有实际用途
   //序列号->(frame,Id,GameAction)
-  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
+  private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Int,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
     //    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
-    GridDataSync(0l, Nil, Nil, Map.empty, 1.0, Nil)
+    GridDataSync(0, Nil, Nil, Map.empty, 1.0, Nil)
   }
 
 
@@ -322,7 +322,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
     virusMap ++= virus1
   }
 
-  def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Long) = {
+  def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
   }
 
@@ -429,19 +429,19 @@ class GridOnClient(override val boundary: Point) extends Grid {
 
   def reStart={
     myId = ""
-    frameCount = 0l
+    frameCount = 0
     food = Map[Point, Short]()
     foodPool = 300
     playerMap = Map.empty[String,Player]
     virusMap = Map.empty[Long,Virus]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Long, Map[String, KeyCode]]
-    mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
+    actionMap = Map.empty[Int, Map[String, KeyCode]]
+    mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 
-  override def getActionEventMap(frame: Long): List[GameEvent] = {List.empty}
+  override def getActionEventMap(frame: Int): List[GameEvent] = {List.empty}
 
-  override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {List.empty}
+  override def getGameEventMap(frame: Int): List[Protocol.GameEvent] = {List.empty}
 }
