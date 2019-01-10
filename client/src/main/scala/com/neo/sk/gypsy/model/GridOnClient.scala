@@ -109,13 +109,13 @@ class GridOnClient(override val boundary: Point) extends Grid {
               if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
                 //                virus = virus.filterNot(_ == v)
                 removeVirus += (vi._1->vi._2)
-                val cellMass = (newMass / (v.splitNumber + 1)).toShort
+                val cellMass = (newMass / (VirusSplitNumber + 1)).toShort
                 val cellRadius = Mass2Radius(cellMass)
-                newMass = ((newMass / (v.splitNumber + 1)) + (v.mass * 0.5)).toShort
+                newMass = ((newMass / (VirusSplitNumber + 1)) + (v.mass * 0.5)).toShort
                 newRadius = Mass2Radius(newMass)
                 newSplitTime = System.currentTimeMillis()
-                val baseAngle = 2 * Pi / v.splitNumber
-                for (i <- 0 until v.splitNumber) {
+                val baseAngle = 2 * Pi / VirusSplitNumber
+                for (i <- 0 until VirusSplitNumber) {
                   val degX = cos(baseAngle * i)
                   val degY = sin(baseAngle * i)
                   val startLen = (newRadius + cellRadius) * 1.2*3

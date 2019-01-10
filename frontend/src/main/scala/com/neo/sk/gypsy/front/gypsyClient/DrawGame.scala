@@ -533,7 +533,7 @@ case class DrawGame(
         }
     }
 
-    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y

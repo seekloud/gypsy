@@ -355,7 +355,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 isremoveVirus = true
                 split = true
                 removeVirus += (vi._1->vi._2)
-                val splitNum = if(v.splitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else (v.splitNumber)
+                val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
                 if(splitNum>0){
                   val cellMass = (newMass / (splitNum + 1)).toShort
                   val cellRadius = Mass2Radius(cellMass)

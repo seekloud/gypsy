@@ -416,7 +416,7 @@ class GameCanvas(canvas: Canvas,
         grid.playerMap += (id -> player)
       }
     }
-    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y
@@ -670,7 +670,7 @@ class GameCanvas(canvas: Canvas,
       }
     }
 
-    virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
     }
 
