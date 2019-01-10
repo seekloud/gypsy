@@ -240,18 +240,12 @@ case class DrawGame(
   }
 
   //等待文字
-  def drawGameWait(firstCome:Boolean,myID:String): Unit = {
+  def drawGameWait(myID:String): Unit = {
     ctx.fillStyle = Color.White.toString()
     ctx.fillRect(0, 0, this.canvas.width , this.canvas.height )
-    if(firstCome) {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Please wait.", 350, 180)
-    } else {
-      ctx.fillStyle = "rgba(99, 99, 99, 1)"
-      ctx.font = "36px Helvetica"
-      ctx.fillText("Ops, Loading....", 350, 250)
-    }
+    ctx.fillStyle = "rgba(99, 99, 99, 1)"
+    ctx.font = "36px Helvetica"
+    ctx.fillText("Please wait.", 350, 180)
   }
 
 
@@ -534,12 +528,12 @@ case class DrawGame(
           val right = newcells.map(a => a.x + a.radius).max
           val bottom = newcells.map(a => a.y - a.radius).min
           val top = newcells.map(a => a.y + a.radius).max
-          val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
           gird.playerMap += (id -> player)
         }
     }
 
-    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y

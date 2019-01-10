@@ -60,6 +60,8 @@ class GameHolder(replay:Boolean = false) {
   var nextFrame = 0
   var nextInt = 0
   var FormerDegree = 0D
+  var mouseInFlame = false
+  var keyInFlame = false
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
@@ -114,6 +116,8 @@ class GameHolder(replay:Boolean = false) {
       //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
+        mouseInFlame = false
+        keyInFlame = false
         update()
       } else {
         if (syncGridData.nonEmpty) {
@@ -201,23 +205,26 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-        println(s"keydown: ${e.keyCode} ${gameState} ")
-        if(gameState == GameState.dead){
-          if (e.keyCode == KeyCode.Space) {
-            println(s"down+${e.keyCode.toString} ReLive Press!")
-            val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
-            webSocketClient.sendMsg(reliveMsg)
-          }
-        }else{
-          if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
-            println(s"down+${e.keyCode.toString}")
-            val keyCode = Protocol.KeyCode(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
-            webSocketClient.sendMsg(keyCode)
+//        println(s"keydown: ${e.keyCode} ${gameState} ")
+        if(keyInFlame == false){
+          if(gameState == GameState.dead){
+            if (e.keyCode == KeyCode.Space) {
+              println(s"down+${e.keyCode.toString} ReLive Press!")
+              keyInFlame = true
+              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+              webSocketClient.sendMsg(reliveMsg)
+            }
+          }else{
+            if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
+              println(s"down+${e.keyCode.toString}")
+              keyInFlame = true
+              val keyCode = Protocol.KeyCode(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+              grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              webSocketClient.sendMsg(keyCode)
+            }
           }
         }
-
         //e.preventDefault()
 
 //        if (e.keyCode == KeyCode.Escape && !isDead) {
@@ -245,16 +252,20 @@ class GameHolder(replay:Boolean = false) {
     }
 
     if( !isTest){
-      canvas3.onmousemove = { (e: dom.MouseEvent) => {
-      val mp = MousePosition(None, (e.pageX - window.x.toFloat / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toFloat / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-//        println(s" ${grid.frameCount}: (x:${e.pageX},y:${e.pageY})  ")
-        FormerDegree = getDegree(e.pageX,e.pageY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
-        webSocketClient.sendMsg(mp)
-      }
-      }
+      canvas3.onmousemove = { (e: dom.MouseEvent) =>
+        if(mouseInFlame == false){
+          {
+            val mp = MousePosition(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+            if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+              println(s"帧号${grid.frameCount},动作：$mp")
+              mouseInFlame = true
+              FormerDegree = getDegree(e.pageX,e.pageY)
+              grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
+              grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+              webSocketClient.sendMsg(mp)
+            }
+          }
+        }
       }
     }else  {
       dom.window.setTimeout(() =>
@@ -278,8 +289,6 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, 1200, 600)
-//      println(data.playerDetails.filterNot(_.id.startsWith("bot_")).map(_.id))
-//      println("myId:   "+myId)
 //      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
@@ -324,9 +333,7 @@ class GameHolder(replay:Boolean = false) {
           isDead=paraBack._2
         case None =>
 //          println("gameState:   "+gameState)
-          if(firstCome){
-            drawGameView.drawGameWait(myId)
-          }
+          drawGameView.drawGameWait(myId)
       }
     }else{
       drawGameView.drawGameLost
@@ -439,7 +446,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+        grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
         if(deadPlayer.id != myId){
           if(!isDead){
             isDead = true
@@ -552,7 +559,7 @@ class GameHolder(replay:Boolean = false) {
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
         val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        grid.playerMap += (killMsg.killerId -> a.copy(kill = a.kill + 1))
+        grid.playerMap += (killMsg.killerId -> a.copy(kill = (a.kill + 1).toShort ))
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){
             isDead = true
