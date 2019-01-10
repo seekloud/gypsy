@@ -219,7 +219,7 @@ class BotHolder(
       var FormerDegree = 0D
       val (x, y) = Constant.swingToXY(swing.get)
       //      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      val mp = MousePosition(botId, x.toFloat, y.toFloat, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      val mp = MousePosition(botId, x.toShort, y.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       if (math.abs(getDegree(x, y) - FormerDegree) * 180 / math.Pi > 5) {
         FormerDegree = getDegree(x, y)
         grid.addMouseActionWithFrame(botId, mp.copy(frame = grid.frameCount + delayFrame))
