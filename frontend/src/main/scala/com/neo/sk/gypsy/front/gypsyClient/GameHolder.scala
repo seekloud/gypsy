@@ -205,7 +205,7 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-        println(s"keydown: ${e.keyCode} ${gameState} ")
+//        println(s"keydown: ${e.keyCode} ${gameState} ")
         if(keyInFlame == false){
           if(gameState == GameState.dead){
             if (e.keyCode == KeyCode.Space) {
@@ -446,7 +446,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.KillMessage(killerId,deadPlayer)=>
         grid.removePlayer(deadPlayer.id)
         val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+        grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
         if(deadPlayer.id != myId){
           if(!isDead){
             isDead = true
@@ -559,7 +559,7 @@ class GameHolder(replay:Boolean = false) {
       case killMsg:Protocol.KillMsg =>
         grid.removePlayer(killMsg.deadPlayer.id)
         val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        grid.playerMap += (killMsg.killerId -> a.copy(kill = a.kill + 1))
+        grid.playerMap += (killMsg.killerId -> a.copy(kill = (a.kill + 1).toShort ))
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){
             isDead = true

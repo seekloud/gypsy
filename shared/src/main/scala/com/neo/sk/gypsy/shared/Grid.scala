@@ -234,8 +234,8 @@ trait Grid {
       var newY = v.y
       var newSpeed = v.speed
       if(v.speed!=0){
-        newX = v.x + (nx*v.speed).toInt
-        newY = v.y + (ny*v.speed).toInt
+        newX = (v.x + (nx*v.speed)).toShort
+        newY = (v.y + (ny*v.speed)).toShort
         newSpeed = if(v.speed-virusSpeedDecayRate<0) 0 else v.speed-virusSpeedDecayRate
         val newPoint =ExamBoundary(newX,newY)
         newX = newPoint._1
@@ -257,16 +257,16 @@ trait Grid {
       var newY = mass.y
       newSpeed -= massSpeedDecayRate
       if (newSpeed < 0) newSpeed = 0
-      if (!(deltaY).isNaN) newY += deltaY.toInt
-      if (!(deltaX).isNaN) newX += deltaX.toInt
+      if (!(deltaY).isNaN) newY = (newY + deltaY).toShort
+      if (!(deltaX).isNaN) newX = (newX + deltaX).toShort
 
       // val borderCalc = mass.radius.ceil.toInt
 
       val borderCalc = 0
-      if (newX > boundary.x - borderCalc) newX = boundary.x - borderCalc
-      if (newY > boundary.y - borderCalc) newY = boundary.y - borderCalc
-      if (newX < borderCalc) newX = borderCalc
-      if (newY < borderCalc) newY = borderCalc
+      if (newX > boundary.x - borderCalc) newX = (boundary.x - borderCalc).toShort
+      if (newY > boundary.y - borderCalc) newY = (boundary.y - borderCalc).toShort
+      if (newX < borderCalc) newX = borderCalc.toShort
+      if (newY < borderCalc) newY = borderCalc.toShort
 
       mass.copy(x = newX, y = newY, speed = newSpeed)
     }
@@ -276,7 +276,7 @@ trait Grid {
   def addVirus(virus: Int): Unit
 
 //边界超越校验
-  def ExamBoundary(newX:Int,newY:Int)={
+  def ExamBoundary(newX:Short,newY:Short)={
     val x = if(newX>boundary.x){
       boundary.x
     } else if(newX<0){
@@ -292,7 +292,7 @@ trait Grid {
       newY
     }
 
-    (x,y)
+    (x.toShort ,y.toShort )
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
@@ -310,7 +310,7 @@ trait Grid {
 //      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      target = if(!cell.parallel) Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y) else Position(mouseAct.clientX , mouseAct.clientY)
+      target = if(!cell.parallel) Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort  ) else Position(mouseAct.clientX , mouseAct.clientY)
 
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
@@ -401,7 +401,7 @@ trait Grid {
           }
         }
       }
-      List(Cell(cell.id, newX, newY, cell.mass, cell.newmass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
+      List(Cell(cell.id, newX.toShort , newY.toShort , cell.mass, cell.newmass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
     val length = newCells.length
     val newX = newCells.map(_.x).sum / length
@@ -411,7 +411,7 @@ trait Grid {
     val bottom = newCells.map(a => a.y - a.radius).min
     val top = newCells.map(a => a.y + a.radius).max
 
-    player.copy(x = newX, y = newY, targetX = mouseAct.clientX.toInt, targetY = mouseAct.clientY.toInt, protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
+    player.copy(x = newX.toShort , y = newY.toShort , targetX = mouseAct.clientX , targetY = mouseAct.clientY , protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
   }
 
   //TODO 前后
@@ -450,7 +450,7 @@ trait Grid {
           cell =>
             var newMass = cell.newmass
             var newRadius = cell.radius
-            val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+            val target = Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort )
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -462,7 +462,7 @@ trait Grid {
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
 //              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= Game.Mass(massX, massY, player.targetX, player.targetY, player.color, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(massX.toShort , massY.toShort , player.targetX, player.targetY, player.color, shotMass, massRadius, shotSpeed)
             }
             massList :::=newMassList
 //            println(cell.mass + "    " + newMass)
@@ -475,7 +475,7 @@ trait Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -495,7 +495,7 @@ trait Grid {
           cell =>
             var newMass = cell.newmass
             var newRadius = cell.radius
-            val target = Position(mouseAct.clientX + player.x - cell.x, mouseAct.clientY + player.y - cell.y)
+            val target = Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort )
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -528,7 +528,7 @@ trait Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -550,7 +550,7 @@ trait Grid {
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
-    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2))
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(((winWidth/2).toShort,(winHeight/2).toShort ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
 //    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
 //    val width = winWidth / scale / 2

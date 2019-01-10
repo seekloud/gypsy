@@ -118,5 +118,6 @@ object AppSettings {
 //  val addBotPlayer = appConfig.getBoolean("addBotPlayer")
 
   val essfMapKeyName = "essfMap"
+  val projectVersion = appConfig.getString("projectVersion")
 
 }
