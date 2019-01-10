@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KeyCode, MousePosition, PressSpace}
 
+
+import scala.math._
 import concurrent.duration._
 import scala.util.Random
 
@@ -93,21 +95,43 @@ object BotActor {
         case InfoReply(data)=>
           if(data.playerDetails.filter(_.id==botId).nonEmpty){
             val bot = data.playerDetails.filter(_.id==botId).head
+            val botCell = bot.cells.sortBy(_.newmass).reverse.head
             val food = data.foodDetails
             val virus = data.virusDetails
             val mass = data.massDetails
-            val otherBots = data.playerDetails.filterNot(_.id==botId)
+            val otherPlayers = data.playerDetails.filterNot(a=>(a.id==botId || a.protect==true))
             //躲避、追赶其他玩家
-            if (otherBots.nonEmpty){
+            if (otherPlayers.nonEmpty){
+              val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              if(botCell.mass>closestP.mass*2.2){
+                val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                roomActor ! botAction(botId,mp)
+                val kc = KeyCode(Some(botId),70,grid.frameCount,-1)
+                roomActor ! botAction(botId,kc)
+              }
+              else if(botCell.mass>closestP.mass*1.1){
+                if(getDis(botCell.x,botCell.y,closestP.x,closestP.y,closestP.radius) > 0){
+                  val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                  roomActor ! botAction(botId,mp)
+                }
+              }
+              else if(botCell.mass*1.1<closestP.mass){
+                val mp = MousePosition(Some(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
+                roomActor ! botAction(botId,mp)
+              }
 
             }
               //吃mass
             else if(mass.nonEmpty){
-
+              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
             }
               //吃食物
             else if(food.nonEmpty){
-
+              val closestP = food.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,0)).head
+              val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
             }
           }
           Behaviors.same
@@ -151,6 +175,10 @@ object BotActor {
       }
 
     }
+  }
+
+  def getDis(x1:Int,y1:Int,x2:Int,y2:Int,r:Int):Double={
+    sqrt(pow(x1-x2,2.0)+pow(y1-y2,2.0))-r
   }
 
 }
