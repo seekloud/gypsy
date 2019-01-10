@@ -353,7 +353,7 @@ class GameServer(override val boundary: Point) extends Grid {
               toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
             newvirusMap.foreach { vi =>
               val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && isremoveVirus) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && !isremoveVirus) {
                 isremoveVirus = true
                 split = true
                 removeVirus += (vi._1->vi._2)
@@ -492,7 +492,7 @@ class GameServer(override val boundary: Point) extends Grid {
             hasMoved =true
             newMass = (newMass + p.mass).toShort
             newRadius = Mass2Radius(newMass)
-            newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
             newTargetX = vx.toShort
             newTargetY = vy.toShort
             massList = massList.filterNot(l => l == p)
@@ -530,7 +530,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
-    var playerPosition:List[PlayerPosition] = Nil
+    //var playerPosition:List[PlayerPosition] = Nil
     newFoods.foreach{
       case (p,mass) =>
         newFoodDetails ::= Food(mass, p.x, p.y)
@@ -540,7 +540,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
-        playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
+        //playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
         item.copy(_2 = newplayer)
     }
     eatenFoods.foreach{
@@ -555,7 +555,7 @@ class GameServer(override val boundary: Point) extends Grid {
       massList,
       virusMap,
       1.0,
-      playerPosition,
+      //playerPosition,
       newFoodDetails,
       eatenFoodDetails
     )
@@ -648,11 +648,11 @@ class GameServer(override val boundary: Point) extends Grid {
     subscriber=subscribersMap
   }
 
-  override def getActionEventMap(frame:Long): List[GameEvent] = {
+  override def getActionEventMap(frame:Int): List[GameEvent] = {
     ActionEventMap.getOrElse(frame,List.empty)
   }
 
-  override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {
+  override def getGameEventMap(frame: Int): List[Protocol.GameEvent] = {
     GameEventMap.getOrElse(frame,List.empty)
   }
 

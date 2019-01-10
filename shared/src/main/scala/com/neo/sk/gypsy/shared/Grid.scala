@@ -37,7 +37,7 @@ trait Grid {
 
   val cellIdgenerator = new AtomicInteger(1000000)
 
-  var frameCount = 0l
+  var frameCount = 0
   //食物列表
   var food = Map[Point, Short]()
 //  //病毒列表
@@ -51,13 +51,13 @@ trait Grid {
   //衰减周期计数
   var tick = 0
   //操作列表  帧数->(用户ID->操作)
-  var actionMap = Map.empty[Long, Map[String, KeyCode]]
+  var actionMap = Map.empty[Int, Map[String, KeyCode]]
 
-  var mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
+    var mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
 
-  val ActionEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
   val bigPlayerMass = 500.0
 
@@ -86,7 +86,7 @@ trait Grid {
     val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)
     actionMap += (keyCode.frame -> tmp)
-    val action = KeyPress(keyCode.id,keyCode.keyCode,keyCode.frame,keyCode.serialNum)
+    val action = KeyPress(id,keyCode.keyCode,keyCode.frame,keyCode.serialNum)
     AddActionEvent(action)
   }
 
@@ -95,11 +95,11 @@ trait Grid {
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
     val direct = (mp.clientX,mp.clientY)
-    val action = MouseMove(mp.id,direct,mp.frame,mp.serialNum)
+    val action = MouseMove(id,direct,mp.frame,mp.serialNum)
     AddActionEvent(action)
   }
 
-  def removeActionWithFrame(id: String, userAction: UserAction, frame: Long) = {
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int) = {
     userAction match {
       case k:KeyCode=>
         val map = actionMap.getOrElse(frame,Map.empty)
@@ -236,7 +236,7 @@ trait Grid {
       if(v.speed!=0){
         newX = (v.x + (nx*v.speed)).toShort
         newY = (v.y + (ny*v.speed)).toShort
-        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0 else v.speed-virusSpeedDecayRate
+        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0f else (v.speed-virusSpeedDecayRate).toFloat
         val newPoint =ExamBoundary(newX,newY)
         newX = newPoint._1
         newY = newPoint._2
@@ -296,7 +296,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -320,7 +320,7 @@ trait Grid {
 //      println(s"slowdown:$slowdown")
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
-        newSpeed = target.clientX / degX
+        newSpeed = (target.clientX / degX).toFloat
       } else {
         if (cell.speed > 30 / slowdown) {
           newSpeed -= acceleration
@@ -333,7 +333,7 @@ trait Grid {
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
               cell.speed + acceleration
-            } else 30 / slowdown
+            } else (30 / slowdown).toFloat
           }
         }
       }
@@ -441,7 +441,7 @@ trait Grid {
     //TODO 这里写下有哪些是分裂的
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
@@ -486,7 +486,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
@@ -519,7 +519,7 @@ trait Grid {
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
 //            println(cell.mass + "   " + newMass)
             List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                Cell(cellId,  cell.x, cell.y, splitMass, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+                Cell(cellId,  cell.x, cell.y, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
         }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
@@ -561,7 +561,7 @@ trait Grid {
     val width = winWidth / Scale / 2
     val height = winHeight / Scale / 2
 
-    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
+    //val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
@@ -577,14 +577,14 @@ trait Grid {
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
 //      scale,
       Scale,
-      allPlayerPosition
+     // allPlayerPosition
     )
   }
 
   def getAllGridData: Protocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[GameEvent]
+  def getActionEventMap(frame:Int):List[GameEvent]
 
-  def getGameEventMap(frame:Long):List[GameEvent]
+  def getGameEventMap(frame:Int):List[GameEvent]
 
 }

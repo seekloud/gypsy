@@ -49,18 +49,18 @@ object Game {
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
                    var killerName:String= "",
-                   width:Double =  8 + sqrt(10)*12,
-                   height:Double =  8 + sqrt(10)*12,
+                   width:Double =  initSize,
+                   height:Double =  initSize,
                    cells:List[Cell],//分裂
                    startTime:Long=System.currentTimeMillis()
                    )
 
   case class PlayerPosition(
                              id:String,
-                             x:Int,
-                             y:Int,
-                             targetX:Int = 0,//运动方向，大部分做了归一化
-                             targetY:Int = 0,
+                             x:Short,
+                             y:Short,
+                             //targetX:Int = 0,//运动方向，大部分做了归一化
+                             //targetY:Int = 0,
                            )
 //  case class Cell(
 //                 id:Long,
@@ -81,7 +81,7 @@ object Game {
                    mass:Short = initMass,  //小球体重
                    newmass:Short = initMass,
                    radius:Short = Mass2Radius(initMass),
-                   speed:Double = 12,
+                   speed:Float = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
                    parallel:Boolean = false,
@@ -96,7 +96,7 @@ object Game {
                  color:Short,
                  mass:Short,
                  radius:Short,
-                 speed:Double
+                 speed:Float
                  )
   case class Virus(
                   vid:Long,
@@ -106,7 +106,7 @@ object Game {
                   radius:Short,
                   targetX:Short = 0,
                   targetY:Short = 0,
-                  speed:Double = 0
+                  speed:Float = 0
                   )
 
   object Boundary{

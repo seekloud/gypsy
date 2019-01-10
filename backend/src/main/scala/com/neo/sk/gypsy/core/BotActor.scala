@@ -86,7 +86,7 @@ object BotActor {
           //TODO 选择一个动作发给roomActor
           val px =  new Random(System.nanoTime()).nextInt(1200)- 600
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
-          val mp = MousePosition(botId,px.toShort,py.toShort,grid.frameCount, -1)
+          val mp = MousePosition(Some(botId),px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
           Behaviors.same
 
@@ -138,7 +138,7 @@ object BotActor {
         case Space =>
           //TODO 复活
           val spaceKeyCode=32
-          roomActor ! botAction(botId, KeyCode(botId,spaceKeyCode,grid.frameCount,-1))
+          roomActor ! botAction(botId, KeyCode(Some(botId),spaceKeyCode,grid.frameCount,-1))
           Behaviors.same
 
         case KillBot =>
