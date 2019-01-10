@@ -176,7 +176,7 @@ object GameClient {
           ClientBoot.addToPlatform{
             grid.removePlayer(deadPlayer.id)
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
             if(deadPlayer.id != GameHolder.myId){
               if(!GameHolder.isDead){
                 GameHolder.isDead = true
@@ -392,7 +392,7 @@ object GameClient {
           ClientBoot.addToPlatform{
             grid.removePlayer(deadPlayer.id)
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = a.kill + 1))
+            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
             if(deadPlayer.id != BotHolder.botId){
               if(!BotHolder.isDead){
                 BotHolder.isDead = true

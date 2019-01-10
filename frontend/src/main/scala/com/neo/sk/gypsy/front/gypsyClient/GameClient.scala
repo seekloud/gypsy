@@ -56,10 +56,10 @@ class GameClient (override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  if (cell.x < cell2.x) cellX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-                  else if (cell.x > cell2.x) cellX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-                  if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
-                  else if (cell.y > cell2.y) cellY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                 }
                 else if (distance < radiusTotal / 2) {
                   /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
@@ -93,7 +93,8 @@ class GameClient (override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge) mergeInFlame = true
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+//        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     mergeInFlame
@@ -130,7 +131,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     virusMap --= removeVirus.keySet.toList
   }
@@ -166,7 +167,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -196,7 +197,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX, y = newY, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -224,8 +225,8 @@ class GameClient (override val boundary: Point) extends Grid {
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
           newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
-          newTargetX = vx
-          newTargetY = vy
+          newTargetX = vx.toShort
+          newTargetY = vy.toShort
           massList = massList.filterNot(l => l == p)
         }
     }

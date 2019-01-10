@@ -206,7 +206,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       }
     }
 
-    virus.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius,radius)
     }
 
@@ -578,11 +578,11 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         val right = newcells.map(a => a.x + a.radius).max
         val bottom = newcells.map(a => a.y - a.radius).min
         val top = newcells.map(a => a.y + a.radius).max
-        val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+        val player = Player(id,name,color,newX.toShort ,newY.toShort ,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
         grid.playerMap += (id -> player)
       }
     }
-    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
 
       ctx.drawImage(img,x-radius+ offx,y-radius+ offy,radius*2,radius*2)
