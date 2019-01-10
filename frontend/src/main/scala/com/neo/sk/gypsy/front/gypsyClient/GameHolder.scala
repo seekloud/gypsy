@@ -211,14 +211,14 @@ class GameHolder(replay:Boolean = false) {
             if (e.keyCode == KeyCode.Space) {
               println(s"down+${e.keyCode.toString} ReLive Press!")
               keyInFlame = true
-              val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
               webSocketClient.sendMsg(reliveMsg)
             }
           }else{
             if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
-              val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+              val keyCode = Protocol.KeyCode(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
               grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
               grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
               webSocketClient.sendMsg(keyCode)
@@ -255,7 +255,7 @@ class GameHolder(replay:Boolean = false) {
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
         if(mouseInFlame == false){
           {
-            val mp = MousePosition(myId, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+            val mp = MousePosition(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
               println(s"帧号${grid.frameCount},动作：$mp")
               mouseInFlame = true
@@ -278,7 +278,7 @@ class GameHolder(replay:Boolean = false) {
   def testSend = {
     val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
     val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
-    val mp = MousePosition(myId,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+    val mp = MousePosition(None,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
     grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
     grid.addUncheckActionWithFrame(myId, mp, mp.frame)
     webSocketClient.sendMsg(mp)
@@ -373,11 +373,11 @@ class GameHolder(replay:Boolean = false) {
 
       case m:Protocol.KeyCode =>
         if(myId!=m.id || usertype == -1){
-          grid.addActionWithFrame(m.id,m)
+          grid.addActionWithFrame(m.id.get,m)
         }
       case m:Protocol.MousePosition =>
         if(myId!=m.id || usertype == -1){
-          grid.addMouseActionWithFrame(m.id,m)
+          grid.addMouseActionWithFrame(m.id.get,m)
         }
 
       case Protocol.Ranks(current) =>
@@ -531,10 +531,10 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.currentRank
 
       case e: Protocol.KeyPress =>
-        grid.addActionWithFrame(e.userId,Protocol.KeyCode(e.userId,e.keyCode,e.frame,e.serialNum))
+        grid.addActionWithFrame(e.userId,Protocol.KeyCode(Some(e.userId),e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
-        grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(e.userId,e.direct._1,e.direct._2,e.frame,e.serialNum))
+        grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(Some(e.userId),e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
         grid.food ++= e.apples
