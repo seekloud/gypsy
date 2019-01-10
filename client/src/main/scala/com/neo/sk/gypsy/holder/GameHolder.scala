@@ -48,14 +48,14 @@ object GameHolder {
   var usertype = 0
   var FormerDegree = 0D
 
+  //每帧动作限制
+  var mouseInFlame = false
+  var keyInFlame = false
+
   val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,
     KeyCode.SPACE,
-    KeyCode.LEFT,
-    KeyCode.UP,
-    KeyCode.RIGHT,
-    KeyCode.DOWN,
     KeyCode.ESCAPE
   )
 
@@ -64,10 +64,6 @@ object GameHolder {
       case KeyCode.E => KeyEvent.VK_E
       case KeyCode.F => KeyEvent.VK_F
       case KeyCode.SPACE => KeyEvent.VK_SPACE
-      case KeyCode.LEFT => KeyEvent.VK_LEFT
-      case KeyCode.UP => KeyEvent.VK_UP
-      case KeyCode.RIGHT => KeyEvent.VK_RIGHT
-      case KeyCode.DOWN => KeyEvent.VK_DOWN
       case KeyCode.F2 => KeyEvent.VK_F2
       case _ => KeyEvent.VK_F2
     }
@@ -149,6 +145,8 @@ class GameHolder(
     //差不多每三秒同步一次
     //不同步
     if (!justSynced) {
+      mouseInFlame = false
+      keyInFlame = false
       update()
     } else {
       if (syncGridData.nonEmpty) {
@@ -190,14 +188,17 @@ class GameHolder(
       val key=e
       if (key == KeyCode.ESCAPE && !isDead) {
         gameClose
-      } else if (watchKeys.contains(key)) {
+      } else if (watchKeys.contains(key) && keyInFlame == false) {
         if (key == KeyCode.SPACE) {
           println(s"down+ Space ReLive Press!")
+          keyInFlame = true
+          //val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
           val reliveMsg = Protocol.ReLiveMsg(grid.frameCount + advanceFrame+ delayFrame)
           serverActor ! reliveMsg
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
+          keyInFlame = true
           val keyCode = Protocol.KeyCode(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
           grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
@@ -215,7 +216,8 @@ class GameHolder(
 
       val mp = MousePosition(None, (e.getX.toFloat - gameScene.gameView.realWindow.x / 2).toShort, (e.getY.toFloat - gameScene.gameView.realWindow.y / 2).toShort, (grid.frameCount +advanceFrame +delayFrame).toInt, getActionSerialNum)
 //      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
+      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
+        mouseInFlame = true
         FormerDegree = getDegree(e.getX,e.getY)
         grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
