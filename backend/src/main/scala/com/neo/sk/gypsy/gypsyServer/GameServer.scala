@@ -1,19 +1,21 @@
 package com.neo.sk.gypsy.gypsyServer
 
 import java.util.concurrent.atomic.AtomicLong
+
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization, Mass2Radius}
+import com.neo.sk.gypsy.shared.util.utils._
 import org.slf4j.LoggerFactory
+
 import scala.collection.mutable
 import scala.util.Random
 import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
+
 import scala.math.{Pi, abs, acos, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
-
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -559,6 +561,35 @@ class GameServer(override val boundary: Point) extends Grid {
     )
   }
 
+  override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
+
+  def getDataForBot(id:String,winWidth:Int,winHeight:Int):GridData4Bot =  {
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(((winWidth/2).toShort,(winHeight/2).toShort ))
+    val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
+    if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
+      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+    }
+    val width = winWidth / Scale / 2
+    val height = winHeight / Scale / 2
+    var playerDetails: List[Player] = Nil
+
+    playerMap.foreach{
+      case (id,player) =>
+        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
+          playerDetails ::= player
+    }
+    val foodList = food.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._1.x,m._1.y),4,width,height)).map{m=>
+      Food(m._2,m._1.x,m._1.y)
+    }.toList
+
+    Protocol.GridData4Bot(
+      frameCount,
+      playerDetails,
+      massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
+      foodList
+    )
+  }
   //获取快照
   def getSnapShot()={
     val playerDetails =  playerMap.map{

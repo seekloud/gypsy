@@ -4,13 +4,13 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomActor.botAction
+import com.neo.sk.gypsy.core.RoomActor.{GetBotInfo, botAction}
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, PressSpace}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KeyCode, MousePosition, PressSpace}
 
 import concurrent.duration._
 import scala.util.Random
@@ -35,9 +35,19 @@ object BotActor {
 
   case object Space extends Command
 
+  case object StartTimer extends Command
+
+  case object GetInfo4Bot extends Command
+
+  case class InfoReply(data:GridData4Bot) extends Command
+
   private final case object ChoseActionKey
 
   private final case object SpaceKey
+
+  val actionInterval = 2*frameRate
+
+
 
 
   def create(botId:String):Behavior[Command] = {
@@ -47,7 +57,7 @@ object BotActor {
         msg match {
           case InitInfo(botName, grid, roomActor) =>
             roomActor ! RoomActor.JoinRoom4Bot(ApiProtocol.PlayerInfo(botId,botName), ctx.self)
-            timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
+         //   timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
             gaming(botId,grid,roomActor)
 
           case unknownMsg@_ =>
@@ -63,6 +73,14 @@ object BotActor {
             (implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx,msg) =>
       msg match {
+        case StartTimer=>
+          timer.startPeriodicTimer(ChoseActionKey,GetInfo4Bot,actionInterval.millis)
+          Behaviors.same
+
+        case GetInfo4Bot=>
+          roomActor ! GetBotInfo(botId,ctx.self)
+          Behaviors.same
+
         case ChoseAction =>
           timer.startSingleTimer(ChoseActionKey, ChoseAction, (1 + scala.util.Random.nextInt(20)) * frameRate.millis)
           //TODO 选择一个动作发给roomActor
@@ -70,6 +88,29 @@ object BotActor {
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
           val mp = MousePosition(botId,px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
+          Behaviors.same
+
+        case InfoReply(data)=>
+          if(data.playerDetails.filter(_.id==botId).nonEmpty){
+            val bot = data.playerDetails.filter(_.id==botId).head
+            val food = data.foodDetails
+            val virus = data.virusDetails
+            val mass = data.massDetails
+            val otherBots = data.playerDetails.filterNot(_.id==botId)
+            //躲避、追赶其他玩家
+            if (otherBots.nonEmpty){
+
+            }
+              //吃mass
+            else if(mass.nonEmpty){
+
+            }
+              //吃食物
+            else if(food.nonEmpty){
+
+            }
+          }
+
           Behaviors.same
 
         case BotDead =>
