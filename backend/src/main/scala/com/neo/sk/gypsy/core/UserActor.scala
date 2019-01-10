@@ -50,15 +50,15 @@ object UserActor {
 
   case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
-  case class Key(id: String, keyCode: Int,frame:Long,n:Int) extends Command with RoomActor.Command
+  case class Key(keyCode: Int,frame:Int,n:Int) extends Command with RoomActor.Command
 
-  case class Mouse(id: String, clientX:Short,clientY:Short,frame:Long,n:Int) extends Command with RoomActor.Command
+  case class Mouse(clientX:Short,clientY:Short,frame:Int,n:Int) extends Command with RoomActor.Command
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
 
 //  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
-  case class UserReLiveMsg(id: String,frame: Long) extends Command with RoomActor.Command
+  case class UserReLiveMsg(frame: Int) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
@@ -113,18 +113,18 @@ object UserActor {
           .map {a=>
             val req = a.reqOpt.get
                  req match{
-                   case KeyCode(id,keyCode,f,n)=>
+                   case KeyCode(_,keyCode,f,n)=>
                      log.debug(s"键盘事件$keyCode")
-                     Key(id,keyCode,f,n)
+                     Key(keyCode,f,n)
 
-                   case MousePosition(id,clientX,clientY,f,n)=>
-                     Mouse(id,clientX,clientY,f,n)
+                   case MousePosition(_,clientX,clientY,f,n)=>
+                     Mouse(clientX,clientY,f,n)
 
                    case Ping(timestamp)=>
                      NetTest(id,timestamp)
 
-                   case ReLiveMsg(id,frame) =>
-                      UserReLiveMsg(id,frame)
+                   case ReLiveMsg(frame) =>
+                      UserReLiveMsg(frame)
 
 //                   case ReLiveAck(id) =>
 //                     UserReLiveAck(id)
@@ -288,14 +288,14 @@ object UserActor {
                   ): Behavior[Command] =
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Key(id, keyCode,frame,n) =>
+        case Key(keyCode,frame,n) =>
           log.debug(s"got $msg")
-          roomActor ! Key(id, keyCode,frame,n)
+          roomActor ! RoomActor.KeyR(userInfo.playerId, keyCode,frame,n)
           Behaviors.same
 
-        case Mouse(id,x,y,frame,n) =>
+        case Mouse(x,y,frame,n) =>
           log.debug(s"gor $msg")
-          roomActor ! Mouse(id,x,y,frame,n)
+          roomActor ! RoomActor.MouseR(userInfo.playerId,x,y,frame,n)
           Behaviors.same
 
 //        case UserReLiveAck(id) =>
@@ -303,9 +303,9 @@ object UserActor {
 //          roomActor ! ReStartAck(id)
 //          Behaviors.same
 
-        case UserReLiveMsg(id,frame) =>
-          println(s"UserActor got $id relive Msg")
-          roomActor ! UserReLive(id,frame)
+        case UserReLiveMsg(frame) =>
+//          println(s"UserActor got $id relive Msg")
+          roomActor ! UserReLive(userInfo.playerId,frame)
           Behaviors.same
 
         case DispatchMsg(m)=>

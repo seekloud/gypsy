@@ -205,7 +205,7 @@ class BotHolder(
   def gameActionReceiver(key: Int, swing: Option[Swing]) = {
     if (key != 0) {
       //使用E、F
-      val keyCode = Protocol.KeyCode(botId, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      val keyCode = Protocol.KeyCode(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       grid.addActionWithFrame(botId, keyCode.copy(frame = grid.frameCount + delayFrame))
       //      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
       serverActor ! keyCode
@@ -219,7 +219,7 @@ class BotHolder(
       var FormerDegree = 0D
       val (x, y) = Constant.swingToXY(swing.get)
       //      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      val mp = MousePosition(botId, x.toFloat, y.toFloat, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+      val mp = MousePosition(None, x.toShort, y.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       if (math.abs(getDegree(x, y) - FormerDegree) * 180 / math.Pi > 5) {
         FormerDegree = getDegree(x, y)
         grid.addMouseActionWithFrame(botId, mp.copy(frame = grid.frameCount + delayFrame))

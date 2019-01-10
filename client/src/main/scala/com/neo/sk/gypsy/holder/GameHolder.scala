@@ -193,13 +193,13 @@ class GameHolder(
       } else if (watchKeys.contains(key)) {
         if (key == KeyCode.SPACE) {
           println(s"down+ Space ReLive Press!")
-          val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
+          val reliveMsg = Protocol.ReLiveMsg((grid.frameCount + advanceFrame+ delayFrame).toInt)
           serverActor ! reliveMsg
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
-          val keyCode = Protocol.KeyCode(myId, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-          grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
+          val keyCode = Protocol.KeyCode(None, keyCode2Int(e), (grid.frameCount + advanceFrame + delayFrame).toInt, getActionSerialNum)
+          grid.addActionWithFrame(myId, keyCode.copy(frame = (grid.frameCount + delayFrame).toInt))
           grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           serverActor ! keyCode
         }
@@ -213,11 +213,11 @@ class GameHolder(
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
 
-      val mp = MousePosition(myId, e.getX.toFloat - gameScene.gameView.realWindow.x / 2, e.getY.toFloat - gameScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MousePosition(None, (e.getX.toFloat - gameScene.gameView.realWindow.x / 2).toShort, (e.getY.toFloat - gameScene.gameView.realWindow.y / 2).toShort, (grid.frameCount +advanceFrame +delayFrame).toInt, getActionSerialNum)
 //      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = (grid.frameCount + delayFrame).toInt ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         serverActor ! mp
       }

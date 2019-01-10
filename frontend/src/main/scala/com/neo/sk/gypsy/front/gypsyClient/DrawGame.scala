@@ -369,7 +369,7 @@ case class DrawGame(
 
   var frame=1
 
-  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Int], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
+  def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Short], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
     val foods = foodMap.map(f=>Food(f._2.toShort,f._1.x,f._1.y)).toList
