@@ -351,7 +351,7 @@ class GameServer(override val boundary: Point) extends Grid {
               toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
             newvirusMap.foreach { vi =>
               val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && isremoveVirus) {
+              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && !isremoveVirus) {
                 isremoveVirus = true
                 split = true
                 removeVirus += (vi._1->vi._2)

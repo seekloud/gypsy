@@ -57,7 +57,7 @@ trait Grid {
 
   val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
   val bigPlayerMass = 500.0
 
