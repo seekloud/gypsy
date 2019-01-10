@@ -334,6 +334,7 @@ object RoomActor {
               grid.addPlayer(id.get, userMap.getOrElse(id.get, ("Unknown",0l,0l))._1)
               dispatchTo(subscribersMap)(id.get,Protocol.PlayerRestart(id.get))
             } else {
+//              println(s"get keyCode $keyCode")
               grid.addActionWithFrame(id.get, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
               dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
             }
