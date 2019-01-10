@@ -57,7 +57,7 @@ trait Grid {
 
   val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
   val bigPlayerMass = 500.0
 
@@ -583,8 +583,8 @@ trait Grid {
 
   def getAllGridData: Protocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[GameEvent]
+  def getActionEventMap(frame:Int):List[GameEvent]
 
-  def getGameEventMap(frame:Long):List[GameEvent]
+  def getGameEventMap(frame:Int):List[GameEvent]
 
 }

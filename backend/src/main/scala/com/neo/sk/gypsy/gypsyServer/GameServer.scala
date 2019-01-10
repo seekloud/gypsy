@@ -617,11 +617,11 @@ class GameServer(override val boundary: Point) extends Grid {
     subscriber=subscribersMap
   }
 
-  override def getActionEventMap(frame:Long): List[GameEvent] = {
+  override def getActionEventMap(frame:Int): List[GameEvent] = {
     ActionEventMap.getOrElse(frame,List.empty)
   }
 
-  override def getGameEventMap(frame: Long): List[Protocol.GameEvent] = {
+  override def getGameEventMap(frame: Int): List[Protocol.GameEvent] = {
     GameEventMap.getOrElse(frame,List.empty)
   }
 
