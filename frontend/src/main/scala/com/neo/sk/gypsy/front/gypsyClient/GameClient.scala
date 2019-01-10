@@ -224,7 +224,7 @@ class GameClient (override val boundary: Point) extends Grid {
           hasMoved =true
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
-          newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
           newTargetX = vx.toShort
           newTargetY = vy.toShort
           massList = massList.filterNot(l => l == p)

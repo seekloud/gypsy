@@ -236,7 +236,7 @@ trait Grid {
       if(v.speed!=0){
         newX = (v.x + (nx*v.speed)).toShort
         newY = (v.y + (ny*v.speed)).toShort
-        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0 else v.speed-virusSpeedDecayRate
+        newSpeed = if(v.speed-virusSpeedDecayRate<0) 0f else (v.speed-virusSpeedDecayRate).toFloat
         val newPoint =ExamBoundary(newX,newY)
         newX = newPoint._1
         newY = newPoint._2
@@ -320,7 +320,7 @@ trait Grid {
 //      println(s"slowdown:$slowdown")
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
-        newSpeed = target.clientX / degX
+        newSpeed = (target.clientX / degX).toFloat
       } else {
         if (cell.speed > 30 / slowdown) {
           newSpeed -= acceleration
@@ -333,7 +333,7 @@ trait Grid {
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
               cell.speed + acceleration
-            } else 30 / slowdown
+            } else (30 / slowdown).toFloat
           }
         }
       }
@@ -519,7 +519,7 @@ trait Grid {
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
 //            println(cell.mass + "   " + newMass)
             List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                Cell(cellId,  cell.x, cell.y, splitMass, splitMass, splitRadius, splitSpeed, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+                Cell(cellId,  cell.x, cell.y, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
         }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length

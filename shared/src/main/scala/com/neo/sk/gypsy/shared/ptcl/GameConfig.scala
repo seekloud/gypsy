@@ -2,6 +2,8 @@ package com.neo.sk.gypsy.shared.ptcl
 
 import com.neo.sk.gypsy.shared.util.utils
 
+import scala.math.sqrt
+
 
 object GameConfig {
 
@@ -60,5 +62,7 @@ object GameConfig {
   val initMass:Short = 10
 //病毒分裂个数
   val VirusSplitNumber = 13
+//  玩家初始长宽
+  val initSize = 8 + sqrt(10)*12
 
 }
