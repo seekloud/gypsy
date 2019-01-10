@@ -10,7 +10,7 @@ import org.scalajs.dom.html.Canvas
 import com.neo.sk.gypsy.shared.util.utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
-//import com.neo.sk.gypsy.front.utils.EchartsJs
+import com.neo.sk.gypsy.front.utils.EchartsJs
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math._
@@ -366,7 +366,7 @@ case class DrawGame(
   def drawGrid(uid: String, data: GridDataSync,foodMap: Map[Point,Short], offsetTime:Long,firstCome:Boolean,offScreenCanvas:Canvas,basePoint:(Double,Double),zoom:(Double,Double),gird:GameClient,p:Player)= {
     //计算偏移量
     val players = data.playerDetails
-    val foods = foodMap.map(f=>Food(f._2,f._1.x,f._1.y)).toList
+    val foods = foodMap.map(f=>Food(f._2.toShort,f._1.x,f._1.y)).toList
     val masses = data.massDetails
     val virus = data.virusDetails
 
@@ -511,13 +511,11 @@ case class DrawGame(
 
         /**膨胀、缩小效果**/
         var newcell = cell
-
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
-          val massSpeed:Short = if(cell.mass < cell.newmass) 1 else -1
-          val tempMass:Short = (cell.mass + massSpeed).toShort
-          newcell = cell.copy(mass = tempMass, radius = Mass2Radius(tempMass))
+          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
+          newcell = cell.copy(mass = (cell.mass + massSpeed).toShort, radius = (4 + sqrt(cell.mass + massSpeed) * 6).toShort)
         }
         newcell
       }.filterNot(e=> e.mass<=0 && e.newmass <=0)
@@ -530,12 +528,12 @@ case class DrawGame(
           val right = newcells.map(a => a.x + a.radius).max
           val bottom = newcells.map(a => a.y - a.radius).min
           val top = newcells.map(a => a.y + a.radius).max
-          val player = Player(id,name,color,newX,newY,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
           gird.playerMap += (id -> player)
         }
     }
 
-    virus.values.foreach { case Virus(vid,x,y,mass,radius,_,tx,ty,speed) =>
+    virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
       var xfix:Double=x
       var yfix:Double=y
