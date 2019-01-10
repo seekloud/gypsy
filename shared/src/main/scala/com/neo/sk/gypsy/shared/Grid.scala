@@ -561,7 +561,7 @@ trait Grid {
     val width = winWidth / Scale / 2
     val height = winHeight / Scale / 2
 
-    val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
+    //val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
@@ -577,7 +577,7 @@ trait Grid {
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
 //      scale,
       Scale,
-      allPlayerPosition
+     // allPlayerPosition
     )
   }
 

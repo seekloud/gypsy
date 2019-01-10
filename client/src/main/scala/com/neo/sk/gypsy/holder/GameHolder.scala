@@ -198,7 +198,7 @@ class GameHolder(
         } else {
           println(s"down+${e.toString}")
           keyInFlame = true
-          val keyCode = Protocol.KeyCode(None,keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          val keyCode = Protocol.KeyCode(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
           grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           serverActor ! keyCode
@@ -218,7 +218,7 @@ class GameHolder(
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
         mouseInFlame = true
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = (grid.frameCount + delayFrame).toInt ))
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         serverActor ! mp
       }
