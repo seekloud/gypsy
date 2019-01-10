@@ -37,7 +37,7 @@ trait Grid {
 
   val cellIdgenerator = new AtomicInteger(1000000)
 
-  var frameCount = 0l
+  var frameCount = 0
   //食物列表
   var food = Map[Point, Short]()
 //  //病毒列表
@@ -51,13 +51,13 @@ trait Grid {
   //衰减周期计数
   var tick = 0
   //操作列表  帧数->(用户ID->操作)
-  var actionMap = Map.empty[Long, Map[String, KeyCode]]
+  var actionMap = Map.empty[Int, Map[String, KeyCode]]
 
-  var mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
+    var mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
 
-  val ActionEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val GameEventMap = mutable.HashMap[Long,List[GameEvent]]() //frame -> List[GameEvent]
+  val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
   val bigPlayerMass = 500.0
 
@@ -86,7 +86,7 @@ trait Grid {
     val map = actionMap.getOrElse(keyCode.frame, Map.empty)
     val tmp = map + (id -> keyCode)
     actionMap += (keyCode.frame -> tmp)
-    val action = KeyPress(keyCode.id,keyCode.keyCode,keyCode.frame,keyCode.serialNum)
+    val action = KeyPress(id,keyCode.keyCode,keyCode.frame,keyCode.serialNum)
     AddActionEvent(action)
   }
 
@@ -95,11 +95,11 @@ trait Grid {
     val tmp = map + (id -> mp)
     mouseActionMap += (mp.frame -> tmp)
     val direct = (mp.clientX,mp.clientY)
-    val action = MouseMove(mp.id,direct,mp.frame,mp.serialNum)
+    val action = MouseMove(id,direct,mp.frame,mp.serialNum)
     AddActionEvent(action)
   }
 
-  def removeActionWithFrame(id: String, userAction: UserAction, frame: Long) = {
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int) = {
     userAction match {
       case k:KeyCode=>
         val map = actionMap.getOrElse(frame,Map.empty)
@@ -296,7 +296,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -441,7 +441,7 @@ trait Grid {
     //TODO 这里写下有哪些是分裂的
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_E
           case _ => false
@@ -486,7 +486,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(player.id,player.targetX.toShort, player.targetY.toShort,0l,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
@@ -583,8 +583,8 @@ trait Grid {
 
   def getAllGridData: Protocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[GameEvent]
+  def getActionEventMap(frame:Int):List[GameEvent]
 
-  def getGameEventMap(frame:Long):List[GameEvent]
+  def getGameEventMap(frame:Int):List[GameEvent]
 
 }
