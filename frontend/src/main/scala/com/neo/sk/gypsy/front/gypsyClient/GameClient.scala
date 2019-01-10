@@ -29,7 +29,7 @@ class GameClient (override val boundary: Point) extends Grid {
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
-    GridDataSync(0l, Nil, Nil, Map.empty, 1.0,Nil)
+    GridDataSync(0, Nil, Nil, Map.empty, 1.0,Nil)
   }
 
 
@@ -340,7 +340,7 @@ class GameClient (override val boundary: Point) extends Grid {
 
   def reStart={
     myId = ""
-    frameCount = 0l
+    frameCount = 0
     food = Map[Point, Short]()
     foodPool = 300
     playerMap = Map.empty[String,Player]
