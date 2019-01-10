@@ -341,6 +341,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var split = false
+        var isRemoveVirus = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -348,30 +349,31 @@ class GameServer(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             //病毒碰撞检测
-            var isremoveVirus = false
-            val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
-              toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
-            newvirusMap.foreach { vi =>
-              val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && !isremoveVirus) {
-                isremoveVirus = true
-                split = true
-                removeVirus += (vi._1->vi._2)
-                val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
-                if(splitNum>0){
-                  val cellMass = (newMass / (splitNum + 1)).toShort
-                  val cellRadius = Mass2Radius(cellMass)
-                  newMass = ( (newMass / (splitNum + 1)) + (v.mass * 0.5) ).toShort
-                  newRadius = Mass2Radius(newMass)
-                  newSplitTime = System.currentTimeMillis()
-                  val baseAngle = 2 * Pi / splitNum
-                  for (i <- 0 until splitNum) {
-                    val degX = cos(baseAngle * i)
-                    val degY = sin(baseAngle * i)
-                    val startLen = (newRadius + cellRadius) * 1.2 * 3
-                    val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-                    val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                    vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort, (cell.y + startLen * degY).toShort, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
+            if(!mergeInFlame && !isRemoveVirus){
+              val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
+                toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
+              newvirusMap.foreach { vi =>
+                val v = vi._2
+                if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) ) {
+                  isRemoveVirus = true
+                  split = true
+                  removeVirus += (vi._1->vi._2)
+                  val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
+                  if(splitNum>0){
+                    val cellMass = (newMass / (splitNum + 1)).toShort
+                    val cellRadius = Mass2Radius(cellMass)
+                    newMass = ( (newMass / (splitNum + 1)) + (v.mass * 0.5) ).toShort
+                    newRadius = Mass2Radius(newMass)
+                    newSplitTime = System.currentTimeMillis()
+                    val baseAngle = 2 * Pi / splitNum
+                    for (i <- 0 until splitNum) {
+                      val degX = cos(baseAngle * i)
+                      val degY = sin(baseAngle * i)
+                      val startLen = (newRadius + cellRadius) * 1.2 * 3
+                      val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
+                      val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                      vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort, (cell.y + startLen * degY).toShort, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
+                    }
                   }
                 }
               }

@@ -486,7 +486,7 @@ trait Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX, player.targetY,0,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
           case _ => false
