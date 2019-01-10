@@ -14,6 +14,8 @@ import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
+import com.neo.sk.gypsy.core.BotActor.InfoReply
+
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.concurrent.duration._
@@ -61,6 +63,8 @@ object RoomActor {
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
   case class UserReLive(id:String,frame:Long) extends Command
+
+  case class GetBotInfo(id:String,botActor:ActorRef[BotActor.Command]) extends Command
 
   private case class ReStart(id: String) extends Command
 
@@ -160,6 +164,7 @@ object RoomActor {
           //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
           userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
+          botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
             case None => userSyncMap.put(group,Set(botInfo.playerId))
@@ -313,6 +318,10 @@ object RoomActor {
           dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
 
+        case GetBotInfo(id,botActor)=>
+          val data = grid.getDataForBot(id,1200,600)
+          botActor ! InfoReply(data)
+          Behaviors.same
 
         case botAction(id,userAction)=>
         userAction match{
