@@ -104,7 +104,6 @@ object Game {
                   y:Short,
                   mass:Short,  //质量
                   radius:Short,
-                  splitNumber:Int = 13,
                   targetX:Short = 0,
                   targetY:Short = 0,
                   speed:Double = 0
