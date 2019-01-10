@@ -193,13 +193,13 @@ class GameHolder(
       } else if (watchKeys.contains(key)) {
         if (key == KeyCode.SPACE) {
           println(s"down+ Space ReLive Press!")
-          val reliveMsg = Protocol.ReLiveMsg((grid.frameCount + advanceFrame+ delayFrame).toInt)
+          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount + advanceFrame+ delayFrame)
           serverActor ! reliveMsg
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
-          val keyCode = Protocol.KeyCode(None, keyCode2Int(e), (grid.frameCount + advanceFrame + delayFrame).toInt, getActionSerialNum)
-          grid.addActionWithFrame(myId, keyCode.copy(frame = (grid.frameCount + delayFrame).toInt))
+          val keyCode = Protocol.KeyCode(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
           grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           serverActor ! keyCode
         }
@@ -217,7 +217,7 @@ class GameHolder(
 //      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = (grid.frameCount + delayFrame).toInt ))
+        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
         grid.addUncheckActionWithFrame(myId, mp, mp.frame)
         serverActor ! mp
       }
