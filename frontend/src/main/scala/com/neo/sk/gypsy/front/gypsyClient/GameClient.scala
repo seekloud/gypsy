@@ -346,8 +346,8 @@ class GameClient (override val boundary: Point) extends Grid {
     virusMap = Map.empty[Long,Virus]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Long, Map[String, KeyCode]]
-    mouseActionMap = Map.empty[Long, Map[String, MousePosition]]
+    actionMap = Map.empty[Int, Map[String, KeyCode]]
+    mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 

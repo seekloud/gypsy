@@ -70,7 +70,7 @@ object GameClient {
         case m:Protocol.KeyCode =>
           if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
             ClientBoot.addToPlatform{
-              grid.addActionWithFrame(m.id,m)
+              grid.addActionWithFrame(m.id.get,m)
             }
           }
           Behaviors.same
@@ -78,7 +78,7 @@ object GameClient {
         case m:Protocol.MousePosition =>
           if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
             ClientBoot.addToPlatform{
-              grid.addMouseActionWithFrame(m.id,m)
+              grid.addMouseActionWithFrame(m.id.get,m)
             }
           }
           Behaviors.same
@@ -216,7 +216,7 @@ object GameClient {
           crashMap.map{p=>
             if(grid.playerMap.get(p._1).nonEmpty){
               ClientBoot.addToPlatform {
-                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
                 var newCells = newPlayer.cells
                 p._2.map { cell =>
                   newCells = cell :: newCells.filterNot(_.id == cell.id)
@@ -285,7 +285,7 @@ object GameClient {
         case m:Protocol.KeyCode =>
           if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
             ClientBoot.addToPlatform{
-              grid.addActionWithFrame(m.id,m)
+              grid.addActionWithFrame(m.id.get,m)
             }
           }
           Behaviors.same
@@ -293,7 +293,7 @@ object GameClient {
         case m:Protocol.MousePosition =>
           if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
             ClientBoot.addToPlatform{
-              grid.addMouseActionWithFrame(m.id,m)
+              grid.addMouseActionWithFrame(m.id.get,m)
             }
           }
           Behaviors.same
@@ -432,7 +432,7 @@ object GameClient {
           crashMap.map{p=>
             if(grid.playerMap.get(p._1).nonEmpty){
               ClientBoot.addToPlatform {
-                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0))))
+                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
                 var newCells = newPlayer.cells
                 p._2.map { cell =>
                   newCells = cell :: newCells.filterNot(_.id == cell.id)

@@ -7,7 +7,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import com.neo.sk.gypsy.Boot._
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.core.RoomManager.RemoveRoom
-import com.neo.sk.gypsy.core.UserActor.{JoinRoomSuccess, JoinRoomSuccess4Watch}
+import com.neo.sk.gypsy.core.UserActor.{Command, JoinRoomSuccess, JoinRoomSuccess4Watch}
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
@@ -60,9 +60,13 @@ object RoomActor {
 
   case class WebSocketMsg(uid:String,req:Protocol.UserAction) extends Command with RoomManager.Command
 
-  case class UserReLive(id:String,frame:Long) extends Command
+  case class UserReLive(id:String,frame:Int) extends Command
 
   private case class ReStart(id: String) extends Command
+
+  case class KeyR(id:String, keyCode: Int,frame:Int,n:Int) extends Command
+
+  case class MouseR(id:String, clientX:Short,clientY:Short,frame:Int,n:Int) extends Command
 
 //  case class ReStartAck(id: String) extends Command
 
@@ -296,21 +300,21 @@ object RoomActor {
           subscribersMap.remove(playerInfo.playerId)
           Behaviors.same
 
-        case UserActor.Key(id, keyCode,frame,n) =>
+        case RoomActor.KeyR(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
           if (keyCode == KeyEvent.VK_SPACE) {
             grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           } else {
-            grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
-            dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+            grid.addActionWithFrame(id, KeyCode(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
+            dispatch(subscribersMap)(KeyCode(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
           }
           Behaviors.same
 
-        case UserActor.Mouse(id,x,y,frame,n) =>
+        case RoomActor.MouseR(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
-          dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+          grid.addMouseActionWithFrame(id,MousePosition(Some(id),x,y,math.max(grid.frameCount,frame),n))
+          dispatch(subscribersMap)(MousePosition(Some(id),x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
 
 
@@ -318,15 +322,15 @@ object RoomActor {
         userAction match{
           case KeyCode(id,keyCode,frame,n) =>
             if (keyCode == KeyEvent.VK_SPACE) {
-              grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
-              dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
+              grid.addPlayer(id.get, userMap.getOrElse(id.get, ("Unknown",0l,0l))._1)
+              dispatchTo(subscribersMap)(id.get,Protocol.PlayerRestart(id.get))
             } else {
-              grid.addActionWithFrame(id, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+              grid.addActionWithFrame(id.get, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
               dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
             }
 
           case MousePosition(id,x,y,frame,n) =>
-            grid.addMouseActionWithFrame(id,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+            grid.addMouseActionWithFrame(id.get,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
             dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
 
         }
