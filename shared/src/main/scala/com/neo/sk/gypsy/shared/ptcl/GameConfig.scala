@@ -58,5 +58,7 @@ object GameConfig {
 
 //  初始质量
   val initMass:Short = 10
+//病毒分裂个数
+  val VirusSplitNumber = 13
 
 }
