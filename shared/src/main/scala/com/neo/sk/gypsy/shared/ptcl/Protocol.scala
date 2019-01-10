@@ -25,12 +25,12 @@ object Protocol {
   case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
 
   case class GridDataSync(
-                           frameCount: Long,
+                           frameCount: Int,
                            playerDetails: List[Player],
                            massDetails: List[Mass],
                            virusDetails: Map[Long,Virus],
                            scale: Double, //缩放比例
-                           playersPosition: List[PlayerPosition],
+//                           playersPosition: List[PlayerPosition],
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
@@ -49,7 +49,6 @@ object Protocol {
 
   case class Id(id: String) extends GameMessage
 
-//  case class Ranks(currentRank: List[Score], historyRank: List[Score]) extends GameMessage
   case class Ranks(currentRank: List[RankInfo]) extends GameMessage
 
   case class MyRank(rank:RankInfo) extends GameMessage
@@ -90,7 +89,7 @@ object Protocol {
     * */
   sealed trait WsSendMsg{
         val serialNum:Int = -1 //类似每一帧的动作顺序
-        val frame:Long = -1l
+        val frame:Int = -1
       }
 
   case object WsSendComplete extends WsSendMsg
@@ -99,21 +98,17 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-//  case class TextInfo(msg:String) extends UserAction
+  case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
 
-  case class MousePosition(id: String,clientX:Short,clientY:Short, override val frame:Long, override val serialNum:Int) extends UserAction with GameMessage
-
-  case class KeyCode(id: String,keyCode: Int, override val frame:Long,override val serialNum:Int) extends UserAction with GameMessage
+  case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
 
   case object PressSpace extends UserAction
 
-  case class ReLiveMsg(id: String,override val frame:Long) extends UserAction with GameMessage
+  case class ReLiveMsg(override val frame:Int) extends UserAction with GameMessage
 
-  case class WatchChange(id:String, watchId: String) extends UserAction
+  case class WatchChange(watchId: String) extends UserAction
 
   case class Ping(timestamp: Long) extends UserAction
-
-//  case class ReLiveAck(id:String) extends UserAction
 
   case object CreateRoom extends UserAction
 
@@ -124,7 +119,7 @@ object Protocol {
     * 事件记录
     * */
   sealed trait GameEvent {
-    val frame:Long = -1l
+    val frame:Int = -1
     val serialNum:Int = -1
   }
 
@@ -134,21 +129,21 @@ object Protocol {
   case class EventData(list:List[GameEvent]) extends GameEvent
   case class SyncGameAllState(gState:GypsyGameSnapInfo) extends GameEvent
 
-  case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Long) extends GameEvent
-  case class UserLeftRoom(userId:String,userName:String,ballId:Long,roomId:Long, override val frame:Long) extends GameEvent
-  case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Long, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
-  case class MouseMove(userId:String,direct:(Short,Short), override val frame:Long, override val serialNum:Int) extends GameEvent
-  case class KeyPress(userId:String,keyCode: Int, override val frame:Long, override val serialNum:Int) extends GameEvent
-  case class GenerateApples(apples:Map[Point, Short], override val frame:Long) extends GameEvent
-  case class GenerateVirus(virus: Map[Long,Virus], override val frame:Long) extends GameEvent with WsMsgSource
-  case class KillMsg(killerId:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Long) extends GameEvent
+  case class UserJoinRoom(roomId:Long,playState:Player, override val frame:Int) extends GameEvent
+  case class UserLeftRoom(userId:String,userName:String,ballId:Long,roomId:Long, override val frame:Int) extends GameEvent
+  case class UserWsJoin(roomId:Long,userId:String,userName:String,ballId:Long, override val frame:Int, override val serialNum:Int) extends GameEvent //每次webSocket加入时候记，不记Play的具体状态
+  case class MouseMove(userId:String,direct:(Short,Short), override val frame:Int, override val serialNum:Int) extends GameEvent
+  case class KeyPress(userId:String,keyCode: Int, override val frame:Int, override val serialNum:Int) extends GameEvent
+  case class GenerateApples(apples:Map[Point, Short], override val frame:Int) extends GameEvent
+  case class GenerateVirus(virus: Map[Long,Virus], override val frame:Int) extends GameEvent with WsMsgSource
+  case class KillMsg(killerId:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Int) extends GameEvent
   case class CurrentRanks(currentRank: List[RankInfo]) extends GameEvent
   case class PongEvent(timestamp: Long)extends GameEvent
 
 
-  case class PlayerInfoChange(player: Map[String,Player], override val frame:Long) extends GameEvent
+  case class PlayerInfoChange(player: Map[String,Player], override val frame:Int) extends GameEvent
   //  缩放放到
-  case class ShowScale( override val frame:Long,scale:Double) extends GameEvent
+  case class ShowScale(override val frame:Int,scale:Double) extends GameEvent
 
   sealed trait GameSnapshot
 
@@ -158,7 +153,7 @@ object Protocol {
                                     ) extends GameSnapshot
 
   case class GypsyGameSnapInfo(
-                                      frameCount: Long,
+                                      frameCount: Int,
                                       playerDetails: List[Player],
                                       foodDetails: List[Food],
                                       massDetails: List[Mass],
@@ -168,15 +163,6 @@ object Protocol {
 
   final case class GameInformation(
                                     gameStartTime:Long
-//                                    gypsyConfig: GypsyGameConfigImpl
                                   )
-
-  //配置数据以后补上
-  final case class GypsyGameConfigImpl(
-                                  x:Int = 100,
-                                  y:Int = 200
-                                  //     boundary: ,
-                                  //     window:
-                                )
 
 }
