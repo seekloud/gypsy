@@ -583,8 +583,8 @@ trait Grid {
 
   def getAllGridData: Protocol.GridDataSync
 
-  def getActionEventMap(frame:Long):List[GameEvent]
+  def getActionEventMap(frame:Int):List[GameEvent]
 
-  def getGameEventMap(frame:Long):List[GameEvent]
+  def getGameEventMap(frame:Int):List[GameEvent]
 
 }
