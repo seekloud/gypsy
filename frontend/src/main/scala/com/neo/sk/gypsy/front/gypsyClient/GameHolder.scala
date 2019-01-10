@@ -62,6 +62,7 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
+  var bigPlayerMass = 500.0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
@@ -289,6 +290,7 @@ class GameHolder(replay:Boolean = false) {
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, 1200, 600)
+      val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
 //      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
@@ -320,7 +322,7 @@ class GameHolder(replay:Boolean = false) {
 
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition,offsetTime)
+          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime)
 //          ctx.save()
 //          ctx.font = "34px Helvetica"
 //          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
