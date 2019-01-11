@@ -499,8 +499,8 @@ trait Grid {
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
-            var splitX = 0
-            var splitY = 0
+            var splitX:Short = 0
+            var splitY:Short = 0
             var splitMass:Short = 0
             var splitRadius:Short = 0
             var splitSpeed = 0.0
@@ -512,14 +512,17 @@ trait Grid {
               splitRadius = Mass2Radius(splitMass)
               newRadius = Mass2Radius(newMass)
               splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
-              splitX = (cell.x + (newRadius + splitRadius) * degX).toInt
-              splitY = (cell.y + (newRadius + splitRadius) * degY).toInt
+              splitX = (cell.x + (newRadius + splitRadius) * degX).toShort
+              splitY = (cell.y + (newRadius + splitRadius) * degY).toShort
               cellId = cellIdgenerator.getAndIncrement().toLong
             }
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
-//            println(cell.mass + "   " + newMass)
+            //            println(cell.mass + "   " + newMass)
+            println(s"cellId:${cellId} id:${cell.id} ")
             List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-                Cell(cellId,  cell.x, cell.y, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+              Cell(cellId,  splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+
+
         }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length

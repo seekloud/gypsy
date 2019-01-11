@@ -122,6 +122,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                  //TODO 这里前端来让CellID 增加？？
                   vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort , (cell.y + startLen * degY).toShort , cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
                 }
               }
