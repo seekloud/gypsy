@@ -311,15 +311,15 @@ object RoomActor {
             grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           } else {
-            grid.addActionWithFrame(id, KeyCode(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
-            dispatch(subscribersMap)(KeyCode(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
+            grid.addActionWithFrame(id, KC(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
+            dispatch(subscribersMap)(KC(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
           }
           Behaviors.same
 
         case RoomActor.MouseR(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          grid.addMouseActionWithFrame(id,MousePosition(Some(id),x,y,math.max(grid.frameCount,frame),n))
-          dispatch(subscribersMap)(MousePosition(Some(id),x,y,math.max(grid.frameCount,frame),n))
+          grid.addMouseActionWithFrame(id,MP(Some(id),x,y,math.max(grid.frameCount,frame),n))
+          dispatch(subscribersMap)(MP(Some(id),x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
 
         case GetBotInfo(id,botActor)=>
@@ -329,19 +329,19 @@ object RoomActor {
 
         case botAction(id,userAction)=>
         userAction match{
-          case KeyCode(id,keyCode,frame,n) =>
+          case KC(id,keyCode,frame,n) =>
             if (keyCode == KeyEvent.VK_SPACE) {
               grid.addPlayer(id.get, userMap.getOrElse(id.get, ("Unknown",0l,0l))._1)
               dispatchTo(subscribersMap)(id.get,Protocol.PlayerRestart(id.get))
             } else {
 //              println(s"get keyCode $keyCode")
-              grid.addActionWithFrame(id.get, KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
-              dispatch(subscribersMap)(KeyCode(id,keyCode,math.max(grid.frameCount,frame),n))
+              grid.addActionWithFrame(id.get, KC(id,keyCode,math.max(grid.frameCount,frame),n))
+              dispatch(subscribersMap)(KC(id,keyCode,math.max(grid.frameCount,frame),n))
             }
 
-          case MousePosition(id,x,y,frame,n) =>
-            grid.addMouseActionWithFrame(id.get,MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
-            dispatch(subscribersMap)(MousePosition(id,x,y,math.max(grid.frameCount,frame),n))
+          case MP(id,x,y,frame,n) =>
+            grid.addMouseActionWithFrame(id.get,MP(id,x,y,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap)(MP(id,x,y,math.max(grid.frameCount,frame),n))
 
         }
           Behaviors.same

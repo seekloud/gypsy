@@ -215,9 +215,9 @@ class GameHolder(replay:Boolean = false) {
             if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
-              val keyCode = Protocol.KeyCode(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-              grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+              grid.addActionWithFrame(myId, keyCode.copy(f=grid.frameCount + delayFrame))
+              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.f)
               webSocketClient.sendMsg(keyCode)
             }
           }
@@ -252,13 +252,13 @@ class GameHolder(replay:Boolean = false) {
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
         if(mouseInFlame == false){
           {
-            val mp = MousePosition(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+            val mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
 //              println(s"帧号${grid.frameCount},动作：$mp")
               mouseInFlame = true
               FormerDegree = getDegree(e.pageX,e.pageY)
-              grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-              grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+              grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
+              grid.addUncheckActionWithFrame(myId, mp, mp.f)
               webSocketClient.sendMsg(mp)
             }
           }
@@ -275,9 +275,9 @@ class GameHolder(replay:Boolean = false) {
   def testSend = {
     val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
     val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
-    val mp = MousePosition(None,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-    grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount+delayFrame ))
-    grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+    val mp = MP(None,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+    grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
+    grid.addUncheckActionWithFrame(myId, mp, mp.f)
     webSocketClient.sendMsg(mp)
   }
 
@@ -372,11 +372,11 @@ class GameHolder(replay:Boolean = false) {
         Shortcut.playMusic("bg")
         println(s"myID:$myId")
 
-      case m:Protocol.KeyCode =>
+      case m:Protocol.KC =>
         if(myId!=m.id || usertype == -1){
           grid.addActionWithFrame(m.id.get,m)
         }
-      case m:Protocol.MousePosition =>
+      case m:Protocol.MP =>
         if(myId!=m.id || usertype == -1){
           grid.addMouseActionWithFrame(m.id.get,m)
         }
@@ -539,10 +539,10 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.currentRank
 
       case e: Protocol.KeyPress =>
-        grid.addActionWithFrame(e.userId,Protocol.KeyCode(Some(e.userId),e.keyCode,e.frame,e.serialNum))
+        grid.addActionWithFrame(e.userId,Protocol.KC(Some(e.userId),e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
-        grid.addMouseActionWithFrame(e.userId,Protocol.MousePosition(Some(e.userId),e.direct._1,e.direct._2,e.frame,e.serialNum))
+        grid.addMouseActionWithFrame(e.userId,Protocol.MP(Some(e.userId),e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
         grid.food ++= e.apples

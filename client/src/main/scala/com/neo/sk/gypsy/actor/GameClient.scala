@@ -67,7 +67,7 @@ object GameClient {
           println(s"myID:${GameHolder.myId}")
           Behaviors.same
 
-        case m:Protocol.KeyCode =>
+        case m:Protocol.KC =>
           if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
             ClientBoot.addToPlatform{
               grid.addActionWithFrame(m.id.get,m)
@@ -75,7 +75,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case m:Protocol.MousePosition =>
+        case m:Protocol.MP =>
           if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
             ClientBoot.addToPlatform{
               grid.addMouseActionWithFrame(m.id.get,m)
@@ -282,7 +282,7 @@ object GameClient {
           ClientMusic.playMusic("bg")
           Behaviors.same
 
-        case m:Protocol.KeyCode =>
+        case m:Protocol.KC =>
           if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
             ClientBoot.addToPlatform{
               grid.addActionWithFrame(m.id.get,m)
@@ -290,7 +290,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case m:Protocol.MousePosition =>
+        case m:Protocol.MP =>
           if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
             ClientBoot.addToPlatform{
               grid.addMouseActionWithFrame(m.id.get,m)

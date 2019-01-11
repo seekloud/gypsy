@@ -204,9 +204,9 @@ object UserManager {
                   crash = crash + a.length
                 case m:Pong =>
                   ping = ping + a.length
-                case m:MousePosition =>
+                case m:MP =>
                   mouse = mouse + a.length
-                case m:KeyCode=>
+                case m:KC=>
                   key = key + a.length
 
                 case x =>
