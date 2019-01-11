@@ -578,7 +578,6 @@ trait Grid {
       playerDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
-//      scale,
       Scale,
      // allPlayerPosition
     )
