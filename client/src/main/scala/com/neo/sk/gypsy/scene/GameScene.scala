@@ -64,7 +64,7 @@ class GameScene {
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
     val data = grid.getGridData(myId,1200,600)
-    val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
+    val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x.toShort,i.y.toShort))
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false

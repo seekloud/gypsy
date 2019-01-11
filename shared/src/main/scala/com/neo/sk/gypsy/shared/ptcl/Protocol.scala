@@ -73,10 +73,13 @@ object Protocol {
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
+  //  按F分裂的球发送的全量消息
+//  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
+
   //只有用户离开房间时候发送
   case class PlayerLeft(id: String, name: String) extends GameMessage
 
-  case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
+  case class PlayerSplit(player: Map[String,Player]) extends GameMessage
 
   case class PlayerJoin(id:String,player:Player) extends GameMessage
 
