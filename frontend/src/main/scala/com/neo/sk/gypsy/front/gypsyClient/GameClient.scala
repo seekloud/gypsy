@@ -244,7 +244,7 @@ class GameClient (override val boundary: Point) extends Grid {
 }
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
-    uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
+    uncheckActionWithFrame.put(gameAction.sN,(frame,id,gameAction))
   }
 
 /*  def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
@@ -345,8 +345,8 @@ class GameClient (override val boundary: Point) extends Grid {
     virusMap = Map.empty[Long,Virus]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Int, Map[String, KeyCode]]
-    mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
+    actionMap = Map.empty[Int, Map[String, KC]]
+    mouseActionMap = Map.empty[Int, Map[String, MP]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 

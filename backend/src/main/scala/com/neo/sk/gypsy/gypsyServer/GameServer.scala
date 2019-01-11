@@ -356,9 +356,6 @@ class GameServer(override val boundary: Point) extends Grid {
                       val startLen = (newRadius + cellRadius) * 1.2 * 3
                       val speedx = (degX * cell.speed).toFloat * 3
                       val speedy = (degY * cell.speed).toFloat * 3
-                      if(player.id == "guest1541338979393"){
-                        println("speedX: " + speedx)
-                      }
                       vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort, (cell.y + startLen * degY).toShort, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
                     }
                   }
@@ -369,8 +366,8 @@ class GameServer(override val boundary: Point) extends Grid {
             List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
         val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
+        val newX = newCells.map(_.x.toInt).sum / length
+        val newY = newCells.map(_.y.toInt).sum / length
         val left = newCells.map(a => a.x - a.radius).min
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min

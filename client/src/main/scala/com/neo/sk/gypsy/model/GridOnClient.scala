@@ -323,35 +323,35 @@ class GridOnClient(override val boundary: Point) extends Grid {
   }
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
-    uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
+    uncheckActionWithFrame.put(gameAction.sN,(frame,id,gameAction))
   }
 
   def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
-    val frame=gameAction.frame
+    val frame=gameAction.f
     if(myId == id){
-      uncheckActionWithFrame.get(gameAction.serialNum) match {
+      uncheckActionWithFrame.get(gameAction.sN) match {
         case Some((f,playerId,a)) =>
           if(f == frame){ //fixme 此处存在advanceFrame差异
-            uncheckActionWithFrame.remove(gameAction.serialNum)
+            uncheckActionWithFrame.remove(gameAction.sN)
           }else{ //与预执下的操作数据不一致，进行回滚
-            uncheckActionWithFrame.remove(gameAction.serialNum)
+            uncheckActionWithFrame.remove(gameAction.sN)
             if(frame < frameCount){
               //              rollback(frame)
             }else{
               removeActionWithFrame(playerId,a,f)
               gameAction match {
-                case a:KeyCode=>
+                case a:KC=>
                   addActionWithFrame(id,a)
-                case b:MousePosition=>
+                case b:MP=>
                   addMouseActionWithFrame(id,b)
               }
             }
           }
         case None =>
           gameAction match {
-            case a:KeyCode=>
+            case a:KC=>
               addActionWithFrame(id,a)
-            case b:MousePosition=>
+            case b:MP=>
               addMouseActionWithFrame(id,b)
           }
       }
@@ -361,9 +361,9 @@ class GridOnClient(override val boundary: Point) extends Grid {
         //        rollback(frame)
       }else{
         gameAction match {
-          case a:KeyCode=>
+          case a:KC=>
             addActionWithFrame(id,a)
-          case b:MousePosition=>
+          case b:MP=>
             addMouseActionWithFrame(id,b)
         }
       }
@@ -436,8 +436,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
     virusMap = Map.empty[Long,Virus]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Int, Map[String, KeyCode]]
-    mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
+    actionMap = Map.empty[Int, Map[String, KC]]
+    mouseActionMap = Map.empty[Int, Map[String, MP]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 

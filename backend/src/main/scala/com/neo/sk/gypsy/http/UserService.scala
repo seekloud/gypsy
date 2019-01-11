@@ -18,7 +18,7 @@ import com.neo.sk.gypsy.models.GypsyUserInfo
 //import com.neo.sk.gypsy.models.Dao.UserDao
 import com.neo.sk.gypsy.ptcl.UserProtocol.BaseUserInfo
 //import com.neo.sk.gypsy.shared.ptcl.WsMsgProtocol.{ErrorWsMsgServer, KeyCode}
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{ KeyCode}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.KC
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.utils.SecureUtil
 import org.seekloud.byteobject._
