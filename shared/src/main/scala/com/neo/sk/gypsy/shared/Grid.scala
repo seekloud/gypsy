@@ -481,7 +481,7 @@ trait Grid {
 
   //TODO 暂时前后不同 ，后台有广播哪些玩家分裂
   //分裂检测
-  def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
+  def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
 //    val newPlayerMap = playerMap.values.map {
 //      player =>
 //        var newSplitTime = player.lastSplit
