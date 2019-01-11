@@ -430,6 +430,7 @@ class GameHolder(replay:Boolean = false) {
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         )
+        print(s"玩家分裂：${grid.playerMap}")
 
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>

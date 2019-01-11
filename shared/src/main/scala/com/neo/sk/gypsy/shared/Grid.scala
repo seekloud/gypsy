@@ -194,6 +194,10 @@ trait Grid {
       if(decrease){
         updatePlayerMove(massDecrease(player),mouseActMap)
       }else{
+        println(s"帧号${frameCount}")
+        player.cells.foreach{c=>
+          println(s"总速度${c.speed}，x分量${c.speedX}，y分量${c.speedY}")
+        }
         updatePlayerMove(player,mouseActMap)
       }
     }
