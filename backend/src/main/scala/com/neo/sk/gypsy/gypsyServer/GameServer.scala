@@ -152,12 +152,12 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkPlayer2PlayerCrash(): Unit = {
 //    println(s"===========BEGIN============${frameCount} ")
-    playerMap.values.foreach{p=>
+//    playerMap.values.foreach{p=>
 //      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
+//      p.cells.foreach{c=>
 //        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
+//      }
+//    }
 
     var p2pCrash = false
     var changedPlayers = Map[String,List[Cell]]()
@@ -192,7 +192,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
+//            val newCell = cell.copy(id = cell.id,newmass = newMass,radius = newRadius)
             val newCell = cell.copy(newmass = newMass,radius = newRadius)
+            println(s"frame:${frameCount} ${player.id} (newId,oldId): ${(newCell.id,cell.id)} mass：${(newCell.newmass,cell.newmass)}  ")
             if(cellChange){
 //              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
               changedCells = newCell :: changedCells
@@ -219,7 +221,7 @@ class GameServer(override val boundary: Point) extends Grid {
           AddGameEvent(event)
           Left(killer)
         } else {
-          if (playerChange == true){
+          if (playerChange){
             changedPlayers+=(player.id->changedCells)
           }
           val length = newCells.length
@@ -238,12 +240,12 @@ class GameServer(override val boundary: Point) extends Grid {
     }.filterNot(_._1 == "").toMap
 
 //    println(s"===========AFTER============ ")
-    playerMap.values.foreach{p=>
+//    playerMap.values.foreach{p=>
 //      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
+//      p.cells.foreach{c=>
 //        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
+//      }
+//    }
 
     newPlayerMap.foreach {
       case Left(killId) =>

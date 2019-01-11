@@ -480,17 +480,52 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case Protocol.UserCrash(crashMap)=>
-        crashMap.map{p=>
-          if(grid.playerMap.get(p._1).nonEmpty){
-            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            var newCells = newPlayer.cells
-            p._2.map{cell=>
-              newCells = cell :: newCells.filterNot(_.id == cell.id)
+        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
+        crashMap.foreach{p=>
+          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
+          if(grid.playerMap.contains(p._1)){
+            val player = grid.playerMap(p._1)
+            var newCells = player.cells
+            p._2.foreach{c=>
+              newCells = c :: newCells.filterNot(_.id == c.id)
             }
-            newPlayer = newPlayer.copy(cells = newCells)
-            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+            newCells = newCells.filterNot(_.newmass == 0)
+            grid.playerMap += (player.id -> player.copy(cells = newCells))
           }
+
         }
+
+//                crashMap.foreach{p=>
+//                  println(s"CRASH:  ${p._2.map{c=>(c.id,c.newmass) } }")
+//                  if(grid.playerMap.get(p._1).nonEmpty){
+//        //            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+//                    var newPlayer = grid.playerMap(p._1)
+//                    var newCells = newPlayer.cells
+//                    p._2.foreach{cell=>
+//                      newCells = cell :: newCells.filterNot(_.id == cell.id)
+//                    }
+////                    newCells = newCells.filter(_.newmass == 0)
+//                    newPlayer = newPlayer.copy(cells = newCells)
+//                    grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+//                  }
+//                }
+
+        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
+
+
+
+//        crashMap.map{p=>
+//          if(grid.playerMap.get(p._1).nonEmpty){
+////            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+//            var newPlayer = grid.playerMap(p._1)
+//            var newCells = newPlayer.cells
+//            p._2.map{cell=>
+//              newCells = cell :: newCells.filterNot(_.id == cell.id)
+//            }
+//            newPlayer = newPlayer.copy(cells = newCells)
+//            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+//          }
+//        }
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
         gameState = GameState.allopatry
