@@ -217,7 +217,7 @@ class GameHolder(replay:Boolean = false) {
               keyInFlame = true
               val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
               if(e.keyCode != KeyCode.F){
-                grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+                grid.addActionWithFrame(myId, keyCode.copy(f=grid.frameCount + delayFrame))
 //                grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
               }
               webSocketClient.sendMsg(keyCode)
@@ -441,7 +441,6 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.PlayerSplit(player) =>
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
-        }
         )
 
         //只针对自己死亡发送的死亡消息

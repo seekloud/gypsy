@@ -245,7 +245,7 @@ class GameClient (override val boundary: Point) extends Grid {
   virusMap ++= virus1
 }
 
-  override def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
+  override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
     //TODO 前端不做分裂检测
 //    val newPlayerMap = playerMap.values.map {
 //      player =>

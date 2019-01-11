@@ -551,22 +551,22 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
 
-  override def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
+  override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
     var SplitPlayerMap = Map[String,Player]()
     val newPlayerMap = playerMap.values.map {
       player =>
         var isSplit = false
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX, player.targetY,0,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
         val split = actMap.get(player.id) match {
-          case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
+          case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_F
           case _ => false
         }
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var newMass = cell.newmass
             var newRadius = cell.radius
-            val target = Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort )
+            val target = Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort )
             val deg = atan2(target.clientY, target.clientX)
             val degX = if (cos(deg).isNaN) 0 else cos(deg)
             val degY = if (sin(deg).isNaN) 0 else sin(deg)
