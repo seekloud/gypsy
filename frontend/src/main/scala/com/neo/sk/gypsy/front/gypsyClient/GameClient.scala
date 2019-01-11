@@ -29,7 +29,7 @@ class GameClient (override val boundary: Point) extends Grid {
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
 
   override def getAllGridData: GridDataSync={
-    GridDataSync(0l, Nil, Nil, Map.empty, 1.0)
+    GridDataSync(0, Nil, Nil, Map.empty, 1.0)
   }
 
 
@@ -55,13 +55,13 @@ class GameClient (override val boundary: Point) extends Grid {
               val deg= acos(abs(cell.x-cell2.x)/distance)
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
-                if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
+                if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()>newSplitTime + 2*1000) {
                   if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                   else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                   if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                   else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                 }
-                else if (distance < radiusTotal / 2) {
+                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval)) {
                   /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
                   if (cell.radius > cell2.radius) {
                     //被融合的细胞不能再被其他细胞融合
@@ -224,7 +224,7 @@ class GameClient (override val boundary: Point) extends Grid {
           hasMoved =true
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
-          newSpeed = sqrt(pow(vx,2)+ pow(vy,2))
+          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
           newTargetX = vx.toShort
           newTargetY = vy.toShort
           massList = massList.filterNot(l => l == p)

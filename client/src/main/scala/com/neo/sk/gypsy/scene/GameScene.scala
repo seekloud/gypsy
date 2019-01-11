@@ -29,6 +29,7 @@ class GameScene {
   var gameSceneListener: GameSceneListener = _
   val canvasWidth=1200
   val canvasHeight=600
+  var bigPlayerMass = 500.0
   val window=Point(canvasWidth,canvasHeight)
   val group = new Group()
   val gameCanvas = new Canvas(canvasWidth,canvasHeight)
@@ -63,6 +64,7 @@ class GameScene {
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
     val data = grid.getGridData(myId,1200,600)
+    val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
         firstCome=false
@@ -93,15 +95,15 @@ class GameScene {
         val basePoint = (offx, offy)
 //        val foods=grid.food
         gameView.drawGrid(myId,data,offsetTime,basePoint,zoom,grid)
-        topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
+        topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition)
         gameCanvasCtx.save()
         gameCanvasCtx.setFont(Font.font(" Helvetica",24))
         kill=s"KILL: ${p.kill}"
         Score=s"SCORE: ${p.cells.map(_.newmass).sum.toInt}"
         val txt=new Text(kill)
         val killWidth=txt.getLayoutBounds.getWidth
-        gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
-        gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.newmass).sum.toInt}", 280+killWidth, 10)
+        gameCanvasCtx.fillText(kill, 250, 10)
+        gameCanvasCtx.fillText(Score, 300+killWidth, 10)
         gameCanvasCtx.restore()
  //       renderFps(topCanvas,NetDelay.latency)
         //todo 解决返回值问题

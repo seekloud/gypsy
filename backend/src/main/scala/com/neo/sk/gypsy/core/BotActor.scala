@@ -4,14 +4,16 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomActor.botAction
+import com.neo.sk.gypsy.core.RoomActor.{GetBotInfo, botAction}
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.ptcl.Protocol.{KeyCode, MousePosition, PressSpace}
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KeyCode, MousePosition, PressSpace}
 
+
+import scala.math._
 import concurrent.duration._
 import scala.util.Random
 
@@ -35,9 +37,19 @@ object BotActor {
 
   case object Space extends Command
 
+  case object StartTimer extends Command
+
+  case object GetInfo4Bot extends Command
+
+  case class InfoReply(data:GridData4Bot) extends Command
+
   private final case object ChoseActionKey
 
   private final case object SpaceKey
+
+  val actionInterval = 2*frameRate
+
+
 
 
   def create(botId:String):Behavior[Command] = {
@@ -47,7 +59,7 @@ object BotActor {
         msg match {
           case InitInfo(botName, grid, roomActor) =>
             roomActor ! RoomActor.JoinRoom4Bot(ApiProtocol.PlayerInfo(botId,botName), ctx.self)
-            timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
+         //   timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
             gaming(botId,grid,roomActor)
 
           case unknownMsg@_ =>
@@ -63,6 +75,14 @@ object BotActor {
             (implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx,msg) =>
       msg match {
+        case StartTimer=>
+          timer.startPeriodicTimer(ChoseActionKey,GetInfo4Bot,actionInterval.millis)
+          Behaviors.same
+
+        case GetInfo4Bot=>
+          roomActor ! GetBotInfo(botId,ctx.self)
+          Behaviors.same
+
         case ChoseAction =>
           timer.startSingleTimer(ChoseActionKey, ChoseAction, (1 + scala.util.Random.nextInt(20)) * frameRate.millis)
           //TODO 选择一个动作发给roomActor
@@ -70,6 +90,50 @@ object BotActor {
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
           val mp = MousePosition(Some(botId),px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
+          Behaviors.same
+
+        case InfoReply(data)=>
+          if(data.playerDetails.filter(_.id==botId).nonEmpty){
+            val bot = data.playerDetails.filter(_.id==botId).head
+            val botCell = bot.cells.sortBy(_.newmass).reverse.head
+            val food = data.foodDetails
+            val virus = data.virusDetails
+            val mass = data.massDetails
+            val otherPlayers = data.playerDetails.filterNot(a=>(a.id==botId || a.protect==true))
+            //躲避、追赶其他玩家
+            if (otherPlayers.nonEmpty){
+              val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              if(botCell.mass>closestP.mass*2.2){
+                val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                roomActor ! botAction(botId,mp)
+                val kc = KeyCode(Some(botId),70,grid.frameCount,-1)
+                roomActor ! botAction(botId,kc)
+              }
+              else if(botCell.mass>closestP.mass*1.1){
+                if(getDis(botCell.x,botCell.y,closestP.x,closestP.y,closestP.radius) > 0){
+                  val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                  roomActor ! botAction(botId,mp)
+                }
+              }
+              else if(botCell.mass*1.1<closestP.mass){
+                val mp = MousePosition(Some(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
+                roomActor ! botAction(botId,mp)
+              }
+
+            }
+              //吃mass
+            else if(mass.nonEmpty){
+              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
+            }
+              //吃食物
+            else if(food.nonEmpty){
+              val closestP = food.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,0)).head
+              val mp = MousePosition(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
+            }
+          }
           Behaviors.same
 
         case BotDead =>
@@ -111,6 +175,10 @@ object BotActor {
       }
 
     }
+  }
+
+  def getDis(x1:Int,y1:Int,x2:Int,y2:Int,r:Int):Double={
+    sqrt(pow(x1-x2,2.0)+pow(y1-y2,2.0))-r
   }
 
 }
