@@ -216,8 +216,10 @@ class GameHolder(replay:Boolean = false) {
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
               val keyCode = Protocol.KeyCode(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-              grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              if(e.keyCode != KeyCode.F){
+                grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+//                grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              }
               webSocketClient.sendMsg(keyCode)
             }
           }
@@ -370,12 +372,19 @@ class GameHolder(replay:Boolean = false) {
         println(s"myID:$myId")
 
       case m:Protocol.KeyCode =>
-        if(myId!=m.id || usertype == -1){
-          grid.addActionWithFrame(m.id.get,m)
+        if(m.id.isDefined){
+          val ID = m.id.get
+          if(!myId.equals(ID) || usertype == -1){
+            grid.addActionWithFrame(ID,m)
+          }
         }
+
       case m:Protocol.MousePosition =>
-        if(myId!=m.id || usertype == -1){
-          grid.addMouseActionWithFrame(m.id.get,m)
+        if(m.id.isDefined){
+          val ID = m.id.get
+          if(!myId.equals(ID) || usertype == -1){
+            grid.addMouseActionWithFrame(ID,m)
+          }
         }
 
       case Protocol.Ranks(current) =>
@@ -426,7 +435,7 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSpilt(player) =>
+      case Protocol.PlayerSplit(player) =>
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         )
@@ -474,6 +483,17 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerMap.get(id).nonEmpty){
           grid.playerMap = grid.playerMap - id + (id->player)
         }
+
+//      case  Protocol.SplitPlayer(splitPlayers) =>
+////        println(s"====AAA=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)} )   } } ")
+////        println(s"======= ${splitPlayers.map{p =>(p._1, p._2.map{c=>(c.id,c.newmass)} )   } } ")
+//        splitPlayers.foreach{sp=>
+//          if(grid.playerMap.contains(sp._1)){
+////            val player = grid.playerMap(sp._1)
+//            grid.playerMap += (sp._1 -> grid.playerMap(sp._1).copy(cells = sp._2) )
+//          }
+//        }
+////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
 
       case Protocol.UserCrash(crashMap)=>
         println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")

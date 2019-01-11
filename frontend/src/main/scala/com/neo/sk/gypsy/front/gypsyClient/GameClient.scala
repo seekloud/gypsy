@@ -1,10 +1,12 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
+import java.awt.event.KeyEvent
+
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization, Mass2Radius}
+import com.neo.sk.gypsy.shared.util.utils.{Mass2Radius, checkCollision, normalization}
+
 import scala.collection.mutable
 import scala.math._
-
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -244,6 +246,63 @@ class GameClient (override val boundary: Point) extends Grid {
   }
   virusMap ++= virus1
 }
+
+  override def checkPlayerSplit(actMap: Map[String,KeyCode], mouseActMap: Map[String, MousePosition]): Unit = {
+    //TODO 前端不做分裂检测
+//    val newPlayerMap = playerMap.values.map {
+//      player =>
+//        var newSplitTime = player.lastSplit
+//        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(Some(player.id), player.targetX, player.targetY, 0, 0))
+//        val split = actMap.get(player.id) match {
+//          case Some(keyEvent) => keyEvent.keyCode == KeyEvent.VK_F
+//          case _ => false
+//        }
+//        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
+//          cell =>
+//            var newMass = cell.newmass
+//            var newRadius = cell.radius
+//            val target = Position((mouseAct.clientX + player.x - cell.x).toShort, (mouseAct.clientY + player.y - cell.y).toShort)
+//            val deg = atan2(target.clientY, target.clientX)
+//            val degX = if (cos(deg).isNaN) 0 else cos(deg)
+//            val degY = if (sin(deg).isNaN) 0 else sin(deg)
+//            var splitX: Short = 0
+//            var splitY: Short = 0
+//            var splitMass: Short = 0
+//            var splitRadius: Short = 0
+//            var splitSpeed = 0.0
+//            var cellId = 0L
+//            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
+//              newSplitTime = System.currentTimeMillis()
+//              splitMass = (newMass / 2).toShort
+//              newMass = (newMass - splitMass).toShort
+//              splitRadius = Mass2Radius(splitMass)
+//              newRadius = Mass2Radius(newMass)
+//              splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
+//              splitX = (cell.x + (newRadius + splitRadius) * degX).toShort
+//              splitY = (cell.y + (newRadius + splitRadius) * degY).toShort
+//              cellId = cellIdgenerator.getAndIncrement().toLong
+//            }
+//
+//            /** 效果：大球：缩小，小球：从0碰撞，且从大球中滑出 **/
+//            //            println(cell.mass + "   " + newMass)
+//            //            println(s"cellId:${cellId} id:${cell.id} ")
+//            List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel, cell.isCorner),
+//              Cell(cellId, splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+//
+//
+//        }.filterNot(e => e.newmass <= 0 && e.mass <= 0)
+//        val length = newCells.length
+//        val newX = newCells.map(_.x).sum / length
+//        val newY = newCells.map(_.y).sum / length
+//        val left = newCells.map(a => a.x - a.radius).min
+//        val right = newCells.map(a => a.x + a.radius).max
+//        val bottom = newCells.map(a => a.y - a.radius).min
+//        val top = newCells.map(a => a.y + a.radius).max
+//        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+//    }
+//    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+  }
+
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
     uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
