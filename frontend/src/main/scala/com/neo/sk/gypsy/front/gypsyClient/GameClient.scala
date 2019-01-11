@@ -32,8 +32,6 @@ class GameClient (override val boundary: Point) extends Grid {
     GridDataSync(0, Nil, Nil, Map.empty, 1.0)
   }
 
-
-
 //  override def checkCellMerge(): Boolean = {false}
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
@@ -104,26 +102,26 @@ class GameClient (override val boundary: Point) extends Grid {
     var removeVirus = Map.empty[Long,Virus]
     playerMap.values.map {
       player =>
+        var isremoveVirus = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
-            var vSplitCells = List[Cell]()
             var newMass = cell.newmass
             var newRadius = cell.radius
-            //病毒碰撞检测: 一个cell只能让一个病毒消失
-            var isremoveVirus = false
-            val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
-              toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
-            newvirusMap.foreach { vi =>
-              val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame && !isremoveVirus) {
-                removeVirus += (vi._1->vi._2)
-                isremoveVirus = true
+            if(!mergeInFlame && !isremoveVirus){
+              //病毒碰撞检测: 一个cell只能让一个病毒消失
+              val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
+                toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
+              newvirusMap.foreach { vi =>
+                val v = vi._2
+                if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2)) {
+                  removeVirus += (vi._1->vi._2)
+                  isremoveVirus = true
+                }
               }
             }
-            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
         }
-
         val length = newCells.length
         val newX = newCells.map(_.x).sum / length
         val newY = newCells.map(_.y).sum / length

@@ -53,7 +53,7 @@ trait Grid {
   //操作列表  帧数->(用户ID->操作)
   var actionMap = Map.empty[Int, Map[String, KeyCode]]
 
-    var mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
+  var mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
 
   val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
@@ -296,7 +296,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MousePosition]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
+    val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -410,7 +410,6 @@ trait Grid {
     val right = newCells.map(a => a.x + a.radius).max
     val bottom = newCells.map(a => a.y - a.radius).min
     val top = newCells.map(a => a.y + a.radius).max
-
     player.copy(x = newX.toShort , y = newY.toShort , targetX = mouseAct.clientX , targetY = mouseAct.clientY , protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
   }
 
