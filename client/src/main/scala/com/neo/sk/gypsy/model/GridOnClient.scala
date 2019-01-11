@@ -56,10 +56,10 @@ class GridOnClient(override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  if (cell.x < cell2.x) cellX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-                  else if (cell.x > cell2.x) cellX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-                  if (cell.y < cell2.y) cellY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
-                  else if (cell.y > cell2.y) cellY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
+                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                 }
                 //                 else if (distance < radiusTotal / 2) {
                 //                  if (cell.radius > cell2.radius) {
@@ -294,7 +294,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
             val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
             val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
             hasMoved =true
-            newMass += p.mass
+            newMass = (newMass + p.mass).toShort
             newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
             newTargetX = vx.toShort
