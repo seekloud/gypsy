@@ -300,6 +300,9 @@ class GameHolder(replay:Boolean = false) {
           var kill = ""
           var Score = ""
           p.cells.foreach { cell =>
+//            if(p.id == "guest1541338979393"){
+//              println("cell speedx: " + cell.speedX)
+//            }
             val offx = cell.speedX * offsetTime.toDouble / frameRate
             val offy = cell.speedY * offsetTime.toDouble / frameRate
             val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
@@ -427,8 +430,15 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case Protocol.PlayerSpilt(player) =>
-        player.keys.foreach(item =>
+        //这儿没什么问题
+        player.keys.foreach(item =>{
+//          if(item=="guest1541338979393"){
+//            player(item).cells.foreach(e=>
+//              println("cell speed: " + e.speedX)
+//            )
+//          }
           grid.playerMap += (item -> player(item))
+        }
         )
 
         //只针对自己死亡发送的死亡消息

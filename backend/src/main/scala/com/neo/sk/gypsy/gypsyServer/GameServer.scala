@@ -153,14 +153,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-//    println(s"===========BEGIN============${frameCount} ")
-    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
-
     var p2pCrash = false
     var changedPlayers = Map[String,List[Cell]]()
     val newPlayerMap = playerMap.values.map {
@@ -238,14 +230,6 @@ class GameServer(override val boundary: Point) extends Grid {
       case Right(s) => (s.id, s)
       case Left(_) => ("", Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
-
-//    println(s"===========AFTER============ ")
-    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
 
     newPlayerMap.foreach {
       case Left(killId) =>
@@ -340,7 +324,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var splitPlayer = Map.empty[String,Player]
     val newPlayerMap = playerMap.values.map {
       player =>
-        var split = false
+//        var split = false
         var isRemoveVirus = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
@@ -356,7 +340,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 val v = vi._2
                 if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) ) {
                   isRemoveVirus = true
-                  split = true
+//                  split = true
                   removeVirus += (vi._1->vi._2)
                   val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
                   if(splitNum>0){
@@ -370,8 +354,11 @@ class GameServer(override val boundary: Point) extends Grid {
                       val degX = cos(baseAngle * i)
                       val degY = sin(baseAngle * i)
                       val startLen = (newRadius + cellRadius) * 1.2 * 3
-                      val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-                      val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                      val speedx = (degX * cell.speed).toFloat * 3
+                      val speedy = (degY * cell.speed).toFloat * 3
+                      if(player.id == "guest1541338979393"){
+                        println("speedX: " + speedx)
+                      }
                       vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort, (cell.y + startLen * degY).toShort, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
                     }
                   }
@@ -389,7 +376,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         val newplayer = player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-        if(split){
+        if(isRemoveVirus){
           splitPlayer += (player.id->newplayer)
         }
         newplayer
