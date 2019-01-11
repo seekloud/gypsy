@@ -79,10 +79,6 @@ class GameHolder(replay:Boolean = false) {
     KeyCode.E,
     KeyCode.F,
     KeyCode.Space,
-    KeyCode.Left,
-    KeyCode.Up,
-    KeyCode.Right,
-    KeyCode.Down,
     KeyCode.Escape
   )
 

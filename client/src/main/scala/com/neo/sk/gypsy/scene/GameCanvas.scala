@@ -87,7 +87,7 @@ class GameCanvas(canvas: Canvas,
   val mapMargin = 20
 
   //文本高度
-  val textLineHeight = 14
+  val textLineHeight = 18
 
   private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
   private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
@@ -170,7 +170,7 @@ class GameCanvas(canvas: Canvas,
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFill(Color.web(MyColors.rankList))
-    ctx.fillRect(realWindow.x-200,20,150,250)
+    ctx.fillRect(realWindow.x-200,20,150,230)
 
 
     println(s"realWindow排行榜背景${realWindow}")
@@ -376,20 +376,19 @@ class GameCanvas(canvas: Canvas,
           ctx.fill()
         }
 
-        val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds.getWidth
-        var nameFont: Double = cell.radius * 1.5 / sqrt(pow(nameWidth, 2))
+        var nameFont = sqrt(cell.newmass*3)+3
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.setFont(Font.font("Helvetica",nameFont))
-//        var playermass=cell.mass.toInt
         var playermass=cell.newmass.toInt
+        val txt3=new Text(name)
+        val nameWidth = txt3.getLayoutBounds.getWidth.toInt
         val txt4=new Text(playermass.toString)
-        val massWidth = txt4.getLayoutBounds.getWidth
+        val massWidth = txt4.getLayoutBounds.getWidth.toInt
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
+        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2 -nameFont, yfix + offy + nameFont.toInt/2)
+        ctx.fillText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
         /**膨胀、缩小效果**/
         var newcell = cell
@@ -445,9 +444,9 @@ class GameCanvas(canvas: Canvas,
     ctx.setFont(Font.font("Helvetica",12))
     //    ctx.fillStyle = MyColors.rankList
     //    ctx.fillRect(window.x-200,20,150,250)
-    val currentRankBaseLine = 4
+    val currentRankBaseLine = 3
     ctx.setFill(Color.web(MyColors.background))
-    drawTextLine(s"————排行榜————", realWindow.x-200, 0, currentRankBaseLine)
+    drawTextLine(s"————排行榜————", realWindow.x-190, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
@@ -462,7 +461,7 @@ class GameCanvas(canvas: Canvas,
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+32, 13, 13)
+        ctx.drawImage(img, realWindow.x-200, index * textLineHeight+24, 13, 13)
       }
       if(score.id == uid){
         ctx.save()
