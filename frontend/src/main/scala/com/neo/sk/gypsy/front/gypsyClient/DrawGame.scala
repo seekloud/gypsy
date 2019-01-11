@@ -112,7 +112,7 @@ case class DrawGame(
   val mapMargin = 20
 
   //文本高度
-  val textLineHeight = 14
+  val textLineHeight = 18
 
   private[this] val stripeX = scala.collection.immutable.Range(0, bounds.y + 50,50)
   private[this] val stripeY = scala.collection.immutable.Range(0, bounds.x + 100,100)
@@ -293,7 +293,7 @@ case class DrawGame(
     val rankWidth = this.canvas.width * 0.14
 
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth,56+GameConfig.rankShowNum*14)
+    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth,56+GameConfig.rankShowNum*17)
 
     //绘制小地图
     val littleMap = this.canvas.width * 0.18  // 200
@@ -496,12 +496,11 @@ case class DrawGame(
         }
 
         var nameFont = sqrt(cell.newmass*3)+3
-        //var nameFont: Double = cell.radius * 2 / sqrt(pow(ctx.measureText(name).width, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.font = s"${nameFont.toInt}px Helvetica"
-        val nameWidth = ctx.measureText(name).width
+        val nameWidth = ctx.measureText(name).width.toInt
         val playermass= cell.newmass.toInt
-        val massWidth = ctx.measureText(playermass.toString).width
+        val massWidth = ctx.measureText(playermass.toString).width.toInt
         ctx.strokeStyle = "grey"
         ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.fillStyle = MyColors.background
@@ -567,9 +566,9 @@ case class DrawGame(
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
-    val currentRankBaseLine = 4
+    val currentRankBaseLine = 3
     ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", (this.canvas.width- this.canvas.width * 0.17).toInt, 0, currentRankBaseLine)
+    drawTextLine(s"—————排行榜—————", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
@@ -583,7 +582,7 @@ case class DrawGame(
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+33, 13, 13)
+        ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+25, 13, 13)
       }
       if(score.id == uid){
         ctx.save()

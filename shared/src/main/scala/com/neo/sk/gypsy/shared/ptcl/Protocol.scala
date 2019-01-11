@@ -35,6 +35,14 @@ object Protocol {
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
 
+  case class GridData4Bot(
+                         frameCount:Long,
+                         playerDetails:List[Player],
+                         massDetails: List[Mass],
+                         virusDetails: Map[Long,Virus],
+                         foodDetails:List[Food]
+                         )
+
   case class FeedApples(
                          aLs: List[Food]
                        ) extends GameMessage

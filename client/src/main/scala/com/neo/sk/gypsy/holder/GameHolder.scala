@@ -192,8 +192,7 @@ class GameHolder(
         if (key == KeyCode.SPACE) {
           println(s"down+ Space ReLive Press!")
           keyInFlame = true
-          //val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
-          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount + advanceFrame+ delayFrame)
+          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
           serverActor ! reliveMsg
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
@@ -214,7 +213,7 @@ class GameHolder(
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
 
-      val mp = MousePosition(None, (e.getX.toFloat - gameScene.gameView.realWindow.x / 2).toShort, (e.getY.toFloat - gameScene.gameView.realWindow.y / 2).toShort, (grid.frameCount +advanceFrame +delayFrame).toInt, getActionSerialNum)
+      val mp = MousePosition(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
 //      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
         mouseInFlame = true
