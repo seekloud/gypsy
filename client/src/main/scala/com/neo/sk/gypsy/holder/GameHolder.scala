@@ -197,10 +197,13 @@ class GameHolder(
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
+          //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
           keyInFlame = true
           val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-          grid.addActionWithFrame(myId, keyCode.copy(f = grid.frameCount + delayFrame))
-          grid.addUncheckActionWithFrame(myId, keyCode, keyCode.f)
+          if(key == KeyCode.E){
+            grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
+//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+          }
           serverActor ! keyCode
         }
       }

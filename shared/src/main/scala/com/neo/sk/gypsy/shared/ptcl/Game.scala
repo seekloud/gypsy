@@ -41,8 +41,8 @@ object Game {
                    id:String,
                    name:String,
                    color:Short,
-                   x:Short,
-                   y:Short,
+                   x:Int,
+                   y:Int,
                    targetX:Short = 0,//运动方向，大部分做了归一化
                    targetY:Short = 0,
                    kill:Short = 0,
@@ -57,8 +57,8 @@ object Game {
 
   case class PlayerPosition(
                              id:String,
-                             x:Short,
-                             y:Short,
+                             x:Int,
+                             y:Int,
                              //targetX:Int = 0,//运动方向，大部分做了归一化
                              //targetY:Int = 0,
                            )
@@ -76,8 +76,8 @@ object Game {
 //                 )
   case class Cell(
                    id:Long,
-                   x:Short,
-                   y:Short,
+                   x:Int,
+                   y:Int,
                    mass:Short = initMass,  //小球体重
                    newmass:Short = initMass,
                    radius:Short = Mass2Radius(initMass),

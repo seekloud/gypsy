@@ -69,7 +69,7 @@ object RoomManager {
                 val botNum = if(AppSettings.addBotPlayer) AppSettings.botNum else 0
                 roomInUse.find(p => p._2.length + botNum < AppSettings.limitCount) match{
                   case Some(t) =>
-                    log.info(s"RoomSize :  ${t._2.length} ======== ")
+//                    log.info(s"RoomSize :  ${t._2.length} ======== ")
                     roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match {
                       case Some(t) => /**此时是relive的情况**/
                       case None =>

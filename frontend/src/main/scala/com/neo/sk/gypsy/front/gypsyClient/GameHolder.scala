@@ -216,8 +216,10 @@ class GameHolder(replay:Boolean = false) {
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
               val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-              grid.addActionWithFrame(myId, keyCode.copy(f=grid.frameCount + delayFrame))
-              grid.addUncheckActionWithFrame(myId, keyCode, keyCode.f)
+              if(e.keyCode != KeyCode.F){
+                grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
+//                grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+              }
               webSocketClient.sendMsg(keyCode)
             }
           }
@@ -373,12 +375,19 @@ class GameHolder(replay:Boolean = false) {
         println(s"myID:$myId")
 
       case m:Protocol.KC =>
-        if(myId!=m.id || usertype == -1){
-          grid.addActionWithFrame(m.id.get,m)
+        if(m.id.isDefined){
+          val ID = m.id.get
+          if(!myId.equals(ID) || usertype == -1){
+            grid.addActionWithFrame(ID,m)
+          }
         }
+
       case m:Protocol.MP =>
-        if(myId!=m.id || usertype == -1){
-          grid.addMouseActionWithFrame(m.id.get,m)
+        if(m.id.isDefined){
+          val ID = m.id.get
+          if(!myId.equals(ID) || usertype == -1){
+            grid.addMouseActionWithFrame(ID,m)
+          }
         }
 
       case Protocol.Ranks(current) =>
@@ -429,14 +438,8 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSpilt(player) =>
-        //这儿没什么问题
-        player.keys.foreach(item =>{
-//          if(item=="guest1541338979393"){
-//            player(item).cells.foreach(e=>
-//              println("cell speed: " + e.speedX)
-//            )
-//          }
+      case Protocol.PlayerSplit(player) =>
+        player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         }
         )
@@ -485,18 +488,64 @@ class GameHolder(replay:Boolean = false) {
           grid.playerMap = grid.playerMap - id + (id->player)
         }
 
+//      case  Protocol.SplitPlayer(splitPlayers) =>
+////        println(s"====AAA=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)} )   } } ")
+////        println(s"======= ${splitPlayers.map{p =>(p._1, p._2.map{c=>(c.id,c.newmass)} )   } } ")
+//        splitPlayers.foreach{sp=>
+//          if(grid.playerMap.contains(sp._1)){
+////            val player = grid.playerMap(sp._1)
+//            grid.playerMap += (sp._1 -> grid.playerMap(sp._1).copy(cells = sp._2) )
+//          }
+//        }
+////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
+
       case Protocol.UserCrash(crashMap)=>
-        crashMap.map{p=>
-          if(grid.playerMap.get(p._1).nonEmpty){
-            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            var newCells = newPlayer.cells
-            p._2.map{cell=>
-              newCells = cell :: newCells.filterNot(_.id == cell.id)
+        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
+        crashMap.foreach{p=>
+          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
+          if(grid.playerMap.contains(p._1)){
+            val player = grid.playerMap(p._1)
+            var newCells = player.cells
+            p._2.foreach{c=>
+              newCells = c :: newCells.filterNot(_.id == c.id)
             }
-            newPlayer = newPlayer.copy(cells = newCells)
-            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+            newCells = newCells.filterNot(_.newmass == 0)
+            grid.playerMap += (player.id -> player.copy(cells = newCells))
           }
+
         }
+
+//                crashMap.foreach{p=>
+//                  println(s"CRASH:  ${p._2.map{c=>(c.id,c.newmass) } }")
+//                  if(grid.playerMap.get(p._1).nonEmpty){
+//        //            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+//                    var newPlayer = grid.playerMap(p._1)
+//                    var newCells = newPlayer.cells
+//                    p._2.foreach{cell=>
+//                      newCells = cell :: newCells.filterNot(_.id == cell.id)
+//                    }
+////                    newCells = newCells.filter(_.newmass == 0)
+//                    newPlayer = newPlayer.copy(cells = newCells)
+//                    grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+//                  }
+//                }
+
+        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
+
+
+
+//        crashMap.map{p=>
+//          if(grid.playerMap.get(p._1).nonEmpty){
+////            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+//            var newPlayer = grid.playerMap(p._1)
+//            var newCells = newPlayer.cells
+//            p._2.map{cell=>
+//              newCells = cell :: newCells.filterNot(_.id == cell.id)
+//            }
+//            newPlayer = newPlayer.copy(cells = newCells)
+//            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
+//          }
+//        }
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
         gameState = GameState.allopatry
