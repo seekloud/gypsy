@@ -30,15 +30,17 @@ object utils {
   def getZoomRate(width:Double,height:Double,newCWidth:Int,newCHeight:Int):Double = {
     var scale = 1.0
     if (width * height >= newCHeight * newCWidth / 4) {
-      scale = (newCHeight * newCWidth) / 4 / (width * height)
+      scale = sqrt((newCHeight * newCWidth) / 4 / (width * height))
     } else if (width >= newCWidth / 2 || height >= newCHeight / 2) {
       scale = if (newCWidth / 2 / width > newCHeight / 2 / height) {
-        newCHeight / 2 / height
+        sqrt(newCHeight / 2 / height)
       } else {
-        newCWidth / 2 / width
+        sqrt(newCWidth / 2 / width)
       }
       //      scale = List(300.0/height,600.0/width).min
     }
+    println(s"width: $width height:$height newcwidth: $newCWidth newcheight: $newCHeight")
+    println(s"scale: $scale")
     scale
   }
 

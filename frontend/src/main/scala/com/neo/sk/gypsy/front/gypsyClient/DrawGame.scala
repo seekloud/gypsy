@@ -377,7 +377,7 @@ case class DrawGame(
     if(getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale!=1){
       Scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
     }
-
+    println(s"domwidth:${dom.window.innerWidth.toInt} domheight:${dom.window.innerHeight.toInt}")
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
