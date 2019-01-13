@@ -62,7 +62,6 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
-  var bigPlayerMass = 500.0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]

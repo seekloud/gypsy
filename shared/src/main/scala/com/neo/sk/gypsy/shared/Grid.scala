@@ -59,8 +59,6 @@ trait Grid {
 
   val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val bigPlayerMass = 500.0
-
   var deadPlayerMap=Map.empty[Long,Player]
 
   //统计分数
@@ -548,7 +546,7 @@ trait Grid {
 
   /**
     * method: getGridData
-    * describe: 获取自己视角中的全量数据
+    * describe: 获取自己视角中的全量数据 + 质量超过500的巨型玩家
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
@@ -568,8 +566,10 @@ trait Grid {
     var playerDetails: List[Player] = Nil
     playerMap.foreach{
       case (id,player) =>
-        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
+        val score = player.cells.map(_.newmass).sum
+        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
         playerDetails ::= player
+
     }
 
     Protocol.GridDataSync(

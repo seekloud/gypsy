@@ -59,10 +59,13 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 500
+  val initMass:Short = 2000
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
+
+  //Level5
+  val bigPlayerMass:Short = 500
 
 }
