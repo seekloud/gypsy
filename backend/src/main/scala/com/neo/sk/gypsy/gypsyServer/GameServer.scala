@@ -369,8 +369,8 @@ class GameServer(override val boundary: Point) extends Grid {
             List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
         val length = newCells.length
-        val newX = newCells.map(_.x.toInt).sum / length
-        val newY = newCells.map(_.y.toInt).sum / length
+        val newX = newCells.map(_.x).sum / length
+        val newY = newCells.map(_.y).sum / length
         val left = newCells.map(a => a.x - a.radius).min
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
@@ -511,46 +511,6 @@ class GameServer(override val boundary: Point) extends Grid {
    }
   }
 
-  /**
-    * method: getAllGridData
-    * describe: 获取全量数据
-    */
-  override def getAllGridData: Protocol.GridDataSync = {
-    var playerDetails: List[Player] = Nil
-    var newFoodDetails: List[Food] = Nil
-    var eatenFoodDetails:List[Food] = Nil
-    //var playerPosition:List[PlayerPosition] = Nil
-    newFoods.foreach{
-      case (p,mass) =>
-        newFoodDetails ::= Food(mass, p.x, p.y)
-    }
-    playerMap = playerMap.map{
-      item =>
-        val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
-        val newplayer = item._2.copy(cells = newcells)
-        playerDetails ::= newplayer
-        //playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
-        item.copy(_2 = newplayer)
-    }
-    eatenFoods.foreach{
-      case (p,mass) =>
-        eatenFoodDetails ::= Food(mass, p.x, p.y)
-    }
-    newFoods=Map[Point, Short]().empty
-    eatenFoods = Map[Point, Short]().empty
-    Protocol.GridDataSync(
-      frameCount,
-      playerDetails,
-      massList,
-      virusMap,
-      1.0,
-      //playerPosition,
-      newFoodDetails,
-      eatenFoodDetails
-    )
-  }
-
-
   override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
     var SplitPlayerMap = Map[String,Player]()
     val newPlayerMap = playerMap.values.map {
@@ -622,7 +582,44 @@ class GameServer(override val boundary: Point) extends Grid {
 
   }
 
-
+  /**
+    * method: getAllGridData
+    * describe: 获取全量数据
+    */
+  override def getAllGridData: Protocol.GridDataSync = {
+    var playerDetails: List[Player] = Nil
+    var newFoodDetails: List[Food] = Nil
+    var eatenFoodDetails:List[Food] = Nil
+    //var playerPosition:List[PlayerPosition] = Nil
+    newFoods.foreach{
+      case (p,mass) =>
+        newFoodDetails ::= Food(mass, p.x, p.y)
+    }
+    playerMap = playerMap.map{
+      item =>
+        val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
+        val newplayer = item._2.copy(cells = newcells)
+        playerDetails ::= newplayer
+        //playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
+        item.copy(_2 = newplayer)
+    }
+    eatenFoods.foreach{
+      case (p,mass) =>
+        eatenFoodDetails ::= Food(mass, p.x, p.y)
+    }
+    newFoods=Map[Point, Short]().empty
+    eatenFoods = Map[Point, Short]().empty
+    Protocol.GridDataSync(
+      frameCount,
+      playerDetails,
+      massList,
+      virusMap,
+      1.0,
+      //playerPosition,
+      newFoodDetails,
+      eatenFoodDetails
+    )
+  }
 
   override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
 
