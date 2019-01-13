@@ -201,7 +201,7 @@ class GameHolder(
           keyInFlame = true
           val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           if(key == KeyCode.E){
-            grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
+            grid.addActionWithFrame(myId, keyCode.copy(f = grid.frameCount + delayFrame))
 //            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           }
           serverActor ! keyCode
