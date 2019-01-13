@@ -302,25 +302,22 @@ class GameHolder(replay:Boolean = false) {
           var kill = ""
           var Score = ""
           p.cells.foreach { cell =>
-//            if(p.id == "guest1541338979393"){
-//              println("cell speedx: " + cell.speedX)
-//            }
             val offx = cell.speedX * offsetTime.toDouble / frameRate
             val offy = cell.speedY * offsetTime.toDouble / frameRate
             val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
             val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
-            if (newX>xMax) xMax=newX
-            if (newX<xMin) xMin=newX
-            if (newY>yMax) yMax=newY
-            if (newY<yMin) yMin=newY
-            zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
+            if (newX + cell.radius > xMax) xMax= newX + cell.radius
+            if (newX - cell.radius < xMin) xMin= newX - cell.radius
+            if (newY + cell.radius > yMax) yMax= newY + cell.radius
+            if (newY - cell.radius < yMin) yMin= newY - cell.radius
             sumX += newX
             sumY += newY
           }
           val offx = sumX /p.cells.length
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
-
+          zoom=(xMax - xMin, yMax - yMin)
+//        println("zoom:  " + zoom)
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime)
