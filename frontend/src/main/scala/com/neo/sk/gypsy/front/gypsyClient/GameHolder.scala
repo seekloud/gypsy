@@ -321,7 +321,6 @@ class GameHolder(replay:Boolean = false) {
           val offy = sumY /p.cells.length
           val basePoint = (offx, offy)
           val foods = grid.food
-//          println(s"zoomx:${zoom._1} zoomy:${zoom._2}")
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
           drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime)
 //          ctx.save()
