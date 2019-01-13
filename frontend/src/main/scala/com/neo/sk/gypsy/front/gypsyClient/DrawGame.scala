@@ -88,7 +88,7 @@ case class DrawGame(
   this.canvas.height= size.y
   var screeScale = if( this.canvas.width / Window.w > this.canvas.height/Window.h) (this.canvas.height/ Window.h) else (this.canvas.width / Window.w)
 
-  var Scale=1.0
+//  var Scale=1.0
   def updateCanvasSize(newWidth:Double, newHeight:Double)= {
     screeScale = if(newWidth / Window.w > newHeight/Window.h) {newHeight/ Window.h} else {newWidth/Window.w}
 //    println(newWidth+ "   " + newHeight + "  "+ screeScale)
@@ -373,16 +373,16 @@ case class DrawGame(
     val offx= this.canvas.width/2 - basePoint._1
     val offy =this.canvas.height/2 - basePoint._2
 
-//    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-    if(getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale!=1){
-      Scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-    }
-    println(s"domwidth:${dom.window.innerWidth.toInt} domheight:${dom.window.innerHeight.toInt}")
+    val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
+//    if(getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale!=1){
+//      Scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
+//    }
+//    println(s"domwidth:${dom.window.innerWidth.toInt} domheight:${dom.window.innerHeight.toInt}")
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
     ctx.save()
-    centerScale(Scale,this.canvas.width/2,this.canvas.height/2)
+    centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
     //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
