@@ -194,9 +194,9 @@ trait Grid {
       if(decrease){
         updatePlayerMove(massDecrease(player),mouseActMap)
       }else{
-        println(s"帧号${frameCount}")
+        //println(s"帧号${frameCount}")
         player.cells.foreach{c=>
-          println(s"总速度${c.speed}，x分量${c.speedX}，y分量${c.speedY}")
+          //println(s"总速度${c.speed}，x分量${c.speedX}，y分量${c.speedY}")
         }
         updatePlayerMove(player,mouseActMap)
       }
@@ -314,8 +314,15 @@ trait Grid {
 //      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      target = if(!cell.parallel) Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort  ) else Position(mouseAct.clientX , mouseAct.clientY)
+      target = if(!cell.parallel) Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort) else Position(mouseAct.clientX , mouseAct.clientY)
 
+      if(player.cells.length>1){
+        println(s"frame:$frameCount,target:(${target.clientX},${target.clientY})")
+        println(s"player${player.x},${player.y}")
+        println(s"mouseAct${mouseAct.clientX},${mouseAct.clientY}")
+        println(s"cell${cell.x},${cell.y}")
+        println(s"${cell.speed},${cell.speedX},${cell.speedY}")
+      }
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
