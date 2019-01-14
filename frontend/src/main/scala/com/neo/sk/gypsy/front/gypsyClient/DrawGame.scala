@@ -495,11 +495,11 @@ case class DrawGame(
           ctx.fill()
         }
 
-        var nameFont = sqrt(cell.newmass*3)+3
+        var nameFont = sqrt(cell.mass*3)+3
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.font = s"${nameFont.toInt}px Helvetica"
         val nameWidth = ctx.measureText(name).width.toInt
-        val playermass= cell.newmass.toInt
+        val playermass= cell.mass.toInt
         val massWidth = ctx.measureText(playermass.toString).width.toInt
         ctx.strokeStyle = "grey"
         ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
@@ -518,11 +518,20 @@ case class DrawGame(
 //            case x if(-150 < x && x < 150) => if(cell.mass < cell.newmass) 1 else -1
 //            case x if(150 < x || x < -150) => (cell.newmass - cell.mass)/15
 //          }
-          val massSpeed = if(cell.mass < cell.newmass) 1 else -1
+//          val massSpeed = if(cell.mass < cell.newmass) (cell.mass/100)+1 else -((cell.mass/100)+1)
+        val massSpeed = if(cell.mass < cell.newmass){
+         if((cell.newmass-cell.mass)>=(cell.mass/100)+1)
+           (cell.mass/50)+1
+         else cell.newmass-cell.mass
+        } else {
+         if((cell.mass-cell.newmass)>=(cell.mass/50)+1)
+           -((cell.mass/50)+1)
+         else cell.newmass-cell.mass
+        }
           newcell = cell.copy(mass = (cell.mass + massSpeed).toShort, radius = (4 + sqrt(cell.mass + massSpeed) * 6).toShort)
         }
         newcell
-      }.filterNot(e=> e.mass <= 0 && e.newmass <= 0)
+      }.filterNot(e=> e.mass <= 0)
         if(cellDifference){
           //改变player的x,y
           val length = newcells.length
@@ -559,7 +568,7 @@ case class DrawGame(
     ctx.save()
     ctx.font = s"${ 34 * this.canvas.width / Window.w }px Helvetica"
     ctx.fillText(s"KILL: ${p.kill}", this.canvas.width * 0.18 + 30 , 10)
-    ctx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", this.canvas.width * 0.18 + 180 * this.canvas.width / Window.w , 10)
+    ctx.fillText(s"SCORE: ${p.cells.map(_.newmass).sum.toInt}", this.canvas.width * 0.18 + 180 * this.canvas.width / Window.w , 10)
     ctx.restore()
     renderFps(ctx,NetDelay.latency,this.canvas.width)
   }

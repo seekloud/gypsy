@@ -41,7 +41,7 @@ object utils {
     }
 //    println(s"width: $width height:$height newcwidth: $newCWidth newcheight: $newCHeight")
 //    println(s"${scale.formatted("%.3f").toDouble}")
-    scale.formatted("%.3f").toDouble
+    scale
   }
 
 
