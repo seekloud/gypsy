@@ -71,8 +71,10 @@ class GameHolder(replay:Boolean = false) {
   val grid = new GameClient(bounds)
 
   //游戏状态
-  private[this] var gameState = GameState.play
-  var deadInfo :Option[Protocol.UserDeadMessage] = None
+//  private[this] var gameState = GameState.play
+  private[this] var gameState = GameState.dead
+//  var deadInfo :Option[Protocol.UserDeadMessage] = None
+  var deadInfo :Option[Protocol.UserDeadMessage] = Some(UserDeadMessage(myId,"AAA","AAA",1,1,2000))
 
   private[this] val watchKeys = Set(
     KeyCode.E,
@@ -435,7 +437,7 @@ class GameHolder(replay:Boolean = false) {
           if(gameState == GameState.dead){
             println(s"发送复活确认")
 //            webSocketClient.sendMsg(ReLiveAck(id))
-            gameState = GameState.play
+//            gameState = GameState.play
           }
           drawTopView.cleanCtx()
         }
