@@ -67,18 +67,24 @@ object GameClient {
           println(s"myID:${GameHolder.myId}")
           Behaviors.same
 
-        case m:Protocol.KeyCode =>
-          if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
-            ClientBoot.addToPlatform{
-              grid.addActionWithFrame(m.id.get,m)
+        case m:Protocol.KC =>
+          if(m.id.isDefined){
+            val ID = m.id.get
+            if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
+              ClientBoot.addToPlatform{
+                grid.addActionWithFrame(m.id.get,m)
+              }
             }
           }
           Behaviors.same
 
-        case m:Protocol.MousePosition =>
-          if(GameHolder.myId!=m.id || GameHolder.usertype == -1){
-            ClientBoot.addToPlatform{
-              grid.addMouseActionWithFrame(m.id.get,m)
+        case m:Protocol.MP =>
+          if(m.id.isDefined){
+            val ID = m.id.get
+            if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
+              ClientBoot.addToPlatform{
+                grid.addMouseActionWithFrame(m.id.get,m)
+              }
             }
           }
           Behaviors.same
@@ -152,7 +158,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSpilt(player) =>
+        case Protocol.PlayerSplit(player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
               grid.playerMap += (item -> player(item))
@@ -282,18 +288,24 @@ object GameClient {
           ClientMusic.playMusic("bg")
           Behaviors.same
 
-        case m:Protocol.KeyCode =>
-          if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
-            ClientBoot.addToPlatform{
-              grid.addActionWithFrame(m.id.get,m)
+        case m:Protocol.KC =>
+          if(m.id.isDefined){
+            val ID = m.id.get
+            if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
+              ClientBoot.addToPlatform{
+                grid.addActionWithFrame(m.id.get,m)
+              }
             }
           }
           Behaviors.same
 
-        case m:Protocol.MousePosition =>
-          if(BotHolder.botId!=m.id || BotHolder.usertype == -1){
-            ClientBoot.addToPlatform{
-              grid.addMouseActionWithFrame(m.id.get,m)
+        case m:Protocol.MP =>
+          if(m.id.isDefined){
+            val ID = m.id.get
+            if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
+              ClientBoot.addToPlatform{
+                grid.addMouseActionWithFrame(m.id.get,m)
+              }
             }
           }
           Behaviors.same
@@ -368,7 +380,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSpilt(player) =>
+        case Protocol.PlayerSplit(player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
               grid.playerMap += (item -> player(item))

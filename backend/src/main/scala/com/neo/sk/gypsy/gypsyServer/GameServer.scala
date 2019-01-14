@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.gypsyServer
 
+import java.awt.event.KeyEvent
 import java.util.concurrent.atomic.AtomicLong
 
 import com.neo.sk.gypsy.shared.Grid
@@ -14,7 +15,7 @@ import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
 
-import scala.math.{Pi, abs, acos, cos, pow, sin, sqrt}
+import scala.math.{Pi, abs, acos, atan2, cbrt, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
@@ -153,14 +154,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
 
   override def checkPlayer2PlayerCrash(): Unit = {
-//    println(s"===========BEGIN============${frameCount} ")
-    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
-
     var p2pCrash = false
     var changedPlayers = Map[String,List[Cell]]()
     val newPlayerMap = playerMap.values.map {
@@ -194,7 +187,9 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
+//            val newCell = cell.copy(id = cell.id,newmass = newMass,radius = newRadius)
             val newCell = cell.copy(newmass = newMass,radius = newRadius)
+//            println(s"frame:${frameCount} ${player.id} (newId,oldId): ${(newCell.id,cell.id)} mass：${(newCell.newmass,cell.newmass)}  ")
             if(cellChange){
 //              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
               changedCells = newCell :: changedCells
@@ -221,7 +216,7 @@ class GameServer(override val boundary: Point) extends Grid {
           AddGameEvent(event)
           Left(killer)
         } else {
-          if (playerChange == true){
+          if (playerChange){
             changedPlayers+=(player.id->changedCells)
           }
           val length = newCells.length
@@ -238,14 +233,6 @@ class GameServer(override val boundary: Point) extends Grid {
       case Right(s) => (s.id, s)
       case Left(_) => ("", Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
     }.filterNot(_._1 == "").toMap
-
-//    println(s"===========AFTER============ ")
-    playerMap.values.foreach{p=>
-//      println(s"&&&&& size: ${p.cells.size}")
-      p.cells.foreach{c=>
-//        println(s"playId:${p.id} mass:${c.newmass}  ")
-      }
-    }
 
     newPlayerMap.foreach {
       case Left(killId) =>
@@ -340,7 +327,7 @@ class GameServer(override val boundary: Point) extends Grid {
     var splitPlayer = Map.empty[String,Player]
     val newPlayerMap = playerMap.values.map {
       player =>
-        var split = false
+//        var split = false
         var isRemoveVirus = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
@@ -356,7 +343,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 val v = vi._2
                 if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) ) {
                   isRemoveVirus = true
-                  split = true
+//                  split = true
                   removeVirus += (vi._1->vi._2)
                   val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
                   if(splitNum>0){
@@ -370,8 +357,8 @@ class GameServer(override val boundary: Point) extends Grid {
                       val degX = cos(baseAngle * i)
                       val degY = sin(baseAngle * i)
                       val startLen = (newRadius + cellRadius) * 1.2 * 3
-                      val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-                      val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                      val speedx = (degX * cell.speed).toFloat * 3
+                      val speedy = (degY * cell.speed).toFloat * 3
                       vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort, (cell.y + startLen * degY).toShort, 1, cellMass, cellRadius, cell.speed, speedx, speedy)
                     }
                   }
@@ -382,14 +369,14 @@ class GameServer(override val boundary: Point) extends Grid {
             List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
         val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
+        val newX = newCells.map(_.x.toInt).sum / length
+        val newY = newCells.map(_.y.toInt).sum / length
         val left = newCells.map(a => a.x - a.radius).min
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         val newplayer = player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-        if(split){
+        if(isRemoveVirus){
           splitPlayer += (player.id->newplayer)
         }
         newplayer
@@ -400,7 +387,7 @@ class GameServer(override val boundary: Point) extends Grid {
       val event2 = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event2)
       //只发送改变的玩家
-      dispatch(subscriber)(PlayerSpilt(splitPlayer))
+      dispatch(subscriber)(PlayerSplit(splitPlayer))
     }
   }
 
@@ -563,10 +550,84 @@ class GameServer(override val boundary: Point) extends Grid {
     )
   }
 
+
+  override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
+    var SplitPlayerMap = Map[String,Player]()
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var isSplit = false
+        var newSplitTime = player.lastSplit
+        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
+        val split = actMap.get(player.id) match {
+          case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_F
+          case _ => false
+        }
+        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
+          cell =>
+            var newMass = cell.newmass
+            var newRadius = cell.radius
+            val target = Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort )
+            val deg = atan2(target.clientY, target.clientX)
+            val degX = if (cos(deg).isNaN) 0 else cos(deg)
+            val degY = if (sin(deg).isNaN) 0 else sin(deg)
+            var splitX:Short = 0
+            var splitY:Short = 0
+            var splitMass:Short = 0
+            var splitRadius:Short = 0
+            var splitSpeed = 0.0
+            var cellId = 0L
+            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
+              newSplitTime = System.currentTimeMillis()
+              splitMass = (newMass / 2).toShort
+              newMass = (newMass- splitMass).toShort
+              splitRadius = Mass2Radius(splitMass)
+              newRadius = Mass2Radius(newMass)
+              splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
+              splitX = (cell.x + (newRadius + splitRadius) * degX).toShort
+              splitY = (cell.y + (newRadius + splitRadius) * degY).toShort
+              cellId = cellIdgenerator.getAndIncrement().toLong
+              isSplit = true
+            }
+            /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
+            //            println(cell.mass + "   " + newMass)
+//            println(s"cellId:${cellId} id:${cell.id} ")
+            List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
+              Cell(cellId,  splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
+
+
+        }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
+
+        if(isSplit){
+          val length = newCells.length
+          val newX = newCells.map(_.x).sum / length
+          val newY = newCells.map(_.y).sum / length
+          val left = newCells.map(a => a.x - a.radius).min
+          val right = newCells.map(a => a.x + a.radius).max
+          val bottom = newCells.map(a => a.y - a.radius).min
+          val top = newCells.map(a => a.y + a.radius).max
+          val newPlayer = player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+          SplitPlayerMap += (player.id -> newPlayer)
+          newPlayer
+        }else{
+          player
+        }
+
+    }
+    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+
+    if(SplitPlayerMap.nonEmpty){
+      val msg = PlayerSplit(SplitPlayerMap)
+      dispatch(subscriber)(msg)
+    }
+
+  }
+
+
+
   override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
 
   def getDataForBot(id:String,winWidth:Int,winHeight:Int):GridData4Bot =  {
-    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(((winWidth/2).toShort,(winHeight/2).toShort ))
+    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(( winWidth/2 ,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
       Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)

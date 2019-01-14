@@ -113,11 +113,11 @@ object UserActor {
           .map {a=>
             val req = a.reqOpt.get
                  req match{
-                   case KeyCode(_,keyCode,f,n)=>
+                   case KC(_,keyCode,f,n)=>
                      log.debug(s"键盘事件$keyCode")
                      Key(keyCode,f,n)
 
-                   case MousePosition(_,clientX,clientY,f,n)=>
+                   case MP(_,clientX,clientY,f,n)=>
                      Mouse(clientX,clientY,f,n)
 
                    case Ping(timestamp)=>

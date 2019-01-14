@@ -204,9 +204,6 @@ class GameCanvas(canvas: Canvas,
       val showTime = killList.head._1
       val killerId = killList.head._2
       val deadPlayer = killList.head._3
-      //      println("kk"+killerId)
-      //      println("dd"+deadPlayer)
-      //      println("gg"+grid.playerMap)
       val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", 0, 0, 0, cells = List(Cell(0L, 0, 0)))).name
       val deadName = deadPlayer.name
       val txt1=new Text(killerName)
@@ -225,14 +222,14 @@ class GameCanvas(canvas: Canvas,
       if (showTime > 0) {
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))
-        ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
+//        ctx.setStroke(Color.web("#f32705"))
+//        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
         ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
-        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 25,realWindow.y*0.15,32,32)
-        ctx.setStroke(Color.web("#f32705"))
-        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
-        ctx.setFill(Color.web("#f27c02"))
+        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 50,realWindow.y*0.15,32,32)
+//        ctx.setStroke(Color.web("#f32705"))
+//        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
+//        ctx.setFill(Color.web("#f27c02"))
         ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
@@ -377,18 +374,22 @@ class GameCanvas(canvas: Canvas,
         }
 
         var nameFont = sqrt(cell.newmass*3)+3
-        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > 72) 72 else nameFont
         ctx.setFont(Font.font("Helvetica",nameFont))
         var playermass=cell.newmass.toInt
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth.toInt
         val txt4=new Text(playermass.toString)
         val massWidth = txt4.getLayoutBounds.getWidth.toInt
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
+//        ctx.setStroke(Color.web("grey"))
+//        println(s"nameFont:$nameFont namelength:${name.length}")
+//        ctx.strokeText(s"$name", xfix + offx - (name.length*nameFont/3).toInt, yfix + offy - (nameFont.toInt / 2))
+//        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2 -nameFont, yfix + offy + nameFont.toInt/2)
-        ctx.fillText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
+        ctx.fillText(s"${playermass.toString}",xfix + offx - (name.length*nameFont/6).toInt, yfix + offy + nameFont.toInt/4)
+        ctx.fillText(s"$name", xfix + offx - (name.length*nameFont/3).toInt-5, yfix + offy - (nameFont.toInt / 2))
+//        ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2 -nameFont, yfix + offy + nameFont.toInt/2)
+//        ctx.fillText(s"$name", xfix + offx - nameWidth / 2 -nameFont, yfix + offy - (nameFont.toInt / 2))
         ctx.restore()
         /**膨胀、缩小效果**/
         var newcell = cell
