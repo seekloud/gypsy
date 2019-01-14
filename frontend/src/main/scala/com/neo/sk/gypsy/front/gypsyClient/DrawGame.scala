@@ -473,7 +473,7 @@ case class DrawGame(
       frame+=1
 
       var cellDifference = false
-      val c= cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
+      val c = cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
       val newcells = c.map{ cell =>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
