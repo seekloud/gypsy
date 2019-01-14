@@ -489,7 +489,6 @@ case class DrawGame(
           ctx.arc(xfix + offx,yfix + offy, cell.radius + 15,0,2*Math.PI)
           ctx.fill()
         }
-
         var nameFont = sqrt(cell.mass*3)+3
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.font = s"${nameFont.toInt}px Helvetica"
