@@ -639,12 +639,14 @@ case class DrawGame(
     ctx.fillStyle = "#CD3700"
     val Width = this.canvas.width
     val Height = this.canvas.height
-    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+//    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.22
+    ctx.fillText(s"You Dead!", Width*0.42, BaseHeight)
 
     ctx.font = s"${Window.w *0.02}px Comic Sans MS"
 
     var DrawLeft = Width*0.35
-    var DrawHeight = Height*0.3
+    val DrawHeight = BaseHeight
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
@@ -655,6 +657,9 @@ case class DrawGame(
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+
+    ctx.fillText(s"${msg.killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+
   }
 
 
