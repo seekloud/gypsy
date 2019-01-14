@@ -31,16 +31,18 @@ object utils {
     var scale = 1.0
     if (width >= newCWidth / 2 || height >= newCHeight / 2) {
       scale = if (newCWidth / 2 / width > newCHeight / 2 / height) {
-        sqrt(newCHeight / 2 / height)
+        newCHeight / 2 / height
       } else {
-        sqrt(newCWidth / 2 / width)
+        newCWidth / 2 / width
       }
     }
     else if (width * height >= newCHeight * newCWidth / 4) {
-      scale = sqrt((newCHeight * newCWidth) / 4 / (width * height))
+      scale = (newCHeight * newCWidth) / 4 / (width * height)
     }
 //    println(s"width: $width height:$height newcwidth: $newCWidth newcheight: $newCHeight")
 //    println(s"${scale.formatted("%.3f").toDouble}")
+    scale = if(scale>0.22) scale else 0.22
+    println(scale)
     scale
   }
 
