@@ -508,11 +508,16 @@ case class DrawGame(
         if(cell.mass != cell.newmass){
           //根据差值来膨胀或缩小
           cellDifference = true
+//          val massDifference = cell.mass - cell.newmass
+//          val massSpeed = massDifference match {
+//            case x if(-150 < x && x < 150) => if(cell.mass < cell.newmass) 1 else -1
+//            case x if(150 < x || x < -150) => (cell.newmass - cell.mass)/15
+//          }
           val massSpeed = if(cell.mass < cell.newmass) 1 else -1
           newcell = cell.copy(mass = (cell.mass + massSpeed).toShort, radius = (4 + sqrt(cell.mass + massSpeed) * 6).toShort)
         }
         newcell
-      }.filterNot(e=> e.mass<=0 && e.newmass <=0)
+      }.filterNot(e=> e.mass <= 0 && e.newmass <= 0)
         if(cellDifference){
           //改变player的x,y
           val length = newcells.length
@@ -522,7 +527,7 @@ case class DrawGame(
           val right = newcells.map(a => a.x + a.radius).max
           val bottom = newcells.map(a => a.y - a.radius).min
           val top = newcells.map(a => a.y + a.radius).max
-          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit, killerName, right - left, top - bottom, newcells, startTime)
           gird.playerMap += (id -> player)
         }
     }
