@@ -39,10 +39,7 @@ object utils {
     else if (width * height >= newCHeight * newCWidth / 4) {
       scale = (newCHeight * newCWidth) / 4 / (width * height)
     }
-//    println(s"width: $width height:$height newcwidth: $newCWidth newcheight: $newCHeight")
-//    println(s"${scale.formatted("%.3f").toDouble}")
     scale = if(scale>0.22) scale else 0.22
-    println(scale)
     scale
   }
 
