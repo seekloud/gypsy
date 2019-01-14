@@ -327,7 +327,6 @@ class GameServer(override val boundary: Point) extends Grid {
     var splitPlayer = Map.empty[String,Player]
     val newPlayerMap = playerMap.values.map {
       player =>
-//        var split = false
         var isRemoveVirus = false
         var newSplitTime = player.lastSplit
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
@@ -343,7 +342,6 @@ class GameServer(override val boundary: Point) extends Grid {
                 val v = vi._2
                 if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) ) {
                   isRemoveVirus = true
-//                  split = true
                   removeVirus += (vi._1->vi._2)
                   val splitNum = if(VirusSplitNumber>maxCellNum-player.cells.length) maxCellNum-player.cells.length else VirusSplitNumber
                   if(splitNum>0){
