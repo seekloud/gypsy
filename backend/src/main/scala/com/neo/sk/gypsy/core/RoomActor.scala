@@ -190,10 +190,6 @@ object RoomActor {
           userActor ! JoinRoomSuccess4Watch(ctx.self,roomId)
           watchId match{
             case Some(wid) =>
-//              for(i<- 0 until userList.length){
-//                if(userList(i).id == wid && !userList(i).shareList.contains(playerInfo.playerId)){
-//                  userList(i).shareList.append(playerInfo.playerId)
-//                }
 //              }
               dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.Id(wid))
               dispatchTo(subscribersMap)(playerInfo.playerId,grid.getAllGridData)
