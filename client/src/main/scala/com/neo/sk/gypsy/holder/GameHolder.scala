@@ -197,10 +197,13 @@ class GameHolder(
 //          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
+          //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
           keyInFlame = true
-          val keyCode = Protocol.KeyCode(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-          grid.addActionWithFrame(myId, keyCode.copy(frame = grid.frameCount + delayFrame))
-          grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          if(key == KeyCode.E){
+            grid.addActionWithFrame(myId, keyCode.copy(f = grid.frameCount + delayFrame))
+//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+          }
           serverActor ! keyCode
         }
       }
@@ -213,13 +216,13 @@ class GameHolder(
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
 
-      val mp = MousePosition(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+      val mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
 //      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
         mouseInFlame = true
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(frame = grid.frameCount + delayFrame ))
-        grid.addUncheckActionWithFrame(myId, mp, mp.frame)
+        grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount + delayFrame ))
+        grid.addUncheckActionWithFrame(myId, mp, mp.f)
         serverActor ! mp
       }
     }

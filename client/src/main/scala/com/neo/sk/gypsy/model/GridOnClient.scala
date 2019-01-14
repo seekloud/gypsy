@@ -85,7 +85,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX, y = newY , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     mergeInFlame
@@ -122,6 +122,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
                   // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
                   val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
                   val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+                  //TODO 这里前端来让CellID 增加？？
                   vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort , (cell.y + startLen * degY).toShort , cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
                 }
               }
@@ -136,7 +137,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX , y = newY , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -174,7 +175,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX.toShort , y = newY.toShort , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX , y = newY , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -205,7 +206,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX.toShort , y = newY.toShort , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+        player.copy(x = newX , y = newY , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -323,35 +324,35 @@ class GridOnClient(override val boundary: Point) extends Grid {
   }
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
-    uncheckActionWithFrame.put(gameAction.serialNum,(frame,id,gameAction))
+    uncheckActionWithFrame.put(gameAction.sN,(frame,id,gameAction))
   }
 
   def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
-    val frame=gameAction.frame
+    val frame=gameAction.f
     if(myId == id){
-      uncheckActionWithFrame.get(gameAction.serialNum) match {
+      uncheckActionWithFrame.get(gameAction.sN) match {
         case Some((f,playerId,a)) =>
           if(f == frame){ //fixme 此处存在advanceFrame差异
-            uncheckActionWithFrame.remove(gameAction.serialNum)
+            uncheckActionWithFrame.remove(gameAction.sN)
           }else{ //与预执下的操作数据不一致，进行回滚
-            uncheckActionWithFrame.remove(gameAction.serialNum)
+            uncheckActionWithFrame.remove(gameAction.sN)
             if(frame < frameCount){
               //              rollback(frame)
             }else{
               removeActionWithFrame(playerId,a,f)
               gameAction match {
-                case a:KeyCode=>
+                case a:KC=>
                   addActionWithFrame(id,a)
-                case b:MousePosition=>
+                case b:MP=>
                   addMouseActionWithFrame(id,b)
               }
             }
           }
         case None =>
           gameAction match {
-            case a:KeyCode=>
+            case a:KC=>
               addActionWithFrame(id,a)
-            case b:MousePosition=>
+            case b:MP=>
               addMouseActionWithFrame(id,b)
           }
       }
@@ -361,9 +362,9 @@ class GridOnClient(override val boundary: Point) extends Grid {
         //        rollback(frame)
       }else{
         gameAction match {
-          case a:KeyCode=>
+          case a:KC=>
             addActionWithFrame(id,a)
-          case b:MousePosition=>
+          case b:MP=>
             addMouseActionWithFrame(id,b)
         }
       }
@@ -436,8 +437,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
     virusMap = Map.empty[Long,Virus]
     massList = List[Mass]()
     tick = 0
-    actionMap = Map.empty[Int, Map[String, KeyCode]]
-    mouseActionMap = Map.empty[Int, Map[String, MousePosition]]
+    actionMap = Map.empty[Int, Map[String, KC]]
+    mouseActionMap = Map.empty[Int, Map[String, MP]]
     deadPlayerMap=Map.empty[Long,Player]
   }
 

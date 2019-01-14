@@ -73,10 +73,13 @@ object Protocol {
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
+  //  按F分裂的球发送的全量消息
+//  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
+
   //只有用户离开房间时候发送
   case class PlayerLeft(id: String, name: String) extends GameMessage
 
-  case class PlayerSpilt(player: Map[String,Player]) extends GameMessage
+  case class PlayerSplit(player: Map[String,Player]) extends GameMessage
 
   case class PlayerJoin(id:String,player:Player) extends GameMessage
 
@@ -87,10 +90,15 @@ object Protocol {
   /**
     * 前端发送的数据
     * */
+//  sealed trait WsSendMsg{
+//        val serialNum:Int = -1 //类似每一帧的动作顺序
+//        val frame:Int = -1
+//      }
+  //sN -> serialNum; f -> frame
   sealed trait WsSendMsg{
-        val serialNum:Int = -1 //类似每一帧的动作顺序
-        val frame:Int = -1
-      }
+    val sN:Int = -1 //类似每一帧的动作顺序
+    val f:Int = -1
+  }
 
   case object WsSendComplete extends WsSendMsg
 
@@ -98,13 +106,17 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-  case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
+  //MP -> MousePosition;  cX->clientX;  cY->clientY; sN -> serialNum; f -> frame
+//  case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
+  case class MP(id: Option[String],cX:Short,cY:Short, override val f:Int, override val sN:Int) extends UserAction with GameMessage
 
-  case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
+  //KC->KeyCode; kC->keyCode
+//  case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
+  case class KC(id: Option[String],kC: Int, override val f:Int,override val sN:Int) extends UserAction with GameMessage
 
   case object PressSpace extends UserAction
 
-  case class ReLiveMsg(override val frame:Int) extends UserAction with GameMessage
+  case class ReLiveMsg(override val f:Int) extends UserAction with GameMessage
 
   case class WatchChange(watchId: String) extends UserAction
 
