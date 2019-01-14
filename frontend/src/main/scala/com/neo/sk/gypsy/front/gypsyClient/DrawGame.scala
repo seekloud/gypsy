@@ -471,6 +471,7 @@ case class DrawGame(
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
       frame+=1
+
       var cellDifference = false
       val c= cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
       val newcells = c.map{ cell =>
