@@ -406,6 +406,9 @@ class GameHolder(replay:Boolean = false) {
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
+      case Protocol.RemoveVirus(virus) =>
+        grid.virusMap --= virus.keySet.toList
+
       case data: Protocol.GridDataSync =>
         println("获取全量数据  get ALL GRID===================")
         syncGridData = Some(data)

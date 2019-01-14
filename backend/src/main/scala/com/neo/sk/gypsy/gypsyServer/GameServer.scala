@@ -388,6 +388,7 @@ class GameServer(override val boundary: Point) extends Grid {
       AddGameEvent(event2)
       //只发送改变的玩家
       dispatch(subscriber)(PlayerSplit(splitPlayer))
+      dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
 
