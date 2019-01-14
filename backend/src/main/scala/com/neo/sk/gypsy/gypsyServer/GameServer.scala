@@ -382,6 +382,7 @@ class GameServer(override val boundary: Point) extends Grid {
         newplayer
     }
     virusMap --= removeVirus.keySet.toList
+    println(s"${frameCount} delete size:${removeVirus.keySet.size} Virus : ${removeVirus.keySet} ")
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     if(removeVirus.nonEmpty && splitPlayer.nonEmpty){
       val event2 = PlayerInfoChange(playerMap,frameCount)

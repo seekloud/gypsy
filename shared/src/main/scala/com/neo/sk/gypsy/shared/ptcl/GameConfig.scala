@@ -29,7 +29,7 @@ object GameConfig {
   //食物池
   var foodPool = 300
   //病毒数量
-  var virusNum:Int = 8
+  var virusNum:Int = 16
   //病毒质量上限
   var virusMassLimit:Int = 200
   val shotMass:Short = 10
@@ -59,7 +59,7 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 20
+  val initMass:Short = 200
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽

@@ -42,7 +42,7 @@ object utils {
 //    println(s"width: $width height:$height newcwidth: $newCWidth newcheight: $newCHeight")
 //    println(s"${scale.formatted("%.3f").toDouble}")
     scale = if(scale>0.22) scale else 0.22
-    println(scale)
+//    println(scale)
     scale
   }
 

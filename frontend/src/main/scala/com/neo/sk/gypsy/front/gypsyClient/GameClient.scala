@@ -111,6 +111,7 @@ class GameClient (override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             if(!mergeInFlame && !isremoveVirus){
+              println("Virus begin!")
               //病毒碰撞检测: 一个cell只能让一个病毒消失
               val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
                 toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
@@ -133,6 +134,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
     }
+    println(s"${frameCount}  delete size:${removeVirus.keySet.size} Virus : ${removeVirus.keySet} ")
     virusMap --= removeVirus.keySet.toList
   }
 
