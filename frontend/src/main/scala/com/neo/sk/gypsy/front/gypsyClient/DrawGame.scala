@@ -520,12 +520,12 @@ case class DrawGame(
 //          }
 //          val massSpeed = if(cell.mass < cell.newmass) (cell.mass/100)+1 else -((cell.mass/100)+1)
         val massSpeed = if(cell.mass < cell.newmass){
-         if((cell.newmass-cell.mass)>=(cell.mass/100)+1)
-           (cell.mass/50)+1
+         if((cell.newmass-cell.mass)>=(cell.mass/50)+1)
+           ((cell.newmass-cell.mass)/50)+1
          else cell.newmass-cell.mass
         } else {
          if((cell.mass-cell.newmass)>=(cell.mass/50)+1)
-           -((cell.mass/50)+1)
+           -(((cell.mass-cell.newmass)/50)+1)
          else cell.newmass-cell.mass
         }
           newcell = cell.copy(mass = (cell.mass + massSpeed).toShort, radius = (4 + sqrt(cell.mass + massSpeed) * 6).toShort)
