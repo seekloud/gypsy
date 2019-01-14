@@ -113,8 +113,10 @@ class GameHolder(replay:Boolean = false) {
       //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
-        mouseInFlame = false
-        keyInFlame = false
+        if(grid.frameCount % 1 ==0){
+          mouseInFlame = false
+          keyInFlame = false
+        }
         update()
       } else {
         if (syncGridData.nonEmpty) {
@@ -250,12 +252,14 @@ class GameHolder(replay:Boolean = false) {
       atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
 
+    var mp = MP(None,0,0,0,0)
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-        if(mouseInFlame == false){
-          {
-            val mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+
+            mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+              if(mouseInFlame == false){
+                {
 //              println(s"帧号${grid.frameCount},动作：$mp")
               mouseInFlame = true
               FormerDegree = getDegree(e.pageX,e.pageY)
