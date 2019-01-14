@@ -282,7 +282,6 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.sendMsg(mp)
   }
 
-
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
@@ -406,6 +405,9 @@ class GameHolder(replay:Boolean = false) {
         println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
+      case Protocol.RemoveVirus(virus) =>
+        grid.virusMap --= virus.keySet.toList
+
       case data: Protocol.GridDataSync =>
         println("获取全量数据  get ALL GRID===================")
         syncGridData = Some(data)
@@ -438,6 +440,7 @@ class GameHolder(replay:Boolean = false) {
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         )
+        print(s"玩家分裂：${grid.playerMap}")
 
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>

@@ -471,14 +471,10 @@ case class DrawGame(
         case 23=> star23 //(244, 153, 48)  a65d0a
       }
       frame+=1
+
       var cellDifference = false
-      val newcells = cells.sortBy(_.id).map{ cell =>
-//        val cellx = if(cell.x!=cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate)
-//          cell.x + cell.speedX * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
-//        else cell.x + cell.speedX *offsetTime.toFloat / WsMsgProtocol.frameRate
-//        val celly = if(cell.y!=cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate)
-//          cell.y + cell.speedY * offsetTime.toFloat * 1/30 / WsMsgProtocol.frameRate
-//        else cell.y + cell.speedY *offsetTime.toFloat / WsMsgProtocol.frameRate
+      val c = cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
+      val newcells = c.map{ cell =>
         val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
         val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
@@ -494,7 +490,6 @@ case class DrawGame(
           ctx.arc(xfix + offx,yfix + offy, cell.radius + 15,0,2*Math.PI)
           ctx.fill()
         }
-
         var nameFont = sqrt(cell.mass*3)+3
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
         ctx.font = s"${nameFont.toInt}px Helvetica"
@@ -683,6 +678,10 @@ case class DrawGame(
     //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
+  }
+
+  def sortRule(cell:Cell):(Short,Long) ={
+    (cell.newmass,cell.id)
   }
 
 //  def MTime2HMS(time:Long)={

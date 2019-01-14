@@ -564,6 +564,7 @@ trait Grid {
 
     //val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
+
     playerMap.foreach{
       case (id,player) =>
         val score = player.cells.map(_.newmass).sum

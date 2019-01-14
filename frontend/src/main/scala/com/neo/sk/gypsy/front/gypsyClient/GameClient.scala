@@ -101,41 +101,41 @@ class GameClient (override val boundary: Point) extends Grid {
   }
 
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
-    var removeVirus = Map.empty[Long,Virus]
-    playerMap.values.map {
-      player =>
-        var isremoveVirus = false
-        var newSplitTime = player.lastSplit
-        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-          cell =>
-            var newMass = cell.newmass
-            var newRadius = cell.radius
-            if(!mergeInFlame && !isremoveVirus){
-              println("Virus begin!")
-              //病毒碰撞检测: 一个cell只能让一个病毒消失
-              val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
-                toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
-              newvirusMap.foreach { vi =>
-                val v = vi._2
-                if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2)) {
-                  removeVirus += (vi._1->vi._2)
-                  isremoveVirus = true
-                }
-              }
-            }
-            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
-        }
-        val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
-        val left = newCells.map(a => a.x - a.radius).min
-        val right = newCells.map(a => a.x + a.radius).max
-        val bottom = newCells.map(a => a.y - a.radius).min
-        val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-    }
-    println(s"${frameCount}  delete size:${removeVirus.keySet.size} Virus : ${removeVirus.keySet} ")
-    virusMap --= removeVirus.keySet.toList
+//    var removeVirus = Map.empty[Long,Virus]
+//    playerMap.values.map {
+//      player =>
+//        var isremoveVirus = false
+////        var newSplitTime = player.lastSplit
+//        player.cells.sortBy(_.radius).reverse.flatMap {
+//          cell =>
+////            var newMass = cell.newmass
+////            var newRadius = cell.radius
+//            if(!mergeInFlame && !isremoveVirus){
+//              //病毒碰撞检测: 一个cell只能让一个病毒消失
+//              val newvirusMap = virusMap.filter(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)) < cell.radius)).
+//                toList.sortBy(v => (sqrt(pow(v._2.x - cell.x, 2.0) + pow(v._2.y - cell.y, 2.0)))).reverse
+//              newvirusMap.foreach { vi =>
+//                val v = vi._2
+//                if (cell.radius > v.radius * 1.2) {
+//                  removeVirus += (vi._1->vi._2)
+//                  isremoveVirus = true
+//                }
+//              }
+//            }
+//              List(cell)
+//            List(Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
+//        }
+//        val length = newCells.length
+//        val newX = newCells.map(_.x).sum / length
+//        val newY = newCells.map(_.y).sum / length
+//        val left = newCells.map(a => a.x - a.radius).min
+//        val right = newCells.map(a => a.x + a.radius).max
+//        val bottom = newCells.map(a => a.y - a.radius).min
+//        val top = newCells.map(a => a.y + a.radius).max
+//        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+//        player
+//    }
+//    virusMap --= removeVirus.keySet.toList
   }
 
   override def checkPlayer2PlayerCrash(): Unit = {}
