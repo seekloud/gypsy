@@ -136,6 +136,7 @@ object UserManager {
   var ping = 0.0
   var mouse = 0.0
   var key = 0.0
+  var split = 0.0
   var other = 0.0
   var timer = System.currentTimeMillis()
   val period = 30 * 1000
@@ -208,7 +209,10 @@ object UserManager {
                   mouse = mouse + a.length
                 case m:KC=>
                   key = key + a.length
-
+                case m:AddVirus=>
+                  virus = virus + a.length
+                case m:PlayerSplit=>
+                  split = split + a.length
                 case x =>
                   other = other + a.length
 
@@ -229,6 +233,7 @@ object UserManager {
                   s"RANK:$rank" +
                   s"MERGE:$merge" +
                   s"CRASH:$crash" +
+                  s"SPLIT:$split" +
                   s"OTHER:$other")
                 sync = 0.0
                 food = 0.0
@@ -240,6 +245,7 @@ object UserManager {
                 ping = 0.0
                 mouse = 0.0
                 key = 0.0
+                split = 0.0
                 other = 0.0
               }
 

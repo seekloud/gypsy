@@ -388,6 +388,7 @@ class GameServer(override val boundary: Point) extends Grid {
       AddGameEvent(event2)
       //只发送改变的玩家
       dispatch(subscriber)(PlayerSplit(splitPlayer))
+      dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
 
@@ -522,6 +523,7 @@ class GameServer(override val boundary: Point) extends Grid {
           case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_F
           case _ => false
         }
+        var splitIncrement = 0
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var newMass = cell.newmass
@@ -536,7 +538,8 @@ class GameServer(override val boundary: Point) extends Grid {
             var splitRadius:Short = 0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
+            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum-splitIncrement) {
+              splitIncrement += 1
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toShort
               newMass = (newMass- splitMass).toShort

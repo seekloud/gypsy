@@ -83,6 +83,8 @@ object Protocol {
 
   case class PlayerJoin(id:String,player:Player) extends GameMessage
 
+  case class RemoveVirus(virus: Map[Long,Virus]) extends GameMessage
+
   case class JoinRoomSuccess(playerId:String, roomId:Long) extends GameMessage
 
   case class JoinRoomFailure(playerId:String,roomId:Long,errorCode:Int,msg:String) extends GameMessage

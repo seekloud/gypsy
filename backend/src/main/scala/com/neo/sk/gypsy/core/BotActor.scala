@@ -104,7 +104,7 @@ object BotActor {
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
               if(botCell.mass>closestP.mass*2.2){
-                if(random() > 0.6){
+                if(random() < 0.2){
                   val mp = MP(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
                 }
