@@ -62,7 +62,6 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
-  var bigPlayerMass = 500.0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   private[this] var killList = List.empty[(Int,String,Player)]
@@ -256,7 +255,9 @@ class GameHolder(replay:Boolean = false) {
     var mp = MP(None,0,0,0,0)
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-
+            val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
+            val mpy = e.pageY - canvas3.offsetTop - window.y / 2
+//            println(s" ($mpx,$mpy) ===")
             mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
               if(mouseInFlame == false){
@@ -324,7 +325,7 @@ class GameHolder(replay:Boolean = false) {
 //        println("zoom:  " + zoom)
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime)
+          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime,grid.playerMap.size)
 //          ctx.save()
 //          ctx.font = "34px Helvetica"
 //          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
@@ -446,7 +447,7 @@ class GameHolder(replay:Boolean = false) {
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         )
-        print(s"玩家分裂：${grid.playerMap}")
+//        print(s"玩家分裂：${grid.playerMap}")
 
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
@@ -504,9 +505,9 @@ class GameHolder(replay:Boolean = false) {
 ////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
 
       case Protocol.UserCrash(crashMap)=>
-        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
+//        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
         crashMap.foreach{p=>
-          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
+//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerMap.contains(p._1)){
             val player = grid.playerMap(p._1)
             var newCells = player.cells
@@ -534,7 +535,7 @@ class GameHolder(replay:Boolean = false) {
 //                  }
 //                }
 
-        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
+//        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
 
 
 
