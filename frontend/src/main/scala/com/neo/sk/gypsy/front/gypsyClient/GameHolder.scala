@@ -62,7 +62,7 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
-  var bigPlayerMass = 500.0
+//  var bigPlayerMass = 500.0
   var mp = MP(None,0,0,0,0)
   var fmp = MP(None,0,0,0,0)
   private[this] var logicFrameTime = System.currentTimeMillis()
@@ -258,7 +258,9 @@ class GameHolder(replay:Boolean = false) {
     }
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-
+            val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
+            val mpy = e.pageY - canvas3.offsetTop - window.y / 2
+//            println(s" ($mpx,$mpy) ===")
             mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
         //    if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
 //              if(mouseInFlame == false){
@@ -333,7 +335,7 @@ class GameHolder(replay:Boolean = false) {
 //        println("zoom:  " + zoom)
           val foods = grid.food
           drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime)
+          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime,grid.playerMap.size)
 //          ctx.save()
 //          ctx.font = "34px Helvetica"
 //          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
