@@ -254,7 +254,9 @@ class GameHolder(replay:Boolean = false) {
     var mp = MP(None,0,0,0,0)
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-
+            val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
+            val mpy = e.pageY - canvas3.offsetTop - window.y / 2
+//            println(s" ($mpx,$mpy) ===")
             mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
             if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
               if(mouseInFlame == false){
