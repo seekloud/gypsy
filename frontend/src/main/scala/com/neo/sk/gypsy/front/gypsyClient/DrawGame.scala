@@ -481,6 +481,9 @@ case class DrawGame(
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+
+        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+
         //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.fillStyle = MyColors.halo
@@ -567,15 +570,18 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long)={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long,playerNum:Int)={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.fillStyle = MyColors.background
+    ctx.font = s"${8 * this.canvas.width / Window.w }px Helvetica"
+    ctx.fillText(s"Version:${version}",(this.canvas.width- this.canvas.width * 0.17+ctx.measureText("——————").width).toInt,16)
     ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
     val currentRankBaseLine = 3
-    ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, currentRankBaseLine)
+//    drawTextLine(s"Version:${version}", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, 0)
+    drawTextLine(s"———排行榜———  人数:$playerNum", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
@@ -634,22 +640,28 @@ case class DrawGame(
     ctx.fillStyle = "#CD3700"
     val Width = this.canvas.width
     val Height = this.canvas.height
-    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+//    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.22
+    ctx.fillText(s"You Dead!", Width*0.42, BaseHeight)
 
     ctx.font = s"${Window.w *0.02}px Comic Sans MS"
 
     var DrawLeft = Width*0.35
-    var DrawHeight = Height*0.3
+    val DrawHeight = BaseHeight
+    val killerName = playerMap.get(msg.killerId).get.name
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
     ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+
+    ctx.fillText(s"${killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+
   }
 
 
