@@ -290,6 +290,7 @@ class GameHolder(replay:Boolean = false) {
   }
 
   def draw(offsetTime:Long)={
+    println(s"Screen ===> (${dom.window.innerWidth.toInt},${dom.window.innerHeight.toInt}) ")
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
