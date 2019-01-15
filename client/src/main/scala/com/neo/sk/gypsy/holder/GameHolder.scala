@@ -145,6 +145,7 @@ class GameHolder(
     //差不多每三秒同步一次
     //不同步
     if (!justSynced) {
+
       mouseInFlame = false
       keyInFlame = false
       update()
