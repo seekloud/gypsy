@@ -9,6 +9,8 @@ object GameConfig {
 
 //  val historyRankLength = 5
 
+  val version = "20190115"
+
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
   val acceleration  = 2
@@ -59,10 +61,20 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 100
+  val initMass:Short = 50
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
+
+  //Level5
+  val bigPlayerMass:Short = 500
+
+
+  //canvas大小屏时候中间值，作为grid里面updateMove里面鼠标缩放的默认参数
+  //小屏（900*450） 大屏(1200+++*760)
+  val CanvasWidth = 1100
+  val CanvasHeight = 600
+
 
 }

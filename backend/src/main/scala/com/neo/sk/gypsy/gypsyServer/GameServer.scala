@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.gypsyServer
 
 import java.awt.event.KeyEvent
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
@@ -14,6 +14,7 @@ import scala.util.Random
 import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
+import com.neo.sk.gypsy.common.AppSettings
 
 import scala.math.{Pi, abs, acos, atan2, cbrt, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
@@ -43,7 +44,11 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
   var currentRank = List.empty[Score]
-//  private[this] var historyRankMap = Map.empty[String, Score]
+
+//  val playerIdgenerator = new AtomicInteger(127)
+  val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
+
+  //  private[this] var historyRankMap = Map.empty[String, Score]
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 
 //  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
@@ -68,14 +73,31 @@ class GameServer(override val boundary: Point) extends Grid {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(24)
-      val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
+      val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
       playerMap += id -> player
+      /**--------------------**/
+      var addPlayerByteId = true
+      var playerIdByte = Random.nextInt(127).toByte
+      playerId2ByteMap.foreach{item=>
+        if(item._1 == id){
+          addPlayerByteId = false
+          playerIdByte = item._2
+        }
+      }
+      if(addPlayerByteId){
+        if(playerId2ByteMap.values.toList.contains(playerIdByte)){
+          playerIdByte = Random.nextInt(127).toByte
+        }
+        playerId2ByteMap += id -> playerIdByte
+      }
+      dispatch(subscriber)(PlayerJoin(playerIdByte,player))
+      /**-------------------**/
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
-      dispatch(subscriber)(PlayerJoin(id,player))
-      dispatchTo(subscriber)(id,getAllGridData)
+      dispatchTo(subscriber)(id, getAllGridData)
+      dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
     }
     waitingJoin = Map.empty[String, String]
   }
@@ -159,7 +181,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var playerChange = false
-        var killer = ""
+        var killerId = ""
         val score = player.cells.map(_.mass).sum
         var changedCells = List[Cell]()
         val newCells = player.cells.sortBy(_.radius).reverse.map {
@@ -175,7 +197,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
-                  killer = p._1
+                  killerId = p._1
                   cellChange = true
                 } else if (cell.mass > otherCell.mass * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
                   //吃掉别人了
@@ -187,34 +209,34 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-//            val newCell = cell.copy(id = cell.id,newmass = newMass,radius = newRadius)
             val newCell = cell.copy(newmass = newMass,radius = newRadius)
-//            println(s"frame:${frameCount} ${player.id} (newId,oldId): ${(newCell.id,cell.id)} mass：${(newCell.newmass,cell.newmass)}  ")
             if(cellChange){
-//              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
               changedCells = newCell :: changedCells
             }
-//            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
             newCell
         }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
-          playerMap.get(killer) match {
-            case Some(killerPlayer) =>
-              player.killerName = killerPlayer.name
-            case _ =>
-              player.killerName = "unknown"
-          }
+//          playerMap.get(killer) match {
+//            case Some(killerPlayer) =>
+//              player.killerName = killerPlayer.name
+//            case _ =>
+//              player.killerName = "unknown"
+//          }
 //          加入待复活列表
           if(player.id.startsWith("bot_")){
-            ReLiveMap += (player.id -> System.currentTimeMillis())
+            var playerNum=0
+            playerMap.foreach(i=>playerNum+=1)
+            if(playerNum>AppSettings.botNum){
+            }
+            else ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score,System.currentTimeMillis()-player.startTime))
-          dispatch(subscriber)(Protocol.KillMessage(killer,player))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(killerId,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killer,player,score,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killerId,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
-          Left(killer)
+          Left(killerId)
         } else {
           if (playerChange){
             changedPlayers+=(player.id->changedCells)
@@ -386,6 +408,7 @@ class GameServer(override val boundary: Point) extends Grid {
       AddGameEvent(event2)
       //只发送改变的玩家
       dispatch(subscriber)(PlayerSplit(splitPlayer))
+      dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
 
@@ -515,11 +538,12 @@ class GameServer(override val boundary: Point) extends Grid {
       player =>
         var isSplit = false
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(playerId2ByteMap(player.id)),player.targetX, player.targetY,0,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_F
           case _ => false
         }
+        var splitIncrement = 0
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
             var newMass = cell.newmass
@@ -534,7 +558,8 @@ class GameServer(override val boundary: Point) extends Grid {
             var splitRadius:Short = 0
             var splitSpeed = 0.0
             var cellId = 0L
-            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
+            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum-splitIncrement) {
+              splitIncrement += 1
               newSplitTime = System.currentTimeMillis()
               splitMass = (newMass / 2).toShort
               newMass = (newMass- splitMass).toShort

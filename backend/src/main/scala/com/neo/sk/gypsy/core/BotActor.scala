@@ -88,7 +88,7 @@ object BotActor {
           //TODO 选择一个动作发给roomActor
           val px =  new Random(System.nanoTime()).nextInt(1200)- 600
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
-          val mp = MP(Some(botId),px.toShort,py.toShort,grid.frameCount, -1)
+          val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
           Behaviors.same
 
@@ -104,21 +104,21 @@ object BotActor {
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
               if(botCell.mass>closestP.mass*2.2){
-                if(random() > 0.6){
-                  val mp = MP(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                if(random() < 0.2){
+                  val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
                 }
-                val kc = KC(Some(botId),70,grid.frameCount,-1)
+                val kc = KC(Some(grid.playerId2ByteMap(botId)),70,grid.frameCount,-1)
                 roomActor ! botAction(botId,kc)
               }
               else if(botCell.mass>closestP.mass*1.1){
                 if(getDis(botCell.x,botCell.y,closestP.x,closestP.y,closestP.radius) > 0){
-                  val mp = MP(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                  val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
                 }
               }
               else if(botCell.mass*1.1<closestP.mass){
-                val mp = MP(Some(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
+                val mp = MP(Some(grid.playerId2ByteMap(botId)),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
                 roomActor ! botAction(botId,mp)
               }
 
@@ -126,13 +126,13 @@ object BotActor {
               //吃mass
             else if(mass.nonEmpty){
               val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
-              val mp = MP(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
             }
               //吃食物
             else if(food.nonEmpty){
               val closestP = food.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,0)).head
-              val mp = MP(Some(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
             }
           }
@@ -164,7 +164,7 @@ object BotActor {
         case Space =>
           //TODO 复活
           val spaceKeyCode=32
-          roomActor ! botAction(botId, KC(Some(botId),spaceKeyCode,grid.frameCount,-1))
+          roomActor ! botAction(botId, KC(Some(grid.playerId2ByteMap(botId)),spaceKeyCode,grid.frameCount,-1))
           Behaviors.same
 
         case KillBot =>
