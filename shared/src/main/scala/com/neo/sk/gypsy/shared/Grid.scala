@@ -59,8 +59,6 @@ trait Grid {
 
   val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val bigPlayerMass = 500.0
-
   var deadPlayerMap=Map.empty[Long,Player]
 
   //统计分数
@@ -126,8 +124,6 @@ trait Grid {
       case None => GameEventMap.put(event.frame,List(event))
     }
   }
-
-
 
   def update() = {
     updateSpots()
@@ -296,7 +292,8 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
-    val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
+    var MouseScala = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
+    val mouseAct = mouseActMap.getOrElse(player.id,MP(None,player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
@@ -312,12 +309,11 @@ trait Grid {
 
       target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
 
-      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
+      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScala
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
       val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
-//      println(s"slowdown:$slowdown")
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
@@ -325,10 +321,12 @@ trait Grid {
         if (cell.speed > 30 / slowdown) {
           newSpeed -= acceleration
 //          newSpeed = 30 / slowdown
+
         } else {
           if (distance < cell.radius) {
             if (cell.speed > 0) {
               newSpeed = cell.speed - acceleration
+
             } else newSpeed = 0
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
@@ -440,7 +438,7 @@ trait Grid {
     //TODO 这里写下有哪些是分裂的
     val newPlayerMap = playerMap.values.map {
       player =>
-        val mouseAct = mouseActMap.getOrElse(player.id, MP(Some(player.id),player.targetX.toShort, player.targetY.toShort,0,0))
+        val mouseAct = mouseActMap.getOrElse(player.id, MP(None,player.targetX.toShort, player.targetY.toShort,0,0))
         val shot = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_E
           case _ => false
@@ -548,7 +546,7 @@ trait Grid {
 
   /**
     * method: getGridData
-    * describe: 获取自己视角中的全量数据
+    * describe: 获取自己视角中的全量数据 + 质量超过500的巨型玩家
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
@@ -566,10 +564,13 @@ trait Grid {
 
     //val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
+
     playerMap.foreach{
       case (id,player) =>
-        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height))
+        val score = player.cells.map(_.newmass).sum
+        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
         playerDetails ::= player
+
     }
 
     Protocol.GridDataSync(
