@@ -94,6 +94,8 @@ class GameHolder(replay:Boolean = false) {
   protected def checkScreenSize = {
     val newWidth=dom.window.innerWidth.toInt
     val newHeight=dom.window.innerHeight.toInt
+    println(s"Screen ===> ($newWidth,$newHeight) ")
+
     if(newWidth!= window.x || newHeight!= window.y){
       //屏幕适配
       window =  Point(newWidth, newHeight)
