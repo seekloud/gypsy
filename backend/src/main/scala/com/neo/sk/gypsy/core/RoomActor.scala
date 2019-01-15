@@ -355,18 +355,6 @@ object RoomActor {
           if(AppSettings.gameRecordIsWork){
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
           }
-          var playerNum = 0
-          var allPlayerNum = 0
-          val PlayerMap = grid.playerMap.filterNot(id=>id._1.startsWith("bot_"))
-          grid.playerMap.foreach(_=>allPlayerNum+=1)
-          PlayerMap.foreach(_=>playerNum+=1)
-          if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
-            for(b <- 1 to (AppSettings.botNum-allPlayerNum)){
-              val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-              val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
-              getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-            }
-          }
 
 //          复活列表
 //          if(grid.ReLiveMap.nonEmpty){
@@ -384,6 +372,21 @@ object RoomActor {
               ctx.self ! ReStart(live._1)
             }
             grid.ReLiveMap = Map.empty
+          }
+
+          if(tickCount % 10 ==0){
+            var playerNum = 0
+            var allPlayerNum = 0
+            val PlayerMap = grid.playerMap.filterNot(id=>id._1.startsWith("bot_"))
+            grid.playerMap.foreach(_=>allPlayerNum+=1)
+            PlayerMap.foreach(_=>playerNum+=1)
+            if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
+              for(b <- 1 to (AppSettings.botNum-allPlayerNum)){
+                val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+              }
+            }
           }
 
 
