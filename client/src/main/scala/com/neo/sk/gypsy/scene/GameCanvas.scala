@@ -199,13 +199,11 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,Player)])={
+  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
     if(isKill){
       val showTime = killList.head._1
-      val killerId = killList.head._2
-      val deadPlayer = killList.head._3
-      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", 0, 0, 0, cells = List(Cell(0L, 0, 0)))).name
-      val deadName = deadPlayer.name
+      val killerName = killList.head._2
+      val deadName = killList.head._3
       val txt1=new Text(killerName)
       val txt2=new Text(deadName)
       val killNameLength=txt1.getLayoutBounds.getWidth
@@ -233,7 +231,7 @@ class GameCanvas(canvas: Canvas,
         ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
-        val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
+        val killList1 = if (showTime > 1) (showTime - 1, killerName, deadName) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
       }else{
         (killList,isKill)
@@ -315,7 +313,7 @@ class GameCanvas(canvas: Canvas,
         ctx.fill()
       }
     }
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,width,height,cells,startTime) =>
       val circleImg = color match{
           //经典星球
 //        case 0 => circle //(243,69,109)   b30e35
@@ -412,7 +410,7 @@ class GameCanvas(canvas: Canvas,
         val right = newcells.map(a => a.x + a.radius).max
         val bottom = newcells.map(a => a.y - a.radius).min
         val top = newcells.map(a => a.y + a.radius).max
-        val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+        val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit,right - left,top - bottom,newcells,startTime)
         grid.playerMap += (id -> player)
       }
     }
@@ -499,7 +497,7 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
+  def drawWhenDead(playerMap:Map[String,Player], msg:Protocol.UserDeadMessage) = {
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
@@ -521,7 +519,7 @@ class GameCanvas(canvas: Canvas,
     //    DrawLeft = Width*0.56+Width*0.12
     DrawLeft = Width*0.56
 //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
@@ -678,7 +676,7 @@ class GameCanvas(canvas: Canvas,
   }
   /********************4.视野内包括自己的所有玩家******************************/
   def drawAllPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       val circleColor = color.toInt % 7 match{
         //纯色星球
                 case 0 => "#b30e35"
@@ -719,7 +717,7 @@ class GameCanvas(canvas: Canvas,
   }
   /*********************5.视野内的自己***************************************/
   def drawPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       if(id == uid){
         val circleColor = color.toInt % 7 match{
           //纯色星球

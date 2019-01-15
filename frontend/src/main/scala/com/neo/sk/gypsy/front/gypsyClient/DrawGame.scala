@@ -320,14 +320,12 @@ case class DrawGame(
     }
   }
 
-  def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,Player)])={
+  def drawKill(myId:String,grid:GameClient,isKill:Boolean,killList:List[(Int,String,String)])={
 
     if(isKill){
       val showTime = killList.head._1
-      val killerId = killList.head._2
-      val deadPlayer = killList.head._3
-      val killerName = grid.playerMap.getOrElse(killerId, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0)))).name
-      val deadName = deadPlayer.name
+      val killerName = killList.head._2
+      val deadName = killList.head._3
 /*      val killImg = if (deadPlayer.kill > 3) shutdown
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
@@ -351,7 +349,7 @@ case class DrawGame(
         ctx.fillText(deadName, this.canvas.width * 0.5 -allWidth + ctx.measureText(s"$killerName  ").width+ 32 + 50, this.canvas.height * 0.15)
 //        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
         ctx.restore()
-        val killList1 = if (showTime > 1) (showTime - 1, killerId, deadPlayer) :: killList.tail else killList.tail
+        val killList1 = if (showTime > 1) (showTime - 1, killerName, deadName) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
       }else{
         (killList,isKill)
@@ -434,7 +432,7 @@ case class DrawGame(
       }
     }
 
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
 //        case 0 => circle //(243,69,109)   b30e35
 //        case 1 => circle1 //(244, 153, 48)  a65d0a
@@ -483,6 +481,9 @@ case class DrawGame(
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+
+        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+
         //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.fillStyle = MyColors.halo
@@ -536,7 +537,7 @@ case class DrawGame(
           val right = newcells.map(a => a.x + a.radius).max
           val bottom = newcells.map(a => a.y - a.radius).min
           val top = newcells.map(a => a.y + a.radius).max
-          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit, killerName, right - left, top - bottom, newcells, startTime)
+          val player = Player(id,name,color,newX.toShort,newY.toShort,tx,ty,kill,protect,lastSplit, right - left, top - bottom, newcells, startTime)
           gird.playerMap += (id -> player)
         }
     }
@@ -569,15 +570,18 @@ case class DrawGame(
   }
 
   //ctx3
-  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long)={
+  def drawRankMapData(uid:String,currentRank:List[RankInfo],players:List[Player],basePoint:(Double,Double),bigPlayerPosition:List[PlayerPosition],offsetTime:Long,playerNum:Int)={
     val littleMap = this.canvas.width * 0.18  // 200
 
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
+    ctx.fillStyle = MyColors.background
+    ctx.font = s"${8 * this.canvas.width / Window.w }px Helvetica"
+    ctx.fillText(s"Version:${version}",(this.canvas.width- this.canvas.width * 0.17+ctx.measureText("——————").width).toInt,16)
     ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
     val currentRankBaseLine = 3
-    ctx.fillStyle = MyColors.background
-    drawTextLine(s"—————排行榜—————", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, currentRankBaseLine)
+//    drawTextLine(s"Version:${version}", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, 0)
+    drawTextLine(s"———排行榜———  人数:$playerNum", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
     currentRank.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
@@ -628,7 +632,7 @@ case class DrawGame(
   }
 
 
-  def drawWhenDead(msg:Protocol.UserDeadMessage)={
+  def drawWhenDead(playerMap: Map[String,Player], msg:Protocol.UserDeadMessage)={
     ctx.fillStyle = "#000"//Color.Black.toString()
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
@@ -636,22 +640,28 @@ case class DrawGame(
     ctx.fillStyle = "#CD3700"
     val Width = this.canvas.width
     val Height = this.canvas.height
-    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+//    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.22
+    ctx.fillText(s"You Dead!", Width*0.42, BaseHeight)
 
     ctx.font = s"${Window.w *0.02}px Comic Sans MS"
 
     var DrawLeft = Width*0.35
-    var DrawHeight = Height*0.3
+    val DrawHeight = BaseHeight
+    val killerName = playerMap.get(msg.killerId).get.name
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
     ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+
+    ctx.fillText(s"${killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+
   }
 
 
