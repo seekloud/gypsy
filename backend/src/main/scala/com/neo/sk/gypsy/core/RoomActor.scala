@@ -12,7 +12,7 @@ import com.neo.sk.gypsy.gypsyServer.GameServer
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import com.neo.sk.gypsy.core.BotActor.InfoReply
 
@@ -88,6 +88,8 @@ object RoomActor {
 
   val ballId = new AtomicLong(100000)
 
+  val botId = new AtomicInteger(100)
+
   def create(roomId:Long):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
@@ -106,7 +108,7 @@ object RoomActor {
             }
 
             if(AppSettings.addBotPlayer) {
-              for(b <- 1 to AppSettings.botNum ){
+              for(b <- 1 until AppSettings.botNum ){
                 val id = "bot_"+roomId + "_100"+ b
                 val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
                 getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
@@ -120,7 +122,6 @@ object RoomActor {
 //                getBotActor(ctx, id) ! BotActor.InitInfo(b._2, grid, ctx.self)
 //              }
 //            }
-
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap, subscribersMap,userSyncMap ,grid, 0l)
         }
@@ -236,6 +237,7 @@ object RoomActor {
 
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
+          log.info(s"bot$playerInfo die")
 
 //          //复活列表清除(Bot感觉不用)
           grid.ReLiveMap -= playerInfo.playerId
@@ -350,6 +352,19 @@ object RoomActor {
           val eventList = grid.getEvents()
           if(AppSettings.gameRecordIsWork){
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
+          }
+          var playerNum = 0
+          var allPlayerNum = 0
+          val PlayerMap = grid.playerMap.filterNot(id=>id._1.startsWith("bot_"))
+          grid.playerMap.foreach(_=>allPlayerNum+=1)
+          PlayerMap.foreach(_=>playerNum+=1)
+          if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
+            for(b <- 1 to (AppSettings.botNum-allPlayerNum)){
+              val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+              val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+              getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+              log.info(s"newBot:$botName")
+            }
           }
 
 //          复活列表
