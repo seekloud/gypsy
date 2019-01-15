@@ -94,7 +94,6 @@ class GameHolder(replay:Boolean = false) {
   protected def checkScreenSize = {
     val newWidth=dom.window.innerWidth.toInt
     val newHeight=dom.window.innerHeight.toInt
-    println(s"Screen ===> ($newWidth,$newHeight) ")
 
     if(newWidth!= window.x || newHeight!= window.y){
       //屏幕适配
@@ -290,7 +289,6 @@ class GameHolder(replay:Boolean = false) {
   }
 
   def draw(offsetTime:Long)={
-    println(s"Screen ===> (${dom.window.innerWidth.toInt},${dom.window.innerHeight.toInt}) ")
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
