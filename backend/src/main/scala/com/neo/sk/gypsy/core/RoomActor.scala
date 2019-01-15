@@ -363,7 +363,6 @@ object RoomActor {
               val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
               val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
               getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-              log.info(s"newBot:$botName")
             }
           }
 
