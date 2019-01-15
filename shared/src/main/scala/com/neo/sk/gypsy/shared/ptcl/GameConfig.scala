@@ -31,7 +31,7 @@ object GameConfig {
   //食物池
   var foodPool = 300
   //病毒数量
-  var virusNum:Int = 0
+  var virusNum:Int = 8
   //病毒质量上限
   var virusMassLimit:Int = 200
   val shotMass:Short = 10
@@ -39,7 +39,7 @@ object GameConfig {
   //最大分裂个数
   val maxCellNum = 16
   //质量衰减下限
-  val decreaseLimit = 10000
+  val decreaseLimit = 200
   //衰减率
   val decreaseRate = 0.995
   //小球速度衰减率
@@ -70,7 +70,6 @@ object GameConfig {
   //Level5
   val bigPlayerMass:Short = 500
 
-  val cellBound = true
 
   //canvas大小屏时候中间值，作为grid里面updateMove里面鼠标缩放的默认参数
   //小屏（900*450） 大屏(1200+++*760)

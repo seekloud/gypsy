@@ -318,26 +318,21 @@ trait Grid {
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
       val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
       //指针在圆内，静止
-      print(s"$frameCount==> ")
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
-        println("xxxxxxx1")
       } else {
         if (cell.speed > 30 / slowdown) {
           newSpeed -= acceleration
 //          newSpeed = 30 / slowdown
-          println("xxxxxxx2")
 
         } else {
           if (distance < cell.radius) {
             if (cell.speed > 0) {
               newSpeed = cell.speed - acceleration
-              println("xxxxxxx3")
 
-            } else println(s"xxxxxxx5 ${distance}|| ${cell.radius} ");newSpeed = 0
+            } else newSpeed = 0
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
-              println("xxxxxxx4")
               cell.speed + acceleration
             } else (30 / slowdown).toFloat
           }
