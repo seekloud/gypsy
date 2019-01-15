@@ -37,7 +37,7 @@ object GameHolder {
   var firstCome=true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
-  var killList = List.empty[(Int,String,Player)]
+  var killList = List.empty[(Int,String,String)] //time killerId deadId
   var deadInfo :Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
   val timeline = new Timeline()

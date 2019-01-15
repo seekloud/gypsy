@@ -167,34 +167,34 @@ object GameClient {
           Behaviors.same
 
         //只针对某个死亡玩家发送的死亡消息
-        case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
-          if(id==GameHolder.myId){
+        case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+          if(deadId == GameHolder.myId){
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
               GameHolder.gameState = GameState.dead
-              grid.removePlayer(id)
+//              grid.removePlayer(id)
+              ClientMusic.playMusic("godlike")
             }
           }
           Behaviors.same
 
         //针对所有玩家发送的死亡消息
-        case Protocol.KillMessage(killerId,deadPlayer)=>
+        case Protocol.KillMessage(killerId,deadId)=>
           ClientBoot.addToPlatform{
-            grid.removePlayer(deadPlayer.id)
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadPlayer.id != GameHolder.myId){
+            if(deadId != GameHolder.myId){
               if(!GameHolder.isDead){
                 GameHolder.isDead = true
-                GameHolder.killList :+=(200,killerId,deadPlayer)
+                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }else{
-                GameHolder.killList :+=(200,killerId,deadPlayer)
+                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }
             }else{
 //              ClientMusic.playMusic("shutdown")
             }
-            if(killerId == GameHolder.myId){
-              ClientMusic.playMusic("godlike")
+            grid.removePlayer(deadId)
+            //            if(killerId == GameHolder.myId){
 //              grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
 //                case 1 => ClientMusic.playMusic("1Blood")
 //                case 2 => ClientMusic.playMusic("2Kill")
@@ -205,7 +205,7 @@ object GameClient {
 //                case 7 => ClientMusic.playMusic("legendary")
 //                case _ => ClientMusic.playMusic("unstop")
 //              }
-            }
+//            }
           }
           Behaviors.same
 
@@ -389,34 +389,34 @@ object GameClient {
           Behaviors.same
 
         //只针对某个死亡玩家发送的死亡消息
-        case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
-          if(id==BotHolder.botId){
+        case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+          if(deadId == BotHolder.botId){
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
               grid.removePlayer(id)
+              ClientMusic.playMusic("godlikeM")
             }
           }
           Behaviors.same
 
         //针对所有玩家发送的死亡消息
-        case Protocol.KillMessage(killerId,deadPlayer)=>
+        case Protocol.KillMessage(killerId,deadId)=>
           ClientBoot.addToPlatform{
-            grid.removePlayer(deadPlayer.id)
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadPlayer.id != BotHolder.botId){
+            if(deadId != BotHolder.botId){
               if(!BotHolder.isDead){
                 BotHolder.isDead = true
-                BotHolder.killList :+=(200,killerId,deadPlayer)
+                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }else{
-                BotHolder.killList :+=(200,killerId,deadPlayer)
+                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }
             }else{
 //              ClientMusic.playMusic("shutdownM")
             }
-            if(killerId == BotHolder.botId){
-              ClientMusic.playMusic("godlikeM")
+            grid.removePlayer(deadId)
+            //            if(killerId == BotHolder.botId){
 /*              grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
                 case 1 => ClientMusic.playMusic("1Blood")
                 case 2 => ClientMusic.playMusic("2Kill")
@@ -427,7 +427,7 @@ object GameClient {
                 case 7 => ClientMusic.playMusic("legendaryM")
                 case _ => ClientMusic.playMusic("unstop")
               }*/
-            }
+//            }
           }
           Behaviors.same
 

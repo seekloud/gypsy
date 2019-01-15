@@ -68,7 +68,7 @@ class GameServer(override val boundary: Point) extends Grid {
     waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(24)
-      val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),"",8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
+      val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
       playerMap += id -> player
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
@@ -159,7 +159,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var playerChange = false
-        var killer = ""
+        var killerId = ""
         val score = player.cells.map(_.mass).sum
         var changedCells = List[Cell]()
         val newCells = player.cells.sortBy(_.radius).reverse.map {
@@ -175,7 +175,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   p2pCrash = true
                   newMass = 0
                   newRadius = 0
-                  killer = p._1
+                  killerId = p._1
                   cellChange = true
                 } else if (cell.mass > otherCell.mass * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
                   //吃掉别人了
@@ -187,34 +187,30 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
-//            val newCell = cell.copy(id = cell.id,newmass = newMass,radius = newRadius)
             val newCell = cell.copy(newmass = newMass,radius = newRadius)
-//            println(s"frame:${frameCount} ${player.id} (newId,oldId): ${(newCell.id,cell.id)} mass：${(newCell.newmass,cell.newmass)}  ")
             if(cellChange){
-//              changedCells = Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner) :: changedCells
               changedCells = newCell :: changedCells
             }
-//            Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel,cell.isCorner)
             newCell
         }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
-          playerMap.get(killer) match {
-            case Some(killerPlayer) =>
-              player.killerName = killerPlayer.name
-            case _ =>
-              player.killerName = "unknown"
-          }
+//          playerMap.get(killer) match {
+//            case Some(killerPlayer) =>
+//              player.killerName = killerPlayer.name
+//            case _ =>
+//              player.killerName = "unknown"
+//          }
 //          加入待复活列表
           if(player.id.startsWith("bot_")){
             ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score,System.currentTimeMillis()-player.startTime))
-          dispatch(subscriber)(Protocol.KillMessage(killer,player))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(killerId,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killer,player,score,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killerId,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
-          Left(killer)
+          Left(killerId)
         } else {
           if (playerChange){
             changedPlayers+=(player.id->changedCells)
