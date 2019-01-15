@@ -33,7 +33,8 @@ object BotHolder {
   var firstCome = true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
-  var killList = List.empty[(Int, String, Player)]
+  //显示击杀弹幕
+  var killList = List.empty[(Int, String, String)] //time killerName deadName
   var deadInfo: Option[Protocol.UserDeadMessage] = None
   var gameState = GameState.play
   val timeline = new Timeline()
