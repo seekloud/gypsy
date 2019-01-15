@@ -63,6 +63,8 @@ class GameHolder(replay:Boolean = false) {
   var mouseInFlame = false
   var keyInFlame = false
   var bigPlayerMass = 500.0
+  var mp = MP(None,0,0,0,0)
+  var fmp = MP(None,0,0,0,0)
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
   /**用于显示击杀弹幕**/
@@ -95,6 +97,7 @@ class GameHolder(replay:Boolean = false) {
   protected def checkScreenSize = {
     val newWidth=dom.window.innerWidth.toInt
     val newHeight=dom.window.innerHeight.toInt
+
     if(newWidth!= window.x || newHeight!= window.y){
       //屏幕适配
       window =  Point(newWidth, newHeight)
@@ -114,8 +117,10 @@ class GameHolder(replay:Boolean = false) {
       //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
-        mouseInFlame = false
-        keyInFlame = false
+        if(grid.frameCount % 2 ==0){
+          updateMousePos
+          keyInFlame = false
+        }
         update()
       } else {
         if (syncGridData.nonEmpty) {
@@ -246,32 +251,40 @@ class GameHolder(replay:Boolean = false) {
 //        }
       }
     }
+
     //在画布上监听鼠标事件
     def getDegree(x:Double,y:Double)= {
       atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
-
     if( !isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-        if(mouseInFlame == false){
-          {
-            val mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-            if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-//              println(s"帧号${grid.frameCount},动作：$mp")
-              mouseInFlame = true
-              FormerDegree = getDegree(e.pageX,e.pageY)
-              grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
-              grid.addUncheckActionWithFrame(myId, mp, mp.f)
-              webSocketClient.sendMsg(mp)
-            }
-          }
-        }
+
+            mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+        //    if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
+//              if(mouseInFlame == false){
+////              println(s"帧号${grid.frameCount},动作：$mp")
+//              mouseInFlame = true
+//              FormerDegree = getDegree(e.pageX,e.pageY)
+//              grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
+//              grid.addUncheckActionWithFrame(myId, mp, mp.f)
+//              webSocketClient.sendMsg(mp)
+//          }
+       // }
       }
     }else  {
       dom.window.setTimeout(() =>
         dom.window.setInterval(() => {
           testSend
         }, 2000), 3000)
+    }
+  }
+
+  def updateMousePos ={
+    if(fmp != mp){
+      fmp = mp
+      grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
+      grid.addUncheckActionWithFrame(myId, mp, mp.f)
+      webSocketClient.sendMsg(mp)
     }
   }
 
