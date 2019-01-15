@@ -383,8 +383,8 @@ class GameHolder(replay:Boolean = false) {
     data match {
       case Protocol.Id(id) =>
         myId = id
-        Shortcut.playMusic("bg")
-        println(s"myID:$myId")
+//        Shortcut.playMusic("bg")
+//        println(s"myID:$myId")
 
       case m:Protocol.KC =>
         if(m.id.isDefined){
@@ -441,7 +441,7 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerRestart(id) =>
         println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
-        Shortcut.playMusic("bg")
+//        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${player.id}  加入游戏 ${grid.frameCount}")
@@ -696,7 +696,7 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
-    Shortcut.stopMusic("bg")
+//    Shortcut.stopMusic("bg")
   }
 
 }
