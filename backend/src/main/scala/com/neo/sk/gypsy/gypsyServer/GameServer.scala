@@ -14,6 +14,7 @@ import scala.util.Random
 import com.neo.sk.gypsy.core.{EsheepSyncClient, UserActor}
 import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
+import com.neo.sk.gypsy.common.AppSettings
 
 import scala.math.{Pi, abs, acos, atan2, cbrt, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
@@ -206,7 +207,11 @@ class GameServer(override val boundary: Point) extends Grid {
           }
 //          加入待复活列表
           if(player.id.startsWith("bot_")){
-            ReLiveMap += (player.id -> System.currentTimeMillis())
+            var playerNum=0
+            playerMap.foreach(i=>playerNum+=1)
+            if(playerNum>AppSettings.botNum){
+            }
+            else ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(player.id,killer,player.killerName,player.kill,score,System.currentTimeMillis()-player.startTime))
