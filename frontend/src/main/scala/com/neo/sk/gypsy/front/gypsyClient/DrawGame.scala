@@ -648,18 +648,19 @@ case class DrawGame(
 
     var DrawLeft = Width*0.35
     val DrawHeight = BaseHeight
+    val killerName = playerMap.get(msg.killerId).get.name
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
     ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
 
-    ctx.fillText(s"${msg.killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+    ctx.fillText(s"${killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
 
   }
 
