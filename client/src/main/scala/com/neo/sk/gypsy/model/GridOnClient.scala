@@ -29,12 +29,12 @@ class GridOnClient(override val boundary: Point) extends Grid {
   //序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Int,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
+  val playerByte2IdMap = new mutable.HashMap[Byte,String]()
 
   override def getAllGridData: GridDataSync={
     //    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
     GridDataSync(0, Nil, Nil, Map.empty, 1.0, Nil)
   }
-
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false

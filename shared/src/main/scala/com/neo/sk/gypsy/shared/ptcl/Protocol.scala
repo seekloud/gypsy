@@ -24,6 +24,8 @@ object Protocol {
   case class DecodeEventError(data:DecodeError) extends GameMessage
   case class ReplayFrameData(ws:Array[Byte]) extends GameMessage
 
+  case class PlayerIdBytes(playerIdByteMap: Map[String, Byte]) extends GameMessage
+
   case class GridDataSync(
                            frameCount: Int,
                            playerDetails: List[Player],
@@ -81,7 +83,7 @@ object Protocol {
 
   case class PlayerSplit(player: Map[String,Player]) extends GameMessage
 
-  case class PlayerJoin(id:String,player:Player) extends GameMessage
+  case class PlayerJoin(id:Byte, player:Player) extends GameMessage //id: 映射id
 
   case class RemoveVirus(virus: Map[Long,Virus]) extends GameMessage
 
@@ -108,13 +110,13 @@ object Protocol {
 
   sealed trait UserAction extends WsSendMsg
 
-  //MP -> MousePosition;  cX->clientX;  cY->clientY; sN -> serialNum; f -> frame
+  //MP -> MousePosition;  cX -> clientX;  cY -> clientY; sN -> serialNum; f -> frame
 //  case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
-  case class MP(id: Option[String],cX:Short,cY:Short, override val f:Int, override val sN:Int) extends UserAction with GameMessage
+  case class MP(id: Option[Byte],cX:Short,cY:Short, override val f:Int, override val sN:Int) extends UserAction with GameMessage
 
-  //KC->KeyCode; kC->keyCode
+  //KC -> KeyCode; kC -> keyCode
 //  case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
-  case class KC(id: Option[String],kC: Int, override val f:Int,override val sN:Int) extends UserAction with GameMessage
+  case class KC(id: Option[Byte],kC: Int, override val f:Int,override val sN:Int) extends UserAction with GameMessage
 
   case object PressSpace extends UserAction
 

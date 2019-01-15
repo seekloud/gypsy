@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.gypsyServer
 
 import java.awt.event.KeyEvent
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
@@ -43,7 +43,11 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
   var currentRank = List.empty[Score]
-//  private[this] var historyRankMap = Map.empty[String, Score]
+
+//  val playerIdgenerator = new AtomicInteger(127)
+  val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
+
+  //  private[this] var historyRankMap = Map.empty[String, Score]
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 
 //  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
@@ -70,12 +74,29 @@ class GameServer(override val boundary: Point) extends Grid {
       val color = new Random(System.nanoTime()).nextInt(24)
       val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
       playerMap += id -> player
+      /**--------------------**/
+      var addPlayerByteId = true
+      var playerIdByte = Random.nextInt(127).toByte
+      playerId2ByteMap.foreach{item=>
+        if(item._1 == id){
+          addPlayerByteId = false
+          playerIdByte = item._2
+        }
+      }
+      if(addPlayerByteId){
+        if(playerId2ByteMap.values.toList.contains(playerIdByte)){
+          playerIdByte = Random.nextInt(127).toByte
+        }
+        playerId2ByteMap += id -> playerIdByte
+      }
+      dispatch(subscriber)(PlayerJoin(playerIdByte,player))
+      /**-------------------**/
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
-      dispatch(subscriber)(PlayerJoin(id,player))
-      dispatchTo(subscriber)(id,getAllGridData)
+      dispatchTo(subscriber)(id, getAllGridData)
+      dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
     }
     waitingJoin = Map.empty[String, String]
   }
@@ -514,7 +535,7 @@ class GameServer(override val boundary: Point) extends Grid {
       player =>
         var isSplit = false
         var newSplitTime = player.lastSplit
-        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
+        val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(playerId2ByteMap(player.id)),player.targetX, player.targetY,0,0))
         val split = actMap.get(player.id) match {
           case Some(keyEvent) => keyEvent.kC==KeyEvent.VK_F
           case _ => false

@@ -167,7 +167,7 @@ object RoomActor {
           val createBallId = ballId.incrementAndGet()
           //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
-          userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
+          userMap.put(botInfo.playerId, (botInfo.nickname, createBallId, group))
           botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
@@ -241,6 +241,8 @@ object RoomActor {
           grid.ReLiveMap -= playerInfo.playerId
 
           grid.removePlayer(playerInfo.playerId)
+          /**移除playerId2ByteMap**/
+          grid.playerId2ByteMap -= playerInfo.playerId
           dispatch(subscribersMap)(Protocol.PlayerLeft(playerInfo.playerId, playerInfo.nickname))
           try{
             // 添加离开事件
@@ -307,15 +309,15 @@ object RoomActor {
             grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           } else {
-            grid.addActionWithFrame(id, KC(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
-            dispatch(subscribersMap)(KC(Some(id),keyCode,math.max(grid.frameCount,frame).toInt,n))
+            grid.addActionWithFrame(id, KC(Some(grid.playerId2ByteMap(id)),keyCode,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap)(KC(Some(grid.playerId2ByteMap(id)),keyCode,math.max(grid.frameCount,frame),n))
           }
           Behaviors.same
 
         case RoomActor.MouseR(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          grid.addMouseActionWithFrame(id,MP(Some(id),x,y,math.max(grid.frameCount,frame),n))
-          dispatch(subscribersMap)(MP(Some(id),x,y,math.max(grid.frameCount,frame),n))
+          grid.addMouseActionWithFrame(id,MP(Some(grid.playerId2ByteMap(id)),x,y,math.max(grid.frameCount,frame),n))
+          dispatch(subscribersMap)(MP(Some(grid.playerId2ByteMap(id)),x,y,math.max(grid.frameCount,frame),n))
           Behaviors.same
 
         case GetBotInfo(id,botActor)=>
@@ -323,20 +325,20 @@ object RoomActor {
           botActor ! InfoReply(data)
           Behaviors.same
 
-        case botAction(id,userAction)=>
+        case botAction(botId,userAction)=>
         userAction match{
           case KC(id,keyCode,frame,n) =>
             if (keyCode == KeyEvent.VK_SPACE) {
-              grid.addPlayer(id.get, userMap.getOrElse(id.get, ("Unknown",0l,0l))._1)
-              dispatchTo(subscribersMap)(id.get,Protocol.PlayerRestart(id.get))
+              grid.addPlayer(botId, userMap.getOrElse(botId, ("Unknown",0l,0l))._1)
+              dispatchTo(subscribersMap)(botId,Protocol.PlayerRestart(botId))
             } else {
 //              println(s"get keyCode $keyCode")
-              grid.addActionWithFrame(id.get, KC(id,keyCode,math.max(grid.frameCount,frame),n))
+              grid.addActionWithFrame(botId, KC(id,keyCode,math.max(grid.frameCount,frame),n))
               dispatch(subscribersMap)(KC(id,keyCode,math.max(grid.frameCount,frame),n))
             }
 
           case MP(id,x,y,frame,n) =>
-            grid.addMouseActionWithFrame(id.get,MP(id,x,y,math.max(grid.frameCount,frame),n))
+            grid.addMouseActionWithFrame(botId,MP(id,x,y,math.max(grid.frameCount,frame),n))
             dispatch(subscribersMap)(MP(id,x,y,math.max(grid.frameCount,frame),n))
 
         }

@@ -386,7 +386,7 @@ class GameHolder(replay:Boolean = false) {
 
       case m:Protocol.KC =>
         if(m.id.isDefined){
-          val ID = m.id.get
+          val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addActionWithFrame(ID,m)
           }
@@ -394,7 +394,7 @@ class GameHolder(replay:Boolean = false) {
 
       case m:Protocol.MP =>
         if(m.id.isDefined){
-          val ID = m.id.get
+          val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addMouseActionWithFrame(ID,m)
           }
@@ -428,6 +428,11 @@ class GameHolder(replay:Boolean = false) {
         syncGridData = Some(data)
         justSynced = true
 
+      case PlayerIdBytes(playerIdByteMap)=>
+        playerIdByteMap.foreach(item =>{
+          grid.playerByte2IdMap += item._2 -> item._1
+        })
+
       //网络延迟检测
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
@@ -437,12 +442,13 @@ class GameHolder(replay:Boolean = false) {
         Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
-        println(s"${id}  加入游戏 ${grid.frameCount}")
+        println(s"${player.id}  加入游戏 ${grid.frameCount}")
         //防止复活后又发了一条JOin消息
-        if(!grid.playerMap.contains(id)){
-          grid.playerMap += (id -> player)
+        if(!grid.playerMap.contains(player.id)){
+          grid.playerMap += (player.id -> player)
+          grid.playerByte2IdMap += (id-> player.id)
         }
-        if(myId == id){
+        if(myId == player.id){
           if(gameState == GameState.dead){
             println(s"发送复活确认")
 //            webSocketClient.sendMsg(ReLiveAck(id))
@@ -477,6 +483,13 @@ class GameHolder(replay:Boolean = false) {
           }
         }
         grid.removePlayer(deadId)
+        var deadByte = 0.toByte
+        grid.playerByte2IdMap.foreach{elem =>
+          if(elem._2 == deadId){
+            deadByte = elem._1
+          }
+        }
+        grid.playerByte2IdMap -= deadByte
 
       //        if(killerId == myId){
 //          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
@@ -596,10 +609,10 @@ class GameHolder(replay:Boolean = false) {
         grid.currentRank = e.currentRank
 
       case e: Protocol.KeyPress =>
-        grid.addActionWithFrame(e.userId,Protocol.KC(Some(e.userId),e.keyCode,e.frame,e.serialNum))
+        grid.addActionWithFrame(e.userId,Protocol.KC(None,e.keyCode,e.frame,e.serialNum))
 
       case e: Protocol.MouseMove =>
-        grid.addMouseActionWithFrame(e.userId,Protocol.MP(Some(e.userId),e.direct._1,e.direct._2,e.frame,e.serialNum))
+        grid.addMouseActionWithFrame(e.userId,Protocol.MP(None,e.direct._1,e.direct._2,e.frame,e.serialNum))
 
       case e: Protocol.GenerateApples =>
         grid.food ++= e.apples
