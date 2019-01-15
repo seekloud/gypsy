@@ -294,6 +294,8 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
+    var MouseScala = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
+
     val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
@@ -310,26 +312,32 @@ trait Grid {
 
       target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
 
-      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2))
+      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScala
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
       val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
-//      println(s"slowdown:$slowdown")
       //指针在圆内，静止
+      print(s"$frameCount==> ")
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
+        println("xxxxxxx1")
       } else {
         if (cell.speed > 30 / slowdown) {
           newSpeed -= acceleration
 //          newSpeed = 30 / slowdown
+          println("xxxxxxx2")
+
         } else {
           if (distance < cell.radius) {
             if (cell.speed > 0) {
               newSpeed = cell.speed - acceleration
-            } else newSpeed = 0
+              println("xxxxxxx3")
+
+            } else println(s"xxxxxxx5 ${distance}|| ${cell.radius} ");newSpeed = 0
           } else {
             newSpeed = if (cell.speed < 30 / slowdown) {
+              println("xxxxxxx4")
               cell.speed + acceleration
             } else (30 / slowdown).toFloat
           }
