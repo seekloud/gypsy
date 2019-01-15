@@ -48,7 +48,7 @@ object Game {
                    kill:Short = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
-                   var killerName:String= "",
+//                   var killerName:String= "",
                    width:Double =  initSize,
                    height:Double =  initSize,
                    cells:List[Cell],//分裂
