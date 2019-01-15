@@ -69,10 +69,10 @@ object GameClient {
 
         case m:Protocol.KC =>
           if(m.id.isDefined){
-            val ID = m.id.get
+            val ID = grid.playerByte2IdMap(m.id.get)
             if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
-                grid.addActionWithFrame(m.id.get,m)
+                grid.addActionWithFrame(ID,m)
               }
             }
           }
@@ -80,10 +80,10 @@ object GameClient {
 
         case m:Protocol.MP =>
           if(m.id.isDefined){
-            val ID = m.id.get
+            val ID = grid.playerByte2IdMap(m.id.get)
             if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
-                grid.addMouseActionWithFrame(m.id.get,m)
+                grid.addMouseActionWithFrame(ID,m)
               }
             }
           }
@@ -147,7 +147,7 @@ object GameClient {
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            grid.playerMap += (id -> player)
+            grid.playerMap += (player.id -> player)
             if(GameHolder.myId == id){
               if(GameHolder.gameState == GameState.dead){
 //                gameHolder.reLive(id)
@@ -290,10 +290,10 @@ object GameClient {
 
         case m:Protocol.KC =>
           if(m.id.isDefined){
-            val ID = m.id.get
+            val ID = grid.playerByte2IdMap(m.id.get)
             if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{
-                grid.addActionWithFrame(m.id.get,m)
+                grid.addActionWithFrame(ID,m)
               }
             }
           }
@@ -301,10 +301,10 @@ object GameClient {
 
         case m:Protocol.MP =>
           if(m.id.isDefined){
-            val ID = m.id.get
+            val ID = grid.playerByte2IdMap(m.id.get)
             if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{
-                grid.addMouseActionWithFrame(m.id.get,m)
+                grid.addMouseActionWithFrame(ID,m)
               }
             }
           }
@@ -369,7 +369,8 @@ object GameClient {
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            grid.playerMap += (id -> player)
+            grid.playerMap += (player.id -> player)
+            grid.playerByte2IdMap += (id -> player.id)
             if(BotHolder.botId == id){
               if(BotHolder.gameState == GameState.dead){
 //                botHolder.reLive(id)
@@ -394,7 +395,14 @@ object GameClient {
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
-              grid.removePlayer(id)
+              grid.removePlayer(deadId)
+              var playerIdByte = 0.toByte
+              grid.playerByte2IdMap.foreach{item =>
+                if(item._2 == deadId){
+                  playerIdByte = item._1
+                }
+              }
+              grid.playerByte2IdMap -= playerIdByte
               ClientMusic.playMusic("godlikeM")
             }
           }

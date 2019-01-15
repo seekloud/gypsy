@@ -29,6 +29,7 @@ class GameClient (override val boundary: Point) extends Grid {
   //序列号->(frame,Id,GameAction)
   private[this] val uncheckActionWithFrame = new mutable.HashMap[Int,(Long,String,UserAction)]()
   private[this] val gameSnapshotMap = new mutable.HashMap[Long,GridDataSync]()
+  var playerByte2IdMap = new mutable.HashMap[Byte, String]()
 
   override def getAllGridData: GridDataSync={
     GridDataSync(0, Nil, Nil, Map.empty, 1.0)
