@@ -294,7 +294,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
-    var MouseScala = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
+    val MouseScala = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
 
     val mouseAct = mouseActMap.getOrElse(player.id,MP(Some(player.id),player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
