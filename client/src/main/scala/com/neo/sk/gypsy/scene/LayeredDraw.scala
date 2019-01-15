@@ -234,7 +234,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,killerName,width,height,cells,startTime) =>
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       val circleColor = color.toInt % 7 match{
         //纯色星球
         case 0 => "#b30e35"
@@ -411,18 +411,15 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   /********************* 人类视图：800*400 ***********************************/
 
   def drawPlayState()={
-    var zoom = (30.0, 30.0)
 //    val data = grid.getGridData(myId,1200,600)
     val MyBallOpt = player.find(_.id == uid)
     if(MyBallOpt.isDefined){
       val myInfo = MyBallOpt.get
       firstCome = false
       drawPlayView(uid,data,(X,Y),(myInfo.width,myInfo.height),grid)
-
     }else{
       ls.humanView.drawGameWait(firstCome)
     }
-
     if(is2Byte){
       BotUtil.canvas2byteArray(ls.humanCanvas)
     }else{
@@ -497,7 +494,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         ctx.fill()
       }
     }
-    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,killerName,width,height,cells,startTime) =>
+    players.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,lastSplit,width,height,cells,startTime) =>
       val circleImg = color.toInt match{
         //卡通星球
         case 0 => star24 //(243,69,109)   b30e35
@@ -578,7 +575,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         val right = newcells.map(a => a.x + a.radius).max
         val bottom = newcells.map(a => a.y - a.radius).min
         val top = newcells.map(a => a.y + a.radius).max
-        val player = Player(id,name,color,newX.toShort ,newY.toShort ,tx,ty,kill,protect,lastSplit,killerName,right - left,top - bottom,newcells,startTime)
+        val player = Player(id,name,color,newX.toShort ,newY.toShort ,tx,ty,kill,protect,lastSplit,right - left,top - bottom,newcells,startTime)
         grid.playerMap += (id -> player)
       }
     }
@@ -708,7 +705,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
 
-  def drawDeadState(msg:Protocol.UserDeadMessage) = {
+  def drawDeadState(playerMap:Map[String,Player],msg:Protocol.UserDeadMessage) = {
     val ctx = ls.humanCtx
 
     ctx.setFill(Color.web("#000"))
@@ -732,7 +729,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     //    DrawLeft = Width*0.56+Width*0.12
     DrawLeft = Width*0.56
     //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
@@ -770,7 +767,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       case GameState.play =>
         drawPlayState()
       case GameState.dead =>
-        drawDeadState(deadInfo.get)
+        drawDeadState(grid.playerMap,deadInfo.get)
       case GameState.allopatry =>
         drawFinishState()
       case _ =>

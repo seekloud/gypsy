@@ -65,7 +65,8 @@ class GameHolder(replay:Boolean = false) {
   var bigPlayerMass = 500.0
   private[this] var logicFrameTime = System.currentTimeMillis()
   private[this] var syncGridData: scala.Option[GridDataSync] = None
-  private[this] var killList = List.empty[(Int,String,Player)]
+  /**用于显示击杀弹幕**/
+  private[this] var killList = List.empty[(Int,String,String)] //time,killerName,deadName
 
   val webSocketClient = WebSocketClient(wsConnectSuccess,wsConnectError,wsMessageHandler,wsConnectClose,replay)
 
@@ -155,7 +156,7 @@ class GameHolder(replay:Boolean = false) {
       case GameState.play if myId!= ""=>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
-        drawTopView.drawWhenDead(deadInfo.get)
+        drawTopView.drawWhenDead(grid.playerMap,deadInfo.get)
 //        drawTopView.drawEcharts()
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
@@ -441,46 +442,41 @@ class GameHolder(replay:Boolean = false) {
         player.keys.foreach(item =>
           grid.playerMap += (item -> player(item))
         )
-        print(s"玩家分裂：${grid.playerMap}")
 
         //只针对自己死亡发送的死亡消息
-      case msg@Protocol.UserDeadMessage(id,_,killerName,killNum,score,lifeTime)=>
-        if(id==myId){
+      case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+        if(deadId == myId){
+          Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
           gameState = GameState.dead
-//          isDead = true
-          grid.removePlayer(id)
         }
 
       //针对所有玩家发送的死亡消息
-      case Protocol.KillMessage(killerId,deadPlayer)=>
-        grid.removePlayer(deadPlayer.id)
+      case Protocol.KillMessage(killerId,deadId)=>
         val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-        if(deadPlayer.id != myId){
+        if(deadId != myId){
           if(!isDead){
             isDead = true
-            killList :+=(200,killerId,deadPlayer)
+            killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
           }else{
-            killList :+=(200,killerId,deadPlayer)
+            killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
           }
         }
-//        else{
-//          Shortcut.playMusic("shutdownM")
+        grid.removePlayer(deadId)
+
+      //        if(killerId == myId){
+//          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
+//            case 1 => Shortcut.playMusic("1Blood")
+//            case 2 => Shortcut.playMusic("2Kill")
+//            case 3 => Shortcut.playMusic("3Kill")
+//            case 4 => Shortcut.playMusic("4Kill")
+//            case 5 => Shortcut.playMusic("5Kill")
+//            case 6 => Shortcut.playMusic("godlikeM")
+//            case 7 => Shortcut.playMusic("legendaryM")
+//            case _ => Shortcut.playMusic("unstop")
+//          }
 //        }
-        if(killerId == myId){
-          Shortcut.playMusic("godlikeM")
-/*          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-            case 1 => Shortcut.playMusic("1Blood")
-            case 2 => Shortcut.playMusic("2Kill")
-            case 3 => Shortcut.playMusic("3Kill")
-            case 4 => Shortcut.playMusic("4Kill")
-            case 5 => Shortcut.playMusic("5Kill")
-            case 6 => Shortcut.playMusic("godlikeM")
-            case 7 => Shortcut.playMusic("legendaryM")
-            case _ => Shortcut.playMusic("unstop")
-          }*/
-        }
 
       case Protocol.UserMerge(id,player)=>
         if(grid.playerMap.get(id).nonEmpty){
@@ -499,9 +495,9 @@ class GameHolder(replay:Boolean = false) {
 ////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
 
       case Protocol.UserCrash(crashMap)=>
-        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
+//        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
         crashMap.foreach{p=>
-          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
+//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerMap.contains(p._1)){
             val player = grid.playerMap(p._1)
             var newCells = player.cells
@@ -529,7 +525,7 @@ class GameHolder(replay:Boolean = false) {
 //                  }
 //                }
 
-        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
+//        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
 
 
 
@@ -613,15 +609,14 @@ class GameHolder(replay:Boolean = false) {
 
 
       case killMsg:Protocol.KillMsg =>
-        grid.removePlayer(killMsg.deadPlayer.id)
         val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killMsg.killerId -> a.copy(kill = (a.kill + 1).toShort ))
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){
             isDead = true
-            killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
+            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }else{
-            killList :+=(200,killMsg.killerId,killMsg.deadPlayer)
+            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }
           if(killMsg.killerId == myId){
             Shortcut.playMusic("godlikeM")
@@ -637,13 +632,15 @@ class GameHolder(replay:Boolean = false) {
             }*/
           }
         }else{
-          val deadMsg = UserDeadMessage(myId,killMsg.killerId,killMsg.deadPlayer.killerName,killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          //根据map找到killerName
+          val deadMsg = UserDeadMessage(killMsg.killerId, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷
-          grid.removePlayer(myId)
+//          grid.removePlayer(myId)
 //          Shortcut.playMusic("shutdownM")
         }
+        grid.removePlayer(killMsg.deadPlayer.id)
 
       case e:Protocol.PongEvent =>
         NetDelay.receivePong(e.timestamp ,webSocketClient)
