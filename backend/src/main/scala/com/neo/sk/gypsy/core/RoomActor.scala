@@ -297,7 +297,7 @@ object RoomActor {
           userMap.get(playerInfo.playerId).foreach{u=>
             val group = u._3
             userSyncMap.get(group) match {
-              case Some(s) => userSyncMap.update(group,s-playerInfo.playerId)
+              case Some(s) => userSyncMap.update(group,s - playerInfo.playerId)
               case None => userSyncMap.put(group,Set.empty[String])
             }
           }
