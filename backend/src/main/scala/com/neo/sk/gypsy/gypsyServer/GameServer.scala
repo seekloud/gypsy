@@ -48,10 +48,8 @@ class GameServer(override val boundary: Point) extends Grid {
 
 //  val playerIdgenerator = new AtomicInteger(127)
   val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
-
-  //  private[this] var historyRankMap = Map.empty[String, Score]
+//  private[this] var historyRankMap = Map.empty[String, Score]
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
-
 //  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
   def addPlayer(id: String, name: String) = waitingJoin += (id -> name)
@@ -274,12 +272,12 @@ class GameServer(override val boundary: Point) extends Grid {
             var playerNum=0
             playerMap.foreach(i=>playerNum+=1)
             if(playerNum>AppSettings.botNum){
-/*              botSubscriber.get(player.id) match {
+              botSubscriber.get(player.id) match {
                 case Some(bot) =>
+                  println(s"$bot not relive")
                   bot ! BotActor.KillBot
-                  botSubscriber.remove(player.id)
                 case None =>
-              }*/
+              }
             }
             else ReLiveMap += (player.id -> System.currentTimeMillis())
           }
@@ -780,9 +778,9 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,ActorRef[BotActor.Command]]) ={
     subscriber=subscribersMap
-//    botSubscriber=botMap
+    botSubscriber=botMap
   }
 
   override def getActionEventMap(frame:Int): List[GameEvent] = {

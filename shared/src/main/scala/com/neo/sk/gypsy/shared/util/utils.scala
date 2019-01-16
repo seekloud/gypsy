@@ -61,8 +61,8 @@ object utils {
     if(obj.x - radius > center.x + width ||
       obj.x + radius < center.x - width ||
       obj.y - radius > center.y + height ||
-      obj.y + radius < center.y - height ||
-      !checkCollision(center,obj,sqrt(pow(height,2.0)+pow(width,2.0)),radius,-1)
+      obj.y + radius < center.y - height
+//      || !checkCollision(center,obj,sqrt(pow(height,2.0)+pow(width,2.0)),radius,-1)
     )
       {false}
     else{
