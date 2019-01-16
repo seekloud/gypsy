@@ -660,7 +660,7 @@ case class DrawGame(
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
 
-    ctx.fillText(s"${killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+    ctx.fillText(s"Press Space to ReStart ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
 
   }
 
