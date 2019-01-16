@@ -514,24 +514,23 @@ trait Grid {
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
-    val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
+    val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
+    val currentPlayer = playerMap.get(id).get
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-//    val scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
-//    val width = winWidth / scale / 2
-//    val height = winHeight / scale / 2
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
       Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     }
     val width = winWidth / Scale / 2
     val height = winHeight / Scale / 2
 
-    //val allPlayerPosition = playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y,i.targetX,i.targetY))
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
-      case (id,player) =>
-        val score = player.cells.map(_.newmass).sum
-        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
+      case (_,player) =>
+//        val score = player.cells.map(_.newmass).sum
+//        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
+//        playerDetails ::= player
+      if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),currentPlayer.width,currentPlayer.height,Point(player.x,player.y),player.width,player.height))
         playerDetails ::= player
 
     }
@@ -539,8 +538,8 @@ trait Grid {
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
-      massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
-      virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
+      massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),m.radius,width,height)),
+      virusMap.filter(m =>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       Scale,
      // allPlayerPosition
     )

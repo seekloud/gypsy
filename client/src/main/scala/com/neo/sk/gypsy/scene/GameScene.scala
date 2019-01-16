@@ -27,8 +27,8 @@ object GameScene {
 class GameScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
-  val canvasWidth=1200
-  val canvasHeight=600
+  var canvasWidth=1200
+  var canvasHeight=600
   var bigPlayerMass = 500.0
   val window=Point(canvasWidth,canvasHeight)
   val group = new Group()
@@ -59,11 +59,13 @@ class GameScene {
     gameView.resetScreen(viewWidth,viewHeight)
     middleView.resetScreen(viewWidth,viewHeight)
     topView.resetScreen(viewWidth,viewHeight)
+    canvasWidth = viewWidth
+    canvasHeight = viewHeight
   }
 
   def draw(myId:String,offsetTime:Long)={
     var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,1200,600)
+    val data = grid.getGridData(myId,canvasWidth,canvasHeight)
     val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x.toShort,i.y.toShort))
     data.playerDetails.find(_.id == myId) match {
       case Some(p) =>
