@@ -49,6 +49,8 @@ object BotActor {
 
   val actionInterval = 2*frameRate
 
+  var lastSplitTime = 0L
+
 
 
 
@@ -104,12 +106,13 @@ object BotActor {
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
               if(botCell.mass>closestP.mass*2.2){
-                if(random() < 0.2){
                   val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
+                if(System.currentTimeMillis()-lastSplitTime>2*1000 && random()<0.6){
+                  lastSplitTime = System.currentTimeMillis()
+                  val kc = KC(Some(grid.playerId2ByteMap(botId)),70,grid.frameCount,-1)
+                  roomActor ! botAction(botId,kc)
                 }
-                val kc = KC(Some(grid.playerId2ByteMap(botId)),70,grid.frameCount,-1)
-                roomActor ! botAction(botId,kc)
               }
               else if(botCell.mass>closestP.mass*1.1){
                 if(getDis(botCell.x,botCell.y,closestP.x,closestP.y,closestP.radius) > 0){
@@ -121,7 +124,6 @@ object BotActor {
                 val mp = MP(Some(grid.playerId2ByteMap(botId)),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
                 roomActor ! botAction(botId,mp)
               }
-
             }
               //吃mass
             else if(mass.nonEmpty){
@@ -135,6 +137,12 @@ object BotActor {
               val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
             }
+//            if (random()<0.05){
+//              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
+//              val py =  new Random(System.nanoTime()).nextInt(600)- 300
+//              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
+//              roomActor ! botAction(botId,mp)
+//            }
           }
           Behaviors.same
 
