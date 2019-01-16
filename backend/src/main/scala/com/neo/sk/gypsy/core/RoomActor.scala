@@ -96,8 +96,9 @@ object RoomActor {
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
-            val botMap = mutable.HashMap[String,ActorRef[BotActor.Command]]()
+//            val botMap = mutable.HashMap[String,ActorRef[BotActor.Command]]()
             val userMap = mutable.HashMap[String, (String,Long,Long)]()
+            val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
 //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
@@ -124,7 +125,7 @@ object RoomActor {
 //              }
 //            }
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
-            idle(roomId, userMap, subscribersMap,botMap,userSyncMap ,grid, 0l)
+            idle(roomId, userMap,playermap,subscribersMap,userSyncMap ,grid, 0l)
         }
     }
   }
@@ -132,8 +133,9 @@ object RoomActor {
   def idle(
             roomId:Long,
             userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)]
+            playerMap:mutable.HashMap[String,String],
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
-            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]],
+//            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]],
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long
@@ -149,6 +151,7 @@ object RoomActor {
 //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
           userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId,group))
+          playerMap.put(playerInfo.playerId,playerInfo.nickname)
           subscribersMap.put(playerInfo.playerId, userActor)
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
@@ -171,7 +174,7 @@ object RoomActor {
           //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
           userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
-          botMap.put(botInfo.playerId,botActor)
+//          botMap.put(botInfo.playerId,botActor)
           botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
@@ -268,6 +271,7 @@ object RoomActor {
           }
 
           //userMap里面只存玩家信息
+          playerMap.remove(playerInfo.playerId)
           userMap.remove(playerInfo.playerId)
           //玩家离开or观战者离开
 //          var list=List[Int2]()
@@ -291,6 +295,20 @@ object RoomActor {
 //            userList.remove(user)
 //          }
           subscribersMap.remove(playerInfo.playerId)
+
+          var playerNum = 0
+          var allPlayerNum = 0
+          //          val PlayerMap = grid.playerMap.filterNot(id=>id._1.startsWith("bot_"))
+          grid.playerMap.foreach(_=>allPlayerNum+=1)
+          playerMap.foreach(_=>playerNum+=1)
+          if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
+            for(b <- 1 to (AppSettings.botNum-allPlayerNum)){
+              val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+              val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+              getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+            }
+          }
+
           Behaviors.same
 
         case UserActor.Left4Watch(playerInfo) =>
@@ -348,25 +366,13 @@ object RoomActor {
           Behaviors.same
 
         case Sync =>
-          grid.getSubscribersMap(subscribersMap,botMap)
+          grid.getSubscribersMap(subscribersMap)
 //          grid.getUserList(userList)
           grid.update()
           val feedapples = grid.getNewApples
           val eventList = grid.getEvents()
           if(AppSettings.gameRecordIsWork){
               getGameRecorder(ctx,grid,roomId) ! GameRecorder.GameRecord(eventList, Some(GypsyGameSnapshot(grid.getSnapShot())))
-          }
-          var playerNum = 0
-          var allPlayerNum = 0
-          val PlayerMap = grid.playerMap.filterNot(id=>id._1.startsWith("bot_"))
-          grid.playerMap.foreach(_=>allPlayerNum+=1)
-          PlayerMap.foreach(_=>playerNum+=1)
-          if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
-            for(b <- 1 to (AppSettings.botNum-allPlayerNum)){
-              val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-              val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
-              getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-            }
           }
 
 //          复活列表
@@ -439,7 +445,7 @@ object RoomActor {
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
-          idle(roomId,userMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1)
+          idle(roomId,userMap,playerMap,subscribersMap,userSyncMap,grid,tickCount+1)
 
         case UserActor.NetTest(id, createTime) =>
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))

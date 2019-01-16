@@ -719,9 +719,9 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,ActorRef[BotActor.Command]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]]) ={
     subscriber=subscribersMap
-    botSubscriber=botMap
+//    botSubscriber=botMap
   }
 
   override def getActionEventMap(frame:Int): List[GameEvent] = {
