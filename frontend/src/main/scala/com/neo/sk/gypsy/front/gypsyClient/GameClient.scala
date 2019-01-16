@@ -35,6 +35,33 @@ class GameClient (override val boundary: Point) extends Grid {
     GridDataSync(0, Nil, Nil, Map.empty, 1.0)
   }
 
+  //这里用不到id！！！
+  //键盘事件后，按键动作加入action列表
+  def addActionWithFrame(id: String, keyCode: KC) = {
+    val map = actionMap.getOrElse(keyCode.f, Map.empty)
+    val tmp = map + (id -> keyCode)
+    actionMap += (keyCode.f -> tmp)
+  }
+
+  def addMouseActionWithFrame(id: String, mp:MP) = {
+    val map = mouseActionMap.getOrElse(mp.f, Map.empty)
+    val tmp = map + (id -> mp)
+    mouseActionMap += (mp.f -> tmp)
+  }
+
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int) = {
+    userAction match {
+      case k:KC=>
+        val map = actionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && k.sN == t._2.sN)
+        actionMap += (frame->actionQueue)
+      case m:MP=>
+        val map = mouseActionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && m.sN == t._2.sN)
+        mouseActionMap += (frame->actionQueue)
+    }
+  }
+
 //  override def checkCellMerge(): Boolean = {false}
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
