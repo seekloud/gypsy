@@ -337,17 +337,11 @@ case class DrawGame(
       if (showTime > 0) {
         ctx.save()
         ctx.font = "25px Helvetica"
-        ctx.strokeStyle = "#f32705"
-        val allWidth = (ctx.measureText(s"$killerName $deadName").width + 25 + 32 + 50)/2
-        ctx.strokeText(killerName, this.canvas.width * 0.5 - allWidth, this.canvas.height * 0.15)
         ctx.fillStyle = "#f27c02"
+        val allWidth = (ctx.measureText(s"$killerName $deadName").width + 25 + 32 + 50)/2
         ctx.fillText(killerName, this.canvas.width * 0.5 - allWidth, this.canvas.height * 0.15)
         ctx.drawImage(youkill, this.canvas.width * 0.5 - allWidth + ctx.measureText(s"$killerName ").width + 25,this.canvas.height * 0.15,32,32)
-        ctx.strokeStyle = "#f32705"
-        ctx.strokeText(deadName, this.canvas.width * 0.5 -allWidth + ctx.measureText(s"$killerName  ").width+ 32 + 50, this.canvas.height * 0.15)
-        ctx.fillStyle = "#f27c02"
         ctx.fillText(deadName, this.canvas.width * 0.5 -allWidth + ctx.measureText(s"$killerName  ").width+ 32 + 50, this.canvas.height * 0.15)
-//        ctx.strokeRect(12,375,50+ctx.measureText(s"$killerName $deadName").width+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerName, deadName) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
@@ -497,8 +491,6 @@ case class DrawGame(
         val nameWidth = ctx.measureText(name).width.toInt
         val playermass= cell.mass.toInt
         val massWidth = ctx.measureText(playermass.toString).width.toInt
-        ctx.strokeStyle = "grey"
-        ctx.strokeText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
         ctx.fillStyle = MyColors.background
         ctx.fillText(s"${playermass.toString}",xfix + offx - massWidth / 2, yfix + offy + nameFont.toInt/2)
         ctx.fillText(s"$name", xfix + offx - nameWidth / 2, yfix + offy - (nameFont.toInt / 2))
@@ -660,7 +652,7 @@ case class DrawGame(
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
 
-    ctx.fillText(s"${killerName} is unstoppable??? Press Space to Revenge ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
+    ctx.fillText(s"Press Space to ReStart ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*5)
 
   }
 

@@ -80,55 +80,18 @@ trait Grid {
 
   //这里用不到id！！！
   //键盘事件后，按键动作加入action列表
-  def addActionWithFrame(id: String, keyCode: KC) = {
-    val map = actionMap.getOrElse(keyCode.f, Map.empty)
-    val tmp = map + (id -> keyCode)
-    actionMap += (keyCode.f -> tmp)
-    val action = KeyPress(id,keyCode.kC,keyCode.f,keyCode.sN)
-    AddActionEvent(action)
-  }
+  def addActionWithFrame(id: String, keyCode: KC) : Unit
 
-  def addMouseActionWithFrame(id: String, mp:MP) = {
-    val map = mouseActionMap.getOrElse(mp.f, Map.empty)
-    val tmp = map + (id -> mp)
-    mouseActionMap += (mp.f -> tmp)
-    val direct = (mp.cX,mp.cY)
-    val action = MouseMove(id,direct,mp.f,mp.sN)
-    AddActionEvent(action)
-  }
+  def addMouseActionWithFrame(id: String, mp:MP) : Unit
 
-  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int) = {
-    userAction match {
-      case k:KC=>
-        val map = actionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && k.sN == t._2.sN)
-        actionMap += (frame->actionQueue)
-      case m:MP=>
-        val map = mouseActionMap.getOrElse(frame,Map.empty)
-        val actionQueue = map.filterNot(t => t._1 == id && m.sN == t._2.sN)
-        mouseActionMap += (frame->actionQueue)
-    }
-  }
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int): Unit
 
 
-  def AddActionEvent(action: GameEvent):Unit ={
-    ActionEventMap.get(action.frame) match {
-      case Some(actionEvents) => ActionEventMap.put(action.frame,action :: actionEvents)
-      case None => ActionEventMap.put(action.frame,List(action))
-    }
-  }
 
-  def AddGameEvent(event:GameEvent):Unit ={
-    GameEventMap.get(event.frame) match {
-      case Some(gameEvents) => GameEventMap.put(event.frame,event :: gameEvents)
-      case None => GameEventMap.put(event.frame,List(event))
-    }
-  }
 
   def update() = {
     updateSpots()
-    updatePlayer()
-//    updateScoreList()
+    updatePlayer()//    updateScoreList()
     actionMap -= frameCount
     mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
