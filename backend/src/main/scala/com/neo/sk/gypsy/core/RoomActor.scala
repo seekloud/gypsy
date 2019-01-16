@@ -96,7 +96,7 @@ object RoomActor {
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
-//            val botMap = mutable.HashMap[String,ActorRef[BotActor.Command]]()
+            val botMap = mutable.HashMap[String,ActorRef[BotActor.Command]]()
             val userMap = mutable.HashMap[String, (String,Long,Long)]()
             val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
@@ -125,7 +125,7 @@ object RoomActor {
 //              }
 //            }
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
-            idle(roomId, userMap,playermap,subscribersMap,userSyncMap ,grid, 0l)
+            idle(roomId, userMap,playermap,subscribersMap,botMap,userSyncMap ,grid, 0l)
         }
     }
   }
@@ -133,9 +133,9 @@ object RoomActor {
   def idle(
             roomId:Long,
             userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)]
-            playerMap:mutable.HashMap[String,String],
+            playerMap:mutable.HashMap[String,String], //记录房间玩家数（包括等待复活）
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
-//            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]],
+            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]], //记录BOT ws用于清除废弃actor线程
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long
@@ -174,7 +174,7 @@ object RoomActor {
           //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
           userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
-//          botMap.put(botInfo.playerId,botActor)
+          botMap.put(botInfo.playerId,botActor)
           botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
@@ -368,7 +368,7 @@ object RoomActor {
           Behaviors.same
 
         case Sync =>
-          grid.getSubscribersMap(subscribersMap)
+          grid.getSubscribersMap(subscribersMap,botMap)
 //          grid.getUserList(userList)
           grid.update()
           val feedapples = grid.getNewApples
@@ -447,7 +447,7 @@ object RoomActor {
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
-          idle(roomId,userMap,playerMap,subscribersMap,userSyncMap,grid,tickCount+1)
+          idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1)
 
         case UserActor.NetTest(id, createTime) =>
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
