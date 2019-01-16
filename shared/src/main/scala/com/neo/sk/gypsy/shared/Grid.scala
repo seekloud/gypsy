@@ -527,10 +527,10 @@ trait Grid {
 
     playerMap.foreach{
       case (_,player) =>
-//        val score = player.cells.map(_.newmass).sum
-//        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
-//        playerDetails ::= player
-      if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),currentPlayer.width,currentPlayer.height,Point(player.x,player.y),player.width,player.height))
+        val score = player.cells.map(_.newmass).sum
+        if (checkScreenRange(Point(currentPlayer.x,currentPlayer.y),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
+        playerDetails ::= player
+//      if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),currentPlayer.width,currentPlayer.height,Point(player.x,player.y),player.width,player.height))
         playerDetails ::= player
 
     }
@@ -540,7 +540,7 @@ trait Grid {
       playerDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
-      Scale,
+      Scale
      // allPlayerPosition
     )
   }
