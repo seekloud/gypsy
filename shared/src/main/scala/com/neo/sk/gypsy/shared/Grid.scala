@@ -509,30 +509,30 @@ trait Grid {
 
   /**
     * method: getGridData
-    * describe: 获取自己视角中的全量数据 + 质量超过500的巨型玩家
+    * describe: 获取自己视角中的全量数据
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
     myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
-    val currentPlayer = playerMap.get(id).get
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
       Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     }
-    val width = winWidth / Scale / 2
-    val height = winHeight / Scale / 2
+    val width = 600/ Scale
+    val height = 300/ Scale
 
     var playerDetails: List[Player] = Nil
 
     playerMap.foreach{
       case (_,player) =>
-        val score = player.cells.map(_.newmass).sum
-        if (checkScreenRange(Point(currentPlayer.x,currentPlayer.y),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
-        playerDetails ::= player
-//      if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),currentPlayer.width,currentPlayer.height,Point(player.x,player.y),player.width,player.height))
-        playerDetails ::= player
-
+//        val score = player.cells.map(_.newmass).sum
+//        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
+//        playerDetails ::= player
+        if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),width,height,Point(player.x,player.y),player.width,player.height)){
+          if(player.id != myId) println("y:  " + (currentPlayerWH._2 - height) + "otherY:  " + ( player.y + player.height/2 ) )
+          playerDetails ::= player
+        }
     }
 
     Protocol.GridDataSync(
