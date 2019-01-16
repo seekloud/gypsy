@@ -133,9 +133,9 @@ object RoomActor {
   def idle(
             roomId:Long,
             userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)]
-            playerMap:mutable.HashMap[String,String],
+            playerMap:mutable.HashMap[String,String], //记录房间玩家数（包括等待复活）
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
-            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]],
+            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]], //记录BOT ws用于清除废弃actor线程
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long
