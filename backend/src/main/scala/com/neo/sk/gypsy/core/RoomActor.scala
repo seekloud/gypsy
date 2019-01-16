@@ -332,15 +332,19 @@ object RoomActor {
             grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
             dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           } else {
-            grid.addActionWithFrame(id, KC(Some(grid.playerId2ByteMap(id)),keyCode,math.max(grid.frameCount,frame),n))
-            dispatch(subscribersMap)(KC(Some(grid.playerId2ByteMap(id)),keyCode,math.max(grid.frameCount,frame),n))
+            if(grid.playerId2ByteMap.get(id).isDefined){
+              grid.addActionWithFrame(id, KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
+              dispatch(subscribersMap)(KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
+            }
           }
           Behaviors.same
 
         case RoomActor.MouseR(id,x,y,frame,n) =>
           log.debug(s"gor $msg")
-          grid.addMouseActionWithFrame(id,MP(grid.playerId2ByteMap.get(id),x,y,math.max(grid.frameCount,frame),n))
-          dispatch(subscribersMap)(MP(grid.playerId2ByteMap.get(id),x,y,math.max(grid.frameCount,frame),n))
+          if(grid.playerId2ByteMap.get(id).isDefined){
+            grid.addMouseActionWithFrame(id,MP(grid.playerId2ByteMap.get(id),x,y,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap)(MP(grid.playerId2ByteMap.get(id),x,y,math.max(grid.frameCount,frame),n))
+          }
           Behaviors.same
 
         case GetBotInfo(id,botActor)=>
