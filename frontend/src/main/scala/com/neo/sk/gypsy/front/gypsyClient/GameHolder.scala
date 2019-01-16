@@ -117,9 +117,9 @@ class GameHolder(replay:Boolean = false) {
       //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
+        keyInFlame = false
         if(grid.frameCount % 2 ==0){
           updateMousePos
-          keyInFlame = false
         }
         update()
       } else {
