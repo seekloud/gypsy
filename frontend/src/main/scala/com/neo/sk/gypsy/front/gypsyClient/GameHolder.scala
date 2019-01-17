@@ -3,6 +3,7 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
+
 import scala.util.Random
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.NetDelay
@@ -11,13 +12,13 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
+
 import scala.math._
-
-
-import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.{Game, _}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
 
 /**
   * User: sky
@@ -162,7 +163,7 @@ class GameHolder(replay:Boolean = false) {
       case GameState.play if myId!= ""=>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
-        drawTopView.drawWhenDead(grid.playerMap,deadInfo.get)
+        drawTopView.drawWhenDead(deadInfo.get)
 //        drawTopView.drawEcharts()
       case GameState.victory if victoryInfo.isDefined =>
         drawTopView.drawVictory(victoryInfo.get)
@@ -482,7 +483,7 @@ class GameHolder(replay:Boolean = false) {
         )
 
         //只针对自己死亡发送的死亡消息
-      case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+      case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
         if(deadId == myId){
           Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
@@ -523,11 +524,42 @@ class GameHolder(replay:Boolean = false) {
 //          }
 //        }
 
-      case Protocol.UserMerge(id,player)=>
-        if(grid.playerMap.get(id).nonEmpty){
-          grid.playerMap = grid.playerMap - id + (id->player)
-        }
-
+      case Protocol.UserMerge(playerMap)=>
+          grid.playerMap = grid.playerMap.map{player=>
+            if(playerMap.get(player._1).nonEmpty){
+              val mergeCells = playerMap.get(player._1).get
+              val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
+                var newRadius = cell.radius
+                var newM = cell.newmass
+               mergeCells.map{merge=>
+                 if(cell.id == merge._1){
+                   val cellOp = player._2.cells.filter(_.id == merge._2).headOption
+                   if(cellOp.isDefined){
+                     val cell2 = cellOp.get
+                     newM = (newM + cell2.newmass).toShort
+                     newRadius = Mass2Radius(newM)
+                   }
+                 }else if(cell.id == merge._2){
+                   val cellOp = player._2.cells.filter(_.id == merge._1).headOption
+                   newM = 0
+                   newRadius = 0
+                 }
+               }
+                cell.copy(newmass = newM,radius = newRadius)
+              }.filterNot(e=> e.newmass <= 0 && e.mass <= 0)
+              val length = newCells.length
+              val newX = newCells.map(_.x).sum / length
+              val newY = newCells.map(_.y).sum / length
+              val left = newCells.map(a => a.x - a.radius).min
+              val right = newCells.map(a => a.x + a.radius).max
+              val bottom = newCells.map(a => a.y - a.radius).min
+              val top = newCells.map(a => a.y + a.radius).max
+              (player._1 -> Game.Player(player._2.id,player._2.name,player._2.color,newX,newY,player._2.targetX,player._2.targetY,player._2.kill,player._2.protect,player._2.lastSplit,
+                right-left,top-bottom,newCells,player._2.startTime))
+            }else{
+              player
+            }
+          }
 //      case  Protocol.SplitPlayer(splitPlayers) =>
 ////        println(s"====AAA=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)} )   } } ")
 ////        println(s"======= ${splitPlayers.map{p =>(p._1, p._2.map{c=>(c.id,c.newmass)} )   } } ")
@@ -595,10 +627,13 @@ class GameHolder(replay:Boolean = false) {
         gameState = GameState.allopatry
 
         //某个用户离开
-      case Protocol.PlayerLeft(id,name) =>
-        grid.removePlayer(id)
-        if(id == myId){
-          gameClose
+      case Protocol.PlayerLeft(id) =>
+        if(grid.playerByte2IdMap.get(id).isDefined){
+          grid.removePlayer(grid.playerByte2IdMap(id))
+          grid.playerByte2IdMap -= id
+          if(id == myId){
+            gameClose
+          }
         }
 
       case Protocol.DecodeEvent(data)=>
@@ -663,9 +698,9 @@ class GameHolder(replay:Boolean = false) {
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){
             isDead = true
-            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
+            killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }else{
-            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
+            killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }
           if(killMsg.killerId == myId){
             Shortcut.playMusic("godlikeM")
@@ -682,7 +717,7 @@ class GameHolder(replay:Boolean = false) {
           }
         }else{
           //根据map找到killerName
-          val deadMsg = UserDeadMessage(killMsg.killerId, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          val deadMsg = UserDeadMessage(killMsg.killerName, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷

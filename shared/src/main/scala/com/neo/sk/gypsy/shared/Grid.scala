@@ -255,7 +255,7 @@ trait Grid {
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
-    var MouseScala = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
+    var MouseScale = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
     val mouseAct = mouseActMap.getOrElse(player.id,MP(None,player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
@@ -270,9 +270,10 @@ trait Grid {
 //      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
-
-      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScala
+   //   if(System.currentTimeMillis() - player.lastSplit > 1500){
+        target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
+   //   }
+      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
@@ -281,7 +282,7 @@ trait Grid {
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
       } else {
-        if (cell.speed > 30 / slowdown) {
+        if (cell.speed > initSpeed / slowdown) {
           newSpeed -= acceleration
 //          newSpeed = 30 / slowdown
 
@@ -292,9 +293,9 @@ trait Grid {
 
             } else newSpeed = 0
           } else {
-            newSpeed = if (cell.speed < 30 / slowdown) {
+            newSpeed = if (cell.speed < initSpeed / slowdown) {
               cell.speed + acceleration
-            } else (30 / slowdown).toFloat
+            } else (initSpeed / slowdown).toFloat
           }
         }
       }
@@ -319,8 +320,8 @@ trait Grid {
         val radiusTotal = cell.radius + cell2.radius+2
         if (distance < radiusTotal) {
           if (player.lastSplit > System.currentTimeMillis() - mergeInterval&&System.currentTimeMillis()-player.lastSplit>1000) {
-            val mouseX=mouseAct.cX+player.x
-            val mouseY=mouseAct.cY+player.y
+            val mouseX=mouseAct.cX/MouseScale+player.x
+            val mouseY=mouseAct.cY/MouseScale+player.y
             val cos1=((cell2.x-cell.x)*(mouseX-cell.x)+(cell2.y-cell.y)*(mouseY-cell.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(newY - mouseY, 2) + pow(newX - mouseX, 2)))
             val cos2=((cell.x-cell2.x)*(mouseX-cell2.x)+(cell.y-cell2.y)*(mouseY-cell2.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
             val cos3=((cell.x-mouseX)*(cell2.x-mouseX)+(cell.y-mouseY)*(cell2.y-mouseY))/sqrt((pow(newY - mouseY, 2) + pow(newX - mouseX, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
@@ -530,7 +531,6 @@ trait Grid {
 //        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
 //        playerDetails ::= player
         if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),width,height,Point(player.x,player.y),player.width,player.height)){
-//          if(player.id != myId) println("y:  " + (currentPlayerWH._2 - height) + "otherY:  " + ( player.y + player.height/2 ) )
           playerDetails ::= player
         }
     }
@@ -578,7 +578,7 @@ trait Grid {
 
     tick = 0
     Scale = 1.0
-    
+
 
   }
 
