@@ -624,7 +624,7 @@ case class DrawGame(
   }
 
 
-  def drawWhenDead(playerMap: Map[String,Player], msg:Protocol.UserDeadMessage)={
+  def drawWhenDead(msg:Protocol.UserDeadMessage)={
     ctx.fillStyle = "#000"//Color.Black.toString()
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
@@ -640,19 +640,18 @@ case class DrawGame(
 
     var DrawLeft = Width*0.35
     val DrawHeight = BaseHeight
-    val killerName = playerMap.get(msg.killerId).get.name
     ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
     ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
     ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.fillStyle=Color.White.toString()
     DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
-
-    ctx.fillText(s"Press Space to ReStart ￣へ￣#  ",Width*0.35,DrawHeight + Height*0.07*5)
+    val reStart = "Press Space to ReStart ￣へ￣#  "
+    ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2, DrawHeight + Height*0.07*5)
 
   }
 

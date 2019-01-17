@@ -56,8 +56,10 @@ object Protocol {
   case class MyRank(rank:RankInfo) extends GameMessage
 
   case class PlayerRestart(id:String) extends GameMessage
-
-  case class UserDeadMessage(killerId:String, deadId:String, killNum:Short, score:Short, lifeTime:Long) extends GameMessage
+  /**用户从playerMap中删除的两种可能：1、用户离开房间 2、用户死亡**/
+  case class UserDeadMessage(killerName:String, deadId:String, killNum:Short, score:Short, lifeTime:Long) extends GameMessage
+  //只有用户离开房间时候发送
+  case class PlayerLeft(id: Byte) extends GameMessage
 
   case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
 
@@ -77,9 +79,6 @@ object Protocol {
 
   //  按F分裂的球发送的全量消息
 //  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
-
-  //只有用户离开房间时候发送
-  case class PlayerLeft(id: String, name: String) extends GameMessage
 
   case class PlayerSplit(player: Map[String,Player]) extends GameMessage
 
@@ -152,7 +151,7 @@ object Protocol {
   case class KeyPress(userId:String,keyCode: Int, override val frame:Int, override val serialNum:Int) extends GameEvent
   case class GenerateApples(apples:Map[Point, Short], override val frame:Int) extends GameEvent
   case class GenerateVirus(virus: Map[Long,Virus], override val frame:Int) extends GameEvent with WsMsgSource
-  case class KillMsg(killerId:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Int) extends GameEvent
+  case class KillMsg(killerId:String,killerName:String,deadPlayer:Player,score:Short,lifeTime:Long, override val frame: Int) extends GameEvent
   case class CurrentRanks(currentRank: List[RankInfo]) extends GameEvent
   case class PongEvent(timestamp: Long)extends GameEvent
 

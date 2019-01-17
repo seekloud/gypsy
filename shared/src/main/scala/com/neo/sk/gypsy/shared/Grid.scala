@@ -531,7 +531,6 @@ trait Grid {
 //        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
 //        playerDetails ::= player
         if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),width,height,Point(player.x,player.y),player.width,player.height)){
-          if(player.id != myId) println("y:  " + (currentPlayerWH._2 - height) + "otherY:  " + ( player.y + player.height/2 ) )
           playerDetails ::= player
         }
     }

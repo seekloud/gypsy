@@ -226,6 +226,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var playerChange = false
+        var newProtected = player.protect
         var killerId = ""
         val score = player.cells.map(_.mass).sum
         var changedCells = List[Cell]()
@@ -251,6 +252,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + otherCell.newmass).toShort
                   newRadius = Mass2Radius(newMass)
                   cellChange = true
+                  if(newProtected)
+                    newProtected = false
                 }
               }
             }
@@ -282,10 +285,10 @@ class GameServer(override val boundary: Point) extends Grid {
             else ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(killerId,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(playerMap.get(killerId).get.name,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killerId,player,score,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killerId,playerMap.get(killerId).get.name,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
           Left(killerId)
         } else {
@@ -510,6 +513,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + p.mass).toShort
                   newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
+                  if(newProtected)
+                    newProtected = false
                 }
             }
             Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
