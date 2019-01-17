@@ -226,6 +226,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var playerChange = false
+        var newProtected = player.protect
         var killerId = ""
         val score = player.cells.map(_.mass).sum
         var changedCells = List[Cell]()
@@ -251,6 +252,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + otherCell.newmass).toShort
                   newRadius = Mass2Radius(newMass)
                   cellChange = true
+                  if(newProtected)
+                    newProtected = false
                 }
               }
             }
@@ -513,6 +516,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + p.mass).toShort
                   newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
+                  if(newProtected)
+                    newProtected = false
                 }
             }
             Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
