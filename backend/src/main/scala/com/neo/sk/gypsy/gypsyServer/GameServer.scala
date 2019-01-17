@@ -348,8 +348,8 @@ class GameServer(override val boundary: Point) extends Grid {
               val deg= acos(abs(cell.x-cell2.x)/distance)
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
-                if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()>newSplitTime + 2*1000) {
-                    if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis() > newSplitTime + splitInterval) {
+                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                     else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                     if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                     else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
@@ -383,9 +383,9 @@ class GameServer(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        if(playerIsMerge){
+        if(playerIsMerge && playerId2ByteMap.get(player.id).isDefined){
           mergeInFlame = true
-          dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          dispatch(subscriber)(UserMerge(playerId2ByteMap(player.id),player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
         }
 
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
