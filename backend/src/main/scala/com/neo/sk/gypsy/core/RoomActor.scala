@@ -329,35 +329,14 @@ object RoomActor {
           //userMap里面只存玩家信息
           playerMap.remove(playerInfo.playerId)
           userMap.remove(playerInfo.playerId)
-          //玩家离开or观战者离开
-//          var list=List[Int2]()
-//          var user = -1
-//          for(i<-0 until userList.length){
-//            //观战者离开
-//            for(j<-0 until userList(i).shareList.length){
-//              if(userList(i).shareList(j) == playerInfo.playerId){
-//                list :::= List(Int2(i,j))
-//              }
-//            }
-//            //玩家离开
-//            if(userList(i).id == playerInfo.playerId){
-//              user = i
-//            }
-//          }
-//          list.map{l=>
-//            userList(l.i).shareList.remove(l.j)
-//          }
-//          if(user != -1){
-//            userList.remove(user)
-//          }
+
           subscribersMap.remove(playerInfo.playerId)
 
-          val playerNum = playerMap.size
-          val allPlayerNum = playerNum + botMap.size
+          val allPlayerNum = playerMap.size + botMap.size
 //            if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
-            if(allPlayerNum<AppSettings.botNum){
-              val needAdd = AppSettings.botNum-allPlayerNum
-              createBotActor(needAdd,roomId,ctx,grid)
+          if (allPlayerNum < AppSettings.botNum) {
+            val needAdd = AppSettings.botNum - allPlayerNum
+            createBotActor(needAdd, roomId, ctx, grid)
 
           }
 
@@ -437,10 +416,12 @@ object RoomActor {
 //                botMap.remove(botId)
                 grid.playerMap -= botId
             }
-            val playerNum = playerMap.keys.size
-            val botNum = botMap.keys.size
-            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
-              val needAdd = AppSettings.botNum-(playerNum+botNum)
+//            val playerNum = playerMap.keys.size
+//            val botNum = botMap.keys.size
+            val allPlayerNum = playerMap.size + botMap.size
+//            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
+            if(allPlayerNum<AppSettings.botNum){
+              val needAdd = AppSettings.botNum-allPlayerNum
               createBotActor(needAdd,roomId,ctx,grid)
 //              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
 //                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
