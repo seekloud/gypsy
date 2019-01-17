@@ -623,6 +623,7 @@ class GameHolder(replay:Boolean = false) {
         println(s"Receive Victory Msg $id,$name,$kill,$score")
         victoryInfo = Some(msg)
         gameState = GameState.victory
+        grid.clearAllData()
 
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
