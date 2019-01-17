@@ -350,9 +350,8 @@ class GameServer(override val boundary: Point) extends Grid {
                     else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                     if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                     else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-
                 }
-                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval) ) {
+                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval) && frameCount %2 ==0) {
                   /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
                   if (cell.radius > cell2.radius) {
                     //被融合的细胞不能再被其他细胞融合
@@ -368,8 +367,6 @@ class GameServer(override val boundary: Point) extends Grid {
                     newMass = 0
                     newRadius = 0
                     deleteCells = cell :: deleteCells
-//                    cellX = cell2.x
-//                    cellY = cell2.y
                   }
                 }
               }
@@ -385,7 +382,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge){
           mergeInFlame = true
-          //dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
         }
 
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
