@@ -189,7 +189,7 @@ object BotActor {
       msg match {
         case Action(key,swing,sender) =>
           botHolder.gameActionReceiver(key,swing)
-          sender ! ActionRsp(frameIndex = botHolder.getFrameCount.toInt, msg = "ok")
+          sender ! ActionRsp(frameIndex = botHolder.getFrameCount, msg = "ok")
           Behaviors.same
 
 

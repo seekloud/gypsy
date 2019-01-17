@@ -69,9 +69,9 @@ object Protocol {
 
   case class MatchRoomError() extends GameMessage
 
-  case class UserMerge(id:String,player: Player)extends GameMessage
+  case class UserMerge(id:Byte,player: Player)extends GameMessage
 
-  case class UserCrash(crashMap:Map[String,List[Cell]]) extends GameMessage
+  case class UserCrash(crashMap:Map[Byte,List[Cell]]) extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage
 
@@ -80,7 +80,7 @@ object Protocol {
   //  按F分裂的球发送的全量消息
 //  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
 
-  case class PlayerSplit(player: Map[String,Player]) extends GameMessage
+  case class PlayerSplit(player: Map[Byte,Player]) extends GameMessage
 
   case class PlayerJoin(id:Byte, player:Player) extends GameMessage //id: 映射id
 
