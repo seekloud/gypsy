@@ -258,7 +258,7 @@ object RoomActor {
           grid.clearAllData
           isclear = true
 
-          if(playerMap.size < AppSettings.botNum){
+          if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
             if(playerMap.size + botMap.size < AppSettings.botNum){
               val needAdd = AppSettings.botNum - playerMap.size - botMap.size
               createBotActor(needAdd,roomId,ctx,grid)
@@ -277,7 +277,6 @@ object RoomActor {
                 ctx.self ! ReStart(bot._1)
               }
             }
-
           }
 //          if(grid.ReLiveMap.nonEmpty){
 //
@@ -435,17 +434,19 @@ object RoomActor {
             bigBotMap.keys.foreach {
               botId =>
                 botMap.get(botId).get ! KillBot
-                botMap.remove(botId)
+//                botMap.remove(botId)
                 grid.playerMap -= botId
             }
             val playerNum = playerMap.keys.size
             val botNum = botMap.keys.size
             if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
-              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
-                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
-                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
-                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-              }
+              val needAdd = AppSettings.botNum-(playerNum+botNum)
+              createBotActor(needAdd,roomId,ctx,grid)
+//              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
+//                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
+//                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+//                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+//              }
             }
           }
           grid.getSubscribersMap(subscribersMap,botMap)
