@@ -282,7 +282,7 @@ trait Grid {
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
       } else {
-        if (cell.speed > 30 / slowdown) {
+        if (cell.speed > initSpeed / slowdown) {
           newSpeed -= acceleration
 //          newSpeed = 30 / slowdown
 
@@ -293,9 +293,9 @@ trait Grid {
 
             } else newSpeed = 0
           } else {
-            newSpeed = if (cell.speed < 30 / slowdown) {
+            newSpeed = if (cell.speed < initSpeed / slowdown) {
               cell.speed + acceleration
-            } else (30 / slowdown).toFloat
+            } else (initSpeed / slowdown).toFloat
           }
         }
       }
