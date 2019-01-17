@@ -413,9 +413,13 @@ object RoomActor {
           if(!bigBotMap.isEmpty){
             bigBotMap.keys.foreach {
               botId =>
-                botMap.get(botId).get ! KillBot
-//                botMap.remove(botId)
-                grid.playerMap -= botId
+                if(botMap.get(botId).isDefined){
+                  botMap(botId) ! KillBot
+//                  botMap.get(botId).get ! KillBot
+                  //                botMap.remove(botId)
+                  grid.playerMap -= botId
+                }
+
             }
 //            val playerNum = playerMap.keys.size
 //            val botNum = botMap.keys.size
@@ -441,6 +445,7 @@ object RoomActor {
             if(FirstPlayer.score > VictoryScore){
               ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.k,FirstPlayer.score)
             }
+            println(s"CURRENT Rank  ${grid.currentRank}  ")
           }
 
           val feedapples = grid.getNewApples
