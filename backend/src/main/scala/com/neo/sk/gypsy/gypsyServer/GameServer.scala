@@ -267,10 +267,11 @@ class GameServer(override val boundary: Point) extends Grid {
 //            case _ =>
 //              player.killerName = "unknown"
 //          }
-//          加入待复活列表
+//          陪玩机器人加入待复活列表,如果总人数过多则直接杀死改bot
           if(player.id.startsWith("bot_")){
-            var playerNum=0
-            playerMap.foreach(i=>playerNum+=1)
+//            var playerNum=0
+//            playerMap.foreach(i=>playerNum+=1)
+            val playerNum = playerMap.keySet.size
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
@@ -768,6 +769,18 @@ class GameServer(override val boundary: Point) extends Grid {
   def cleanNewApple = {
     newFoods = Map.empty
   }
+
+  override def clearAllData: Unit ={
+    super.clearAllData
+    //TODO 清空判别
+//    ReLiveMap 要清空吗？(不清)
+//    waitingJoin感觉不需要清空
+    newFoods = Map.empty
+    eatenFoods = Map.empty
+    playerId2ByteMap.clear()
+    currentRank = List.empty[Score]
+  }
+
 
   def randomEmptyPoint(): Point = {
     val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))

@@ -657,6 +657,36 @@ case class DrawGame(
   }
 
 
+  def drawVictory(msg:Protocol.VictoryMsg)={
+    ctx.fillStyle = "#000"//Color.Black.toString()
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(deadbg,0,0, canvas.width, canvas.height)
+    ctx.font = "50px Helvetica"
+    ctx.fillStyle = "#CD3700"
+    val Width = this.canvas.width
+    val Height = this.canvas.height
+    //    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.22
+    ctx.fillText(s"Congratulation!", Width*0.42, BaseHeight)
+
+    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
+
+    var DrawLeft = Width*0.35
+    val DrawHeight = BaseHeight
+    val killerName = msg.name
+    ctx.fillText(s"The   Winner  Is    :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    ctx.fillStyle=Color.White.toString()
+    DrawLeft = ctx.measureText("The   Winner  Is    :").width +  Width*0.35 + 60
+    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${msg.kill}", DrawLeft,DrawHeight + Height*0.07*3)
+
+    ctx.fillText(s"Press Space to ReStart= ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*4)
+  }
+
+
 /*  def drawEcharts() = {
     val myChart = EchartsJs.echarts.init(echarts)
     val option = EchartOption(XAxis("category",false,List("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),YAxis("value"),List(SeriesItem(List(820, 932, 901, 934, 1290, 1330, 1320),"line",AreaStyle()))).asJson

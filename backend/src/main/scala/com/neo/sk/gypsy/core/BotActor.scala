@@ -4,14 +4,13 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomActor.{GetBotInfo, botAction}
+import com.neo.sk.gypsy.core.RoomActor.{DeleteBot, GetBotInfo, botAction}
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KC, MP, PressSpace}
-
 
 import scala.math._
 import concurrent.duration._
@@ -153,6 +152,7 @@ object BotActor {
 
         case KillBot =>
           log.debug(s"botActor:$botId go to die...")
+          roomActor ! DeleteBot(botId)
           Behaviors.stopped
 
         case unknownMsg@_ =>

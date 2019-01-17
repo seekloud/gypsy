@@ -75,6 +75,8 @@ object Protocol {
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
+  case class VictoryMsg(id:String,name:String,kill:Short,score:Short) extends GameMessage
+
   //  按F分裂的球发送的全量消息
 //  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
 
@@ -120,7 +122,11 @@ object Protocol {
 
   case object PressSpace extends UserAction
 
+  //复活
   case class ReLiveMsg(override val f:Int) extends UserAction with GameMessage
+
+  //胜利后重开
+  case class ReJoinMsg(override val f:Int) extends UserAction with GameMessage
 
   case class WatchChange(watchId: String) extends UserAction
 
