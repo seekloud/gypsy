@@ -89,7 +89,7 @@ object BotActor {
           //TODO 选择一个动作发给roomActor
           val px =  new Random(System.nanoTime()).nextInt(1200)- 600
           val py =  new Random(System.nanoTime()).nextInt(600)- 300
-          val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
+          val mp = MP(grid.playerId2ByteMap.get(botId),px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
           Behaviors.same
 
@@ -100,43 +100,48 @@ object BotActor {
             val food = data.foodDetails
             val virus = data.virusDetails
             val mass = data.massDetails
+            var move = false
             val otherPlayers = data.playerDetails.filterNot(a=>(a.id==botId || a.protect==true))
             //躲避、追赶其他玩家
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
               if(botCell.mass>closestP.mass*2.2){
-                  val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                  val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
+                move = true
                 if(System.currentTimeMillis()-lastSplitTime>2*1000 && random()<0.6){
                   lastSplitTime = System.currentTimeMillis()
-                  val kc = KC(Some(grid.playerId2ByteMap(botId)),70,grid.frameCount,-1)
+                  val kc = KC(grid.playerId2ByteMap.get(botId),70,grid.frameCount,-1)
                   roomActor ! botAction(botId,kc)
                 }
               }
               else if(botCell.mass>closestP.mass*1.1){
                 if(getDis(botCell.x,botCell.y,closestP.x,closestP.y,closestP.radius) > 0){
-                  val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+                  val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
+                  move = true
                 }
               }
               else if(botCell.mass*1.1<closestP.mass){
-                val mp = MP(Some(grid.playerId2ByteMap(botId)),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
+                val mp = MP(grid.playerId2ByteMap.get(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
                 roomActor ! botAction(botId,mp)
               }
             }
               //吃mass
             else if(mass.nonEmpty){
               val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
-              val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
+              move = true
             }
               //吃食物
             else if(food.nonEmpty){
               val closestP = food.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,0)).head
-              val mp = MP(Some(grid.playerId2ByteMap(botId)),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
+              val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
+              move = true
             }
-//            if (random()<0.05){
+//            if (move == false &&random()<0.1){
 //              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
 //              val py =  new Random(System.nanoTime()).nextInt(600)- 300
 //              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
@@ -172,7 +177,7 @@ object BotActor {
         case Space =>
           //TODO 复活
           val spaceKeyCode=32
-          roomActor ! botAction(botId, KC(Some(grid.playerId2ByteMap(botId)),spaceKeyCode,grid.frameCount,-1))
+          roomActor ! botAction(botId, KC(grid.playerId2ByteMap.get(botId),spaceKeyCode,grid.frameCount,-1))
           Behaviors.same
 
         case KillBot =>

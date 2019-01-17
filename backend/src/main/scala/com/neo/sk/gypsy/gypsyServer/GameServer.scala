@@ -226,6 +226,7 @@ class GameServer(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         var playerChange = false
+        var newProtected = player.protect
         var killerId = ""
         val score = player.cells.map(_.mass).sum
         var changedCells = List[Cell]()
@@ -251,6 +252,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + otherCell.newmass).toShort
                   newRadius = Mass2Radius(newMass)
                   cellChange = true
+                  if(newProtected)
+                    newProtected = false
                 }
               }
             }
@@ -269,8 +272,6 @@ class GameServer(override val boundary: Point) extends Grid {
 //          }
 //          陪玩机器人加入待复活列表,如果总人数过多则直接杀死改bot
           if(player.id.startsWith("bot_")){
-//            var playerNum=0
-//            playerMap.foreach(i=>playerNum+=1)
             val playerNum = playerMap.keySet.size
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
@@ -283,10 +284,10 @@ class GameServer(override val boundary: Point) extends Grid {
             else ReLiveMap += (player.id -> System.currentTimeMillis())
           }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(killerId,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(playerMap.get(killerId).get.name,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
           esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          val event = KillMsg(killerId,player,score,System.currentTimeMillis()-player.startTime,frameCount)
+          val event = KillMsg(killerId,playerMap.get(killerId).get.name,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
           Left(killerId)
         } else {
@@ -323,13 +324,16 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
+    var mergePlayer = Map[String,List[(Long,Long)]]()
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
         var mergeCells = List[Cell]()
+        var mergeCell = List[(Long,Long)]()
         //已经被本体其他cell融合的cell
         var deleteCells = List[Cell]()
         var playerIsMerge=false
+
         //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -348,9 +352,8 @@ class GameServer(override val boundary: Point) extends Grid {
                     else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
                     if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                     else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-
                 }
-                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval) ) {
+                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval) && frameCount %2 ==0) {
                   /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
                   if (cell.radius > cell2.radius) {
                     //被融合的细胞不能再被其他细胞融合
@@ -359,6 +362,7 @@ class GameServer(override val boundary: Point) extends Grid {
                       newMass = (newMass + cell2.newmass).toShort
                       newRadius = Mass2Radius(newMass)
                       mergeCells = cell2 :: mergeCells
+                      mergeCell = (cell.id,cell2.id) :: mergeCell
                     }
                   }
                   else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
@@ -366,8 +370,6 @@ class GameServer(override val boundary: Point) extends Grid {
                     newMass = 0
                     newRadius = 0
                     deleteCells = cell :: deleteCells
-//                    cellX = cell2.x
-//                    cellY = cell2.y
                   }
                 }
               }
@@ -383,13 +385,13 @@ class GameServer(override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge){
           mergeInFlame = true
-          //dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          mergePlayer += (player.id -> mergeCell)
         }
-
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     if(mergeInFlame){
+      dispatch(subscriber)(UserMerge(mergePlayer))
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
     }
@@ -514,6 +516,8 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass + p.mass).toShort
                   newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
+                  if(newProtected)
+                    newProtected = false
                 }
             }
             Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)

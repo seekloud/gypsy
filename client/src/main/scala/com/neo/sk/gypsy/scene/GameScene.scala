@@ -119,7 +119,7 @@ class GameScene {
   }
 
   def drawWhenDead(msg:Protocol.UserDeadMessage) = {
-    topView.drawWhenDead(grid.playerMap,msg)
+    topView.drawWhenDead(msg)
   }
   def drawWhenFinish(msg:String) = {
     topView.drawWhenFinish(msg)
