@@ -272,8 +272,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //          }
 //          加入待复活列表
           if(player.id.startsWith("bot_")){
-            var playerNum=0
-            playerMap.foreach(i=>playerNum+=1)
+            val playerNum=playerMap.keys.size
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
@@ -325,13 +324,16 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
+    var mergePlayer = Map[String,List[(Long,Long)]]()
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
         var mergeCells = List[Cell]()
+        var mergeCell = List[(Long,Long)]()
         //已经被本体其他cell融合的cell
         var deleteCells = List[Cell]()
         var playerIsMerge=false
+
         //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -360,6 +362,7 @@ class GameServer(override val boundary: Point) extends Grid {
                       newMass = (newMass + cell2.newmass).toShort
                       newRadius = Mass2Radius(newMass)
                       mergeCells = cell2 :: mergeCells
+                      mergeCell = (cell.id,cell2.id) :: mergeCell
                     }
                   }
                   else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
@@ -382,13 +385,13 @@ class GameServer(override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge){
           mergeInFlame = true
-          dispatch(subscriber)(UserMerge(player.id,player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          mergePlayer += (player.id -> mergeCell)
         }
-
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     if(mergeInFlame){
+      dispatch(subscriber)(UserMerge(mergePlayer))
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
     }
