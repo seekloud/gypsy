@@ -98,6 +98,8 @@ object RoomActor {
 
   var isclear = false
 
+  var killBigBot = false
+
   val BotMaxMass = 500
 
   def create(roomId:Long):Behavior[Command] = {
@@ -409,6 +411,7 @@ object RoomActor {
           Behaviors.same
 
         case Sync =>
+
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
           if(!bigBotMap.isEmpty){
             bigBotMap.keys.foreach {
@@ -417,22 +420,28 @@ object RoomActor {
                   botMap(botId) ! KillBot
 //                  botMap.get(botId).get ! KillBot
                   //                botMap.remove(botId)
+                  killBigBot = true
                   grid.playerMap -= botId
                 }
 
             }
 //            val playerNum = playerMap.keys.size
 //            val botNum = botMap.keys.size
-            val allPlayerNum = playerMap.size + botMap.size
-//            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
-            if(allPlayerNum<AppSettings.botNum){
-              val needAdd = AppSettings.botNum-allPlayerNum
-              createBotActor(needAdd,roomId,ctx,grid)
-//              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
-//                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
-//                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
-//                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-//              }
+
+            if (killBigBot) {
+              val allPlayerNum = playerMap.size + botMap.size
+              //            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
+              if (allPlayerNum < AppSettings.botNum) {
+                val needAdd = AppSettings.botNum - allPlayerNum
+                createBotActor(needAdd, roomId, ctx, grid)
+                killBigBot = false
+                //              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
+                //                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
+                //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+                //                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+                //              }
+              }
+
             }
           }
           grid.getSubscribersMap(subscribersMap,botMap)
@@ -445,7 +454,7 @@ object RoomActor {
             if(FirstPlayer.score > VictoryScore){
               ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.k,FirstPlayer.score)
             }
-            println(s"CURRENT Rank  ${grid.currentRank}  ")
+            println(s"CURRENT Rank  ${FirstPlayer}  ")
           }
 
           val feedapples = grid.getNewApples
