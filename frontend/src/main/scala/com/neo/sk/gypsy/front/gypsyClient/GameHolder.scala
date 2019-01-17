@@ -460,8 +460,10 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case Protocol.PlayerSplit(player) =>
-        player.keys.foreach(item =>
-          grid.playerMap += (item -> player(item))
+        player.keys.foreach(item =>{
+          if(grid.playerByte2IdMap.get(item).isDefined)
+            grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
+        }
         )
 
         //只针对自己死亡发送的死亡消息
@@ -507,10 +509,10 @@ class GameHolder(replay:Boolean = false) {
 //        }
 
       case Protocol.UserMerge(id,player)=>
-        if(grid.playerMap.get(id).nonEmpty){
-          grid.playerMap = grid.playerMap - id + (id->player)
+        if(grid.playerByte2IdMap.get(id).isDefined){
+          val playerId = grid.playerByte2IdMap(id)
+          grid.playerMap = grid.playerMap - playerId + (playerId ->player)
         }
-
 //      case  Protocol.SplitPlayer(splitPlayers) =>
 ////        println(s"====AAA=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)} )   } } ")
 ////        println(s"======= ${splitPlayers.map{p =>(p._1, p._2.map{c=>(c.id,c.newmass)} )   } } ")
@@ -526,8 +528,9 @@ class GameHolder(replay:Boolean = false) {
 //        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
         crashMap.foreach{p=>
 //          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
-          if(grid.playerMap.contains(p._1)){
-            val player = grid.playerMap(p._1)
+          if(grid.playerByte2IdMap.get(p._1).isDefined){
+            val playerId = grid.playerByte2IdMap(p._1)
+            val player = grid.playerMap(playerId)
             var newCells = player.cells
             p._2.foreach{c=>
               newCells = c :: newCells.filterNot(_.id == c.id)

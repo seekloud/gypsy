@@ -102,6 +102,7 @@ object RoomActor {
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
 //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
+            /**每个房间都有一个自己的gird**/
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
 
