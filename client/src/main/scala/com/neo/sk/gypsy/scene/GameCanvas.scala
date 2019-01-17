@@ -497,7 +497,7 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawWhenDead(playerMap:Map[String,Player], msg:Protocol.UserDeadMessage) = {
+  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
@@ -519,7 +519,7 @@ class GameCanvas(canvas: Canvas,
     //    DrawLeft = Width*0.56+Width*0.12
     DrawLeft = Width*0.56
 //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
