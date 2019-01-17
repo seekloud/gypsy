@@ -13,6 +13,7 @@ object GameConfig {
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
+  val initSpeed = 40
   val acceleration  = 2
   //质量转半径率
   val mass2rRate = 6
@@ -25,11 +26,11 @@ object GameConfig {
   //最小分裂大小
   val splitLimit = 30
   //分裂初始速度
-  val splitBaseSpeed = 40
+  val splitBaseSpeed = 50
   //食物质量
-  val foodMass:Short = 1
+  val foodMass:Short = 2
   //食物池
-  var foodPool = 300
+  var foodPool = 150
   //病毒数量
   var virusNum:Int = 8
   //病毒质量上限
