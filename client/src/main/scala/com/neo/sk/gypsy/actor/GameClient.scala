@@ -167,7 +167,7 @@ object GameClient {
           Behaviors.same
 
         //只针对某个死亡玩家发送的死亡消息
-        case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+        case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
           if(deadId == GameHolder.myId){
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
@@ -244,9 +244,10 @@ object GameClient {
 
 
         //某个用户离开
-        case Protocol.PlayerLeft(id,name) =>
+        case Protocol.PlayerLeft(id) =>
           ClientBoot.addToPlatform{
-            grid.removePlayer(id)
+            grid.removePlayer(grid.playerByte2IdMap(id))
+            grid.playerByte2IdMap -= id
             if(id == GameHolder.myId){
               gameHolder.gameClose
             }
@@ -390,7 +391,7 @@ object GameClient {
           Behaviors.same
 
         //只针对某个死亡玩家发送的死亡消息
-        case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+        case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
           if(deadId == BotHolder.botId){
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
@@ -473,9 +474,10 @@ object GameClient {
 
 
         //某个用户离开
-        case Protocol.PlayerLeft(id,name) =>
+        case Protocol.PlayerLeft(id) =>
           ClientBoot.addToPlatform{
-            grid.removePlayer(id)
+            grid.removePlayer(grid.playerByte2IdMap(id))
+            grid.playerByte2IdMap -= id
             if(id == BotHolder.botId){
               botHolder.gameClose
             }

@@ -161,7 +161,7 @@ class GameHolder(replay:Boolean = false) {
       case GameState.play if myId!= ""=>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
-        drawTopView.drawWhenDead(grid.playerMap,deadInfo.get)
+        drawTopView.drawWhenDead(deadInfo.get)
 //        drawTopView.drawEcharts()
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
@@ -387,7 +387,7 @@ class GameHolder(replay:Boolean = false) {
 //        println(s"myID:$myId")
 
       case m:Protocol.KC =>
-        if(grid.playerByte2IdMap.get(m.id.get).isDefined){
+        if(grid.playerByte2IdMap.get(m.id.get).isDefined && m.id.isDefined){
           val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addActionWithFrame(ID,m)
@@ -395,7 +395,7 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case m:Protocol.MP =>
-        if(grid.playerByte2IdMap.get(m.id.get).isDefined){
+        if(grid.playerByte2IdMap.get(m.id.get).isDefined && m.id.isDefined){
           val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addMouseActionWithFrame(ID,m)
@@ -465,7 +465,7 @@ class GameHolder(replay:Boolean = false) {
         )
 
         //只针对自己死亡发送的死亡消息
-      case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+      case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
         if(deadId == myId){
           Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
@@ -574,10 +574,13 @@ class GameHolder(replay:Boolean = false) {
         gameState = GameState.allopatry
 
         //某个用户离开
-      case Protocol.PlayerLeft(id,name) =>
-        grid.removePlayer(id)
-        if(id == myId){
-          gameClose
+      case Protocol.PlayerLeft(id) =>
+        if(grid.playerByte2IdMap.get(id).isDefined){
+          grid.removePlayer(grid.playerByte2IdMap(id))
+          grid.playerByte2IdMap -= id
+          if(id == myId){
+            gameClose
+          }
         }
 
       case Protocol.DecodeEvent(data)=>
@@ -642,9 +645,9 @@ class GameHolder(replay:Boolean = false) {
         if(killMsg.deadPlayer.id != myId){
           if(!isDead){
             isDead = true
-            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
+            killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }else{
-            killList :+=(200,grid.playerMap.get(killMsg.killerId).get.name,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
+            killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }
           if(killMsg.killerId == myId){
             Shortcut.playMusic("godlikeM")
@@ -661,7 +664,7 @@ class GameHolder(replay:Boolean = false) {
           }
         }else{
           //根据map找到killerName
-          val deadMsg = UserDeadMessage(killMsg.killerId, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          val deadMsg = UserDeadMessage(killMsg.killerName, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷
