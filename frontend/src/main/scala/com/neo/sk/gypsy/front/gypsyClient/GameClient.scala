@@ -195,7 +195,7 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-        if(player.id.startsWith("g") && eaten.nonEmpty){
+        if(player.id.startsWith("user") && eaten.nonEmpty){
           val score = player.cells.map(_.newmass).toList.sum
           println(s"${player.id} ${frameCount} ==> ${eaten.keySet} $score ")
         }
