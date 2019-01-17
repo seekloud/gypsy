@@ -270,9 +270,9 @@ trait Grid {
 //      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      if(System.currentTimeMillis() - player.lastSplit > 1500){
+   //   if(System.currentTimeMillis() - player.lastSplit > 1500){
         target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
-      }
+   //   }
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
