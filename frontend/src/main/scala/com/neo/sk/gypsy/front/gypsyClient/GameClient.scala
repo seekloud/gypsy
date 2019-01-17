@@ -443,6 +443,13 @@ class GameClient (override val boundary: Point) extends Grid {
     deadPlayerMap=Map.empty[Long,Player]
   }
 
+  override def clearAllData() = {
+    super.clearAllData
+    playerByte2IdMap.clear()
+    currentRank = List.empty[RankInfo]
+  }
+
+
   override def getActionEventMap(frame: Int): List[GameEvent] = {List.empty}
 
   override def getGameEventMap(frame: Int): List[Protocol.GameEvent] = {List.empty}

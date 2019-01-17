@@ -499,7 +499,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         if(player.id.startsWith("user") && eaten.nonEmpty){
-            val score = player.cells.map(_.newmass).toList.sum
+            val score = newCells.map(_.newmass).toList.sum
             println(s"${player.id} ${frameCount} ==> ${eaten.keySet}  $score ")
         }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
