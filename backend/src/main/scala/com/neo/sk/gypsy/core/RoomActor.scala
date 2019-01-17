@@ -454,7 +454,7 @@ object RoomActor {
             if(FirstPlayer.score > VictoryScore){
               ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.k,FirstPlayer.score)
             }
-            println(s"${grid.frameCount} CURRENT Rank  ${FirstPlayer}  ")
+//            println(s"${grid.frameCount} CURRENT Rank  ${FirstPlayer}  ")
           }
 
           val feedapples = grid.getNewApples

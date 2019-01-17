@@ -167,6 +167,7 @@ class GameClient (override val boundary: Point) extends Grid {
   override def checkPlayerFoodCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
+        var eaten  = Map[Point, Short]()
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
@@ -179,6 +180,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   newMass = (newMass+foodMass).toShort
                   newRadius = Mass2Radius(newMass)
                   food -= p
+                  eaten += (p->color)
                   if (newProtected)
                   //吃食物后取消保护
                     newProtected = false
@@ -193,6 +195,10 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
+        if(player.id.startsWith("g") && eaten.nonEmpty){
+          val score = player.cells.map(_.newmass).toList.sum
+          println(s"${player.id} ${frameCount} ==> ${eaten.keySet} $score ")
+        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
