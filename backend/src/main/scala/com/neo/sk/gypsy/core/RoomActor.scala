@@ -250,8 +250,10 @@ object RoomActor {
 
           grid.removePlayer(playerInfo.playerId)
           /**移除playerId2ByteMap**/
-          grid.playerId2ByteMap -= playerInfo.playerId
-          dispatch(subscribersMap)(Protocol.PlayerLeft(playerInfo.playerId, playerInfo.nickname))
+          if(grid.playerId2ByteMap.get(playerInfo.playerId).isDefined){
+            dispatch(subscribersMap)(Protocol.PlayerLeft(grid.playerId2ByteMap(playerInfo.playerId)))
+            grid.playerId2ByteMap -= playerInfo.playerId
+          }
           try{
             // 添加离开事件
             val leftballId = userMap(playerInfo.playerId)._2
