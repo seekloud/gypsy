@@ -13,10 +13,10 @@ import com.neo.sk.gypsy.holder.BotHolder
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
-
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
+import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
 
 /**
   * @author zhaoyin
@@ -212,13 +212,45 @@ object GameClient {
           Behaviors.same
 
 
-        case Protocol.UserMerge(id,player)=>
-          if(grid.playerByte2IdMap.get(id).isDefined){
+        case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
-              val playerId = grid.playerByte2IdMap(id)
-              grid.playerMap = grid.playerMap - playerId + (playerId ->player)
+              grid.playerMap = grid.playerMap.map{player=>
+                if(playerMap.get(player._1).nonEmpty){
+                  val mergeCells = playerMap.get(player._1).get
+                  val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
+                    var newRadius = cell.radius
+                    var newM = cell.newmass
+                    mergeCells.map{merge=>
+                      if(cell.id == merge._1){
+                        val cellOp = player._2.cells.filter(_.id == merge._2).headOption
+                        if(cellOp.isDefined){
+                          val cell2 = cellOp.get
+                          newM = (newM + cell2.newmass).toShort
+                          newRadius = Mass2Radius(newM)
+                        }
+                      }else if(cell.id == merge._2){
+                        val cellOp = player._2.cells.filter(_.id == merge._1).headOption
+                        newM = 0
+                        newRadius = 0
+                      }
+                    }
+                    cell.copy(newmass = newM,radius = newRadius)
+                  }.filterNot(e=> e.newmass <= 0 && e.mass <= 0)
+                  val length = newCells.length
+                  val newX = newCells.map(_.x).sum / length
+                  val newY = newCells.map(_.y).sum / length
+                  val left = newCells.map(a => a.x - a.radius).min
+                  val right = newCells.map(a => a.x + a.radius).max
+                  val bottom = newCells.map(a => a.y - a.radius).min
+                  val top = newCells.map(a => a.y + a.radius).max
+                  (player._1 -> Game.Player(player._2.id,player._2.name,player._2.color,newX,newY,player._2.targetX,player._2.targetY,player._2.kill,player._2.protect,player._2.lastSplit,
+                    right-left,top-bottom,newCells,player._2.startTime))
+                }else{
+                  player
+                }
+              }
             }
-          }
+
           Behaviors.same
 
         case Protocol.UserCrash(crashMap)=>
@@ -446,13 +478,45 @@ object GameClient {
           Behaviors.same
 
 
-        case Protocol.UserMerge(id,player)=>
-          if(grid.playerByte2IdMap.get(id).isDefined){
+        case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
-              val playerId = grid.playerByte2IdMap(id)
-              grid.playerMap = grid.playerMap - playerId + (playerId ->player)
+              grid.playerMap = grid.playerMap.map{player=>
+                if(playerMap.get(player._1).nonEmpty){
+                  val mergeCells = playerMap.get(player._1).get
+                  val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
+                    var newRadius = cell.radius
+                    var newM = cell.newmass
+                    mergeCells.map{merge=>
+                      if(cell.id == merge._1){
+                        val cellOp = player._2.cells.filter(_.id == merge._2).headOption
+                        if(cellOp.isDefined){
+                          val cell2 = cellOp.get
+                          newM = (newM + cell2.newmass).toShort
+                          newRadius = Mass2Radius(newM)
+                        }
+                      }else if(cell.id == merge._2){
+                        val cellOp = player._2.cells.filter(_.id == merge._1).headOption
+                        newM = 0
+                        newRadius = 0
+                      }
+                    }
+                    cell.copy(newmass = newM,radius = newRadius)
+                  }.filterNot(e=> e.newmass <= 0 && e.mass <= 0)
+                  val length = newCells.length
+                  val newX = newCells.map(_.x).sum / length
+                  val newY = newCells.map(_.y).sum / length
+                  val left = newCells.map(a => a.x - a.radius).min
+                  val right = newCells.map(a => a.x + a.radius).max
+                  val bottom = newCells.map(a => a.y - a.radius).min
+                  val top = newCells.map(a => a.y + a.radius).max
+                  (player._1 -> Game.Player(player._2.id,player._2.name,player._2.color,newX,newY,player._2.targetX,player._2.targetY,player._2.kill,player._2.protect,player._2.lastSplit,
+                    right-left,top-bottom,newCells,player._2.startTime))
+                }else{
+                  player
+                }
+              }
             }
-          }
+
           Behaviors.same
 
         case Protocol.UserCrash(crashMap)=>

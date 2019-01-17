@@ -69,7 +69,7 @@ object Protocol {
 
   case class MatchRoomError() extends GameMessage
 
-  case class UserMerge(id:Byte,player: Player)extends GameMessage
+  case class UserMerge(playerMap:Map[Byte,List[(Long,Long)]])extends GameMessage
 
   case class UserCrash(crashMap:Map[Byte,List[Cell]]) extends GameMessage
 
