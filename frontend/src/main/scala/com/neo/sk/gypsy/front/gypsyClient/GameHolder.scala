@@ -387,7 +387,7 @@ class GameHolder(replay:Boolean = false) {
 //        println(s"myID:$myId")
 
       case m:Protocol.KC =>
-        if(m.id.isDefined){
+        if(grid.playerByte2IdMap.get(m.id.get).isDefined && m.id.isDefined){
           val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addActionWithFrame(ID,m)
@@ -395,7 +395,7 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case m:Protocol.MP =>
-        if(m.id.isDefined){
+        if(grid.playerByte2IdMap.get(m.id.get).isDefined && m.id.isDefined){
           val ID = grid.playerByte2IdMap(m.id.get)
           if(!myId.equals(ID) || usertype == -1){
             grid.addMouseActionWithFrame(ID,m)
