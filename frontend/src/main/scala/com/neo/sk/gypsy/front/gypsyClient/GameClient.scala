@@ -212,6 +212,8 @@ class GameClient (override val boundary: Point) extends Grid {
                   newMass = (newMass + p.mass).toShort
                   newRadius = Mass2Radius(newMass)
                   massList = massList.filterNot(l => l == p)
+                  if(newProtected)
+                    newProtected = false
                 }
             }
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)

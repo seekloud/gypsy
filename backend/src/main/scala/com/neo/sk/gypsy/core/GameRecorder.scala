@@ -68,7 +68,10 @@ object GameRecorder {
                                   )
 
   private[this] def switchBehavior(ctx: ActorContext[Command],
-                                   behaviorName: String, behavior: Behavior[Command], durationOpt: Option[FiniteDuration] = None,timeOut: TimeOut  = TimeOut("busy time error"))
+                                   behaviorName: String,
+                                   behavior: Behavior[Command],
+                                   durationOpt: Option[FiniteDuration] = None,
+                                   timeOut: TimeOut  = TimeOut("busy time error"))
                                   (implicit stashBuffer: StashBuffer[Command],
                                     timer:TimerScheduler[Command]) = {
     //log.debug(s"${ctx.self.path} becomes $behaviorName behavior.")
