@@ -78,7 +78,7 @@ object GameConfig {
   val CanvasHeight = 600
 
 //  胜利分数
-  val VictoryScore = 500
+  val VictoryScore = 200
 
 
 }
