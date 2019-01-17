@@ -99,7 +99,7 @@ trait Grid {
     frameCount += 1
   }
 
-  //统计分数跟新
+  //统计分数更新（暂时没用上）
   def updateScoreList() = {
     if(playerMap.get(myId).isDefined){
       val myInfo = playerMap(myId)
@@ -530,7 +530,7 @@ trait Grid {
 //        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
 //        playerDetails ::= player
         if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),width,height,Point(player.x,player.y),player.width,player.height)){
-          if(player.id != myId) println("y:  " + (currentPlayerWH._2 - height) + "otherY:  " + ( player.y + player.height/2 ) )
+//          if(player.id != myId) println("y:  " + (currentPlayerWH._2 - height) + "otherY:  " + ( player.y + player.height/2 ) )
           playerDetails ::= player
         }
     }
@@ -543,6 +543,43 @@ trait Grid {
       Scale
      // allPlayerPosition
     )
+  }
+
+
+  def clearAllData = {
+//    food
+//    virusMap
+//    playerMap
+//    actionMap
+//    mouseActionMap
+//    massList
+//
+//    ActionEventMap
+//    GameEventMap
+//    deadPlayerMap
+//
+//    tick
+//    Scale
+
+    myId = ""
+    //grid中数据清除
+    food = Map[Point, Short]()
+    playerMap = Map.empty[String,Player]
+    virusMap = Map.empty[Long,Virus]
+    massList = List[Mass]()
+    deadPlayerMap=Map.empty[Long,Player]
+    //动作清除
+    actionMap = Map.empty[Int, Map[String, KC]]
+    mouseActionMap = Map.empty[Int, Map[String, MP]]
+
+    //event记录清除
+    ActionEventMap.clear()
+    GameEventMap.clear()
+
+    tick = 0
+    Scale = 1.0
+    
+
   }
 
   def getAllGridData: Protocol.GridDataSync

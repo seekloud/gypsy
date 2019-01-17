@@ -77,6 +77,7 @@ class GameHolder(replay:Boolean = false) {
   //游戏状态
   private[this] var gameState = GameState.play
   var deadInfo :Option[Protocol.UserDeadMessage] = None
+  var victoryInfo :Option[Protocol.VictoryMsg] = None
 
   private[this] val watchKeys = Set(
     KeyCode.E,
@@ -163,6 +164,9 @@ class GameHolder(replay:Boolean = false) {
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(grid.playerMap,deadInfo.get)
 //        drawTopView.drawEcharts()
+      case GameState.victory if victoryInfo.isDefined =>
+        drawTopView.drawVictory(victoryInfo.get)
+
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
         gameClose
@@ -217,7 +221,15 @@ class GameHolder(replay:Boolean = false) {
               val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
               webSocketClient.sendMsg(reliveMsg)
             }
-          }else{
+          }else if(gameState ==  GameState.victory){
+            if (e.keyCode == KeyCode.Space) {
+              println(s"down+${e.keyCode.toString} Press After Success!")
+              keyInFlame = true
+              val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+//              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+              webSocketClient.sendMsg(rejoinMsg)
+            }
+          } else{
             if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
@@ -304,7 +316,6 @@ class GameHolder(replay:Boolean = false) {
       var zoom = (30.0, 30.0)
       val data=grid.getGridData(myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
       val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
-//      println(data.playerDetails.head.cells.head.mass+ "   "+ data.playerDetails.head.cells.head.newmass)
       data.playerDetails.find(_.id == myId) match {
         case Some(p) =>
           firstCome=false
@@ -387,18 +398,24 @@ class GameHolder(replay:Boolean = false) {
 //        println(s"myID:$myId")
 
       case m:Protocol.KC =>
-        if(grid.playerByte2IdMap.get(m.id.get).isDefined){
-          val ID = grid.playerByte2IdMap(m.id.get)
-          if(!myId.equals(ID) || usertype == -1){
-            grid.addActionWithFrame(ID,m)
+        if(m.id.isDefined){
+          val mid = m.id.get
+          if(grid.playerByte2IdMap.get(mid).isDefined){
+            val ID = grid.playerByte2IdMap(mid)
+            if(!myId.equals(ID) || usertype == -1){
+              grid.addActionWithFrame(ID,m)
+            }
           }
         }
 
       case m:Protocol.MP =>
-        if(grid.playerByte2IdMap.get(m.id.get).isDefined){
-          val ID = grid.playerByte2IdMap(m.id.get)
-          if(!myId.equals(ID) || usertype == -1){
-            grid.addMouseActionWithFrame(ID,m)
+        if(m.id.isDefined){
+          val mid = m.id.get
+          if(grid.playerByte2IdMap.get(mid).isDefined){
+            val ID = grid.playerByte2IdMap(mid)
+            if(!myId.equals(ID) || usertype == -1){
+              grid.addMouseActionWithFrame(ID,m)
+            }
           }
         }
 
@@ -419,7 +436,7 @@ class GameHolder(replay:Boolean = false) {
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
       case Protocol.AddVirus(virus) =>
-        println(s"接收新病毒 new Virus ${virus}")
+//        println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
       case Protocol.RemoveVirus(virus) =>
@@ -444,14 +461,14 @@ class GameHolder(replay:Boolean = false) {
 //        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
-        println(s"${player.id}  加入游戏 ${grid.frameCount}")
-        //防止复活后又发了一条JOin消息
+        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${myId} ")
+        //防止复活后又发了一条Join消息
         if(!grid.playerMap.contains(player.id)){
           grid.playerMap += (player.id -> player)
           grid.playerByte2IdMap += (id-> player.id)
         }
         if(myId == player.id){
-          if(gameState == GameState.dead){
+          if(gameState == GameState.dead || gameState == GameState.victory){
             println(s"发送复活确认")
 //            webSocketClient.sendMsg(ReLiveAck(id))
             gameState = GameState.play
@@ -523,9 +540,7 @@ class GameHolder(replay:Boolean = false) {
 ////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
 
       case Protocol.UserCrash(crashMap)=>
-//        println(s"BeforeCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)}  )} }===============  ")
         crashMap.foreach{p=>
-//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerMap.contains(p._1)){
             val player = grid.playerMap(p._1)
             var newCells = player.cells
@@ -569,6 +584,12 @@ class GameHolder(replay:Boolean = false) {
 //            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
 //          }
 //        }
+
+      case msg@VictoryMsg(id,name,kill,score) =>
+        println(s"Receive Victory Msg $id,$name,$kill,$score")
+        victoryInfo = Some(msg)
+        gameState = GameState.victory
+
       case Protocol.RebuildWebSocket =>
         println("存在异地登录")
         gameState = GameState.allopatry
