@@ -472,6 +472,8 @@ class GameHolder(replay:Boolean = false) {
           if(gameState == GameState.dead || gameState == GameState.victory){
             println(s"发送复活确认")
 //            webSocketClient.sendMsg(ReLiveAck(id))
+            deadInfo = None
+            victoryInfo = None
             gameState = GameState.play
           }
           drawTopView.cleanCtx()

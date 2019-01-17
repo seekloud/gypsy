@@ -256,28 +256,7 @@ object RoomActor {
         case Victory(id,name,kill,score) =>
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,score))
           grid.clearAllData
-          isclear = true
-
-          if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
-            if(playerMap.size + botMap.size < AppSettings.botNum){
-              val needAdd = AppSettings.botNum - playerMap.size - botMap.size
-              createBotActor(needAdd,roomId,ctx,grid)
-
-//              for(i <- 1 to needAdd ){
-//                val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-//                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
-//                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-//              }
-              botMap.foreach{bot =>
-                ctx.self ! ReStart(bot._1)
-              }
-
-            }else{
-              botMap.foreach{bot =>
-                ctx.self ! ReStart(bot._1)
-              }
-            }
-          }
+//          isclear = true
 //          if(grid.ReLiveMap.nonEmpty){
 //
 //            grid.ReLiveMap.foreach{live =>
@@ -291,6 +270,28 @@ object RoomActor {
         case UserReJoin(id,frame) =>
           log.info(s"RoomActor Receive Rejoin from $id *******************")
           ctx.self ! ReStart(id)
+          if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
+            if(playerMap.size + botMap.size < AppSettings.botNum){
+              val needAdd = AppSettings.botNum - playerMap.size - botMap.size
+              createBotActor(needAdd,roomId,ctx,grid)
+
+              //              for(i <- 1 to needAdd ){
+              //                val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+              //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
+              //                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+              //              }
+              botMap.foreach{bot =>
+                ctx.self ! ReStart(bot._1)
+              }
+
+            }else{
+              botMap.foreach{bot =>
+                ctx.self ! ReStart(bot._1)
+              }
+            }
+          }
+
+
           Behaviors.same
 
         case UserActor.Left(playerInfo) =>
