@@ -391,7 +391,7 @@ object GameClient {
           Behaviors.same
 
         //只针对某个死亡玩家发送的死亡消息
-        case msg@Protocol.UserDeadMessage(killerId,deadId,killNum,score,lifeTime)=>
+        case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
           if(deadId == BotHolder.botId){
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)

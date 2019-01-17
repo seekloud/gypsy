@@ -705,7 +705,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
 
-  def drawDeadState(playerMap:Map[String,Player],msg:Protocol.UserDeadMessage) = {
+  def drawDeadState(msg:Protocol.UserDeadMessage) = {
     val ctx = ls.humanCtx
 
     ctx.setFill(Color.web("#000"))
@@ -729,7 +729,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     //    DrawLeft = Width*0.56+Width*0.12
     DrawLeft = Width*0.56
     //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
-    ctx.fillText(s"${playerMap.get(msg.killerId).get.name}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
@@ -767,7 +767,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       case GameState.play =>
         drawPlayState()
       case GameState.dead =>
-        drawDeadState(grid.playerMap,deadInfo.get)
+        drawDeadState(deadInfo.get)
       case GameState.allopatry =>
         drawFinishState()
       case _ =>
