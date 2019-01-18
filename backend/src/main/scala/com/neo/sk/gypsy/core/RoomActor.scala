@@ -123,7 +123,7 @@ object RoomActor {
 
             if(AppSettings.addBotPlayer) {
               createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
-
+              println(s" BOTNUM ==>${AppSettings.botNum - 1}  ")
 //              for(b <- 1 until AppSettings.botNum ){
 //                val id = "bot_"+roomId + "_200"+ b
 //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
@@ -625,9 +625,9 @@ object RoomActor {
     if(AppSettings.starNames.isEmpty){
       "Star"+"-"+index
     }else if(nameNum < AppSettings.starNames.length){
-      AppSettings.starNames(nameNum)
+      AppSettings.starNames(nameNum) + "-"+index
     }else{
-      AppSettings.starNames.head
+      AppSettings.starNames.head + "-"+index
     }
 
   }
