@@ -272,13 +272,13 @@ class GameServer(override val boundary: Point) extends Grid {
 //          }
 //          加入待复活列表
           if(player.id.startsWith("bot_")){
-            var playerNum=0
-            playerMap.foreach(i=>playerNum+=1)
+            val playerNum=playerMap.keys.size
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
                   println(s"$bot not relive")
                   bot ! BotActor.KillBot
+                  AppSettings.starNames += (player.name -> false)
                 case None =>
               }
             }
