@@ -12,6 +12,7 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
+import scala.collection.mutable
 
 import scala.math._
 import com.neo.sk.gypsy.shared.ptcl.{Game, _}
@@ -510,9 +511,15 @@ class GameHolder(replay:Boolean = false) {
 //        }
 
       case Protocol.UserMerge(playerMap)=>
-          grid.playerMap = grid.playerMap.map{player=>
-            if(playerMap.get(player._1).nonEmpty){
-              val mergeCells = playerMap.get(player._1).get
+        val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+        playerMap.foreach{player =>
+          if(grid.playerByte2IdMap.get(player._1).isDefined){
+            playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+          }
+        }
+        grid.playerMap = grid.playerMap.map{ player =>
+            if(playerHashMap.get(player._1).nonEmpty){
+              val mergeCells = playerHashMap.get(player._1).get
               val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                 var newRadius = cell.radius
                 var newM = cell.newmass

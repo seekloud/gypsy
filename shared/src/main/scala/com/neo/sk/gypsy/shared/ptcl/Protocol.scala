@@ -56,9 +56,11 @@ object Protocol {
   case class MyRank(rank:RankInfo) extends GameMessage
 
   case class PlayerRestart(id:String) extends GameMessage
-  /**用户从playerMap中删除的两种可能：1、用户离开房间 2、用户死亡**/
+
+  /**玩家从playerMap中删除的两种可能：**/
+  /**1、玩家死亡**/
   case class UserDeadMessage(killerName:String, deadId:String, killNum:Short, score:Short, lifeTime:Long) extends GameMessage
-  //只有用户离开房间时候发送
+  /** 2、玩家离开房间**/
   case class PlayerLeft(id: Byte) extends GameMessage
 
   case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
@@ -69,8 +71,10 @@ object Protocol {
 
   case class MatchRoomError() extends GameMessage
 
+  /**cell改变事件：**/
+  /**1、玩家自己融合**/
   case class UserMerge(playerMap:Map[Byte,List[(Long,Long)]])extends GameMessage
-
+  /**1、玩家和其他玩家融合**/
   case class UserCrash(crashMap:Map[Byte,List[Cell]]) extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage

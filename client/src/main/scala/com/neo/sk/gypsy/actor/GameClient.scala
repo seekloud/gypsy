@@ -18,6 +18,8 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
 
+import scala.collection.mutable
+
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -214,9 +216,15 @@ object GameClient {
 
         case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
+              val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+              playerMap.foreach{player =>
+                if(grid.playerByte2IdMap.get(player._1).isDefined){
+                  playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+                }
+              }
               grid.playerMap = grid.playerMap.map{player=>
-                if(playerMap.get(player._1).nonEmpty){
-                  val mergeCells = playerMap.get(player._1).get
+                if(playerHashMap.get(player._1).nonEmpty){
+                  val mergeCells = playerHashMap.get(player._1).get
                   val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                     var newRadius = cell.radius
                     var newM = cell.newmass
@@ -480,9 +488,15 @@ object GameClient {
 
         case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
+              val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+              playerMap.foreach{player =>
+                if(grid.playerByte2IdMap.get(player._1).isDefined){
+                  playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+                }
+              }
               grid.playerMap = grid.playerMap.map{player=>
-                if(playerMap.get(player._1).nonEmpty){
-                  val mergeCells = playerMap.get(player._1).get
+                if(playerHashMap.get(player._1).nonEmpty){
+                  val mergeCells = playerHashMap.get(player._1).get
                   val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                     var newRadius = cell.radius
                     var newM = cell.newmass
