@@ -593,13 +593,23 @@ case class DrawGame(
         ctx.save()
         ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
         ctx.fillStyle = "#FFFF33"
-//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        if(score.n.length>5)
+          {
+            drawTextLine(s"【${index}】: ${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+          }
+        else{
+          drawTextLine(s"【${index}】: ${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+        if(score.n.length>5)
+        {
+          drawTextLine(s"【${index}】: ${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
+        else{
+          drawTextLine(s"【${index}】: ${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
 

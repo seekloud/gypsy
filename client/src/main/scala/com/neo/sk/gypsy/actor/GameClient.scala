@@ -18,6 +18,8 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
 
+import scala.collection.mutable
+
 /**
   * @author zhaoyin
   * 2018/10/30  11:44 AM
@@ -160,8 +162,10 @@ object GameClient {
 
         case Protocol.PlayerSplit(player) =>
           ClientBoot.addToPlatform{
-            player.keys.foreach(item =>
-              grid.playerMap += (item -> player(item))
+            player.keys.foreach(item =>{
+              if(grid.playerByte2IdMap.get(item).isDefined)
+                grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
+            }
             )
           }
           Behaviors.same
@@ -212,9 +216,15 @@ object GameClient {
 
         case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
+              val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+              playerMap.foreach{player =>
+                if(grid.playerByte2IdMap.get(player._1).isDefined){
+                  playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+                }
+              }
               grid.playerMap = grid.playerMap.map{player=>
-                if(playerMap.get(player._1).nonEmpty){
-                  val mergeCells = playerMap.get(player._1).get
+                if(playerHashMap.get(player._1).nonEmpty){
+                  val mergeCells = playerHashMap.get(player._1).get
                   val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                     var newRadius = cell.radius
                     var newM = cell.newmass
@@ -253,15 +263,16 @@ object GameClient {
 
         case Protocol.UserCrash(crashMap)=>
           crashMap.map{p=>
-            if(grid.playerMap.get(p._1).nonEmpty){
+            if(grid.playerByte2IdMap.get(p._1).isDefined){
               ClientBoot.addToPlatform {
-                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+                val playerId = grid.playerByte2IdMap(p._1)
+                var newPlayer = grid.playerMap.getOrElse(playerId, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
                 var newCells = newPlayer.cells
                 p._2.map { cell =>
                   newCells = cell :: newCells.filterNot(_.id == cell.id)
                 }
                 newPlayer = newPlayer.copy(cells = newCells)
-                grid.playerMap = grid.playerMap - p._1 + (p._1 -> newPlayer)
+                grid.playerMap = grid.playerMap - playerId + (playerId -> newPlayer)
               }
             }
           }
@@ -418,7 +429,8 @@ object GameClient {
         case Protocol.PlayerSplit(player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
-              grid.playerMap += (item -> player(item))
+              if(grid.playerByte2IdMap.get(item).isDefined)
+                grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
             )
           }
           Behaviors.same
@@ -476,9 +488,15 @@ object GameClient {
 
         case Protocol.UserMerge(playerMap)=>
             ClientBoot.addToPlatform{
+              val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+              playerMap.foreach{player =>
+                if(grid.playerByte2IdMap.get(player._1).isDefined){
+                  playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+                }
+              }
               grid.playerMap = grid.playerMap.map{player=>
-                if(playerMap.get(player._1).nonEmpty){
-                  val mergeCells = playerMap.get(player._1).get
+                if(playerHashMap.get(player._1).nonEmpty){
+                  val mergeCells = playerHashMap.get(player._1).get
                   val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                     var newRadius = cell.radius
                     var newM = cell.newmass
@@ -517,15 +535,16 @@ object GameClient {
 
         case Protocol.UserCrash(crashMap)=>
           crashMap.map{p=>
-            if(grid.playerMap.get(p._1).nonEmpty){
+            if(grid.playerByte2IdMap.get(p._1).isDefined){
               ClientBoot.addToPlatform {
-                var newPlayer = grid.playerMap.getOrElse(p._1, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+                val playerId = grid.playerByte2IdMap(p._1)
+                var newPlayer = grid.playerMap.getOrElse(playerId, Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
                 var newCells = newPlayer.cells
                 p._2.map { cell =>
                   newCells = cell :: newCells.filterNot(_.id == cell.id)
                 }
                 newPlayer = newPlayer.copy(cells = newCells)
-                grid.playerMap = grid.playerMap - p._1 + (p._1 -> newPlayer)
+                grid.playerMap = grid.playerMap - playerId + (playerId -> newPlayer)
               }
             }
           }
