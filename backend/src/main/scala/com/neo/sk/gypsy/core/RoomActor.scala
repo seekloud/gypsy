@@ -114,6 +114,7 @@ object RoomActor {
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
 //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
+            /**每个房间都有一个自己的gird**/
             val grid = new GameServer(bounds)
             grid.setRoomId(roomId)
 
@@ -123,7 +124,6 @@ object RoomActor {
 
             if(AppSettings.addBotPlayer) {
               createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
-              println(s" BOTNUM ==>${AppSettings.botNum - 1}  ")
 //              for(b <- 1 until AppSettings.botNum ){
 //                val id = "bot_"+roomId + "_200"+ b
 //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
@@ -621,7 +621,18 @@ object RoomActor {
     }.upcast[BotActor.Command]
   }
 
-  private def getStarName(nameNum:Int,index:Int) = {
+
+/*  for(b <- 1 until AppSettings.botNum ){
+    val id = "bot_"+roomId + "_100"+ b
+    //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
+    val botNum = AppSettings.starNames.values.toList.filter(i=>i==false).length
+    val botName = AppSettings.starNames.filter(i=>i._2==false).keys.toList(new Random(System.nanoTime()).nextInt(botNum-1))
+    AppSettings.starNames += (botName -> true)
+    getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+  }*/
+
+
+/*  private def getStarName(nameNum:Int,index:Int) = {
     if(AppSettings.starNames.isEmpty){
       "Star"+"-"+index
     }else if(nameNum < AppSettings.starNames.length){
@@ -630,12 +641,17 @@ object RoomActor {
       AppSettings.starNames.head + "-"+index
     }
 
-  }
+  }*/
+
 
   private def createBotActor(needNum:Int,roomId:Long,ctx: ActorContext[RoomActor.Command], grid: GameServer) = {
     for( i <- 1 to needNum){
       val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
+//      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
+      val botNum = AppSettings.starNames.values.toList.count(i=> !i )
+      val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(new Random(System.nanoTime()).nextInt(botNum-1))
+//      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
+      AppSettings.starNames += (botName -> true)
       getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
     }
 
