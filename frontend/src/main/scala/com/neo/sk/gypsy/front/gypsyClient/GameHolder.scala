@@ -620,7 +620,7 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerByte2IdMap.get(id).isDefined){
           grid.removePlayer(grid.playerByte2IdMap(id))
           grid.playerByte2IdMap -= id
-          if(id == myId){
+          if(grid.playerByte2IdMap(id) == myId){
             gameClose
           }
         }
