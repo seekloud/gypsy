@@ -247,12 +247,13 @@ class GameClient (override val boundary: Point) extends Grid {
       case p: Mass =>
         if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
           val (mx,my)=normalization(p.targetX,p.targetY)
-          val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-          val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+          val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed * initVirusSpeed) /(newMass+p.mass)
+          val vy = (ny*newMass*newSpeed + my*p.mass*p.speed * initVirusSpeed) /(newMass+p.mass)
           hasMoved =true
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
           newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
+          println(s"vx:  $vx, vy:   $vy,  newspeed:  $newSpeed")
           newTargetX = vx.toShort
           newTargetY = vy.toShort
           massList = massList.filterNot(l => l == p)
@@ -265,7 +266,6 @@ class GameClient (override val boundary: Point) extends Grid {
       val v1 = vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
       List(v1)
     }else{
-
       val v1 =vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
       List(v1)
     }

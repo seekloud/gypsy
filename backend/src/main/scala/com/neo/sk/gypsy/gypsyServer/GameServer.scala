@@ -219,7 +219,6 @@ class GameServer(override val boundary: Point) extends Grid {
     }
   }
   /**碰撞事件检测**/
-
   override def checkPlayer2PlayerCrash(): Unit = {
     var p2pCrash = false
     var changedPlayers = Map[Byte,List[Cell]]()
@@ -326,6 +325,7 @@ class GameServer(override val boundary: Point) extends Grid {
     }
   }
 
+  /**融合事件检测**/
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
     var mergePlayer = Map[Byte,List[(Long,Long)]]()
@@ -558,8 +558,12 @@ class GameServer(override val boundary: Point) extends Grid {
         case p: Mass =>
           if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
             val (mx,my)=normalization(p.targetX,p.targetY)
-            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+            val vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusSpeed ) /(newMass+p.mass)
+            val vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusSpeed) /(newMass+p.mass)
+//            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
+//            val degree =atan2(vy,vx)
+//            vx = newSpeed * cos(degree)
+//            vy = newSpeed * sin(degree)
             hasMoved =true
             newMass = (newMass + p.mass).toShort
             newRadius = Mass2Radius(newMass)
