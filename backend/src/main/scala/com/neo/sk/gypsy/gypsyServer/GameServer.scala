@@ -328,7 +328,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
-    var mergePlayer = Map[String,List[(Long,Long)]]()
+    var mergePlayer = Map[Byte,List[(Long,Long)]]()
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
@@ -389,7 +389,7 @@ class GameServer(override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge && playerId2ByteMap.get(player.id).isDefined){
           mergeInFlame = true
-          mergePlayer += (player.id -> mergeCell)
+          mergePlayer += (playerId2ByteMap(player.id) -> mergeCell)
         }
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
     }
