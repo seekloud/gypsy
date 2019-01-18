@@ -32,9 +32,9 @@ object GameConfig {
   //食物池
   var foodPool = 150
   //病毒数量
-  var virusNum:Int = 8
+  var virusNum:Int = 30
   //病毒质量上限
-  var virusMassLimit:Int = 200
+  var virusMassLimit:Int = 150
   val shotMass:Short = 10
   val shotSpeed = 100
   //最大分裂个数
@@ -46,7 +46,7 @@ object GameConfig {
   //小球速度衰减率
   val massSpeedDecayRate = 25
 //  病毒衰减速度
-  val virusSpeedDecayRate = 0.3
+  val virusSpeedDecayRate = 0.5
   // 排行版显示玩家数
   val rankShowNum = 10
 
@@ -67,6 +67,9 @@ object GameConfig {
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
+
+  //病毒速度系数
+  val initVirusSpeed = 2
 
   //Level5
   val bigPlayerMass:Short = 500

@@ -6,6 +6,7 @@ import com.neo.sk.gypsy.utils.SessionSupport.SessionConfig
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 import collection.JavaConverters._
+import scala.collection.mutable.Map
 
 /**
   * User: Taoz
@@ -48,7 +49,8 @@ object AppSettings {
 
   val botConfig = appConfig.getConfig("bot")
 //  val starNames = botConfig.getStringList("starName")
-  val starNames = List("水星", "金星", "火星", "木星", "土星", "地球","M78","天王星","海王星","摩羯座","水瓶座")
+  var starNames = Map(("水星",false),("火星",false),("土星",false),("木星",false),("金星",false),("海王星",false),("天王星",false),("冥王星",false),("织女星",false))
+//  val starNames = List("水星", "金星", "火星", "木星", "土星", "地球","M78","天王星","海王星","摩羯座","水瓶座")
   val botNum = botConfig.getInt("botNum")
   val addBotPlayer = botConfig.getBoolean("addBotPlayer")
 

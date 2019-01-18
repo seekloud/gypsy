@@ -12,6 +12,7 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
 import org.scalajs.dom.raw._
+import scala.collection.mutable
 
 import scala.math._
 import com.neo.sk.gypsy.shared.ptcl.{Game, _}
@@ -481,8 +482,10 @@ class GameHolder(replay:Boolean = false) {
         }
 
       case Protocol.PlayerSplit(player) =>
-        player.keys.foreach(item =>
-          grid.playerMap += (item -> player(item))
+        player.keys.foreach(item =>{
+          if(grid.playerByte2IdMap.get(item).isDefined)
+            grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
+        }
         )
 
         //只针对自己死亡发送的死亡消息
@@ -528,9 +531,15 @@ class GameHolder(replay:Boolean = false) {
 //        }
 
       case Protocol.UserMerge(playerMap)=>
-          grid.playerMap = grid.playerMap.map{player=>
-            if(playerMap.get(player._1).nonEmpty){
-              val mergeCells = playerMap.get(player._1).get
+        val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
+        playerMap.foreach{player =>
+          if(grid.playerByte2IdMap.get(player._1).isDefined){
+            playerHashMap.put(grid.playerByte2IdMap(player._1), player._2)
+          }
+        }
+        grid.playerMap = grid.playerMap.map{ player =>
+            if(playerHashMap.get(player._1).nonEmpty){
+              val mergeCells = playerHashMap.get(player._1).get
               val newCells = player._2.cells.sortBy(_.radius).reverse.map{cell=>
                 var newRadius = cell.radius
                 var newM = cell.newmass
@@ -576,8 +585,10 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.UserCrash(crashMap)=>
         crashMap.foreach{p=>
-          if(grid.playerMap.contains(p._1)){
-            val player = grid.playerMap(p._1)
+//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
+          if(grid.playerByte2IdMap.get(p._1).isDefined){
+            val playerId = grid.playerByte2IdMap(p._1)
+            val player = grid.playerMap(playerId)
             var newCells = player.cells
             p._2.foreach{c=>
               newCells = c :: newCells.filterNot(_.id == c.id)
@@ -636,7 +647,7 @@ class GameHolder(replay:Boolean = false) {
         if(grid.playerByte2IdMap.get(id).isDefined){
           grid.removePlayer(grid.playerByte2IdMap(id))
           grid.playerByte2IdMap -= id
-          if(id == myId){
+          if(grid.playerByte2IdMap(id) == myId){
             gameClose
           }
         }

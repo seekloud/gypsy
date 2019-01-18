@@ -192,17 +192,20 @@ trait Grid {
       var newX = v.x
       var newY = v.y
       var newSpeed = v.speed
+      var newMass = vi._2.mass
       if(v.speed!=0){
         newX = (v.x + (nx*v.speed)).toShort
         newY = (v.y + (ny*v.speed)).toShort
         newSpeed = if(v.speed-virusSpeedDecayRate<0) 0f else (v.speed-virusSpeedDecayRate).toFloat
-        val newPoint =ExamBoundary(newX,newY)
+        val newPoint = ExamBoundary(newX,newY)
         newX = newPoint._1
         newY = newPoint._2
+        if(newPoint._3)
+          newMass = 0.toShort
       }
-      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed)
+      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed, mass = newMass)
     }
-    virusMap ++= NewVirus
+    virusMap = NewVirus.filterNot(_._2.mass == 0)
   }
   //更新喷出小球的位置
   def updateMass():Unit = {
@@ -236,22 +239,27 @@ trait Grid {
 
 //边界超越校验
   def ExamBoundary(newX:Short,newY:Short)={
+    var disappear = false
     val x = if(newX>boundary.x){
+      disappear = true
       boundary.x
     } else if(newX<0){
+      disappear = true
       0
     }else{
       newX
     }
     val y = if(newY>boundary.y){
+      disappear = true
       boundary.y
     } else if(newY<0){
+      disappear = true
       0
     }else{
       newY
     }
 
-    (x.toShort ,y.toShort )
+    (x.toShort ,y.toShort,disappear)
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
