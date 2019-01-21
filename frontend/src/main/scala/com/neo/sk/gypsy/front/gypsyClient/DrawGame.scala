@@ -688,7 +688,35 @@ case class DrawGame(
     var DrawLeft = Width*0.35
     var DrawHeight = BaseHeight + Height * 0.1
 
-    if(isVictory){
+    val congratulation =if(isVictory){
+      s"Good Game!  Congratulations to: You~"
+    }else{
+      s"Good Game!  Congratulations to: "
+    }
+    ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
+
+    ctx.save()
+    ctx.fillStyle = Color.Yellow.toString()
+    val winner = s"${msg.name}"
+    ctx.fillText(winner, Width * 0.5 - ctx.measureText(winner).width/2, BaseHeight+Height *0.1 )
+    ctx.restore()
+    DrawHeight = BaseHeight + Height * 0.15
+    ctx.font = s"${Width *0.02}px Comic Sans MS"
+
+    val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+    ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+    //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    ctx.fillStyle=Color.White.toString()
+    DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+
+
+
+/*    if(isVictory){
       val congratulation = s"Good Game!Congratulations to You~"
       ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
       //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
@@ -717,15 +745,8 @@ case class DrawGame(
       ctx.fillText(winner, Width * 0.5 - ctx.measureText(winner).width/2, BaseHeight+Height *0.1 )
       ctx.restore()
       DrawHeight = BaseHeight + Height * 0.15
-      //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
-      //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
-
-      //    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
       ctx.font = s"${Width *0.02}px Comic Sans MS"
 
-//      var DrawLeft = Width*0.35
-//      val DrawHeight = BaseHeight + Height * 0.1
-      //    val WinnerName = msg.name
       val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
       ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
       ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
@@ -736,11 +757,11 @@ case class DrawGame(
       ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
       ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
       ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
-    }
+    }*/
 
     val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
     ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2,DrawHeight + Height*0.07*5)
-//    ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2,BaseHeight + Height * 0.1 + Height*0.07*5)
+
   }
 
 
