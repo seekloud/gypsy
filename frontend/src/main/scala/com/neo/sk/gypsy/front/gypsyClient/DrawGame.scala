@@ -297,7 +297,7 @@ case class DrawGame(
     val rankWidth = this.canvas.width * 0.14
 
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth,56+GameConfig.rankShowNum*17)
+    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth+3,56+GameConfig.rankShowNum*17)
 
     //绘制小地图
     val littleMap = this.canvas.width * 0.18  // 200
@@ -605,7 +605,7 @@ case class DrawGame(
         else{
           drawTextLine(s"【${index}】: ${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         }
-        drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
         if(score.n.length>5)
