@@ -45,8 +45,7 @@ object GameConfig {
   val decreaseRate = 0.995
   //小球速度衰减率
   val massSpeedDecayRate = 25
-//  病毒衰减速度
-  val virusSpeedDecayRate = 0.5
+
   // 排行版显示玩家数
   val rankShowNum = 10
 
@@ -62,14 +61,18 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 90
+  val initMass:Short = 10
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
 
   //病毒速度系数
-  val initVirusSpeed = 2
+  val initVirusRatio = 3
+
+  val initVirusSpeed = 40
+  // 病毒衰减速度
+  val virusSpeedDecayRate = 3
 
   //Level5
   val bigPlayerMass:Short = 500
