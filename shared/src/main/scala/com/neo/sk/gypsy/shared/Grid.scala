@@ -68,7 +68,6 @@ trait Grid {
   var Scale=1.0
 
   //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
-
   //用户离开，从列表中去掉
   def removePlayer(id: String): Option[Player] = {
     val r = playerMap.get(id)
