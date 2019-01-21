@@ -413,8 +413,8 @@ object RoomActor {
 
         case Sync =>
 
-//          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
-          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > 300)
+          val botPlayerNum = botMap.size
+          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
           if(bigBotMap.nonEmpty){
             bigBotMap.keys.foreach {
               botId =>
@@ -432,7 +432,7 @@ object RoomActor {
 //            val botNum = botMap.keys.size
 
             if (killBigBot>0) {
-              val allPlayerNum = playerMap.size + botMap.size - killBigBot
+              val allPlayerNum = playerMap.size + botPlayerNum - killBigBot
               //            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
