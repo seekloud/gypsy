@@ -572,8 +572,8 @@ case class DrawGame(
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.fillStyle = MyColors.background
-    ctx.font = s"${8 * this.canvas.width / Window.w }px Helvetica"
-    ctx.fillText(s"Version:${version}",(this.canvas.width- this.canvas.width * 0.17+ctx.measureText("——————").width).toInt,16)
+    ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
+    ctx.fillText(s"Version:${version}",this.canvas.width * 0.86,16)
     ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
     val currentRankBaseLine = 3
 //    drawTextLine(s"Version:${version}", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, 0)
@@ -600,20 +600,20 @@ case class DrawGame(
         ctx.fillStyle = "#FFFF33"
         if(score.n.length>5)
           {
-            drawTextLine(s"【${index}】: ${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+            drawTextLine(s"【${index}】${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
           }
         else{
-          drawTextLine(s"【${index}】: ${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+          drawTextLine(s"【${index}】${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
         if(score.n.length>5)
         {
-          drawTextLine(s"【${index}】: ${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+          drawTextLine(s"【${index}】${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         }
         else{
-          drawTextLine(s"【${index}】: ${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+          drawTextLine(s"【${index}】${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
