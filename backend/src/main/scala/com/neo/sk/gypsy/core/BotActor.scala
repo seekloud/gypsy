@@ -142,12 +142,13 @@ object BotActor {
               roomActor ! botAction(botId,mp)
               move = true
             }
-//            if (move == false &&random()<0.1){
-//              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
-//              val py =  new Random(System.nanoTime()).nextInt(600)- 300
-//              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
-//              roomActor ! botAction(botId,mp)
-//            }
+
+            if (move == false &&random()<0.1){
+              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
+              val py =  new Random(System.nanoTime()).nextInt(600)- 300
+              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
+            }
           }
           Behaviors.same
 
