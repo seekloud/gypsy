@@ -670,8 +670,8 @@ case class DrawGame(
   }
 
 
-  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Int))={
-    val msg = VictoryMsg._1
+//  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Int))={
+  def drawVictory(msg:Protocol.VictoryMsg)={
     ctx.fillStyle = "#000"//Color.Black.toString()
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(Vicbg,0,0, canvas.width, canvas.height)
@@ -682,7 +682,7 @@ case class DrawGame(
     val Height = this.canvas.height
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
-    ctx.fillText(s"You Dead!", Width*0.42, BaseHeight)
+    ctx.fillText(s"Good Game!Congratulation to:${msg.name}", Width*0.36, BaseHeight)
 //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
 //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
 
@@ -690,17 +690,20 @@ case class DrawGame(
 
     var DrawLeft = Width*0.35
     val DrawHeight = BaseHeight
-    val killerName = msg.name
-    ctx.fillText(s"The   Winner  Is    :", DrawLeft, DrawHeight + Height*0.07)
-    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
-    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    val WinnerName = msg.name
+    val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+    ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+//    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
     ctx.fillStyle=Color.White.toString()
-    DrawLeft = ctx.measureText("The   Winner  Is    :").width +  Width*0.35 + 60
-    ctx.fillText(s"${killerName}", DrawLeft,DrawHeight + Height*0.07)
+    DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
+    ctx.fillText(s"${WinnerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
-    ctx.fillText(s"${msg.kill}", DrawLeft,DrawHeight + Height*0.07*3)
-
-    ctx.fillText(s"Press Space to ReStart= ￣へ￣#  ",Width*0.25,DrawHeight + Height*0.07*4)
+    ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+  
+    val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
+    ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2,DrawHeight + Height*0.07*4)
   }
 
 

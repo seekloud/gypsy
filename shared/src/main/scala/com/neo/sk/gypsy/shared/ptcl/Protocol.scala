@@ -81,7 +81,7 @@ object Protocol {
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
-  case class VictoryMsg(id:String,name:String,kill:Short,score:Short) extends GameMessage
+  case class VictoryMsg(id:String,name:String,score:Short,totalFrame:Int) extends GameMessage
 
   //  按F分裂的球发送的全量消息
 //  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
