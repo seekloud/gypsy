@@ -129,7 +129,6 @@ object RoomActor {
 //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
 //                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
 //              }
-
             }
 
 //            if(AppSettings.addBotPlayer) {
@@ -259,14 +258,6 @@ object RoomActor {
         case Victory(id,name,kill,totalTime) =>
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
-//          isclear = true
-//          if(grid.ReLiveMap.nonEmpty){
-//
-//            grid.ReLiveMap.foreach{live =>
-//              ctx.self ! ReStart(live._1)
-//            }
-//            grid.ReLiveMap = Map.empty
-//          }
           Behaviors.same
 
 
@@ -278,11 +269,6 @@ object RoomActor {
               val needAdd = AppSettings.botNum - playerMap.size - botMap.size
               createBotActor(needAdd,roomId,ctx,grid)
 
-              //              for(i <- 1 to needAdd ){
-              //                val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-              //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
-              //                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-              //              }
               botMap.foreach{bot =>
                 ctx.self ! ReStart(bot._1)
               }
