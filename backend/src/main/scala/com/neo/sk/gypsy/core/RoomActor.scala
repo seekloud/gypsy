@@ -88,7 +88,7 @@ object RoomActor {
 
   case class UserInfo(id:String, name:String, shareList:mutable.ListBuffer[String]) extends Command
 
-  case class Victory(id:String,name:String,kill:Short,score:Short) extends Command
+  case class Victory(id:String,name:String,score:Short,totalFrame:Int) extends Command
 
   val bounds = Point(Boundary.w, Boundary.h)
 
@@ -139,7 +139,7 @@ object RoomActor {
 //              }
 //            }
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
-            idle(roomId, userMap,playermap,subscribersMap,botMap,userSyncMap ,grid, 0l)
+            idle(roomId, userMap,playermap,subscribersMap,botMap,userSyncMap ,grid, 0l,0)
         }
     }
   }
@@ -152,7 +152,8 @@ object RoomActor {
             botMap:mutable.HashMap[String,ActorRef[BotActor.Command]], // [BotInfo.playerId,Actor] 记录BOT ws用于清除废弃actor线程
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
-            tickCount:Long
+            tickCount:Long,
+            StartFrame:Int
           )(
             implicit timer:TimerScheduler[Command],
             sendBuffer:MiddleBufferInJvm
@@ -255,8 +256,8 @@ object RoomActor {
 //          grid.ReLiveMap -= id
 //          Behaviors.same
 
-        case Victory(id,name,kill,score) =>
-          dispatch(subscribersMap)(VictoryMsg(id,name,kill,score))
+        case Victory(id,name,kill,totalTime) =>
+          dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
 //          isclear = true
 //          if(grid.ReLiveMap.nonEmpty){
@@ -449,10 +450,13 @@ object RoomActor {
           grid.update()
 
           // 判断胜利
+          var isVictory = false
           if(grid.currentRank.nonEmpty){
             val FirstPlayer = grid.currentRank.head
             if(FirstPlayer.score > VictoryScore){
-              ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.k,FirstPlayer.score)
+              val totalFrame =  grid.frameCount - StartFrame
+              isVictory = true
+              ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.score,totalFrame)
             }
 //            println(s"${grid.frameCount} CURRENT Rank  ${FirstPlayer}  ")
           }
@@ -539,7 +543,11 @@ object RoomActor {
             val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
-          idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1)
+          if(isVictory){
+            idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1,grid.frameCount)
+          }else{
+            idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1,StartFrame)
+          }
 
         case UserActor.NetTest(id, createTime) =>
           dispatchTo(subscribersMap)(id, Protocol.Pong(createTime))
