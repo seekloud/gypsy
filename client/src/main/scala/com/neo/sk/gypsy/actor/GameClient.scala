@@ -70,7 +70,7 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.KC =>
-          if(m.id.isDefined){
+          if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
             if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
@@ -81,7 +81,7 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.MP =>
-          if(m.id.isDefined){
+          if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
             if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
@@ -334,7 +334,7 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.KC =>
-          if(m.id.isDefined){
+          if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
             if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{
@@ -345,7 +345,7 @@ object GameClient {
           Behaviors.same
 
         case m:Protocol.MP =>
-          if(m.id.isDefined){
+          if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
             if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{

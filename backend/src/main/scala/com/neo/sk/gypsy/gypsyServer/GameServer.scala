@@ -84,7 +84,7 @@ class GameServer(override val boundary: Point) extends Grid {
         }
       }
       if(addPlayerByteId){
-        if(playerId2ByteMap.values.toList.contains(playerIdByte)){
+        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
           playerIdByte = Random.nextInt(127).toByte
         }
         playerId2ByteMap += id -> playerIdByte
