@@ -253,12 +253,16 @@ class GameClient (override val boundary: Point) extends Grid {
       case p: Mass =>
         if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
           val (mx,my)=normalization(p.targetX,p.targetY)
-          val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed * initVirusSpeed) /(newMass+p.mass)
-          val vy = (ny*newMass*newSpeed + my*p.mass*p.speed * initVirusSpeed) /(newMass+p.mass)
+          var vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusRatio ) /(newMass+p.mass)
+          var vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusRatio) /(newMass+p.mass)
+          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
+          val degree =atan2(vy,vx)
+          vx = newSpeed * cos(degree)
+          vy = newSpeed * sin(degree)
           hasMoved =true
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
-          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
+//          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
           println(s"vx:  $vx, vy:   $vy,  newspeed:  $newSpeed")
           newTargetX = vx.toShort
           newTargetY = vy.toShort
