@@ -414,7 +414,7 @@ object RoomActor {
         case Sync =>
 
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
-          if(!bigBotMap.isEmpty){
+          if(bigBotMap.nonEmpty){
             bigBotMap.keys.foreach {
               botId =>
                 if(botMap.get(botId).isDefined){
@@ -658,7 +658,9 @@ object RoomActor {
         val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
         //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
         val botNum = AppSettings.starNames.values.toList.count(i=> !i )
-        val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(new Random(System.nanoTime()).nextInt(botNum-1))
+        val num = new Random(System.nanoTime()).nextInt(botNum-1)
+        println(s"======Random: $num  BotNum:  $botNum ")
+        val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
         //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
         AppSettings.starNames += (botName -> true)
         getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)

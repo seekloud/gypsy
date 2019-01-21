@@ -677,17 +677,18 @@ case class DrawGame(
     ctx.fillRect(0, 0, Boundary.w , Boundary.h )
     ctx.drawImage(Vicbg,0,0, canvas.width, canvas.height)
 //    ctx.font = "30px Helvetica"
-    ctx.font = s"${Window.w *0.03}px Comic Sans MS"
     ctx.fillStyle = "#CD3700"
     val Width = this.canvas.width
     val Height = this.canvas.height
+    ctx.font = s"${Width *0.03}px Comic Sans MS"
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
     ctx.fillText(s"Good Game!Congratulation to:${msg.name}", Width*0.30, BaseHeight)
 //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
 //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
 
-    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
+//    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
+    ctx.font = s"${Width *0.02}px Comic Sans MS"
 
     var DrawLeft = Width*0.35
     val DrawHeight = BaseHeight + Height * 0.1
