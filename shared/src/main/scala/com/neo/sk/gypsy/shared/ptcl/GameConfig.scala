@@ -9,7 +9,7 @@ object GameConfig {
 
 //  val historyRankLength = 5
 
-  val version = "20190118"
+  val version = "20190121"
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
@@ -84,7 +84,7 @@ object GameConfig {
   val CanvasHeight = 600
 
 //  胜利分数
-  val VictoryScore = 500
+  val VictoryScore = 100
 
 
 }

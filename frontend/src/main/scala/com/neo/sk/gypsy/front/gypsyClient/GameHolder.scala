@@ -79,8 +79,8 @@ class GameHolder(replay:Boolean = false) {
   //游戏状态
   private[this] var gameState = GameState.play
   var deadInfo :Option[Protocol.UserDeadMessage] = None
-  case class VictoryShowMsg(winnerName:String,yourFinalScore:Short,GameTime:Long)
-  var victoryInfo :Option[Protocol.VictoryMsg] = None
+
+  var victoryInfo :Option[(Protocol.VictoryMsg,Short)] = None
 
   private[this] val watchKeys = Set(
     KeyCode.E,
@@ -633,9 +633,17 @@ class GameHolder(replay:Boolean = false) {
 
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
-//        val CultureIndex = new Random(System.nanoTime()).nextInt(1000)
+
+        val myScore = if(grid.playerMap.get(myId).isDefined){
+          grid.playerMap(myId).cells.map(_.newmass).sum
+        }else{
+          val a:Short = 0
+          a
+        }
+
 //        victoryInfo = Some((msg,CultureIndex))
-        victoryInfo = Some(msg)
+        victoryInfo = Some((msg,myScore))
+//        victoryInfo = Some(msg)
         gameState = GameState.victory
         grid.clearAllData()
 
