@@ -276,7 +276,7 @@ class GameServer(override val boundary: Point) extends Grid {
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
-                  println(s"$bot not relive")
+                  println(s"${player.name} not relive")
                   bot ! BotActor.KillBot
                   AppSettings.starNames += (player.name -> false)
                 case None =>
