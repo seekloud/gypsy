@@ -421,6 +421,7 @@ object RoomActor {
                   botMap(botId) ! KillBot
 //                  botMap.get(botId).get ! KillBot
                   //                botMap.remove(botId)
+                  AppSettings.starNames += (grid.playerMap(botId).name -> false)
                   killBigBot = true
                   grid.playerMap -= botId
                 }
