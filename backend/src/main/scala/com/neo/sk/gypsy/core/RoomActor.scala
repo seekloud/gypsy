@@ -98,7 +98,7 @@ object RoomActor {
 
   var isclear = false
 
-  var killBigBot = false
+  var killBigBot = 0
 
   val BotMaxMass = 500
 
@@ -413,7 +413,8 @@ object RoomActor {
 
         case Sync =>
 
-          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
+//          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > BotMaxMass)
+          val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > 300)
           if(bigBotMap.nonEmpty){
             bigBotMap.keys.foreach {
               botId =>
@@ -421,8 +422,8 @@ object RoomActor {
                   botMap(botId) ! KillBot
 //                  botMap.get(botId).get ! KillBot
                   //                botMap.remove(botId)
+                  killBigBot +=1
                   AppSettings.starNames += (grid.playerMap(botId).name -> false)
-                  killBigBot = true
                   grid.playerMap -= botId
                 }
 
@@ -430,13 +431,13 @@ object RoomActor {
 //            val playerNum = playerMap.keys.size
 //            val botNum = botMap.keys.size
 
-            if (killBigBot) {
-              val allPlayerNum = playerMap.size + botMap.size
+            if (killBigBot>0) {
+              val allPlayerNum = playerMap.size + botMap.size - killBigBot
               //            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
                 createBotActor(needAdd, roomId, ctx, grid)
-                killBigBot = false
+                killBigBot = 0
                 //              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
                 //                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
                 //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
@@ -660,7 +661,6 @@ object RoomActor {
         //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
         val botNum = AppSettings.starNames.values.toList.count(i=> !i )
         val num = new Random(System.nanoTime()).nextInt(botNum-1)
-        println(s"======Random: $num  BotNum:  $botNum ")
         val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
         //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
         AppSettings.starNames += (botName -> true)

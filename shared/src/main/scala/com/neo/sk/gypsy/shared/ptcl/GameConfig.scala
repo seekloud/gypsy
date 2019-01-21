@@ -61,7 +61,7 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 10
+  val initMass:Short = 50
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
@@ -84,7 +84,7 @@ object GameConfig {
   val CanvasHeight = 600
 
 //  胜利分数
-  val VictoryScore = 500
+  val VictoryScore = 5000
 
 
 }
