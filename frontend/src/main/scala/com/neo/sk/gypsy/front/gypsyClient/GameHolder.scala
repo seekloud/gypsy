@@ -80,7 +80,8 @@ class GameHolder(replay:Boolean = false) {
   private[this] var gameState = GameState.play
   var deadInfo :Option[Protocol.UserDeadMessage] = None
 
-  var victoryInfo :Option[(Protocol.VictoryMsg,Short)] = None
+  //(胜利玩家信息，自己分数，自己是否是胜利者，是就是true)
+  var victoryInfo :Option[(Protocol.VictoryMsg,Short,Boolean)] = None
 
   private[this] val watchKeys = Set(
     KeyCode.E,
@@ -247,23 +248,7 @@ class GameHolder(replay:Boolean = false) {
         }
         //e.preventDefault()
 
-//        if (e.keyCode == KeyCode.Escape && !isDead) {
-//          gameClose
-//        } else if (watchKeys.contains(e.keyCode)) {
-//          println(s"key down: [${e.keyCode}]")
-//          if (e.keyCode == KeyCode.Space) {
-//            println(s"down+${e.keyCode.toString} ReLive Press!")
-//            val reliveMsg = Protocol.ReLiveMsg(myId, grid.frameCount +advanceFrame+ delayFrame)
-//            webSocketClient.sendMsg(reliveMsg)
-//          } else {
-//            println(s"down+${e.keyCode.toString}")
-//            val keyCode = Protocol.KeyCode(myId, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-//            grid.addActionWithFrame(myId, keyCode.copy(frame=grid.frameCount + delayFrame))
-//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
-//            webSocketClient.sendMsg(keyCode)
-//          }
-//          e.preventDefault()
-//        }
+
       }
     }
 
@@ -275,7 +260,6 @@ class GameHolder(replay:Boolean = false) {
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
             val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
             val mpy = e.pageY - canvas3.offsetTop - window.y / 2
-//            println(s" ($mpx,$mpy) ===")
             mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
         //    if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
 //              if(mouseInFlame == false){
@@ -641,8 +625,12 @@ class GameHolder(replay:Boolean = false) {
           a
         }
 
-//        victoryInfo = Some((msg,CultureIndex))
-        victoryInfo = Some((msg,myScore))
+        victoryInfo = if(id.equals(myId)){
+          Some((msg,myScore,true))
+        }else{
+          Some((msg,myScore,false))
+        }
+        //        victoryInfo = Some((msg,CultureIndex))
 //        victoryInfo = Some(msg)
         gameState = GameState.victory
         grid.clearAllData()
