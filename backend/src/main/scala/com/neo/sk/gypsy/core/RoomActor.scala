@@ -654,13 +654,20 @@ object RoomActor {
 
   private def createBotActor(needNum:Int,roomId:Long,ctx: ActorContext[RoomActor.Command], grid: GameServer) = {
     for( i <- 1 to needNum){
-      val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
-//      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
-      val botNum = AppSettings.starNames.values.toList.count(i=> !i )
-      val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(new Random(System.nanoTime()).nextInt(botNum-1))
-//      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
-      AppSettings.starNames += (botName -> true)
-      getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+      try{
+        val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+        //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
+        val botNum = AppSettings.starNames.values.toList.count(i=> !i )
+        val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(new Random(System.nanoTime()).nextInt(botNum-1))
+        //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
+        AppSettings.starNames += (botName -> true)
+        getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
+      }catch {
+        case e:Exception =>
+          log.error(s"Create BotActor ${e.getMessage} ")
+      }
+
+
     }
 
   }
