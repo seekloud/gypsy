@@ -684,7 +684,7 @@ case class DrawGame(
     ctx.font = s"${Width *0.03}px Comic Sans MS"
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
-    val congratulation = s"Good Game!Congratulation to:${msg.name}"
+    val congratulation = s"Good Game!Congratulations to:${msg.name}"
     ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
 //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
 //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
