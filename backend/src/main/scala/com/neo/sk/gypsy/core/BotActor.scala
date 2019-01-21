@@ -157,7 +157,6 @@ object BotActor {
 
         case KillBot =>
           log.debug(s"botActor:$botId go to die...")
-          println(s"=========${AppSettings.starNames}")
           roomActor ! DeleteBot(botId)
           Behaviors.stopped
 
