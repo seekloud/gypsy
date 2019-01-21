@@ -686,7 +686,7 @@ case class DrawGame(
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
     var DrawLeft = Width*0.35
-    val DrawHeight = BaseHeight + Height * 0.1
+    var DrawHeight = BaseHeight + Height * 0.1
 
     if(isVictory){
       val congratulation = s"Good Game!Congratulations to You~"
@@ -708,8 +708,15 @@ case class DrawGame(
       ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*1)
       ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*2)
     }else{
-      val congratulation = s"Good Game!Congratulations to:${msg.name}"
+      val congratulation = s"Good Game!  Congratulations to:"
       ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
+
+      ctx.save()
+      ctx.fillStyle = Color.Yellow.toString()
+      val winner = s"${msg.name}"
+      ctx.fillText(winner, Width * 0.5 - ctx.measureText(winner).width/2, BaseHeight+Height *0.1 )
+      ctx.restore()
+      DrawHeight = BaseHeight + Height * 0.15
       //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
       //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
 
