@@ -568,7 +568,8 @@ trait Grid {
 //    tick
 //    Scale
 
-    myId = ""
+//    myId = ""
+
     //grid中数据清除
     food = Map[Point, Short]()
     playerMap = Map.empty[String,Player]
