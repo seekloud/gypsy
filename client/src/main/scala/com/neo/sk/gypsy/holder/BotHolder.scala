@@ -41,10 +41,12 @@ object BotHolder {
 
   var exitFullScreen = false
 
-  var botId = ""
   var usertype = 0
 
   sealed trait Command
+
+  //(胜利玩家信息，自己分数，自己是否是胜利者，是就是true)
+  var victoryInfo :Option[(Protocol.VictoryMsg,Short,Boolean)] = None
 
 
   val watchKeys = Set(
@@ -158,7 +160,7 @@ class BotHolder(
 
     //TODO 生成分层视图数据
     ClientBoot.addToPlatform {
-      val ld = new LayeredDraw(botId, layeredScene, grid, false)
+      val ld = new LayeredDraw(grid.myId, layeredScene, grid, false)
       val ByteInfo = ld.drawLayered()
       botActor ! GetByte(ByteInfo._1,ByteInfo._2,ByteInfo._3,ByteInfo._4,ByteInfo._5,ByteInfo._6,ByteInfo._7)
     }
@@ -207,7 +209,7 @@ class BotHolder(
     if (key != 0) {
       //使用E、F
       val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-      grid.addActionWithFrame(botId, keyCode.copy(f = grid.frameCount + delayFrame))
+      grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
       //      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
       serverActor ! keyCode
     }
@@ -223,7 +225,7 @@ class BotHolder(
       val mp = MP(None, x.toShort, y.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       if (math.abs(getDegree(x, y) - FormerDegree) * 180 / math.Pi > 5) {
         FormerDegree = getDegree(x, y)
-        grid.addMouseActionWithFrame(botId, mp.copy(f = grid.frameCount + delayFrame))
+        grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame))
         serverActor ! mp
       }
     }
@@ -234,7 +236,7 @@ class BotHolder(
   }
 
   def getInform = {
-    val player = grid.playerMap.find(_._1 == botId).get._2
+    val player = grid.playerMap.find(_._1 == grid.myId).get._2
     val score = player.cells.map(_.newmass).sum
     val kill = player.kill
     val health = if (gameState == GameState.dead) 0 else 1
