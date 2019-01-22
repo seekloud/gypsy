@@ -52,6 +52,9 @@ object GameHolder {
   var mouseInFlame = false
   var keyInFlame = false
 
+  //(胜利玩家信息，自己分数，自己是否是胜利者，是就是true)
+  var victoryInfo :Option[(Protocol.VictoryMsg,Short,Boolean)] = None
+
   val watchKeys = Set(
     KeyCode.E,
     KeyCode.F,

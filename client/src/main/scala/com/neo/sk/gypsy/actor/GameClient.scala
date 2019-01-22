@@ -65,8 +65,8 @@ object GameClient {
       msg match {
         case Protocol.Id(id) =>
           GameHolder.myId = id
-          ClientMusic.playMusic("bg")
-          println(s"myID:${GameHolder.myId}")
+//          ClientMusic.playMusic("bg")
+//          println(s"myID:${GameHolder.myId}")
           Behaviors.same
 
         case m:Protocol.KC =>
@@ -125,10 +125,24 @@ object GameClient {
           }
           Behaviors.same
 
+        case Protocol.RemoveVirus(virus) =>
+          ClientBoot.addToPlatform{
+            grid.virusMap --= virus.keySet.toList
+          }
+          Behaviors.same
+
         case data: Protocol.GridDataSync =>
           ClientBoot.addToPlatform{
             GameHolder.syncGridData = Some(data)
             GameHolder.justSynced = true
+          }
+          Behaviors.same
+
+        case PlayerIdBytes(playerIdByteMap)=>
+          ClientBoot.addToPlatform{
+            playerIdByteMap.foreach(item =>{
+              grid.playerByte2IdMap += item._2 -> item._1
+            })
           }
           Behaviors.same
 
@@ -142,17 +156,21 @@ object GameClient {
 
 
         case Protocol.PlayerRestart(id) =>
-          ClientMusic.playMusic("bg")
           Behaviors.same
 
 
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            grid.playerMap += (player.id -> player)
-            if(GameHolder.myId == id){
-              if(GameHolder.gameState == GameState.dead){
+            if(!grid.playerMap.contains(player.id)){
+              grid.playerMap += (player.id -> player)
+              grid.playerByte2IdMap += (id-> player.id)
+            }
+            if(GameHolder.myId == player.id){
+              if(GameHolder.gameState == GameState.dead || GameHolder.gameState == GameState.victory){
 //                gameHolder.reLive(id)
+                GameHolder.deadInfo = None
+                GameHolder.victoryInfo = None
                 GameHolder.gameState = GameState.play
               }
               gameHolder.cleanCtx()
@@ -194,22 +212,15 @@ object GameClient {
               }else{
                 GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }
-            }else{
-//              ClientMusic.playMusic("shutdown")
             }
             grid.removePlayer(deadId)
-            //            if(killerId == GameHolder.myId){
-//              grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-//                case 1 => ClientMusic.playMusic("1Blood")
-//                case 2 => ClientMusic.playMusic("2Kill")
-//                case 3 => ClientMusic.playMusic("3Kill")
-//                case 4 => ClientMusic.playMusic("4Kill")
-//                case 5 => ClientMusic.playMusic("5Kill")
-//                case 6 => ClientMusic.playMusic("godlike")
-//                case 7 => ClientMusic.playMusic("legendary")
-//                case _ => ClientMusic.playMusic("unstop")
-//              }
-//            }
+            var deadByte = 0.toByte
+            grid.playerByte2IdMap.foreach{elem =>
+              if(elem._2 == deadId){
+                deadByte = elem._1
+              }
+            }
+            grid.playerByte2IdMap -= deadByte
           }
           Behaviors.same
 
@@ -278,6 +289,25 @@ object GameClient {
           }
           Behaviors.same
 
+        case msg@VictoryMsg(id,name,score,time) =>
+          println(s"Receive Victory Msg $id,$name,$score,$time")
+
+          val myScore = if(grid.playerMap.get(GameHolder.myId).isDefined){
+            grid.playerMap(GameHolder.myId).cells.map(_.newmass).sum
+          }else{
+            val a:Short = 0
+            a
+          }
+
+          GameHolder.victoryInfo = if(id.equals(GameHolder.myId)){
+            Some((msg,myScore,true))
+          }else{
+            Some((msg,myScore,false))
+          }
+          GameHolder.gameState = GameState.victory
+          grid.clearAllData()
+          Behaviors.same
+
 
         case Protocol.RebuildWebSocket =>
           println("存在异地登录")
@@ -286,14 +316,15 @@ object GameClient {
           }
           Behaviors.same
 
-
         //某个用户离开
         case Protocol.PlayerLeft(id) =>
           ClientBoot.addToPlatform{
-            grid.removePlayer(grid.playerByte2IdMap(id))
-            grid.playerByte2IdMap -= id
-            if(id == GameHolder.myId){
-              gameHolder.gameClose
+            if(grid.playerByte2IdMap.get(id).isDefined){
+              grid.removePlayer(grid.playerByte2IdMap(id))
+              if(grid.playerByte2IdMap(id) == GameHolder.myId){
+                gameHolder.gameClose
+              }
+              grid.playerByte2IdMap -= id
             }
           }
           Behaviors.same

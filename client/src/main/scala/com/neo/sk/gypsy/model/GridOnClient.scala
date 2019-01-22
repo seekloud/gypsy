@@ -471,4 +471,10 @@ class GridOnClient(override val boundary: Point) extends Grid {
     }
   }
 
+  override def clearAllData() = {
+    super.clearAllData
+    playerByte2IdMap.clear()
+    currentRank = List.empty[RankInfo]
+  }
+
 }
