@@ -13,7 +13,10 @@ import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+
 import com.neo.sk.gypsy.core.BotActor.{InfoReply, KillBot}
+import com.neo.sk.gypsy.core.RoomActor.createBotActor
+
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.concurrent.duration._
@@ -100,6 +103,8 @@ object RoomActor {
 
   val BotMaxMass = 500
 
+  private var isJoin = false
+
   def create(roomId:Long):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
@@ -120,7 +125,7 @@ object RoomActor {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
 
-            createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
+//            createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
 
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap,playermap,subscribersMap,botMap,userSyncMap ,grid, 0l,0)
@@ -163,6 +168,22 @@ object RoomActor {
 //          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
+
+
+          //主要针对胜利后重新加进来
+          if(!isJoin){
+              botMap.foreach{bot =>
+                ctx.self ! ReStart(bot._1)
+              }
+            isJoin = !isJoin
+          }
+          //添加机器人
+
+          if (playerMap.size + botMap.size < AppSettings.botNum) {
+            val needAdd = AppSettings.botNum - playerMap.size - botMap.size
+            createBotActor(needAdd, roomId, ctx, grid)
+          }
+
 
           val event = UserWsJoin(roomId, playerInfo.playerId, playerInfo.nickname, createBallId, grid.frameCount,-1)
           grid.AddGameEvent(event)
@@ -248,13 +269,27 @@ object RoomActor {
           }
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
+          isJoin = false
           Behaviors.same
 
 
         case UserReJoin(id,frame) =>
           log.info(s"RoomActor Receive Rejoin from $id *******************")
           ctx.self ! ReStart(id)
-          if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
+
+          if(!isJoin){
+            botMap.foreach{bot =>
+              ctx.self ! ReStart(bot._1)
+            }
+            isJoin = !isJoin
+          }
+
+          if(playerMap.size + botMap.size < AppSettings.botNum){
+            val needAdd = AppSettings.botNum - playerMap.size - botMap.size
+            createBotActor(needAdd,roomId,ctx,grid)
+          }
+
+          /*if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
             if(playerMap.size + botMap.size < AppSettings.botNum){
               val needAdd = AppSettings.botNum - playerMap.size - botMap.size
               createBotActor(needAdd,roomId,ctx,grid)
@@ -268,7 +303,7 @@ object RoomActor {
                 ctx.self ! ReStart(bot._1)
               }
             }
-          }
+          }*/
 
 
           Behaviors.same
