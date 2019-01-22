@@ -444,7 +444,6 @@ object GameClient {
           Behaviors.same
 
         //网络延迟检测
-        //todo
         case p:Protocol.Pong =>
           ClientBoot.addToPlatform{
             FpsComp.receivePingPackage(p)
