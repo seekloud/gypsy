@@ -520,7 +520,7 @@ trait Grid {
     * describe: 获取自己视角中的全量数据
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
-    myId = id
+//    myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
@@ -568,7 +568,7 @@ trait Grid {
 //    tick
 //    Scale
 
-    myId = ""
+//    myId = ""
     //grid中数据清除
     food = Map[Point, Short]()
     playerMap = Map.empty[String,Player]

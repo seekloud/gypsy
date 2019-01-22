@@ -434,7 +434,7 @@ class GameClient (override val boundary: Point) extends Grid {
   }*/
 
   def reStart={
-    myId = ""
+//    myId = ""
     frameCount = 0
     food = Map[Point, Short]()
     foodPool = 300
