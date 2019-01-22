@@ -64,7 +64,7 @@ object GameClient {
     Behaviors.receive[WsMsgSource]{ (ctx, msg) =>
       msg match {
         case Protocol.Id(id) =>
-          GameHolder.myId = id
+          grid.myId = id
 //          ClientMusic.playMusic("bg")
 //          println(s"myID:${GameHolder.myId}")
           Behaviors.same
@@ -72,7 +72,7 @@ object GameClient {
         case m:Protocol.KC =>
           if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
-            if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
+            if(!grid.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
                 grid.addActionWithFrame(ID,m)
               }
@@ -83,7 +83,7 @@ object GameClient {
         case m:Protocol.MP =>
           if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
-            if(!GameHolder.myId.equals(ID) || GameHolder.usertype == -1){
+            if(!grid.myId.equals(ID) || GameHolder.usertype == -1){
               ClientBoot.addToPlatform{
                 grid.addMouseActionWithFrame(ID,m)
               }
@@ -95,11 +95,11 @@ object GameClient {
         case Protocol.Ranks(current) =>
           ClientBoot.addToPlatform{
             //发来的排行版含有我的排名
-            if(current.exists(r=>r.score.id ==GameHolder.myId)){
+            if(current.exists(r=>r.score.id ==grid.myId)){
               grid.currentRank = current
             }else{
               //          发来的未含有我的
-              grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == GameHolder.myId)
+              grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
             }
             //            grid.currentRank = current
           }
@@ -108,7 +108,7 @@ object GameClient {
         case Protocol.MyRank(rank) =>
           ClientBoot.addToPlatform{
             //把之前这个id的排行过滤掉
-            grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==GameHolder.myId) :+ rank
+            grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==grid.myId) :+ rank
           }
           Behaviors.same
 
@@ -166,7 +166,7 @@ object GameClient {
               grid.playerMap += (player.id -> player)
               grid.playerByte2IdMap += (id-> player.id)
             }
-            if(GameHolder.myId == player.id){
+            if(grid.myId == player.id){
               if(GameHolder.gameState == GameState.dead || GameHolder.gameState == GameState.victory){
 //                gameHolder.reLive(id)
                 GameHolder.deadInfo = None
@@ -190,11 +190,10 @@ object GameClient {
 
         //只针对某个死亡玩家发送的死亡消息
         case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
-          if(deadId == GameHolder.myId){
+          if(deadId == grid.myId){
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
               GameHolder.gameState = GameState.dead
-//              grid.removePlayer(id)
               ClientMusic.playMusic("godlike")
             }
           }
@@ -205,7 +204,7 @@ object GameClient {
           ClientBoot.addToPlatform{
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != GameHolder.myId){
+            if(deadId != grid.myId){
               if(!GameHolder.isDead){
                 GameHolder.isDead = true
                 GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
@@ -292,14 +291,14 @@ object GameClient {
         case msg@VictoryMsg(id,name,score,time) =>
           println(s"Receive Victory Msg $id,$name,$score,$time")
 
-          val myScore = if(grid.playerMap.get(GameHolder.myId).isDefined){
-            grid.playerMap(GameHolder.myId).cells.map(_.newmass).sum
+          val myScore = if(grid.playerMap.get(grid.myId).isDefined){
+            grid.playerMap(grid.myId).cells.map(_.newmass).sum
           }else{
             val a:Short = 0
             a
           }
 
-          GameHolder.victoryInfo = if(id.equals(GameHolder.myId)){
+          GameHolder.victoryInfo = if(id.equals(grid.myId)){
             Some((msg,myScore,true))
           }else{
             Some((msg,myScore,false))
@@ -321,7 +320,7 @@ object GameClient {
           ClientBoot.addToPlatform{
             if(grid.playerByte2IdMap.get(id).isDefined){
               grid.removePlayer(grid.playerByte2IdMap(id))
-              if(grid.playerByte2IdMap(id) == GameHolder.myId){
+              if(grid.playerByte2IdMap(id) == grid.myId){
                 gameHolder.gameClose
               }
               grid.playerByte2IdMap -= id
@@ -360,14 +359,15 @@ object GameClient {
           Behaviors.stopped
 
         case Protocol.Id(id) =>
-          BotHolder.botId = id
-          ClientMusic.playMusic("bg")
+          println(s"lallalal$id")
+          grid.myId = id
+//          ClientMusic.playMusic("bg")
           Behaviors.same
 
         case m:Protocol.KC =>
           if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
-            if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
+            if(!grid.myId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{
                 grid.addActionWithFrame(ID,m)
               }
@@ -378,7 +378,7 @@ object GameClient {
         case m:Protocol.MP =>
           if(m.id.isDefined && grid.playerByte2IdMap.get(m.id.get).isDefined){
             val ID = grid.playerByte2IdMap(m.id.get)
-            if(!BotHolder.botId.equals(ID) || BotHolder.usertype == -1){
+            if(!grid.myId.equals(ID) || BotHolder.usertype == -1){
               ClientBoot.addToPlatform{
                 grid.addMouseActionWithFrame(ID,m)
               }
@@ -390,11 +390,11 @@ object GameClient {
         case Protocol.Ranks(current) =>
           ClientBoot.addToPlatform{
             //发来的排行版含有我的排名
-            if(current.exists(r=>r.score.id ==BotHolder.botId)){
+            if(current.exists(r=>r.score.id ==grid.myId)){
               grid.currentRank = current
             }else{
               //          发来的未含有我的
-              grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == BotHolder.botId)
+              grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
             }
             //            grid.currentRank = current
           }
@@ -403,7 +403,7 @@ object GameClient {
         case Protocol.MyRank(rank) =>
           ClientBoot.addToPlatform{
             //把之前这个id的排行过滤掉
-            grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==BotHolder.botId) :+ rank
+            grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==grid.myId) :+ rank
           }
           Behaviors.same
 
@@ -421,10 +421,25 @@ object GameClient {
           }
           Behaviors.same
 
+        case Protocol.RemoveVirus(virus) =>
+          ClientBoot.addToPlatform{
+            grid.virusMap --= virus.keySet.toList
+          }
+          Behaviors.same
+
+
         case data: Protocol.GridDataSync =>
           ClientBoot.addToPlatform{
             BotHolder.syncGridData = Some(data)
             BotHolder.justSynced = true
+          }
+          Behaviors.same
+
+        case PlayerIdBytes(playerIdByteMap)=>
+          ClientBoot.addToPlatform{
+            playerIdByteMap.foreach(item =>{
+              grid.playerByte2IdMap += item._2 -> item._1
+            })
           }
           Behaviors.same
 
@@ -445,11 +460,16 @@ object GameClient {
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            grid.playerMap += (player.id -> player)
-            grid.playerByte2IdMap += (id -> player.id)
-            if(BotHolder.botId == id){
-              if(BotHolder.gameState == GameState.dead){
+            if(grid.playerByte2IdMap.get(id).isDefined){
+              grid.playerMap += (player.id -> player)
+              grid.playerByte2IdMap += (id -> player.id)
+            }
+
+            if(grid.myId == player.id){
+              if(BotHolder.gameState == GameState.dead || BotHolder.gameState == GameState.victory){
 //                botHolder.reLive(id)
+                BotHolder.deadInfo = None
+                BotHolder.victoryInfo = None
                 BotHolder.gameState = GameState.play
               }
 //              botHolder.cleanCtx()
@@ -468,18 +488,10 @@ object GameClient {
 
         //只针对某个死亡玩家发送的死亡消息
         case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
-          if(deadId == BotHolder.botId){
+          if(deadId == grid.myId){
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
-              grid.removePlayer(deadId)
-              var playerIdByte = 0.toByte
-              grid.playerByte2IdMap.foreach{item =>
-                if(item._2 == deadId){
-                  playerIdByte = item._1
-                }
-              }
-              grid.playerByte2IdMap -= playerIdByte
               ClientMusic.playMusic("godlikeM")
             }
           }
@@ -490,29 +502,22 @@ object GameClient {
           ClientBoot.addToPlatform{
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != BotHolder.botId){
+            if(deadId != grid.myId){
               if(!BotHolder.isDead){
                 BotHolder.isDead = true
                 BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }else{
                 BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
               }
-            }else{
-//              ClientMusic.playMusic("shutdownM")
             }
             grid.removePlayer(deadId)
-            //            if(killerId == BotHolder.botId){
-/*              grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-                case 1 => ClientMusic.playMusic("1Blood")
-                case 2 => ClientMusic.playMusic("2Kill")
-                case 3 => ClientMusic.playMusic("3Kill")
-                case 4 => ClientMusic.playMusic("4Kill")
-                case 5 => ClientMusic.playMusic("5Kill")
-                case 6 => ClientMusic.playMusic("godlikeM")
-                case 7 => ClientMusic.playMusic("legendaryM")
-                case _ => ClientMusic.playMusic("unstop")
-              }*/
-//            }
+            var playerIdByte = 0.toByte
+            grid.playerByte2IdMap.foreach{item =>
+              if(item._2 == deadId){
+                playerIdByte = item._1
+              }
+            }
+            grid.playerByte2IdMap -= playerIdByte
           }
           Behaviors.same
 
@@ -581,6 +586,26 @@ object GameClient {
           }
           Behaviors.same
 
+        case msg@VictoryMsg(id,name,score,time) =>
+          println(s"Receive Victory Msg $id,$name,$score,$time")
+
+          val myScore = if(grid.playerMap.get(grid.myId).isDefined){
+            grid.playerMap(grid.myId).cells.map(_.newmass).sum
+          }else{
+            val a:Short = 0
+            a
+          }
+
+          BotHolder.victoryInfo = if(id.equals(grid.myId)){
+            Some((msg,myScore,true))
+          }else{
+            Some((msg,myScore,false))
+          }
+          BotHolder.gameState = GameState.victory
+          grid.clearAllData()
+          Behaviors.same
+
+
         case Protocol.RebuildWebSocket =>
           println("存在异地登录")
           ClientBoot.addToPlatform{
@@ -592,10 +617,12 @@ object GameClient {
         //某个用户离开
         case Protocol.PlayerLeft(id) =>
           ClientBoot.addToPlatform{
-            grid.removePlayer(grid.playerByte2IdMap(id))
-            grid.playerByte2IdMap -= id
-            if(id == BotHolder.botId){
-              botHolder.gameClose
+            if(grid.playerByte2IdMap.get(id).isDefined){
+              grid.removePlayer(grid.playerByte2IdMap(id))
+              if(grid.playerByte2IdMap(id) == grid.myId){
+                botHolder.gameClose
+              }
+              grid.playerByte2IdMap -= id
             }
           }
           Behaviors.same

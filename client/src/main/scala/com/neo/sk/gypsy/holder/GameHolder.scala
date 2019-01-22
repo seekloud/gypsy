@@ -44,7 +44,6 @@ object GameHolder {
 
   var exitFullScreen = false
 
-  var myId = "" //myId变成String类型
   var usertype = 0
   var FormerDegree = 0D
 
@@ -172,8 +171,8 @@ class GameHolder(
   def gameRender() = {
     val offsetTime=System.currentTimeMillis()-logicFrameTime
     gameState match {
-      case GameState.play if myId!= ""=>
-        gameScene.draw(myId,offsetTime)
+      case GameState.play if grid.myId!= ""=>
+        gameScene.draw(grid.myId,offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         gameScene.drawWhenDead(deadInfo.get)
       case GameState.allopatry =>
@@ -205,7 +204,7 @@ class GameHolder(
           keyInFlame = true
           val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           if(key == KeyCode.E){
-            grid.addActionWithFrame(myId, keyCode.copy(f = grid.frameCount + delayFrame))
+            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
 //            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           }
           serverActor ! keyCode
@@ -225,8 +224,8 @@ class GameHolder(
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
         mouseInFlame = true
         FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount + delayFrame ))
-        grid.addUncheckActionWithFrame(myId, mp, mp.f)
+        grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame ))
+        grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
         serverActor ! mp
       }
     }
