@@ -13,9 +13,7 @@ import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
-
 import com.neo.sk.gypsy.core.BotActor.{InfoReply, KillBot}
-
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.concurrent.duration._
@@ -273,7 +271,11 @@ object RoomActor {
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
           log.info(s"bot$playerInfo die")
-
+          //用户离开时写入战绩
+          if(grid.playerMap.find(_._1 == playerInfo.playerId).isDefined && !playerInfo.playerId.startsWith("bot_")){
+            val player = grid.playerMap.find(_._1 == playerInfo.playerId).get._2
+            esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
+          }
 //          //复活列表清除(Bot感觉不用)
           grid.ReLiveMap -= playerInfo.playerId
 

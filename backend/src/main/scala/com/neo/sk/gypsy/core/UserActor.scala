@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReJoin, UserReLive}
-import com.neo.sk.gypsy.Boot.roomManager
+import com.neo.sk.gypsy.Boot.{esheepClient, roomManager}
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-
+import com.neo.sk.gypsy.gypsyServer.GameServer
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
@@ -318,7 +318,6 @@ object UserActor {
           Behaviors.same
 
         case DispatchMsg(m)=>
-//          log.info(s"bot:    $m")
           frontActor ! m
           Behaviors.same
 
