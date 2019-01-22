@@ -106,7 +106,7 @@ object BotActor {
             //躲避、追赶其他玩家
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
-              if(botCell.mass>closestP.mass*2.2){
+              if(botCell.mass > closestP.mass * 2.2){
                   val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
                 move = true
@@ -123,7 +123,7 @@ object BotActor {
                   move = true
                 }
               }
-              else if(botCell.mass*1.1<closestP.mass){
+              else if(botCell.mass * 1.1 < closestP.mass){
                 val mp = MP(grid.playerId2ByteMap.get(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
                 roomActor ! botAction(botId,mp)
               }
