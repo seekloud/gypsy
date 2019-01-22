@@ -57,7 +57,7 @@ class GameHolder(replay:Boolean = false) {
   private[this] var firstCome=true
 
   /**可变参数*/
-  var myId = "" //myId变成String类型
+//  var myId = "" //myId变成String类型
   var usertype = 0
   var nextFrame = 0
   var nextInt = 0
@@ -154,7 +154,7 @@ class GameHolder(replay:Boolean = false) {
 
   def animate():Double => Unit ={d =>
     drawGameView.drawGameOn2()
-    if(myId == ""){
+    if(grid.myId == ""){
       dom.window.requestAnimationFrame(animate())
     }
   }
@@ -163,7 +163,7 @@ class GameHolder(replay:Boolean = false) {
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     gameState match {
-      case GameState.play if myId!= ""=>
+      case GameState.play if grid.myId!= ""=>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
@@ -185,7 +185,7 @@ class GameHolder(replay:Boolean = false) {
                  frame:Int,
                  accessCode:String
                  ):Unit = {
-    myId = playerId
+    grid.myId = playerId
     val url = ApiRoute.getwrWebSocketUri(recordId,playerId,frame,accessCode)
     webSocketClient.setUp(url)
     start()
@@ -239,7 +239,7 @@ class GameHolder(replay:Boolean = false) {
               keyInFlame = true
               val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
               if(e.keyCode != KeyCode.F){
-                grid.addActionWithFrame(myId, keyCode.copy(f=grid.frameCount + delayFrame))
+                grid.addActionWithFrame(grid.myId, keyCode.copy(f=grid.frameCount + delayFrame))
 //                grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
               }
               webSocketClient.sendMsg(keyCode)
@@ -283,8 +283,8 @@ class GameHolder(replay:Boolean = false) {
   def updateMousePos ={
     if(fmp != mp){
       fmp = mp
-      grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
-      grid.addUncheckActionWithFrame(myId, mp, mp.f)
+      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount+delayFrame ))
+      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
       webSocketClient.sendMsg(mp)
     }
   }
@@ -293,17 +293,17 @@ class GameHolder(replay:Boolean = false) {
     val px =  new Random(System.nanoTime()).nextInt(window.x)- window.x / 2 - canvas3.offsetLeft
     val py =  new Random(System.nanoTime()).nextInt(window.y)- window.y / 2 - canvas3.offsetTop
     val mp = MP(None,px.toShort,py.toShort,grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-    grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
-    grid.addUncheckActionWithFrame(myId, mp, mp.f)
+    grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount+delayFrame ))
+    grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
     webSocketClient.sendMsg(mp)
   }
 
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
-      val data=grid.getGridData(myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
+      val data=grid.getGridData(grid.myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
       val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
-      data.playerDetails.find(_.id == myId) match {
+      data.playerDetails.find(_.id == grid.myId) match {
         case Some(p) =>
           firstCome=false
           var sumX = 0.0
@@ -332,8 +332,8 @@ class GameHolder(replay:Boolean = false) {
           zoom=(xMax - xMin, yMax - yMin)
 //        println("zoom:  " + zoom)
           val foods = grid.food
-          drawGameView.drawGrid(myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
-          drawTopView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime,grid.playerMap.size)
+          drawGameView.drawGrid(grid.myId,data,foods,offsetTime,firstCome,offScreenCanvas,basePoint,zoom,grid,p)
+          drawTopView.drawRankMapData(grid.myId,grid.currentRank,data.playerDetails,basePoint,bigPlayerPosition,offsetTime,grid.playerMap.size)
 //          ctx.save()
 //          ctx.font = "34px Helvetica"
 //          ctx.fillText(s"KILL: ${p.kill}", window.x * 0.18 + 30 , 10)
@@ -341,12 +341,12 @@ class GameHolder(replay:Boolean = false) {
 //          ctx.restore()
 //          renderFps(ctx3,NetDelay.latency,window.x)
           //todo 解决返回值问题
-          val paraBack = drawGameView.drawKill(myId,grid,isDead,killList)
+          val paraBack = drawGameView.drawKill(grid.myId,grid,isDead,killList)
           killList=paraBack._1
           isDead=paraBack._2
         case None =>
 //          println("gameState:   "+gameState)
-          drawGameView.drawGameWait(myId)
+          drawGameView.drawGameWait(grid.myId)
       }
     }else{
       drawGameView.drawGameLost
@@ -380,7 +380,7 @@ class GameHolder(replay:Boolean = false) {
   private def wsMessageHandler(data:GameMessage):Unit = {
     data match {
       case Protocol.Id(id) =>
-        myId = id
+        grid.myId = id
 //        Shortcut.playMusic("bg")
 //        println(s"myID:$myId")
 
@@ -389,7 +389,7 @@ class GameHolder(replay:Boolean = false) {
           val mid = m.id.get
           if(grid.playerByte2IdMap.get(mid).isDefined){
             val ID = grid.playerByte2IdMap(mid)
-            if(!myId.equals(ID) || usertype == -1){
+            if(!grid.myId.equals(ID) || usertype == -1){
               grid.addActionWithFrame(ID,m)
             }
           }
@@ -400,7 +400,7 @@ class GameHolder(replay:Boolean = false) {
           val mid = m.id.get
           if(grid.playerByte2IdMap.get(mid).isDefined){
             val ID = grid.playerByte2IdMap(mid)
-            if(!myId.equals(ID) || usertype == -1){
+            if(!grid.myId.equals(ID) || usertype == -1){
               grid.addMouseActionWithFrame(ID,m)
             }
           }
@@ -408,16 +408,16 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.Ranks(current) =>
         //发来的排行版含有我的排名
-        if(current.exists(r=>r.score.id ==myId)){
+        if(current.exists(r=>r.score.id == grid.myId)){
           grid.currentRank = current
         }else{
 //          发来的未含有我的
-          grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == myId)
+          grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
         }
 
       case Protocol.MyRank(rank) =>
         //把之前这个id的排行过滤掉
-        grid.currentRank = grid.currentRank.filterNot(r=>r.score.id==myId) :+ rank
+        grid.currentRank = grid.currentRank.filterNot(r=>r.score.id == grid.myId) :+ rank
 
       case Protocol.FeedApples(foods) =>
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
@@ -448,13 +448,13 @@ class GameHolder(replay:Boolean = false) {
 //        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
-        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${myId} ")
+        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
         //防止复活后又发了一条Join消息
         if(!grid.playerMap.contains(player.id)){
           grid.playerMap += (player.id -> player)
           grid.playerByte2IdMap += (id-> player.id)
         }
-        if(myId == player.id){
+        if(grid.myId == player.id){
           if(gameState == GameState.dead || gameState == GameState.victory){
             println(s"发送复活确认")
 //            webSocketClient.sendMsg(ReLiveAck(id))
@@ -474,7 +474,7 @@ class GameHolder(replay:Boolean = false) {
 
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
-        if(deadId == myId){
+        if(deadId == grid.myId){
           Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
           gameState = GameState.dead
@@ -484,7 +484,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.KillMessage(killerId,deadId)=>
         val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-        if(deadId != myId){
+        if(deadId != grid.myId){
           if(!isDead){
             isDead = true
             killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
@@ -564,14 +564,14 @@ class GameHolder(replay:Boolean = false) {
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
 
-        val myScore = if(grid.playerMap.get(myId).isDefined){
-          grid.playerMap(myId).cells.map(_.newmass).sum
+        val myScore = if(grid.playerMap.get(grid.myId).isDefined){
+          grid.playerMap(grid.myId).cells.map(_.newmass).sum
         }else{
           val a:Short = 0
           a
         }
 
-        victoryInfo = if(id.equals(myId)){
+        victoryInfo = if(id.equals(grid.myId)){
           Some((msg,myScore,true))
         }else{
           Some((msg,myScore,false))
@@ -587,7 +587,7 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.PlayerLeft(id) =>
         if(grid.playerByte2IdMap.get(id).isDefined){
           grid.removePlayer(grid.playerByte2IdMap(id))
-          if(grid.playerByte2IdMap(id) == myId){
+          if(grid.playerByte2IdMap(id) == grid.myId){
             gameClose
           }
           grid.playerByte2IdMap -= id
@@ -641,7 +641,7 @@ class GameHolder(replay:Boolean = false) {
 
       case e: Protocol.UserLeftRoom =>
         grid.removePlayer(e.userId)
-        if(e.userId == myId){
+        if(e.userId == grid.myId){
           gameClose
         }
 
@@ -652,14 +652,14 @@ class GameHolder(replay:Boolean = false) {
       case killMsg:Protocol.KillMsg =>
         val a = grid.playerMap.getOrElse(killMsg.killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
         grid.playerMap += (killMsg.killerId -> a.copy(kill = (a.kill + 1).toShort ))
-        if(killMsg.deadPlayer.id != myId){
+        if(killMsg.deadPlayer.id != grid.myId){
           if(!isDead){
             isDead = true
             killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }else{
             killList :+=(200,killMsg.killerName,grid.playerMap.get(killMsg.deadPlayer.name).get.name)
           }
-          if(killMsg.killerId == myId){
+          if(killMsg.killerId == grid.myId){
             Shortcut.playMusic("godlikeM")
 /*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
               case 1 => Shortcut.playMusic("1Blood")
@@ -674,7 +674,7 @@ class GameHolder(replay:Boolean = false) {
           }
         }else{
           //根据map找到killerName
-          val deadMsg = UserDeadMessage(killMsg.killerName, myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
+          val deadMsg = UserDeadMessage(killMsg.killerName, grid.myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
           //TODO 商榷
