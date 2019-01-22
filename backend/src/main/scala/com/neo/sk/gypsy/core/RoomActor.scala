@@ -241,6 +241,11 @@ object RoomActor {
 //          Behaviors.same
 
         case Victory(id,name,kill,totalTime) =>
+          grid.playerMap.values.foreach{player=>
+            if(!player.id.startsWith("bot_")){
+              esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
+            }
+          }
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
           Behaviors.same
