@@ -501,19 +501,6 @@ class GameHolder(replay:Boolean = false) {
         }
         grid.playerByte2IdMap -= deadByte
 
-      //        if(killerId == myId){
-//          grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-//            case 1 => Shortcut.playMusic("1Blood")
-//            case 2 => Shortcut.playMusic("2Kill")
-//            case 3 => Shortcut.playMusic("3Kill")
-//            case 4 => Shortcut.playMusic("4Kill")
-//            case 5 => Shortcut.playMusic("5Kill")
-//            case 6 => Shortcut.playMusic("godlikeM")
-//            case 7 => Shortcut.playMusic("legendaryM")
-//            case _ => Shortcut.playMusic("unstop")
-//          }
-//        }
-
       case Protocol.UserMerge(playerMap)=>
         val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
         playerMap.foreach{player =>
@@ -556,16 +543,6 @@ class GameHolder(replay:Boolean = false) {
               player
             }
           }
-//      case  Protocol.SplitPlayer(splitPlayers) =>
-////        println(s"====AAA=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)} )   } } ")
-////        println(s"======= ${splitPlayers.map{p =>(p._1, p._2.map{c=>(c.id,c.newmass)} )   } } ")
-//        splitPlayers.foreach{sp=>
-//          if(grid.playerMap.contains(sp._1)){
-////            val player = grid.playerMap(sp._1)
-//            grid.playerMap += (sp._1 -> grid.playerMap(sp._1).copy(cells = sp._2) )
-//          }
-//        }
-////        println(s"====BBB=== ${grid.playerMap.map{p =>(p._1, p._2.cells.map{c=>(c.id,c.newmass)})} } ")
 
       case Protocol.UserCrash(crashMap)=>
         crashMap.foreach{p=>
@@ -583,37 +560,6 @@ class GameHolder(replay:Boolean = false) {
 
         }
 
-//                crashMap.foreach{p=>
-//                  println(s"CRASH:  ${p._2.map{c=>(c.id,c.newmass) } }")
-//                  if(grid.playerMap.get(p._1).nonEmpty){
-//        //            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-//                    var newPlayer = grid.playerMap(p._1)
-//                    var newCells = newPlayer.cells
-//                    p._2.foreach{cell=>
-//                      newCells = cell :: newCells.filterNot(_.id == cell.id)
-//                    }
-////                    newCells = newCells.filter(_.newmass == 0)
-//                    newPlayer = newPlayer.copy(cells = newCells)
-//                    grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
-//                  }
-//                }
-
-//        println(s"AfterCrash ${grid.playerMap.map{p=>(p._1,p._2.cells.map{c=>(c.id,c.newmass)} )} } ++++++++++++ ")
-
-
-
-//        crashMap.map{p=>
-//          if(grid.playerMap.get(p._1).nonEmpty){
-////            var newPlayer = grid.playerMap.getOrElse(p._1,Player("", "unknown", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-//            var newPlayer = grid.playerMap(p._1)
-//            var newCells = newPlayer.cells
-//            p._2.map{cell=>
-//              newCells = cell :: newCells.filterNot(_.id == cell.id)
-//            }
-//            newPlayer = newPlayer.copy(cells = newCells)
-//            grid.playerMap = grid.playerMap - p._1 + (p._1->newPlayer)
-//          }
-//        }
 
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
@@ -630,8 +576,6 @@ class GameHolder(replay:Boolean = false) {
         }else{
           Some((msg,myScore,false))
         }
-        //        victoryInfo = Some((msg,CultureIndex))
-//        victoryInfo = Some(msg)
         gameState = GameState.victory
         grid.clearAllData()
 
@@ -643,10 +587,10 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.PlayerLeft(id) =>
         if(grid.playerByte2IdMap.get(id).isDefined){
           grid.removePlayer(grid.playerByte2IdMap(id))
-          grid.playerByte2IdMap -= id
           if(grid.playerByte2IdMap(id) == myId){
             gameClose
           }
+          grid.playerByte2IdMap -= id
         }
 
       case Protocol.DecodeEvent(data)=>
