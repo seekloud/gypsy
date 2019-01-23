@@ -66,7 +66,6 @@ object GameClient {
         case Protocol.Id(id) =>
           grid.myId = id
 //          ClientMusic.playMusic("bg")
-//          println(s"myID:${GameHolder.myId}")
           Behaviors.same
 
         case m:Protocol.KC =>
