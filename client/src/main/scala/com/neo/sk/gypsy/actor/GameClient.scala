@@ -44,6 +44,7 @@ object GameClient {
     Behaviors.receive{(ctx,msg) =>
       msg match {
         case ControllerInitial(gameHolder) =>
+          println("running")
           grid = GameHolder.grid
           switchBehavior(ctx,"running",running(playerId,roomId,gameHolder))
         case ControllerInitialBot(botHolder) =>

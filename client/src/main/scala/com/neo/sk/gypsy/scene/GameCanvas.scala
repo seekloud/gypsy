@@ -64,6 +64,8 @@ class GameCanvas(canvas: Canvas,
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
   private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
   private val bronzeImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/cooper.png"))
+  private val Vicbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/Victory.jpg"))
+
 
   val bounds = Point(Boundary.w, Boundary.h)
 
@@ -523,6 +525,57 @@ class GameCanvas(canvas: Canvas,
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+  }
+
+  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Short,Boolean))={
+    val msg = VictoryMsg._1
+    val isVictory = VictoryMsg._3
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(Vicbg, 0,0, realWindow.x, realWindow.y)
+    //    ctx.font = "30px Helvetica"
+    ctx.setFill(Color.web("#CD3700"))
+    val Width = realWindow.x
+    val Height = realWindow.y
+    ctx.setFont(Font.font("Comic Sans MS",Width *0.03))
+    //    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.15
+    var DrawLeft = Width*0.35
+    var DrawHeight = BaseHeight + Height * 0.1
+
+    val congratulation =if(isVictory){
+      "Good Game!  Congratulations to: You~"
+    }else{
+      "Good Game!  Congratulations to: "
+    }
+    val text = new Text(congratulation)
+    ctx.fillText(congratulation, Width * 0.5 - text.getLayoutBounds.getWidth.toInt/2, BaseHeight)
+
+    ctx.save()
+    ctx.setFill(Color.YELLOW)
+    val winner = s"${msg.name}"
+    val winnerText = new Text(winner)
+    ctx.fillText(winner, Width * 0.5 - winnerText.getLayoutBounds.getWidth/2, BaseHeight+Height *0.1 )
+    ctx.restore()
+    DrawHeight = BaseHeight + Height * 0.15
+    ctx.setFont(Font.font("Comic Sans MS",Width *0.02))
+
+    val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+    ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+    //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    ctx.setFill(Color.WHITE)
+    val winnerScore = new Text("The   Winner  Score  :")
+    DrawLeft = winnerScore.getLayoutBounds.getWidth +  Width*0.35 + 60
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+
+    val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
+    val reStartText = new Text(reStart)
+    ctx.fillText(reStart, Width * 0.5 - reStartText.getLayoutBounds.getWidth / 2,DrawHeight + Height*0.07*5)
+
   }
 
   def drawWhenFinish(msg:String) = {

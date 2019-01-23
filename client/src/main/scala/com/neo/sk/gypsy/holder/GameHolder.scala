@@ -175,6 +175,8 @@ class GameHolder(
         gameScene.draw(grid.myId,offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         gameScene.drawWhenDead(deadInfo.get)
+      case GameState.victory if victoryInfo.isDefined =>
+        gameScene.drawVictory(victoryInfo.get)
       case GameState.allopatry =>
         gameScene.drawWhenFinish("存在异地登录")
         gameClose

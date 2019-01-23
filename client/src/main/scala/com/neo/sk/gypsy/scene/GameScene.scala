@@ -121,6 +121,9 @@ class GameScene {
   def drawWhenDead(msg:Protocol.UserDeadMessage) = {
     topView.drawWhenDead(msg)
   }
+  def drawVictory(victoryInfo:(Protocol.VictoryMsg,Short,Boolean) ) = {
+    topView.drawVictory(victoryInfo)
+  }
   def drawWhenFinish(msg:String) = {
     topView.drawWhenFinish(msg)
   }

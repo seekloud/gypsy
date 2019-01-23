@@ -170,7 +170,6 @@ class GameHolder(replay:Boolean = false) {
 //        drawTopView.drawEcharts()
       case GameState.victory if victoryInfo.isDefined =>
         drawTopView.drawVictory(victoryInfo.get)
-
       case GameState.allopatry =>
         drawTopView.drawWhenFinish("存在异地登录")
         gameClose
