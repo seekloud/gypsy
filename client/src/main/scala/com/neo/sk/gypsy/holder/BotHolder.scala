@@ -26,6 +26,7 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import org.seekloud.esheepapi.pb.api.ObservationRsp
 
 object BotHolder {
+
   val bounds = Point(Boundary.w, Boundary.h)
   val grid = new GridOnClient(bounds)
   var justSynced = false
