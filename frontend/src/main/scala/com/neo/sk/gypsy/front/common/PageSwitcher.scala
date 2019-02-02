@@ -3,11 +3,6 @@ package com.neo.sk.gypsy.front.common
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.raw.Event
-/**
-  * @author zhaoyin
-  * @date 2018/10/24  下午1:50
-  */
-
 
 /**
   * User: Taoz

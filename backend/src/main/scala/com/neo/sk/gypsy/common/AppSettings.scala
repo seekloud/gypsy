@@ -1,7 +1,6 @@
 package com.neo.sk.gypsy.common
 
 import java.util.concurrent.TimeUnit
-
 import com.neo.sk.gypsy.utils.SessionSupport.SessionConfig
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory

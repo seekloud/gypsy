@@ -85,7 +85,8 @@ lazy val frontend = (project in file("frontend"))
   .dependsOn(sharedJs)
 
 // Akka Http based backend
-lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
+lazy val backend = (project in file("backend"))
+  .enablePlugins(PackPlugin)
   .settings(commonSettings: _*)
   .settings(
     mainClass in reStart := Some(projectMainClass),
