@@ -82,8 +82,8 @@ object WsClient {
 
           val connected = response.flatMap { upgrade =>
             if(upgrade.response.status == StatusCodes.SwitchingProtocols){
-              val layeredScene = new LayeredScene
               val gameScene = new GameScene
+              val layeredScene = new LayeredScene
               val gameHolder = new GameHolder(stageCtx,gameScene,layeredScene,stream)
               gameHolder.connectToGameServer()
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")

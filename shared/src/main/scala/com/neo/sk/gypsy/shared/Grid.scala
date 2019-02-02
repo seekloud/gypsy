@@ -33,6 +33,7 @@ trait Grid {
   def info(msg: String): Unit
 
   var myId = ""
+
   val random = new Random(System.nanoTime())
 
   val cellIdgenerator = new AtomicInteger(1000000)
