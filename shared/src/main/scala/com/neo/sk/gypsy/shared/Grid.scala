@@ -32,7 +32,6 @@ trait Grid {
 
   def info(msg: String): Unit
 
-  var myId = ""
   val random = new Random(System.nanoTime())
 
   val cellIdgenerator = new AtomicInteger(1000000)
@@ -100,42 +99,42 @@ trait Grid {
   }
 
   //统计分数跟新
-  def updateScoreList() = {
-    if(playerMap.get(myId).isDefined){
-      val myInfo = playerMap(myId)
-      var myScore = 0
-      myInfo.cells.foreach{c=>
-        myScore += c.newmass.toInt
-      }
-      tempScoreList += myScore
-      if(tempScoreList.length > Compress_times){
-        var TotalScore = tempScoreList.sum.toDouble / Compress_times
-        tempScoreList.clear()
-        ScoreList ::= TotalScore
-      }
-
-      if(ScoreList.length > GameConfig.ScoreListMax){
-        var resultScore = List.empty[Double]
-        val evenScore = ScoreList.zipWithIndex.filter(_._2 %2 == 0)
-        val oddScore = ScoreList.zipWithIndex.filter(_._2 %2 == 1)
-        val a = Array.empty[Int]
-        resultScore = evenScore.map{temp =>
-          val index = temp._2
-          val EScore = temp._1
-          //这里用index来获取感觉有点危险
-          val OScore = oddScore(index)._2
-          (EScore+OScore)/2
-        }
-        ScoreList = resultScore
-        Compress_times *=2
-
-//        var tempList = ScoreList match {
-//          case a :: tail => (a+tail.head)/2 :: tail
+//  def updateScoreList() = {
+//    if(playerMap.get(myId).isDefined){
+//      val myInfo = playerMap(myId)
+//      var myScore = 0
+//      myInfo.cells.foreach{c=>
+//        myScore += c.newmass.toInt
+//      }
+//      tempScoreList += myScore
+//      if(tempScoreList.length > Compress_times){
+//        var TotalScore = tempScoreList.sum.toDouble / Compress_times
+//        tempScoreList.clear()
+//        ScoreList ::= TotalScore
+//      }
+//
+//      if(ScoreList.length > GameConfig.ScoreListMax){
+//        var resultScore = List.empty[Double]
+//        val evenScore = ScoreList.zipWithIndex.filter(_._2 %2 == 0)
+//        val oddScore = ScoreList.zipWithIndex.filter(_._2 %2 == 1)
+//        val a = Array.empty[Int]
+//        resultScore = evenScore.map{temp =>
+//          val index = temp._2
+//          val EScore = temp._1
+//          //这里用index来获取感觉有点危险
+//          val OScore = oddScore(index)._2
+//          (EScore+OScore)/2
 //        }
-      }
-
-    }
-  }
+//        ScoreList = resultScore
+//        Compress_times *=2
+//
+////        var tempList = ScoreList match {
+////          case a :: tail => (a+tail.head)/2 :: tail
+////        }
+//      }
+//
+//    }
+//  }
 
   //食物更新
   private[this] def updateSpots() = {
