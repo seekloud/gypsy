@@ -671,13 +671,13 @@ object RoomActor {
 
   private def createBotActor(needNum:Int,roomId:Long,ctx: ActorContext[RoomActor.Command], grid: GameServer) = {
 
-    if(AppSettings.addBotPlayer) {
+    if(AppSettings.addBotPlayer && needNum >0) {
       for( i <- 1 to needNum){
         try{
           val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
           //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
           val botNum = AppSettings.starNames.values.toList.count(i=> !i )
-          val num = new Random(System.nanoTime()).nextInt(botNum-1)
+          val num = new Random(System.nanoTime()).nextInt(botNum)
           val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
           //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
           AppSettings.starNames += (botName -> true)
