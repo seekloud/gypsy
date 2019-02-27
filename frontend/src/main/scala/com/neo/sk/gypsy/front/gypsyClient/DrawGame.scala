@@ -704,15 +704,25 @@ case class DrawGame(
     ctx.font = s"${Width *0.02}px Comic Sans MS"
 
     val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
-    ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
-    ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
-    ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
-    //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
-    ctx.fillStyle=Color.White.toString()
-    DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
-    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
-    ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
-    ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+    if(isVictory){
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*2)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("Your  Final   Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*2)
+    }else{
+      ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+      //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+    }
+    
 
 
 
