@@ -267,6 +267,7 @@ object RoomActor {
               esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
             }
           }
+          println(s"Vitory:$id")
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
           isJoin = false

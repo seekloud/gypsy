@@ -84,10 +84,9 @@ object GameConfig {
   val CanvasHeight = 600
 
 //  胜利分数
-  val VictoryScore = 200
+  val VictoryScore = 2000
 
 //  val KillBotScore = 20000
-  val KillBotScore = VictoryScore/2
-
+  val KillBotScore = 500
 
 }
