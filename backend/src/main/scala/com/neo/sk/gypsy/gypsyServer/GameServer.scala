@@ -270,7 +270,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //            case _ =>
 //              player.killerName = "unknown"
 //          }
-//          陪玩机器人加入待复活列表,如果总人数过多则直接杀死改bot
+//          陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot
           if(player.id.startsWith("bot_")){
             val playerNum = playerMap.keySet.size
             if(playerNum>AppSettings.botNum){

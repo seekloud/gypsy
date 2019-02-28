@@ -5,9 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.neo.sk.gypsy.front.common.Routes.{ApiRoute, UserRoute}
 
 import scala.util.Random
-import com.neo.sk.gypsy.front.scalajs.FpsComponent._
-import com.neo.sk.gypsy.front.scalajs.NetDelay
-import com.neo.sk.gypsy.front.utils.Shortcut
+
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.html.{Canvas, Document => _}
@@ -20,7 +18,9 @@ import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
-
+import com.neo.sk.gypsy.front.scalajs.FpsComponent._
+import com.neo.sk.gypsy.front.scalajs.NetDelay
+import com.neo.sk.gypsy.front.utils.Shortcut
 /**
   * User: sky
   * Date: 2018/9/13
@@ -255,11 +255,11 @@ class GameHolder(replay:Boolean = false) {
     def getDegree(x:Double,y:Double)= {
       atan2(y - 48 - window.y/2,x  -window.x/2 )
     }
-    if( !isTest){
+    if(!isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
             val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
             val mpy = e.pageY - canvas3.offsetTop - window.y / 2
-            mp = MP(None, (e.pageX - window.x / 2 - canvas3.offsetLeft).toShort, (e.pageY - canvas3.offsetTop - window.y.toDouble / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
+            mp = MP(None, mpx.toShort, mpy.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
         //    if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
 //              if(mouseInFlame == false){
 ////              println(s"帧号${grid.frameCount},动作：$mp")

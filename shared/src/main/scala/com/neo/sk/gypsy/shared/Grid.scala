@@ -198,8 +198,6 @@ trait Grid {
         newY = (v.y + (ny*v.speed)).toShort
         newSpeed = if(v.speed-virusSpeedDecayRate<0) 0f else (v.speed-virusSpeedDecayRate).toFloat
         val newPoint = ExamBoundary(newX,newY)
-        newX = newPoint._1
-        newY = newPoint._2
         if(newPoint._3)
           newMass = 0.toShort
       }
