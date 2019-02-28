@@ -95,7 +95,7 @@ object RoomActor {
 
   val ballId = new AtomicLong(100000)
 
-  val botId = new AtomicInteger(1)
+  val botId = new AtomicLong(1)
 
   var isclear = false
 
@@ -680,7 +680,8 @@ object RoomActor {
             val num = new Random(System.nanoTime()).nextInt(botNum)
             val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
             //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
-            val id = "bot_"+roomId + "_200"+ botId.getAndIncrement()
+            val id = "bot_"+roomId + "_"+ botId.getAndIncrement()
+            println(id)
             AppSettings.starNames += (botName -> true)
             getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
           }
