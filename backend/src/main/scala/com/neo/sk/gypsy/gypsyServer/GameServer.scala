@@ -95,7 +95,6 @@ class GameServer(override val boundary: Point) extends Grid {
       AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
       println(s"botMap:${botSubscriber.keySet}")
-      println(food.size)
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))

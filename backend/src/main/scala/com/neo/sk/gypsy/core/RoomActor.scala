@@ -267,6 +267,7 @@ object RoomActor {
               esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
             }
           }
+          println(s"Vitory:$id")
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,totalTime))
           grid.clearAllData
           isJoin = false
@@ -679,7 +680,6 @@ object RoomActor {
           if(botNum > 0){
             val num = new Random(System.nanoTime()).nextInt(botNum)
             val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
-            //      val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),i)
             val id = "bot_"+roomId + "_"+ botId.getAndIncrement()
             println(id)
             AppSettings.starNames += (botName -> true)
