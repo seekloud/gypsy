@@ -311,7 +311,6 @@ object RoomActor {
 
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
-          log.info(s"bot$playerInfo die")
           //用户离开时写入战绩
           if(grid.playerMap.find(_._1 == playerInfo.playerId).isDefined && !playerInfo.playerId.startsWith("bot_")){
             val player = grid.playerMap.find(_._1 == playerInfo.playerId).get._2
