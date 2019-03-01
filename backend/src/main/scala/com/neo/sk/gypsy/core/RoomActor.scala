@@ -676,16 +676,15 @@ object RoomActor {
       for( i <- 1 to needNum){
         try{
           //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
-//          val botNum = AppSettings.starNames.values.toList.count(i=> !i )
-//          if(botNum > 0){
-//            val num = new Random(System.nanoTime()).nextInt(botNum)
-//            val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
-            val botName = AppSettings.starNames.keys.toList(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size))
+          val botNum = AppSettings.starNames.values.toList.count(i=> !i )
+          if(botNum > 0){
+            val num = new Random(System.nanoTime()).nextInt(botNum)
+            val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
             val id = "bot_"+roomId + "_"+ botId.getAndIncrement()
             println(id)
             AppSettings.starNames += (botName -> true)
             getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-//          }
+          }
         }catch {
           case e:Exception =>
             log.error(s"Create BotActor ${e.getMessage} ")
