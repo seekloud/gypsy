@@ -40,17 +40,17 @@ trait HttpService extends ResourceService with OutApiService with UserService wi
     ignoreTrailingSlash {
       pathPrefix("gypsy") {
         pathEndOrSingleSlash {
-          //todo 不需要session了吧
-          optionalGypsySession{
-            case Some(_)=>
-              getFromResource("html/gypsy.html")
-            case None=>
-              log.info("guest comeIn withOut session")
-              addSession( GypsySession(BaseUserInfo(UserRolesType.player,"","",""),System.currentTimeMillis()).toSessionMap){
-                ctx=>
-                  ctx.redirect("/gypsy",StatusCodes.SeeOther)
-              }
-          }
+          getFromResource("html/gypsy.html")
+          //          optionalGypsySession{
+//            case Some(_)=>
+//              getFromResource("html/gypsy.html")
+//            case None=>
+//              log.info("guest comeIn withOut session")
+//              addSession( GypsySession(BaseUserInfo(UserRolesType.player,"","",""),System.currentTimeMillis()).toSessionMap){
+//                ctx=>
+//                  ctx.redirect("/gypsy",StatusCodes.SeeOther)
+//              }
+//          }
         }~ path("playGame") {
           parameter(
             'playerId.as[String],
