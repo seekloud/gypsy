@@ -445,4 +445,36 @@ class GridOnClient(override val boundary: Point) extends Grid {
   override def getActionEventMap(frame: Int): List[GameEvent] = {List.empty}
 
   override def getGameEventMap(frame: Int): List[Protocol.GameEvent] = {List.empty}
+
+  def addActionWithFrame(id: String, keyCode: KC) = {
+    val map = actionMap.getOrElse(keyCode.f, Map.empty)
+    val tmp = map + (id -> keyCode)
+    actionMap += (keyCode.f -> tmp)
+  }
+
+  def addMouseActionWithFrame(id: String, mp:MP) = {
+    val map = mouseActionMap.getOrElse(mp.f, Map.empty)
+    val tmp = map + (id -> mp)
+    mouseActionMap += (mp.f -> tmp)
+  }
+
+  def removeActionWithFrame(id: String, userAction: UserAction, frame: Int) = {
+    userAction match {
+      case k:KC=>
+        val map = actionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && k.sN == t._2.sN)
+        actionMap += (frame->actionQueue)
+      case m:MP=>
+        val map = mouseActionMap.getOrElse(frame,Map.empty)
+        val actionQueue = map.filterNot(t => t._1 == id && m.sN == t._2.sN)
+        mouseActionMap += (frame->actionQueue)
+    }
+  }
+
+  override def clearAllData() = {
+    super.clearAllData
+    playerByte2IdMap.clear()
+    currentRank = List.empty[RankInfo]
+  }
+
 }

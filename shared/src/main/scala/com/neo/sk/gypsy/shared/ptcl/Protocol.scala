@@ -56,9 +56,11 @@ object Protocol {
   case class MyRank(rank:RankInfo) extends GameMessage
 
   case class PlayerRestart(id:String) extends GameMessage
-  /**用户从playerMap中删除的两种可能：1、用户离开房间 2、用户死亡**/
+
+  /**玩家从playerMap中删除的两种可能：**/
+  /**1、玩家死亡**/
   case class UserDeadMessage(killerName:String, deadId:String, killNum:Short, score:Short, lifeTime:Long) extends GameMessage
-  //只有用户离开房间时候发送
+  /** 2、玩家离开房间**/
   case class PlayerLeft(id: Byte) extends GameMessage
 
   case class Wrap(ws:Array[Byte],isKillMsg:Boolean = false) extends WsMsgSource
@@ -69,13 +71,17 @@ object Protocol {
 
   case class MatchRoomError() extends GameMessage
 
-  case class UserMerge(id:Byte,player: Player)extends GameMessage
-
+  /**cell改变事件：**/
+  /**1、玩家自己融合**/
+  case class UserMerge(playerMap:Map[Byte,List[(Long,Long)]])extends GameMessage
+  /**1、玩家和其他玩家融合**/
   case class UserCrash(crashMap:Map[Byte,List[Cell]]) extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
+
+  case class VictoryMsg(id:String,name:String,score:Short,totalFrame:Int) extends GameMessage
 
   //  按F分裂的球发送的全量消息
 //  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
@@ -119,7 +125,11 @@ object Protocol {
 
   case object PressSpace extends UserAction
 
+  //复活
   case class ReLiveMsg(override val f:Int) extends UserAction with GameMessage
+
+  //胜利后重开
+  case class ReJoinMsg(override val f:Int) extends UserAction with GameMessage
 
   case class WatchChange(watchId: String) extends UserAction
 

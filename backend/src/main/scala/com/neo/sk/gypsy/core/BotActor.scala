@@ -4,14 +4,13 @@ package com.neo.sk.gypsy.core
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.core.RoomActor.{GetBotInfo, botAction}
+import com.neo.sk.gypsy.core.RoomActor.{DeleteBot, GetBotInfo, botAction}
 import com.neo.sk.gypsy.gypsyServer.GameServer
 import com.neo.sk.gypsy.ptcl.EsheepProtocol.PlayerInfo
 import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KC, MP, PressSpace}
-
 
 import scala.math._
 import concurrent.duration._
@@ -61,6 +60,7 @@ object BotActor {
         msg match {
           case InitInfo(botName, grid, roomActor) =>
             roomActor ! RoomActor.JoinRoom4Bot(ApiProtocol.PlayerInfo(botId,botName), ctx.self)
+            println(s"$botId :init")
          //   timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
             gaming(botId,grid,roomActor)
 
@@ -88,8 +88,8 @@ object BotActor {
         case ChoseAction =>
           timer.startSingleTimer(ChoseActionKey, ChoseAction, (1 + scala.util.Random.nextInt(20)) * frameRate.millis)
           //TODO 选择一个动作发给roomActor
-          val px =  new Random(System.nanoTime()).nextInt(1200)- 600
-          val py =  new Random(System.nanoTime()).nextInt(600)- 300
+          val px =  new Random(System.nanoTime()).nextInt(1200) - 600
+          val py =  new Random(System.nanoTime()).nextInt(600) - 300
           val mp = MP(grid.playerId2ByteMap.get(botId),px.toShort,py.toShort,grid.frameCount, -1)
           roomActor ! botAction(botId,mp)
           Behaviors.same
@@ -102,15 +102,16 @@ object BotActor {
             val virus = data.virusDetails
             val mass = data.massDetails
             var move = false
+            //TODO 这边的策略可以改一下 小球会怼在角落里
             val otherPlayers = data.playerDetails.filterNot(a=>(a.id==botId || a.protect==true))
             //躲避、追赶其他玩家
             if (otherPlayers.nonEmpty){
               val closestP = otherPlayers.map(_.cells).flatten.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
-              if(botCell.mass>closestP.mass*2.2){
+              if(botCell.mass > closestP.mass * 2.2){
                   val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
                   roomActor ! botAction(botId,mp)
                 move = true
-                if(System.currentTimeMillis()-lastSplitTime>2*1000 && random()<0.6){
+                if(System.currentTimeMillis()-lastSplitTime > 2*1000 && random() < 0.6){
                   lastSplitTime = System.currentTimeMillis()
                   val kc = KC(grid.playerId2ByteMap.get(botId),70,grid.frameCount,-1)
                   roomActor ! botAction(botId,kc)
@@ -123,7 +124,7 @@ object BotActor {
                   move = true
                 }
               }
-              else if(botCell.mass*1.1<closestP.mass){
+              else if(botCell.mass * 1.1 < closestP.mass){
                 val mp = MP(grid.playerId2ByteMap.get(botId),(botCell.x-closestP.x).toShort,(botCell.y-closestP.y).toShort,grid.frameCount, -1)
                 roomActor ! botAction(botId,mp)
               }
@@ -142,12 +143,13 @@ object BotActor {
               roomActor ! botAction(botId,mp)
               move = true
             }
-//            if (move == false &&random()<0.1){
-//              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
-//              val py =  new Random(System.nanoTime()).nextInt(600)- 300
-//              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
-//              roomActor ! botAction(botId,mp)
-//            }
+
+            if (move == false &&random()<0.1){
+              val px =  new Random(System.nanoTime()).nextInt(1200)- 600
+              val py =  new Random(System.nanoTime()).nextInt(600)- 300
+              val mp = MP(Some(grid.playerId2ByteMap(botId)),px.toShort,py.toShort,grid.frameCount, -1)
+              roomActor ! botAction(botId,mp)
+            }
           }
           Behaviors.same
 
@@ -157,7 +159,8 @@ object BotActor {
           dead(botId,grid,roomActor)
 
         case KillBot =>
-          log.debug(s"botActor:$botId go to die...")
+          log.info(s"botActor:$botId go to die...")
+          roomActor ! DeleteBot(botId)
           Behaviors.stopped
 
         case unknownMsg@_ =>

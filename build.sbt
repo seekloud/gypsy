@@ -5,7 +5,7 @@ name := "gypsy"
 val scalaV = "2.12.6"
 //val scalaV = "2.11.8"
 val projectName = "gypsy"
-val projectVersion = "2019.01.14"
+val projectVersion = "2019.01.21"
 
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"
@@ -85,7 +85,8 @@ lazy val frontend = (project in file("frontend"))
   .dependsOn(sharedJs)
 
 // Akka Http based backend
-lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
+lazy val backend = (project in file("backend"))
+  .enablePlugins(PackPlugin)
   .settings(commonSettings: _*)
   .settings(
     mainClass in reStart := Some(projectMainClass),
@@ -98,7 +99,7 @@ lazy val backend = (project in file("backend")).enablePlugins(PackPlugin)
     //packSettings,
     // [Optional] Creating `hello` command that calls org.mydomain.Hello#main(Array[String])
     packMain := Map("gypsy" -> projectMainClass),
-    packJvmOpts := Map("gypsy" -> Seq("-Xmx64m", "-Xms32m")),
+    packJvmOpts := Map("gypsy" -> Seq("-Xmx512m", "-Xms256m")),
     packExtraClasspath := Map("gypsy" -> Seq("."))
   )
   .settings(

@@ -84,7 +84,7 @@ class GameServer(override val boundary: Point) extends Grid {
         }
       }
       if(addPlayerByteId){
-        if(playerId2ByteMap.values.toList.contains(playerIdByte)){
+        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
           playerIdByte = Random.nextInt(127).toByte
         }
         playerId2ByteMap += id -> playerIdByte
@@ -94,6 +94,7 @@ class GameServer(override val boundary: Point) extends Grid {
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
+      println(s"botMap:${botSubscriber.keySet}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
@@ -219,7 +220,6 @@ class GameServer(override val boundary: Point) extends Grid {
     }
   }
   /**碰撞事件检测**/
-
   override def checkPlayer2PlayerCrash(): Unit = {
     var p2pCrash = false
     var changedPlayers = Map[Byte,List[Cell]]()
@@ -235,7 +235,8 @@ class GameServer(override val boundary: Point) extends Grid {
             var cellChange = false
             var newMass = cell.newmass
             var newRadius = cell.radius
-            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+//            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+            playerMap.filterNot(a => a._1 == player.id).foreach { p =>
               p._2.cells.foreach { otherCell =>
                 if (cell.mass * 1.1 < otherCell.mass && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
                   //被吃了
@@ -270,24 +271,25 @@ class GameServer(override val boundary: Point) extends Grid {
 //            case _ =>
 //              player.killerName = "unknown"
 //          }
-//          加入待复活列表
+//          陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot
           if(player.id.startsWith("bot_")){
-            var playerNum=0
-            playerMap.foreach(i=>playerNum+=1)
+            val playerNum = playerMap.keySet.size
             if(playerNum>AppSettings.botNum){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
-                  println(s"$bot not relive")
+                  println(s"${player.name} not relive")
                   bot ! BotActor.KillBot
+                  AppSettings.starNames += (player.name -> false)
                 case None =>
               }
             }
             else ReLiveMap += (player.id -> System.currentTimeMillis())
+          }else{
+            esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
           }
 
           dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(playerMap.get(killerId).get.name,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
           dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
-          esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
           val event = KillMsg(killerId,playerMap.get(killerId).get.name,player,score,System.currentTimeMillis()-player.startTime,frameCount)
           AddGameEvent(event)
           Left(killerId)
@@ -326,15 +328,19 @@ class GameServer(override val boundary: Point) extends Grid {
     }
   }
 
+  /**融合事件检测**/
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
+    var mergePlayer = Map[Byte,List[(Long,Long)]]()
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
         var mergeCells = List[Cell]()
+        var mergeCell = List[(Long,Long)]()
         //已经被本体其他cell融合的cell
         var deleteCells = List[Cell]()
         var playerIsMerge=false
+
         //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>
@@ -363,6 +369,7 @@ class GameServer(override val boundary: Point) extends Grid {
                       newMass = (newMass + cell2.newmass).toShort
                       newRadius = Mass2Radius(newMass)
                       mergeCells = cell2 :: mergeCells
+                      mergeCell = (cell.id,cell2.id) :: mergeCell
                     }
                   }
                   else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
@@ -385,13 +392,13 @@ class GameServer(override val boundary: Point) extends Grid {
         val top = newCells.map(a => a.y + a.radius).max
         if(playerIsMerge && playerId2ByteMap.get(player.id).isDefined){
           mergeInFlame = true
-          dispatch(subscriber)(UserMerge(playerId2ByteMap(player.id),player.copy(x = newX, y = newY, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))))
+          mergePlayer += (playerId2ByteMap(player.id) -> mergeCell)
         }
-
         player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells.sortBy(_.id))
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     if(mergeInFlame){
+      dispatch(subscriber)(UserMerge(mergePlayer))
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
     }
@@ -470,6 +477,7 @@ class GameServer(override val boundary: Point) extends Grid {
   override def checkPlayerFoodCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
+        var eaten  = Map[Point, Short]()
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
@@ -482,6 +490,7 @@ class GameServer(override val boundary: Point) extends Grid {
                   newMass = (newMass+foodMass).toShort
                   newRadius = Mass2Radius(newMass)
                   food -= p
+                  eaten += (p->color)
                   eatenFoods+=(p->color)
                   if (newProtected)
                   //吃食物后取消保护
@@ -497,7 +506,12 @@ class GameServer(override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
+//        if(player.id.startsWith("user") && eaten.nonEmpty){
+//            val score = newCells.map(_.newmass).toList.sum
+//            println(s"${player.id} ${frameCount} ==> ${eaten.keySet}  $score ")
+//        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
+
       //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -554,12 +568,16 @@ class GameServer(override val boundary: Point) extends Grid {
         case p: Mass =>
           if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
             val (mx,my)=normalization(p.targetX,p.targetY)
-            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+            var vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusRatio ) /(newMass+p.mass)
+            var vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusRatio) /(newMass+p.mass)
+            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
+            val degree =atan2(vy,vx)
+            vx = newSpeed * cos(degree)
+            vy = newSpeed * sin(degree)
             hasMoved =true
             newMass = (newMass + p.mass).toShort
             newRadius = Mass2Radius(newMass)
-            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
+//            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
             newTargetX = vx.toShort
             newTargetY = vy.toShort
             massList = massList.filterNot(l => l == p)
@@ -775,6 +793,18 @@ class GameServer(override val boundary: Point) extends Grid {
   def cleanNewApple = {
     newFoods = Map.empty
   }
+
+  override def clearAllData: Unit ={
+    super.clearAllData
+    //TODO 清空判别
+//    ReLiveMap 要清空吗？(不清)
+//    waitingJoin感觉不需要清空
+    newFoods = Map.empty
+    eatenFoods = Map.empty
+    playerId2ByteMap.clear()
+    currentRank = List.empty[Score]
+  }
+
 
   def randomEmptyPoint(): Point = {
     val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))

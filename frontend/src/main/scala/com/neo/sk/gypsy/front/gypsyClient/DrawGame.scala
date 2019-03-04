@@ -1,7 +1,6 @@
 package com.neo.sk.gypsy.front.gypsyClient
 
 import com.neo.sk.gypsy.front.scalajs.NetDelay
-
 import scalatags.JsDom.short._
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
@@ -22,6 +21,8 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.front.scalajs.FpsComponent.renderFps
 
+import scala.util.Random
+
 /**
   * User: sky
   * Date: 2018/9/14
@@ -34,7 +35,7 @@ case class DrawGame(
               ) {
 
 //  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
-  private[this] val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/stone.png").render
+  private[this]val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/stone.png").render
 
   //  private[this] val  circle = dom.document.getElementById("circle").asInstanceOf[HTMLElement]
 //  private[this] val  circle1 = dom.document.getElementById("circle1").asInstanceOf[HTMLElement]
@@ -77,7 +78,10 @@ case class DrawGame(
   bronzeImg.setAttribute("src", "/gypsy/static/img/cooper.png")
 //  private val deadbg = img(*.src := s"/paradise/static/img/king.png").render
   private[this] val deadbg = dom.document.getElementById("deadbg").asInstanceOf[HTMLElement]
-//  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
+
+  private[this] val Vicbg = dom.document.createElement("img").asInstanceOf[html.Image]
+  Vicbg.setAttribute("src", "/gypsy/static/img/Victory.jpg")
+  //  private[this] val echarts = dom.document.getElementById("ehcarts").asInstanceOf[HTMLElement]
 
 //  private val Monster = img(*.style := "width:15px;")(*.src := s"/paradise/static/img/monster.png").render
 
@@ -293,7 +297,7 @@ case class DrawGame(
     val rankWidth = this.canvas.width * 0.14
 
     ctx.fillStyle = MyColors.rankList
-    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth,56+GameConfig.rankShowNum*17)
+    ctx.fillRect(this.canvas.width - this.canvas.width * 0.17,20,rankWidth+3,56+GameConfig.rankShowNum*17)
 
     //绘制小地图
     val littleMap = this.canvas.width * 0.18  // 200
@@ -568,8 +572,8 @@ case class DrawGame(
     //绘制当前排行
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
     ctx.fillStyle = MyColors.background
-    ctx.font = s"${8 * this.canvas.width / Window.w }px Helvetica"
-    ctx.fillText(s"Version:${version}",(this.canvas.width- this.canvas.width * 0.17+ctx.measureText("——————").width).toInt,16)
+    ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
+    ctx.fillText(s"Version:${version}",this.canvas.width * 0.86,16)
     ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
     val currentRankBaseLine = 3
 //    drawTextLine(s"Version:${version}", (this.canvas.width- this.canvas.width * 0.17+5).toInt, 0, 0)
@@ -589,17 +593,28 @@ case class DrawGame(
       imgOpt.foreach{ img =>
         ctx.drawImage(img, this.canvas.width- 200* this.canvas.width / Window.w, index * textLineHeight+25, 13, 13)
       }
+      val offx=ctx.measureText(index.toString).width.toInt
       if(score.id == uid){
         ctx.save()
         ctx.font = s"${12 * this.canvas.width / Window.w }px Helvetica"
         ctx.fillStyle = "#FFFF33"
-//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        if(score.n.length>5)
+          {
+            drawTextLine(s"【${index}】${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+          }
+        else{
+          drawTextLine(s"【${index}】${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
       }else{
-//        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", (this.canvas.width-190 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(6)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
+        if(score.n.length>5)
+        {
+          drawTextLine(s"【${index}】${score.n.take(4)+"*"}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
+        else{
+          drawTextLine(s"【${index}】${score.n.+("    ").take(5)}", (this.canvas.width-188 * this.canvas.width / Window.w).toInt-(offx-7), if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        }
         drawTextLine(s"得分:${score.score.toInt}", (this.canvas.width-90 * this.canvas.width / Window.w).toInt, index , currentRankBaseLine)
       }
 
@@ -652,6 +667,110 @@ case class DrawGame(
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
     val reStart = "Press Space to ReStart ￣へ￣#  "
     ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2, DrawHeight + Height*0.07*5)
+
+  }
+
+
+//  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Int))={
+  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Short,Boolean))={
+    val msg = VictoryMsg._1
+    val isVictory = VictoryMsg._3
+    ctx.fillStyle = "#000"//Color.Black.toString()
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(Vicbg,0,0, canvas.width, canvas.height)
+//    ctx.font = "30px Helvetica"
+    ctx.fillStyle = "#CD3700"
+    val Width = this.canvas.width
+    val Height = this.canvas.height
+    ctx.font = s"${Width *0.03}px Comic Sans MS"
+    //    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.15
+    var DrawLeft = Width*0.35
+    var DrawHeight = BaseHeight + Height * 0.1
+
+    val congratulation =if(isVictory){
+      s"Good Game!  Congratulations to: You~"
+    }else{
+      s"Good Game!  Congratulations to: "
+    }
+    ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
+
+    ctx.save()
+    ctx.fillStyle = Color.Yellow.toString()
+    val winner = s"${msg.name}"
+    ctx.fillText(winner, Width * 0.5 - ctx.measureText(winner).width/2, BaseHeight+Height *0.1 )
+    ctx.restore()
+    DrawHeight = BaseHeight + Height * 0.15
+    ctx.font = s"${Width *0.02}px Comic Sans MS"
+
+    val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+    if(isVictory){
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*2)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("Your  Final   Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*2)
+    }else{
+      ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+      //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+    }
+    
+
+
+
+/*    if(isVictory){
+      val congratulation = s"Good Game!Congratulations to You~"
+      ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
+      //    ctx.fillText(s"第${VictoryMsg._2} 号文明在大爆炸中毁灭了", Width*0.3, BaseHeight)
+      //    ctx.fillText(s"这次的毁灭者是 ${msg.name}", Width*0.35, BaseHeight + Height*0.05 )
+
+      //    ctx.font = s"${Window.w *0.02}px Comic Sans MS"
+      ctx.font = s"${Width *0.02}px Comic Sans MS"
+
+
+      //    val WinnerName = msg.name
+      val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*1)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*2)
+      //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("Your  Final   Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*1)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*2)
+    }else{
+      val congratulation = s"Good Game!  Congratulations to:"
+      ctx.fillText(congratulation, Width * 0.5 - ctx.measureText(congratulation).width/2, BaseHeight)
+
+      ctx.save()
+      ctx.fillStyle = Color.Yellow.toString()
+      val winner = s"${msg.name}"
+      ctx.fillText(winner, Width * 0.5 - ctx.measureText(winner).width/2, BaseHeight+Height *0.1 )
+      ctx.restore()
+      DrawHeight = BaseHeight + Height * 0.15
+      ctx.font = s"${Width *0.02}px Comic Sans MS"
+
+      val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+      ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+      ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+      ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+      //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+      ctx.fillStyle=Color.White.toString()
+      DrawLeft = ctx.measureText("The   Winner  Score  :").width +  Width*0.35 + 60
+      ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+      ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+      ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+    }*/
+
+    val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
+    ctx.fillText(reStart, Width * 0.5 - ctx.measureText(reStart).width/2,DrawHeight + Height*0.07*5)
 
   }
 

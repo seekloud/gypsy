@@ -9,7 +9,7 @@ object GameConfig {
 
 //  val historyRankLength = 5
 
-  val version = "20190115"
+  val version = "20190121"
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
@@ -32,9 +32,9 @@ object GameConfig {
   //食物池
   var foodPool = 150
   //病毒数量
-  var virusNum:Int = 8
+  var virusNum:Int = 30
   //病毒质量上限
-  var virusMassLimit:Int = 200
+  var virusMassLimit:Int = 150
   val shotMass:Short = 10
   val shotSpeed = 100
   //最大分裂个数
@@ -45,8 +45,7 @@ object GameConfig {
   val decreaseRate = 0.995
   //小球速度衰减率
   val massSpeedDecayRate = 25
-//  病毒衰减速度
-  val virusSpeedDecayRate = 0.3
+
   // 排行版显示玩家数
   val rankShowNum = 10
 
@@ -62,11 +61,18 @@ object GameConfig {
   val maxDelayFrame = 3
 
 //  初始质量
-  val initMass:Short = 100
+  val initMass:Short = 10
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
+
+  //病毒速度系数
+  val initVirusRatio = 3
+
+  val initVirusSpeed = 40
+  // 病毒衰减速度
+  val virusSpeedDecayRate = 3
 
   //Level5
   val bigPlayerMass:Short = 500
@@ -77,5 +83,10 @@ object GameConfig {
   val CanvasWidth = 1100
   val CanvasHeight = 600
 
+//  胜利分数
+  val VictoryScore = 2000
+
+//  val KillBotScore = 20000
+  val KillBotScore = 500
 
 }

@@ -67,7 +67,6 @@ trait Grid {
   var Scale=1.0
 
   //  var quad = new Quadtree(0, new Rectangle(0,0,boundary.x,boundary.y))
-
   //用户离开，从列表中去掉
   def removePlayer(id: String): Option[Player] = {
     val r = playerMap.get(id)
@@ -191,17 +190,18 @@ trait Grid {
       var newX = v.x
       var newY = v.y
       var newSpeed = v.speed
+      var newMass = vi._2.mass
       if(v.speed!=0){
         newX = (v.x + (nx*v.speed)).toShort
         newY = (v.y + (ny*v.speed)).toShort
         newSpeed = if(v.speed-virusSpeedDecayRate<0) 0f else (v.speed-virusSpeedDecayRate).toFloat
-        val newPoint =ExamBoundary(newX,newY)
-        newX = newPoint._1
-        newY = newPoint._2
+        val newPoint = ExamBoundary(newX,newY)
+        if(newPoint._3)
+          newMass = 0.toShort
       }
-      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed)
+      vi._1 -> v.copy(x = newX,y=newY,speed = newSpeed, mass = newMass)
     }
-    virusMap ++= NewVirus
+    virusMap = NewVirus.filterNot(_._2.mass == 0)
   }
   //更新喷出小球的位置
   def updateMass():Unit = {
@@ -235,22 +235,27 @@ trait Grid {
 
 //边界超越校验
   def ExamBoundary(newX:Short,newY:Short)={
+    var disappear = false
     val x = if(newX>boundary.x){
+      disappear = true
       boundary.x
     } else if(newX<0){
+      disappear = true
       0
     }else{
       newX
     }
     val y = if(newY>boundary.y){
+      disappear = true
       boundary.y
     } else if(newY<0){
+      disappear = true
       0
     }else{
       newY
     }
 
-    (x.toShort ,y.toShort )
+    (x.toShort ,y.toShort,disappear)
   }
 
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
@@ -512,7 +517,7 @@ trait Grid {
     * describe: 获取自己视角中的全量数据
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
-    myId = id
+//    myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
@@ -542,6 +547,43 @@ trait Grid {
       Scale
      // allPlayerPosition
     )
+  }
+
+
+  def clearAllData = {
+//    food
+//    virusMap
+//    playerMap
+//    actionMap
+//    mouseActionMap
+//    massList
+//
+//    ActionEventMap
+//    GameEventMap
+//    deadPlayerMap
+//
+//    tick
+//    Scale
+
+//    myId = ""
+    //grid中数据清除
+    food = Map[Point, Short]()
+    playerMap = Map.empty[String,Player]
+    virusMap = Map.empty[Long,Virus]
+    massList = List[Mass]()
+    deadPlayerMap=Map.empty[Long,Player]
+    //动作清除
+    actionMap = Map.empty[Int, Map[String, KC]]
+    mouseActionMap = Map.empty[Int, Map[String, MP]]
+
+    //event记录清除
+    ActionEventMap.clear()
+    GameEventMap.clear()
+
+    tick = 0
+    Scale = 1.0
+
+
   }
 
   def getAllGridData: Protocol.GridDataSync

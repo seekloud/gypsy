@@ -6,17 +6,18 @@ import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReLive}
-import com.neo.sk.gypsy.Boot.roomManager
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
-import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.gypsyServer.GameServer
+import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReJoin, UserReLive}
+import com.neo.sk.gypsy.Boot.{esheepClient, roomManager}
 /**
   * @author zhaoyin
   *  2018/10/25  下午10:27
@@ -59,6 +60,8 @@ object UserActor {
 //  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
   case class UserReLiveMsg(frame: Int) extends Command with RoomActor.Command
+
+  case class UserReJoinMsg(frame: Int) extends Command with RoomActor.Command
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command with RoomActor.Command
 
@@ -127,6 +130,9 @@ object UserActor {
                       UserReLiveMsg(frame)
 //                   case ReLiveAck(id) =>
 //                     UserReLiveAck(id)
+
+                   case ReJoinMsg(frame) =>
+                     UserReJoinMsg(frame)
 
                    case Protocol.CreateRoom =>
                      CreateRoom
@@ -307,8 +313,12 @@ object UserActor {
           roomActor ! UserReLive(userInfo.playerId,frame)
           Behaviors.same
 
+        case UserReJoinMsg(frame) =>
+          println(s"UserActor got ${userInfo.playerId} relive Msg  ")
+          roomActor ! UserReJoin(userInfo.playerId,frame)
+          Behaviors.same
+
         case DispatchMsg(m)=>
-//          log.info(s"bot:    $m")
           frontActor ! m
           Behaviors.same
 

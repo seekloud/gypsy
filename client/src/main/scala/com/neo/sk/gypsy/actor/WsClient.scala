@@ -85,7 +85,6 @@ object WsClient {
               val gameScene = new GameScene
               val layeredScene = new LayeredScene
               val gameHolder = new GameHolder(stageCtx,gameScene,layeredScene,stream)
-              //gameHolder.connectToGameServer(gameHolder)
               gameHolder.connectToGameServer()
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
             } else {

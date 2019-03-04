@@ -169,6 +169,7 @@ class GameClient (override val boundary: Point) extends Grid {
   override def checkPlayerFoodCrash(): Unit = {
     val newPlayerMap = playerMap.values.map {
       player =>
+        var eaten  = Map[Point, Short]()
         var newProtected = player.protect
         val newCells = player.cells.map {
           cell =>
@@ -181,6 +182,7 @@ class GameClient (override val boundary: Point) extends Grid {
                   newMass = (newMass+foodMass).toShort
                   newRadius = Mass2Radius(newMass)
                   food -= p
+                  eaten += (p->color)
                   if (newProtected)
                   //吃食物后取消保护
                     newProtected = false
@@ -195,6 +197,10 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
+//        if(player.id.startsWith("user") && eaten.nonEmpty){
+//          val score = player.cells.map(_.newmass).toList.sum
+//          println(s"${player.id} ${frameCount} ==> ${eaten.keySet} $score ")
+//        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -249,12 +255,17 @@ class GameClient (override val boundary: Point) extends Grid {
       case p: Mass =>
         if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
           val (mx,my)=normalization(p.targetX,p.targetY)
-          val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-          val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+          var vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusRatio ) /(newMass+p.mass)
+          var vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusRatio) /(newMass+p.mass)
+          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
+          val degree =atan2(vy,vx)
+          vx = newSpeed * cos(degree)
+          vy = newSpeed * sin(degree)
           hasMoved =true
           newMass = (newMass + p.mass).toShort
           newRadius = Mass2Radius(newMass)
-          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
+//          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
+          println(s"vx:  $vx, vy:   $vy,  newspeed:  $newSpeed")
           newTargetX = vx.toShort
           newTargetY = vy.toShort
           massList = massList.filterNot(l => l == p)
@@ -267,7 +278,6 @@ class GameClient (override val boundary: Point) extends Grid {
       val v1 = vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
       List(v1)
     }else{
-
       val v1 =vi._1 -> v.copy(x = newX,y=newY,mass=newMass,radius = newRadius,targetX = newTargetX,targetY = newTargetY,speed = newSpeed)
       List(v1)
     }
@@ -426,7 +436,7 @@ class GameClient (override val boundary: Point) extends Grid {
   }*/
 
   def reStart={
-    myId = ""
+//    myId = ""
     frameCount = 0
     food = Map[Point, Short]()
     foodPool = 300
@@ -438,6 +448,13 @@ class GameClient (override val boundary: Point) extends Grid {
     mouseActionMap = Map.empty[Int, Map[String, MP]]
     deadPlayerMap=Map.empty[Long,Player]
   }
+
+  override def clearAllData() = {
+    super.clearAllData
+    playerByte2IdMap.clear()
+    currentRank = List.empty[RankInfo]
+  }
+
 
   override def getActionEventMap(frame: Int): List[GameEvent] = {List.empty}
 

@@ -30,7 +30,7 @@ object RoomManager {
   case class GetRoomList(replyTo:ActorRef[RoomListRsp]) extends Command
 
   val behaviors:Behavior[Command] ={
-    log.debug(s"UserManager start...")
+    log.debug(s"RoomManager start...")
     Behaviors.setup[Command]{
       ctx =>
         Behaviors.withTimers[Command]{
@@ -53,29 +53,36 @@ object RoomManager {
         msg match {
           case JoinRoom(playerInfo,roomIdOpt,userActor) =>
             roomIdOpt match{
+                /**玩家要求加入指定房间**/
               case Some(roomId) =>
                 roomInUse.get(roomId) match{
                   case Some(ls) =>
-                    //TODO 考虑Bot加入时人数满上限的情况 返回加入失败消息
-                    roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
+                    roomInUse.find(p => p._2.length < AppSettings.limitCount) match {
+                      case Some(t) =>
+                        roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match {
+                          case Some(t) => /**此时是relive的情况**/
+                          case None =>
+                            roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
+                            getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                        }
+                      case None =>
+                    }
                   case None =>
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
                 }
-                getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
               case None =>
-//                val a= roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(a=>a._1)
-//                val b= roomInUse.find(p => p._2.length < AppSettings.limitCount)
-//                roomInUse.find(p => p._2.length < AppSettings.limitCount).toList.sortBy(_._1).headOption match{
-                val botNum = if(AppSettings.addBotPlayer) AppSettings.botNum else 0
-                roomInUse.find(p => p._2.length + botNum < AppSettings.limitCount) match{
+                /**后台为玩家分配房间**/
+//                val botNum = if(AppSettings.addBotPlayer) AppSettings.botNum else 0
+                roomInUse.find(p => p._2.length < AppSettings.limitCount) match{
                   case Some(t) =>
 //                    log.info(s"RoomSize :  ${t._2.length} ======== ")
                     roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match {
                       case Some(t) => /**此时是relive的情况**/
                       case None =>
                         roomInUse.put(t._1,(playerInfo.playerId,playerInfo.nickname) :: t._2)
+                        getRoomActor(ctx,t._1) ! RoomActor.JoinRoom(playerInfo,t._1,userActor)
                     }
-                    getRoomActor(ctx,t._1) ! RoomActor.JoinRoom(playerInfo,t._1,userActor)
                   case None =>
                     var roomId = roomIdGenerator.getAndIncrement()
                     while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
