@@ -60,6 +60,7 @@ object BotActor {
         msg match {
           case InitInfo(botName, grid, roomActor) =>
             roomActor ! RoomActor.JoinRoom4Bot(ApiProtocol.PlayerInfo(botId,botName), ctx.self)
+            println(s"$botId :init")
          //   timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
             gaming(botId,grid,roomActor)
 
@@ -158,7 +159,7 @@ object BotActor {
           dead(botId,grid,roomActor)
 
         case KillBot =>
-          log.debug(s"botActor:$botId go to die...")
+          log.info(s"botActor:$botId go to die...")
           roomActor ! DeleteBot(botId)
           Behaviors.stopped
 

@@ -181,6 +181,7 @@ object RoomActor {
 
           if (playerMap.size + botMap.size < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
+            println("joinroom create")
             createBotActor(needAdd, roomId, ctx, grid)
           }
 
@@ -287,6 +288,7 @@ object RoomActor {
 
           if(playerMap.size + botMap.size < AppSettings.botNum){
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
+            println("rejoin create")
             createBotActor(needAdd,roomId,ctx,grid)
           }
 
@@ -356,6 +358,7 @@ object RoomActor {
 //            if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
           if (allPlayerNum < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - allPlayerNum
+            println("user left create")
             createBotActor(needAdd, roomId, ctx, grid)
 
           }
@@ -423,12 +426,15 @@ object RoomActor {
 
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
+          println(s"botmap:${botMap.keySet}")
           botMap.remove(botId)
+          println(s"botmap removed:${botMap.keySet}")
 
           Behaviors.same
 
         case Sync =>
 
+          grid.update()
           val botPlayerNum = botMap.size
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > (KillBotScore) )
           if(bigBotMap.nonEmpty){
@@ -452,6 +458,7 @@ object RoomActor {
               //            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
+                println("Sync create")
                 createBotActor(needAdd, roomId, ctx, grid)
                 killBigBot = 0
                 //              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
@@ -465,7 +472,7 @@ object RoomActor {
           }
           grid.getSubscribersMap(subscribersMap,botMap)
 //          grid.getUserList(userList)
-          grid.update()
+//          grid.update()
 
           // 判断胜利
           var isVictory = false
