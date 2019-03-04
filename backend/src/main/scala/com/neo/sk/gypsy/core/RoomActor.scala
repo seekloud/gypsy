@@ -428,6 +428,7 @@ object RoomActor {
           log.info(s"Delete Bot : $botId")
           println(s"botmap:${botMap.keySet}")
           botMap.remove(botId)
+          userMap.remove(botId)
           println(s"botmap removed:${botMap.keySet}")
           println(s"usermap:${userMap.keySet}")
 
