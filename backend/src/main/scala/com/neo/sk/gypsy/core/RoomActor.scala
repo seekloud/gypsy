@@ -429,6 +429,7 @@ object RoomActor {
           println(s"botmap:${botMap.keySet}")
           botMap.remove(botId)
           println(s"botmap removed:${botMap.keySet}")
+          println(s"usermap:${userMap.keySet}")
 
           Behaviors.same
 
