@@ -77,8 +77,6 @@ object RoomActor {
 
   case class MouseR(id:String, clientX:Short,clientY:Short,frame:Int,n:Int) extends Command
 
-//  case class ReStartAck(id: String) extends Command
-
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
   private case object UnKnowAction extends Command
@@ -128,7 +126,7 @@ object RoomActor {
 //            createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
 
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
-            idle(roomId, userMap,playermap,subscribersMap,botMap,userSyncMap ,grid, 0l,0)
+            idle(roomId, userMap,playermap,botMap,subscribersMap,userSyncMap ,grid, 0l,0)
         }
     }
   }
@@ -136,9 +134,9 @@ object RoomActor {
   def idle(
             roomId:Long,
             userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)](包括人类+机器人)
-            playerMap:mutable.HashMap[String,String], // [PlayId,nickName]  记录房间玩家数（包括等待复活） (仅人类，包括在玩及等待复活)
-            subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
+            playerMap:mutable.HashMap[String,String], // [playId,nickName]  记录房间玩家数（包括等待复活） (仅人类，包括在玩及等待复活)
             botMap:mutable.HashMap[String,ActorRef[BotActor.Command]], // [BotInfo.playerId,Actor] 记录BOT ws用于清除废弃actor线程
+            subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long,
@@ -149,10 +147,10 @@ object RoomActor {
           ):Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
+          /**普通玩家加入**/
         case JoinRoom(playerInfo,roomId,userActor) =>
           val createBallId = ballId.incrementAndGet()
           println(s" ballId:${createBallId} id:${playerInfo.playerId} fra:${grid.frameCount}")
-//          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
           userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId,group))
           playerMap.put(playerInfo.playerId,playerInfo.nickname)
@@ -190,11 +188,11 @@ object RoomActor {
           grid.AddGameEvent(event)
           Behaviors.same
 
+          /**机器人加入**/
         case JoinRoom4Bot(botInfo,botActor)=>
           val createBallId = ballId.incrementAndGet()
-          //          userList.append(UserInfo(playerInfo.playerId, playerInfo.nickname, mutable.ListBuffer[String]()))
           val group = tickCount % AppSettings.SyncCount
-          userMap.put(botInfo.playerId, (botInfo.nickname, createBallId,group))
+          userMap.put(botInfo.playerId, (botInfo.nickname, createBallId, group))
           botMap.put(botInfo.playerId,botActor)
           botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
@@ -202,10 +200,8 @@ object RoomActor {
             case None => userSyncMap.put(group,Set(botInfo.playerId))
           }
           grid.addPlayer(botInfo.playerId, botInfo.nickname)
-          //userActor ! JoinRoomSuccess(roomId,ctx.self)
 
           dispatchTo(subscribersMap)(botInfo.playerId, Protocol.Id(botInfo.playerId))
-//          dispatchTo(subscribersMap)(botInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(botInfo.playerId,Protocol.FeedApples(foodlists))
 
@@ -213,6 +209,7 @@ object RoomActor {
           grid.AddGameEvent(event)
           Behaviors.same
 
+          /**观察者加入**/
         case JoinRoom4Watch(playerInfo,watchId,userActor) =>
           subscribersMap.put(playerInfo.playerId,userActor)
           userActor ! JoinRoomSuccess4Watch(ctx.self,roomId)
@@ -240,20 +237,17 @@ object RoomActor {
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
           Behaviors.same
 
-        case ReStart(id) =>
-          log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
-//          timer.cancel(ReliveTimeOutKey)
-          grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
-          //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
-          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
-          //复活时发送全量消息
-//          dispatchTo(subscribersMap)(id,grid.getAllGridData)
-          Behaviors.same
-
-
+        /**玩家/机器人复活**/
         case UserReLive(id,frame) =>
           log.info(s"RoomActor Receive Relive Ack from $id *******************")
           ctx.self ! ReStart(id)
+          Behaviors.same
+
+        case ReStart(id) =>
+          log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
+          grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
+          //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
+          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           Behaviors.same
 
 //        case ReStartAck(id) =>
@@ -262,6 +256,7 @@ object RoomActor {
 //          grid.ReLiveMap -= id
 //          Behaviors.same
 
+        /**胜利，一局结束**/
         case Victory(id,name,kill,totalTime) =>
           grid.playerMap.values.foreach{player=>
             if(!player.id.startsWith("bot_")){
@@ -274,7 +269,7 @@ object RoomActor {
           isJoin = false
           Behaviors.same
 
-
+        /**玩家胜利重开**/
         case UserReJoin(id,frame) =>
           log.info(s"RoomActor Receive Rejoin from $id *******************")
           ctx.self ! ReStart(id)
@@ -311,6 +306,7 @@ object RoomActor {
 
           Behaviors.same
 
+        /**玩家离开**/
         case UserActor.Left(playerInfo) =>
           log.info(s"got----RoomActor----Left $msg")
           //用户离开时写入战绩
@@ -318,8 +314,8 @@ object RoomActor {
             val player = grid.playerMap.find(_._1 == playerInfo.playerId).get._2
             esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
           }
-//          //复活列表清除(Bot感觉不用)
-          grid.ReLiveMap -= playerInfo.playerId
+          //fixme 复活列表清除(Bot感觉不用)
+//          grid.ReLiveMap -= playerInfo.playerId
 
           grid.removePlayer(playerInfo.playerId)
           /**移除playerId2ByteMap**/
@@ -373,20 +369,15 @@ object RoomActor {
               case None => userSyncMap.put(group,Set.empty[String])
             }
           }
-
           subscribersMap.remove(playerInfo.playerId)
           Behaviors.same
 
+        /**鼠标、键盘消息**/
         case RoomActor.KeyR(id, keyCode,frame,n) =>
           log.debug(s"got $msg")
-          if (keyCode == KeyEvent.VK_SPACE) {
-            grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
-            dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
-          } else {
-            if(grid.playerId2ByteMap.get(id).isDefined){
-              grid.addActionWithFrame(id, KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
-              dispatch(subscribersMap)(KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
-            }
+          if(grid.playerId2ByteMap.get(id).isDefined){
+            grid.addActionWithFrame(id, KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
+            dispatch(subscribersMap)(KC(grid.playerId2ByteMap.get(id),keyCode,math.max(grid.frameCount,frame),n))
           }
           Behaviors.same
 
@@ -398,6 +389,7 @@ object RoomActor {
           }
           Behaviors.same
 
+        /**Bot获取游戏信息**/
         case GetBotInfo(id,botActor)=>
           val data = grid.getDataForBot(id,1200,600)
           botActor ! InfoReply(data)
@@ -422,19 +414,24 @@ object RoomActor {
         }
           Behaviors.same
 
-
+        /**Bot死亡**/
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
           println(s"botmap:${botMap.keySet}")
           botMap.remove(botId)
           userMap.remove(botId)
+          userMap.get(botId).foreach{u=>
+            val group = u._3
+            userSyncMap.get(group) match {
+              case Some(s) => userSyncMap.update(group,s - botId)
+              case None => userSyncMap.put(group,Set.empty[String])
+            }
+          }
           println(s"botmap removed:${botMap.keySet}")
           println(s"usermap:${userMap.keySet}")
-
           Behaviors.same
 
         case Sync =>
-
           grid.update()
           val botPlayerNum = botMap.size
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > (KillBotScore) )
@@ -443,37 +440,23 @@ object RoomActor {
               botId =>
                 if(botMap.get(botId).isDefined){
                   botMap(botId) ! KillBot
-//                  botMap.get(botId).get ! KillBot
-                  //                botMap.remove(botId)
                   killBigBot +=1
                   AppSettings.starNames += (grid.playerMap(botId).name -> false)
                   grid.playerMap -= botId
                 }
 
             }
-//            val playerNum = playerMap.keys.size
-//            val botNum = botMap.keys.size
-
             if (killBigBot>0) {
               val allPlayerNum = playerMap.size + botPlayerNum - killBigBot
-              //            if(playerNum<AppSettings.botNum && (playerNum+botNum)<AppSettings.botNum){
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
                 println("Sync create")
                 createBotActor(needAdd, roomId, ctx, grid)
                 killBigBot = 0
-                //              for(b <- 1 to (AppSettings.botNum-(playerNum+botNum))){
-                //                val id = "bot_"+roomId + "_300"+ botId.getAndIncrement()
-                //                val botName = getStarName(new Random(System.nanoTime()).nextInt(AppSettings.starNames.size),b)
-                //                getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
-                //              }
               }
-
             }
           }
           grid.getSubscribersMap(subscribersMap,botMap)
-//          grid.getUserList(userList)
-//          grid.update()
 
           // 判断胜利
           var isVictory = false
@@ -484,7 +467,6 @@ object RoomActor {
               isVictory = true
               ctx.self ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.score,totalFrame)
             }
-//            println(s"${grid.frameCount} CURRENT Rank  ${FirstPlayer}  ")
           }
 
           val feedapples = grid.getNewApples
@@ -570,9 +552,9 @@ object RoomActor {
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
           if(isVictory){
-            idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1,grid.frameCount)
+            idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,grid.frameCount)
           }else{
-            idle(roomId,userMap,playerMap,subscribersMap,botMap,userSyncMap,grid,tickCount+1,StartFrame)
+            idle(roomId,userMap,playerMap,botMap, subscribersMap,userSyncMap,grid,tickCount+1,StartFrame)
           }
 
         case UserActor.NetTest(id, createTime) =>
@@ -683,7 +665,6 @@ object RoomActor {
     if(AppSettings.addBotPlayer && needNum >0) {
       for( i <- 1 to needNum){
         try{
-          //      val botNum = AppSettings.starNames.values.toList.filter(i=> !i).length
           val botNum = AppSettings.starNames.values.toList.count(i=> !i )
           if(botNum > 0){
             val num = new Random(System.nanoTime()).nextInt(botNum)
