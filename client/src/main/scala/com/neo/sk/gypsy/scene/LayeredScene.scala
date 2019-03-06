@@ -37,15 +37,26 @@ class LayeredScene {
   val interactCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)//03视野内可交互的元素
   val interactCanvasCtx = interactCanvas.getGraphicsContext2D
   val interactView = new GameCanvas(interactCanvas,interactCanvasCtx,layerWindow)
-  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内包括自己的所有玩家
+  val kernelCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内的玩家实体
+  val kernelCanvasCtx = kernelCanvas.getGraphicsContext2D
+  val kernelView = new GameCanvas(kernelCanvas,kernelCanvasCtx,layerWindow)
+  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //05视野内包括自己的所有玩家
   val allPlayerCanvasCtx = allPlayerCanvas.getGraphicsContext2D
   val allPlayerView = new GameCanvas(allPlayerCanvas,allPlayerCanvasCtx,layerWindow)
-  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //05玩家自己
+  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //06玩家自己
   val playerCanvasCtx = playerCanvas.getGraphicsContext2D
   val playerView = new GameCanvas(playerCanvas,playerCanvasCtx,layerWindow)
-  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //06面板状态信息
+  val pointerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //07鼠标指针位置
+  val pointerCanvasCtx = pointerCanvas.getGraphicsContext2D
+  val pointerView = new GameCanvas(pointerCanvas,pointerCanvasCtx,layerWindow)
+  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //08当前用户状态视图
   val informCanvasCtx = informCanvas.getGraphicsContext2D
-  val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
+  val informView = new GameCanvas(informCanvas,informCanvasCtx,layerWindow)
+
+
+
+
+
 
 
   /**javafx的布局**/
@@ -68,7 +79,8 @@ class LayeredScene {
 //  val scene = new Scene(group,2000,800)
   val scene = new Scene(group)
   humanCanvas.setLayoutX(0)
-  humanCanvas.setLayoutY(100)
+//  humanCanvas.setLayoutY(100)
+  humanCanvas.setLayoutY(0)
   group.getChildren.add(humanCanvas)
 
 
@@ -89,18 +101,22 @@ class LayeredScene {
 
 
   //设置分层视图
-  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace) //01视野在整个地图中的位置
   locationCanvas.setLayoutY(0)
-  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace) //02视野内的不可变元素
   nonInteractCanvas.setLayoutY(0)
-  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)  //03视野内的可变元素
   interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  allPlayerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
-  allPlayerCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  playerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  kernelCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace) //04视野内的玩家实体
+  kernelCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  allPlayerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)  //05视野内的所有权视图
+  allPlayerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+  playerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+canvasSpace*2) //06视野内的当前玩家资产视图
   playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
-  informCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
-  informCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+  pointerCanvas.setLayoutX(0)                               //07鼠标指针位置
+  pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace)
+  informCanvas.setLayoutX(layeredCanvasWidth+canvasSpace)   //08当前用户状态视图
+  informCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
 
 
   group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
