@@ -417,7 +417,6 @@ object RoomActor {
         /**Bot死亡**/
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
-          println(s"botmap:${botMap.keySet}")
           botMap.remove(botId)
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
@@ -427,8 +426,12 @@ object RoomActor {
               case None => userSyncMap.put(group,Set.empty[String])
             }
           }
-          println(s"botmap removed:${botMap.keySet}")
-          println(s"usermap:${userMap.keySet}")
+          /**移除playerId2ByteMap**/
+          grid.removePlayer(botId)
+          if(grid.playerId2ByteMap.get(botId).isDefined){
+            dispatch(subscribersMap)(Protocol.PlayerLeft(grid.playerId2ByteMap(botId)))
+            grid.playerId2ByteMap -= botId
+          }
           Behaviors.same
 
         case Sync =>
@@ -486,6 +489,7 @@ object RoomActor {
 //            grid.ReLiveMap ++= newReLive
 //          }
 
+          /**复活bot**/
           if(grid.ReLiveMap.nonEmpty){
             grid.ReLiveMap.foreach{live =>
               ctx.self ! ReStart(live._1)

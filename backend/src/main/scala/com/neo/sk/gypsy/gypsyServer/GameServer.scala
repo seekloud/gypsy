@@ -84,6 +84,7 @@ class GameServer(override val boundary: Point) extends Grid {
           playerIdByte = item._2
         }
       }
+      /**bot没有ByteId**/
       if(addPlayerByteId){
         while(playerId2ByteMap.values.toList.contains(playerIdByte)){
           playerIdByte = Random.nextInt(127).toByte
@@ -95,7 +96,6 @@ class GameServer(override val boundary: Point) extends Grid {
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
-      println(s"botMap:${botSubscriber.keySet}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
@@ -266,13 +266,7 @@ class GameServer(override val boundary: Point) extends Grid {
             newCell
         }.filterNot(c => c.newmass < 1 || c.radius < 1 )
         if (newCells.isEmpty) {
-//          playerMap.get(killer) match {
-//            case Some(killerPlayer) =>
-//              player.killerName = killerPlayer.name
-//            case _ =>
-//              player.killerName = "unknown"
-//          }
-//          陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot
+          /**陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot**/
           if(player.id.startsWith("bot_")){
             val playerNum = playerMap.keySet.size
             if(playerNum>AppSettings.botNum){
