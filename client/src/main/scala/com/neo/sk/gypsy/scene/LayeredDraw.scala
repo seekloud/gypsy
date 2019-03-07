@@ -6,14 +6,14 @@ import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, getZoomRate, normalization, Mass2Radius}
+import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.common.Constant._
-import com.neo.sk.gypsy.shared.ptcl.Protocol.GridDataSync
+import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MP}
 import javafx.geometry.VPos
 
 import scala.math.{abs, pow, sqrt}
@@ -122,7 +122,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     //TODO 视野缩放
     data.playerDetails.foreach{player=>
       if(player.id == uid){
-        ctx.setFill(Color.GRAY)
+        ctx.setFill(Color.WHEAT)
         ctx.fillRect((player.x-Window.w/2)/(Boundary.w/layeredCanvasWidth),(player.y - Window.h/2)/(Boundary.h/layeredCanvasHeight),layeredCanvasWidth*(Window.w/Boundary.w),layeredCanvasHeight*(Window.h/Boundary.h))
       }
     }
@@ -221,10 +221,66 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   /********************4.视野内的玩家实体******************************/
   def drawKernel() = {
     val ctx = ls.kernelCanvasCtx
+    ctx.setFill(Color.GRAY)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+
+    ctx.save()
+    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+
+    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
+      val circleColor = color.toInt % 7 match{
+        //纯色星球
+        case 0 => "#b30e35"
+        case 1 => "#a65d0a"
+        case 2  => "#917600"
+        case 3  => "#05851b"
+        case 4  => "#037da6"
+        case 5  => "#875a16"
+        case 6  => "#4174ab"
+        case _  => "#8f3284"
+
+      }
+      ctx.setFill(Color.web(circleColor))
+      println(s"name: ${name}  has cell num:${cells.size} ")
+      cells.sortBy(_.id).foreach{ cell=>
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.fill()
+
+        if(protect){
+          ctx.setFill(Color.web(MyColors.halo))
+          ctx.beginPath()
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.fill()
+        }
+        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+        ctx.setFont(Font.font("Helvetica",nameFont))
+        val txt3=new Text(name)
+        val nameWidth = txt3.getLayoutBounds.getWidth
+        ctx.setStroke(Color.web("grey"))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.setFill(Color.web(MyColors.background))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.restore()
+      }
+    }
+
+    ctx.restore()
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(ls.kernelCanvas)
+    }else{
+      BotUtil.emptyArray
+    }
 
   }
 
-  /********************4.视野内包括自己的所有玩家******************************/
+  /********************5.视野内的所有权视图******************************/
   def drawAllPlayer() = {
     val ctx = ls.allPlayerCanvasCtx
 
@@ -287,7 +343,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   }
 
-  /*********************5.视野内的自己***************************************/
+  /*********************6.视野内的当前玩家资产视图**************************/
   def drawPlayer() = {
     val ctx = ls.playerCanvasCtx
     ctx.setFill(Color.GRAY)
@@ -360,7 +416,35 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   }
 
-  /*********************6.面板状态信息图层************************************/
+  /*********************7.鼠标指针位置************************************/
+  def drawPointer(mouseActionMap:Map[Int, Map[String, MP]]) = {
+    val ctx = ls.pointerCanvasCtx
+    ctx.setFill(Color.GRAY)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+
+    ctx.save()
+    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+
+    if(!mouseActionMap.isEmpty){
+      mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+        ctx.beginPath()
+        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,10,10,0,360)
+        ctx.fill()
+      }
+    }
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(ls.pointerCanvas)
+    }else{
+      BotUtil.emptyArray
+    }
+
+  }
+
+  /*********************8.当前用户状态视图************************************/
   def drawInform() = {
     val ctx = ls.informCanvasCtx
 
@@ -781,12 +865,14 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     val localByte = drawLocation()
     val noninteractByte = drawNonInteract()
     val interactByte = drawInteract()
+    val kernelByte = drawKernel()
     val allplayerByte = drawAllPlayer()
     val playerByte = drawPlayer()
+    val pointerByte = drawPointer(grid.mouseActionMap)
     val infoByte = drawInform()
     val humanByte = drawViewByState()
 
-    (localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte)
+    (localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte)
   }
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {

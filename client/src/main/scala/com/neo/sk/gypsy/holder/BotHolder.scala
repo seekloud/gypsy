@@ -163,7 +163,7 @@ class BotHolder(
     ClientBoot.addToPlatform {
       val ld = new LayeredDraw(grid.myId, layeredScene, grid, false)
       val ByteInfo = ld.drawLayered()
-      botActor ! GetByte(ByteInfo._1,ByteInfo._2,ByteInfo._3,ByteInfo._4,ByteInfo._5,ByteInfo._6,ByteInfo._7)
+      botActor ! GetByte(ByteInfo._1,ByteInfo._2,ByteInfo._3,ByteInfo._4,ByteInfo._5,ByteInfo._6,ByteInfo._7,ByteInfo._8,ByteInfo._9)
     }
   }
 

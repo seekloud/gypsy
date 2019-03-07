@@ -66,7 +66,7 @@ object BotActor {
 
   case class MsgToService(sendMsg: WsSendMsg) extends Command
 
-  case class GetByte(localByte:Array[Byte],noninteractByte:Array[Byte],interactByte:Array[Byte],allplayerByte:Array[Byte],playerByte:Array[Byte],infoByte:Array[Byte],humanByte:Array[Byte]) extends Command
+  case class GetByte(localByte:Array[Byte],noninteractByte:Array[Byte],interactByte:Array[Byte],kernelByte:Array[Byte],allplayerByte:Array[Byte],playerByte:Array[Byte],pointerByte:Array[Byte],infoByte:Array[Byte],humanByte:Array[Byte]) extends Command
 
   case object Stop extends Command
 
@@ -163,7 +163,7 @@ object BotActor {
           val layeredScene = new LayeredScene
           botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
           botHolder.connectToGameServer()
-          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
+          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
         case JoinRoom(roomId, sender) =>
           SDKReplyTo = sender
@@ -171,7 +171,7 @@ object BotActor {
           val layeredScene = new LayeredScene
           botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
           botHolder.connectToGameServer()
-          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
+          gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
         case Stop =>
           Behaviors.stopped
@@ -183,7 +183,7 @@ object BotActor {
     }
   }
 
-  def gaming(actor: ActorRef[Protocol.WsSendMsg],byteInfo: (Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte])
+  def gaming(actor: ActorRef[Protocol.WsSendMsg],byteInfo: (Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte], Array[Byte],Array[Byte],Array[Byte])
             )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
@@ -193,8 +193,8 @@ object BotActor {
           Behaviors.same
 
 
-        case GetByte(localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte) =>
-          gaming(actor,(localByte,noninteractByte,interactByte,allplayerByte,playerByte,infoByte,humanByte))
+        case GetByte(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte) =>
+          gaming(actor,(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte))
 
         case ReturnObservation(sender) =>
           //TODO
@@ -204,9 +204,11 @@ object BotActor {
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._3.length,ByteString.copyFrom(byteInfo._3))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._4.length,ByteString.copyFrom(byteInfo._4))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._5.length,ByteString.copyFrom(byteInfo._5))),
-            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6)))
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._8))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._7))),
           )
-          val observation = ObservationRsp(Some(layerInfo),Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._7.length,ByteString.copyFrom(byteInfo._7))))
+          val observation = ObservationRsp(Some(layerInfo),Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._9.length,ByteString.copyFrom(byteInfo._9))))
           sender ! observation
           Behaviors.same
 

@@ -12,6 +12,7 @@ import com.neo.sk.gypsy.utils.BotUtil._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, timeout}
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
+import io.grpc.stub.StreamObserver
 
 object BotServer {
 
@@ -131,8 +132,22 @@ class BotServer(
 
   //TODO 按空格键复活
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
-    Future.successful(SimpleRsp(errCode = 100008, state = state, msg = "auth error"))
+
   }
+  //TODO
+  override def systemInfo(request: Credit): Future[SystemInfoRsp] = {
+
+  }
+  //TODO
+  override def currentFrame(request: Credit, responseObserver: StreamObserver[CurrentFrameRsp]): Unit ={
+
+  }
+  //TODO
+  override def observationWithInfo(request: Credit, responseObserver: StreamObserver[ObservationWithInfoRsp]): Unit ={
+
+  }
+
+
 
 }
 
