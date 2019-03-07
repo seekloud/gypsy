@@ -116,15 +116,14 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   /*******************1.视野在整个地图中的位置***********************/
   def drawLocation()={
-//    ls.locationCanvasCtx
-    ls.locationCanvasCtx.setFill(Color.BLACK)
-    ls.locationCanvasCtx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    val ctx = ls.locationCanvasCtx
+    ctx.setFill(Color.BLACK)
+    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
     //TODO 视野缩放
     data.playerDetails.foreach{player=>
       if(player.id == uid){
-        ls.locationCanvasCtx.setFill(Color.GRAY)
-//        ls.locationCanvasCtx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
-        ls.locationCanvasCtx.fillRect((player.x-Window.w/2)/(Boundary.w/layeredCanvasWidth),(player.y - Window.h/2)/(Boundary.h/layeredCanvasHeight),layeredCanvasWidth*(Window.w/Boundary.w),layeredCanvasHeight*(Window.h/Boundary.h))
+        ctx.setFill(Color.GRAY)
+        ctx.fillRect((player.x-Window.w/2)/(Boundary.w/layeredCanvasWidth),(player.y - Window.h/2)/(Boundary.h/layeredCanvasHeight),layeredCanvasWidth*(Window.w/Boundary.w),layeredCanvasHeight*(Window.h/Boundary.h))
       }
     }
     if(is2Byte){
@@ -136,7 +135,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
   def drawNonInteract() = {
-//    ls.nonInteractCanvasCtx
     val ctx = ls.nonInteractCanvasCtx
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
@@ -217,6 +215,12 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }else{
       BotUtil.emptyArray
     }
+
+  }
+
+  /********************4.视野内的玩家实体******************************/
+  def drawKernel() = {
+    val ctx = ls.kernelCanvasCtx
 
   }
 
