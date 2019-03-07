@@ -220,7 +220,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   }
 
-
   /********************4.视野内包括自己的所有玩家******************************/
   def drawAllPlayer() = {
     val ctx = ls.allPlayerCanvasCtx
@@ -356,7 +355,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
 
   }
-
 
   /*********************6.面板状态信息图层************************************/
   def drawInform() = {

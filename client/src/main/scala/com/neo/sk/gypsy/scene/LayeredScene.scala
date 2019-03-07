@@ -57,8 +57,6 @@ class LayeredScene {
 
 
 
-
-
   /**javafx的布局**/
 //  val flow = new FlowPane()
 //  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
@@ -119,8 +117,8 @@ class LayeredScene {
   informCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
 
 
-  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
-    allPlayerCanvas,playerCanvas,informCanvas)
+  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,kernelCanvas,
+    allPlayerCanvas,playerCanvas,pointerCanvas,informCanvas)
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
     //TODO
@@ -132,8 +130,10 @@ class LayeredScene {
     locationView.resetScreen(viewWidth/4,viewHeight/3)
     nonInteractView.resetScreen(viewWidth/4,viewHeight/3)
     interactView.resetScreen(viewWidth/4,viewHeight/3)
+    kernelView.resetScreen(viewWidth/4,viewHeight/3)
     allPlayerView.resetScreen(viewWidth/4,viewHeight/3)
     playerView.resetScreen(viewWidth/4,viewHeight/3)
+    pointerView.resetScreen(viewWidth/4,viewHeight/3)
     informView.resetScreen(viewWidth/4,viewHeight/3)
   }
 
