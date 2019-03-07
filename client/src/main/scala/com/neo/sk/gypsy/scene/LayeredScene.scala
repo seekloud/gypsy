@@ -24,9 +24,9 @@ class LayeredScene {
   val humanCtx = humanCanvas.getGraphicsContext2D
   val humanView = new GameCanvas(humanCanvas,humanCtx,humanWindow)
 
-    val actionSerialNumGenerator = new AtomicInteger(0)
+  val actionSerialNumGenerator = new AtomicInteger(0)
 
-  /**分层视图**/
+  /**分层视图：8个**/
   val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
   val locationCanvasCtx = locationCanvas.getGraphicsContext2D
@@ -46,6 +46,7 @@ class LayeredScene {
   val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //06面板状态信息
   val informCanvasCtx = informCanvas.getGraphicsContext2D
   val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
+
 
   /**javafx的布局**/
 //  val flow = new FlowPane()
@@ -70,13 +71,6 @@ class LayeredScene {
   humanCanvas.setLayoutY(100)
   group.getChildren.add(humanCanvas)
 
-  //设置分层的布局
-  locationCanvas
-  nonInteractCanvas
-  interactCanvas
-  allPlayerCanvas
-  playerCanvas
-  informCanvas
 
   val canvasSpace = 5
 
@@ -94,6 +88,7 @@ class LayeredScene {
 //  informCanvas.setLayoutY(410)
 
 
+  //设置分层视图
   locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
   locationCanvas.setLayoutY(0)
   nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
