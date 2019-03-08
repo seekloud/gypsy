@@ -29,7 +29,7 @@ object ClientBoot{
   implicit val timeout: Timeout = Timeout(20.seconds) // for actor ask
   val tokenActor:ActorRef[TokenActor.Command] = system.spawn(TokenActor.create(),"esheepSyncClient")
   val gameClient= system.spawn(GameClient.create(),"gameHolder")
-//  val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(),"sdkServer")
+  val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(),"sdkServer")
 
 
   /**保证线程安全**/
@@ -46,7 +46,7 @@ class ClientBoot extends javafx.application.Application{
     val context = new StageContext(mainStage)
     val wsClient = system.spawn(WsClient.create(gameClient,context,system,materializer,executor),"WsClient")
     val botActor = system.spawn(BotActor.create(gameClient,context),"botActor")
-    val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(),"sdkServer")
+//    val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(botActor),"sdkServer")
     val loginScene = new LoginScene()
     val loginHolder = new LoginHolder(wsClient,botActor,loginScene,context)
     loginHolder.showScene()
