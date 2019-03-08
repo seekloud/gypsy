@@ -33,4 +33,7 @@ object AppSettings {
   val botSecure =  appConfig.getString("botSecure.apiToken")
   val isBot = appConfig.getBoolean("isBot")
 
+  val botServerPort = appConfig.getInt("botServerPort")
+
+
 }
