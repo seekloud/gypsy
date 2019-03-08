@@ -33,7 +33,7 @@ case class DrawGame(
               canvas:Canvas,
               size:Point
               ) {
-
+//
 //  private[this] val  virusImg = dom.document.getElementById("virus").asInstanceOf[HTMLElement]
   private[this]val virusImg = img(*.style := "width:3600px;height:1800px;display:none")(*.src := s"/gypsy/static/img/stone.png").render
 
