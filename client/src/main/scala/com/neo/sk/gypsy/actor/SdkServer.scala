@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import com.neo.sk.gypsy.botService.BotServer
 import io.grpc.Server
 import org.slf4j.LoggerFactory
-
+import com.neo.sk.gypsy.
 import scala.concurrent.ExecutionContext
 /**
   * create by zhaoyin
@@ -18,8 +18,10 @@ object SdkServer {
   private val log = LoggerFactory.getLogger("sdkserver")
   case object Shutdown extends Command
 
-  case class BuildServer(port: Int,
-    executionContext: ExecutionContext
+  case class BuildServer(
+                          port: Int,
+                          executionContext: ExecutionContext,
+                          botActor: BotActor
     ) extends Command
 
 
@@ -31,22 +33,22 @@ object SdkServer {
     stashBuffer.unstashAll(ctx, behavior)
   }
 
-  def create(botActor: ActorRef[BotActor.Command]): Behavior[Command] = {
+  def create(): Behavior[Command] = {
     Behaviors.setup[Command] { ctx =>
       Behaviors.withTimers[Command] { implicit timer =>
         implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
-        switchBehavior(ctx, "idle", idle(botActor))
+        switchBehavior(ctx, "idle", idle())
       }
     }
   }
 
-  private def idle(botActor: ActorRef[BotActor.Command])
+  private def idle()
                   (implicit stashBuffer: StashBuffer[Command],
                    timer: TimerScheduler[Command]
                   ): Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case BuildServer(port, executor) =>
+        case BuildServer(port, executor,botActor) =>
           //FIXME 启动BotServer服务
           val server = BotServer.build(port, executor, botActor)
           server.start()
