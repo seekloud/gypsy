@@ -129,20 +129,20 @@ object BotActor {
             case Left(e) =>
           }
           Behaviors.same
-        case Work(stream) =>
-          //启动BotService
-          val port = 5321
-          val server = BotServer.build(port, executor, ctx.self)
-          server.start()
-          log.debug(s"Server started at $port")
-          sys.addShutdownHook {
-            log.debug("JVM SHUT DOWN.")
-            server.shutdown()
-            log.debug("SHUT DOWN.")
-          }
-//          server.awaitTermination()
-//          log.debug("DONE.")
-          waitingGame(gameClient,stageCtx,stream)
+//        case Work(stream) =>
+//          //启动BotService
+//          val port = 5321
+//          val server = BotServer.build(port, executor, ctx.self)
+//          server.start()
+//          log.debug(s"Server started at $port")
+//          sys.addShutdownHook {
+//            log.debug("JVM SHUT DOWN.")
+//            server.shutdown()
+//            log.debug("SHUT DOWN.")
+//          }
+////          server.awaitTermination()
+////          log.debug("DONE.")
+//          waitingGame(gameClient,stageCtx,stream)
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
