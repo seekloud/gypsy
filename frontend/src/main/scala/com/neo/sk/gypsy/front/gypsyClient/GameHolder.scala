@@ -215,7 +215,6 @@ class GameHolder(replay:Boolean = false) {
     //在画布上监听键盘事件
     canvas3.onkeydown = {
       (e: dom.KeyboardEvent) => {
-//        println(s"keydown: ${e.keyCode} ${gameState} ")
         if(keyInFlame == false){
           if(gameState == GameState.dead){
             if (e.keyCode == KeyCode.Space) {
@@ -229,7 +228,6 @@ class GameHolder(replay:Boolean = false) {
               println(s"down+${e.keyCode.toString} Press After Success!")
               keyInFlame = true
               val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
-//              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
               webSocketClient.sendMsg(rejoinMsg)
             }
           } else{
@@ -239,15 +237,11 @@ class GameHolder(replay:Boolean = false) {
               val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
               if(e.keyCode != KeyCode.F){
                 grid.addActionWithFrame(grid.myId, keyCode.copy(f=grid.frameCount + delayFrame))
-//                grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
               }
               webSocketClient.sendMsg(keyCode)
             }
           }
         }
-        //e.preventDefault()
-
-
       }
     }
 

@@ -17,6 +17,8 @@ import com.neo.sk.gypsy.shared.util.utils._
   */
 class GridOnClient(override val boundary: Point) extends Grid {
 
+  var myId = ""
+
   override def debug(msg: String): Unit = println(msg)
 
   override def info(msg: String): Unit = println(msg)

@@ -19,6 +19,8 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
   */
 class GameClient (override val boundary: Point) extends Grid {
 
+  var myId = ""
+
   override def debug(msg: String): Unit = println(msg)
 
   override def info(msg: String): Unit = println(msg)

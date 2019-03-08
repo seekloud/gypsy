@@ -56,6 +56,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private var roomId = 0l
 
+  /**只针对bot的待复活列表**/
   var ReLiveMap = Map.empty[String,Long]   //(BotId -> 时间)
 
 
