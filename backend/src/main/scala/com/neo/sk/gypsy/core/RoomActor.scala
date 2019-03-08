@@ -325,6 +325,7 @@ object RoomActor {
           /**移除playerId2ByteMap**/
           if(grid.playerId2ByteMap.get(playerInfo.playerId).isDefined){
             dispatch(subscribersMap)(Protocol.PlayerLeft(grid.playerId2ByteMap(playerInfo.playerId)))
+            grid.playerId2ByteQueue.enqueue(grid.playerId2ByteMap(playerInfo.playerId))
             grid.playerId2ByteMap -= playerInfo.playerId
           }
           try{
@@ -431,6 +432,7 @@ object RoomActor {
           grid.removePlayer(botId)
           if(grid.playerId2ByteMap.get(botId).isDefined){
             dispatch(subscribersMap)(Protocol.PlayerLeft(grid.playerId2ByteMap(botId)))
+            grid.playerId2ByteQueue.enqueue(grid.playerId2ByteMap(botId))
             grid.playerId2ByteMap -= botId
           }
           Behaviors.same

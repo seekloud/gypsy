@@ -48,6 +48,10 @@ class GameServer(override val boundary: Point) extends Grid {
 
 //  val playerIdgenerator = new AtomicInteger(127)
   val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
+  val playerId2ByteQueue = new mutable.Queue[Byte]()
+  for( i <- 0 to 126){
+    playerId2ByteQueue.enqueue(i.toByte)
+  }
 //  private[this] var historyRankMap = Map.empty[String, Score]
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 //  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
@@ -74,22 +78,23 @@ class GameServer(override val boundary: Point) extends Grid {
       val color = new Random(System.nanoTime()).nextInt(24)
       val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
       playerMap += id -> player
-      /**--------------------**/
-      var addPlayerByteId = true
-      var playerIdByte = Random.nextInt(127).toByte
-      playerId2ByteMap.foreach{item=>
-        if(item._1 == id){
-          addPlayerByteId = false
-          playerIdByte = item._2
-        }
-      }
-      /**bot没有ByteId**/
-      if(addPlayerByteId){
-        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
-          playerIdByte = Random.nextInt(127).toByte
-        }
+      val playerIdByte = playerId2ByteQueue.dequeue()
+//      /**--------------------**/
+//      var addPlayerByteId = true
+//      var playerIdByte = Random.nextInt(127).toByte
+//      playerId2ByteMap.foreach{item=>
+//        if(item._1 == id){
+//          addPlayerByteId = false
+//          playerIdByte = item._2
+//        }
+//      }
+//      /**bot没有ByteId**/
+//      if(addPlayerByteId){
+//        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
+//          playerIdByte = Random.nextInt(127).toByte
+//        }
         playerId2ByteMap += id -> playerIdByte
-      }
+//      }
       dispatch(subscriber)(PlayerJoin(playerIdByte,player))
       /**-------------------**/
       val event = UserJoinRoom(roomId,player,frameCount+2)
