@@ -19,7 +19,8 @@ object SdkServer {
   case object Shutdown extends Command
 
   case class BuildServer(port: Int,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+                         act:ActorRef[BotActor.Command]
     ) extends Command
 
 
@@ -31,26 +32,26 @@ object SdkServer {
     stashBuffer.unstashAll(ctx, behavior)
   }
 
-  def create(botActor: ActorRef[BotActor.Command]): Behavior[Command] = {
+  def create(): Behavior[Command] = {
     Behaviors.setup[Command] { ctx =>
       Behaviors.withTimers[Command] { implicit timer =>
         implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
 
-        switchBehavior(ctx, "idle", idle(botActor))
+        switchBehavior(ctx, "idle", idle())
       }
     }
   }
 
-  private def idle(botActor: ActorRef[BotActor.Command])
+  private def idle()
                   (implicit stashBuffer: StashBuffer[Command],
                    timer: TimerScheduler[Command]
                   ): Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case BuildServer(port, executor) =>
+        case BuildServer(port, executor,act) =>
           //FIXME 启动BotServer服务
           val port = 5321
-          val server = BotServer.build(port, executor, botActor)
+          val server = BotServer.build(port, executor, act)
           server.start()
           log.debug(s"Server started at $port")
           sys.addShutdownHook {
@@ -73,6 +74,7 @@ object SdkServer {
       msg match {
         case Shutdown =>
           //TODO 关闭BotServer服务
+          server.shutdown()
           Behaviors.stopped
       }
     }
