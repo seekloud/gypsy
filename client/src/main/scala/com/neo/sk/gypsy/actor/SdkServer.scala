@@ -35,7 +35,6 @@ object SdkServer {
     Behaviors.setup[Command] { ctx =>
       Behaviors.withTimers[Command] { implicit timer =>
         implicit val stashBuffer: StashBuffer[Command] = StashBuffer[Command](Int.MaxValue)
-
         switchBehavior(ctx, "idle", idle(botActor))
       }
     }
@@ -49,7 +48,6 @@ object SdkServer {
       msg match {
         case BuildServer(port, executor) =>
           //FIXME 启动BotServer服务
-          val port = 5321
           val server = BotServer.build(port, executor, botActor)
           server.start()
           log.debug(s"Server started at $port")

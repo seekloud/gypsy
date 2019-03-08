@@ -116,6 +116,7 @@ object BotActor {
                       val layeredScene = new LayeredScene
                       botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
                       botHolder.connectToGameServer()
+
 //                    ctx.self ! Work(stream)
                       Future.successful("BotActor webscoket connect success.")
                     }else{
