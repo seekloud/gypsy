@@ -68,6 +68,7 @@ object BotActor {
 
   case class GetByte(localByte:Array[Byte],noninteractByte:Array[Byte],interactByte:Array[Byte],kernelByte:Array[Byte],allplayerByte:Array[Byte],playerByte:Array[Byte],pointerByte:Array[Byte],infoByte:Array[Byte],humanByte:Array[Byte]) extends Command
 
+  case class StartSdkServer() extends  Command
   case object Stop extends Command
 
   var SDKReplyTo:ActorRef[JoinRoomRsp] = _
@@ -117,6 +118,7 @@ object BotActor {
                       botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
                       botHolder.connectToGameServer()
 //                    ctx.self ! Work(stream)
+                      ctx.self ! StartSdkServer()
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
@@ -129,6 +131,10 @@ object BotActor {
             case Left(e) =>
           }
           Behaviors.same
+
+        case StartSdkServer() =>
+          ClientBoot.sdkServer ! SdkServer.BuildServer(5321,executor,ctx.self)
+          waitingGaming(gameClient,stageCtx)
 //        case Work(stream) =>
 //          //启动BotService
 //          val port = 5321
