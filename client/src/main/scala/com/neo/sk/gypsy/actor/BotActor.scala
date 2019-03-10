@@ -68,7 +68,7 @@ object BotActor {
 
   case class GetByte(localByte:Array[Byte],noninteractByte:Array[Byte],interactByte:Array[Byte],kernelByte:Array[Byte],allplayerByte:Array[Byte],playerByte:Array[Byte],pointerByte:Array[Byte],infoByte:Array[Byte],humanByte:Array[Byte]) extends Command
 
-  case class StartSdkServer() extends Command
+  case class StartSdkServer(stream: ActorRef[Protocol.WsSendMsg], botHolder: BotHolder) extends Command
 
   case object Stop extends Command
 
@@ -113,14 +113,16 @@ object BotActor {
                   val connected = response.flatMap{ upgrade =>
                     if(upgrade.response.status == StatusCodes.SwitchingProtocols){
                       tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
-                      //暂时用普通玩家登陆流程
-                      stream ! Protocol.JoinRoom(None)
-                      val layeredScene = new LayeredScene
-                      botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
-                      botHolder.connectToGameServer()
 
-//                    ctx.self ! Work(stream)
-                      ctx.self ! StartSdkServer()
+                      //暂时用普通玩家登陆流程
+//                      stream ! Protocol.JoinRoom(None)
+
+//                      val layeredScene = new LayeredScene
+//                      botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
+//                      botHolder.connectToGameServer()
+
+                      // fixme bot登录流程
+                      ctx.self ! StartSdkServer(stream, botHolder)
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
@@ -134,9 +136,9 @@ object BotActor {
           }
           Behaviors.same
 
-        case StartSdkServer() =>
-          ClientBoot.sdkServer ! SdkServer.BuildServer(port = 5321,executor,ctx.self)
-          waitingGaming(gameClient,stageCtx)
+        case StartSdkServer(stream, botHolder) =>
+          ClientBoot.sdkServer ! SdkServer.BuildServer(AppSettings.botServerPort, executor, ctx.self, botHolder)
+          waitingGame(gameClient,stageCtx,stream)
 
 //        case Work(stream) =>
 //          //启动BotService
@@ -203,6 +205,21 @@ object BotActor {
 
 
         case GetByte(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte) =>
+          //TODO 这里模仿ReturnObservation，但ReturnObservation有TODO，需一起修改
+          val layerInfo = LayeredObservation(
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._1.length,ByteString.copyFrom(byteInfo._1))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._2.length,ByteString.copyFrom(byteInfo._2))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._3.length,ByteString.copyFrom(byteInfo._3))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._4.length,ByteString.copyFrom(byteInfo._4))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._5.length,ByteString.copyFrom(byteInfo._5))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._8))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._7))),
+          )
+          val observation = ObservationRsp(Some(layerInfo), Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._9.length,ByteString.copyFrom(byteInfo._9))))
+          if(BotServer.isObservationConnect) {
+            BotServer.streamSender.get ! GrpcStreamSender.NewObservation(observation)
+          }
           gaming(actor,(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte))
 
         case ReturnObservation(sender) =>

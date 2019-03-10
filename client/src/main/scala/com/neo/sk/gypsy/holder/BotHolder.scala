@@ -14,9 +14,10 @@ import java.awt.event.KeyEvent
 import com.neo.sk.gypsy.common.Constant
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.ClientBoot.gameClient
-import com.neo.sk.gypsy.actor.BotActor
+import com.neo.sk.gypsy.actor.{BotActor, GrpcStreamSender}
 import com.neo.sk.gypsy.actor.BotActor.GetByte
 import com.neo.sk.gypsy.actor.GameClient._
+import com.neo.sk.gypsy.botService.BotServer
 import org.seekloud.esheepapi.pb.actions._
 
 import scala.math.atan2
@@ -157,6 +158,10 @@ class BotHolder(
         syncGridData = None
       }
       justSynced = false
+    }
+    //FIXME 主动推送帧数据 3/10
+    if(BotServer.isFrameConnect) {
+      BotServer.streamSender.foreach(_ ! GrpcStreamSender.NewFrame(getFrameCount))
     }
 
     //TODO 生成分层视图数据

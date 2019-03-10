@@ -46,7 +46,6 @@ class ClientBoot extends javafx.application.Application{
     val context = new StageContext(mainStage)
     val wsClient = system.spawn(WsClient.create(gameClient,context,system,materializer,executor),"WsClient")
     val botActor = system.spawn(BotActor.create(gameClient,context),"botActor")
-//    val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(botActor),"sdkServer")
     val loginScene = new LoginScene()
     val loginHolder = new LoginHolder(wsClient,botActor,loginScene,context)
     loginHolder.showScene()

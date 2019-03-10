@@ -3,6 +3,7 @@ package com.neo.sk.gypsy.actor
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import com.neo.sk.gypsy.botService.BotServer
+import com.neo.sk.gypsy.holder.BotHolder
 import io.grpc.Server
 import org.slf4j.LoggerFactory
 
@@ -20,7 +21,8 @@ object SdkServer {
 
   case class BuildServer(port: Int,
     executionContext: ExecutionContext,
-                         act:ActorRef[BotActor.Command]
+    act:ActorRef[BotActor.Command],
+    botHolder: BotHolder
     ) extends Command
 
 
@@ -48,10 +50,9 @@ object SdkServer {
                   ): Behavior[Command] = {
     Behaviors.receive { (ctx, msg) =>
       msg match {
-        case BuildServer(port, executor,act) =>
+        case BuildServer(port, executor, act, botHolder) =>
           //FIXME 启动BotServer服务
-          val port = 5321
-          val server = BotServer.build(port, executor, act)
+          val server = BotServer.build(port, executor, act, botHolder)
           server.start()
           log.debug(s"Server started at $port")
           sys.addShutdownHook {

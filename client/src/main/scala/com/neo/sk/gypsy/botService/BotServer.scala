@@ -1,23 +1,32 @@
 package com.neo.sk.gypsy.botService
 
+import java.awt.event.KeyEvent
+
 import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.AskPattern._
-import com.neo.sk.gypsy.actor.BotActor
+import akka.actor.typed.scaladsl.adapter._
+import com.neo.sk.gypsy.actor.{BotActor, GrpcStreamSender}
 import io.grpc.{Server, ServerBuilder}
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc
 import org.seekloud.esheepapi.pb.service.EsheepAgentGrpc.EsheepAgent
+
 import scala.concurrent.{ExecutionContext, Future}
 import com.neo.sk.gypsy.utils.BotUtil._
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, timeout}
+import com.neo.sk.gypsy.holder.BotHolder
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import io.grpc.stub.StreamObserver
 
 object BotServer {
 
-  def build(port: Int, executionContext: ExecutionContext, botActor:ActorRef[BotActor.Command]): Server = {
-    val service = new BotServer(botActor)
+  var streamSender: Option[ActorRef[GrpcStreamSender.Command]] = None
+  var isObservationConnect = false
+  var isFrameConnect = false
+
+  def build(port: Int, executionContext: ExecutionContext, botActor:ActorRef[BotActor.Command], botHolder: BotHolder): Server = {
+    val service = new BotServer(botActor, botHolder)
     ServerBuilder.forPort(port).addService(
       EsheepAgentGrpc.bindService(service, executionContext)
     ).build
@@ -28,8 +37,9 @@ object BotServer {
 
 
 class BotServer(
-                 botActor:ActorRef[BotActor.Command]
-               ) extends EsheepAgent {
+  botActor:ActorRef[BotActor.Command],
+  botHolder: BotHolder
+) extends EsheepAgent {
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
   private var state: State = State.unknown
@@ -68,6 +78,9 @@ class BotServer(
   override def leaveRoom(request: Credit): Future[SimpleRsp] = {
     println(s"leaveRoom Called by [$request")
     if(checkBotToken(request.apiToken)){
+      BotServer.isFrameConnect = false
+      BotServer.isObservationConnect = false
+      BotServer.streamSender.foreach(s=> s ! GrpcStreamSender.LeaveRoom)
       botActor ! BotActor.LeaveRoom
       state = State.ended
       Future.successful(SimpleRsp(state = state, msg = "ok"))
@@ -130,21 +143,58 @@ class BotServer(
 
   }
 
-  //TODO 按空格键复活
+  //按空格键复活
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
-
+    if (checkBotToken(request.apiToken)) {
+      //TODO 下面给客户端传递了消息，需要给后台传递消息
+      //TODO swing? 暂时为None
+      BotActor.botHolder.gameActionReceiver(KeyEvent.VK_SPACE, None)
+      Future.successful(SimpleRsp(state = state, msg = "ok"))
+    } else {
+      Future.successful(SimpleRsp(errCode = 100005, state = State.unknown, msg = "auth error"))
+    }
   }
-  //TODO
+  //
   override def systemInfo(request: Credit): Future[SystemInfoRsp] = {
-
+    if(checkBotToken(request.apiToken)) {
+      //FIXME 下面150是帧时长，需要写在配置文件等地方
+      val rsp = SystemInfoRsp(framePeriod = 150, state = state, msg = "ok")
+      Future.successful(rsp)
+    } else {
+      Future.successful(SystemInfoRsp(errCode = 100006, state = State.unknown, msg = "auth error"))
+    }
   }
-  //TODO
+
   override def currentFrame(request: Credit, responseObserver: StreamObserver[CurrentFrameRsp]): Unit ={
-
+    if(checkBotToken(request.apiToken)){
+      BotServer.isFrameConnect = true
+      if(BotServer.streamSender.isDefined){
+        BotServer.streamSender.get ! GrpcStreamSender.FrameObserver(responseObserver)
+      }
+      else{
+        BotServer.streamSender = Some(system.spawn(GrpcStreamSender.create(botHolder), "grpcStreamSender"))
+        BotServer.streamSender.get ! GrpcStreamSender.FrameObserver(responseObserver)
+      }
+    }
+    else{
+      responseObserver.onCompleted()
+    }
   }
-  //TODO
-  override def observationWithInfo(request: Credit, responseObserver: StreamObserver[ObservationWithInfoRsp]): Unit ={
 
+  override def observationWithInfo(request: Credit, responseObserver: StreamObserver[ObservationWithInfoRsp]): Unit ={
+    if(checkBotToken(request.apiToken)){
+      BotServer.isObservationConnect = true
+      if(BotServer.streamSender.isDefined){
+        BotServer.streamSender.get ! GrpcStreamSender.ObservationObserver(responseObserver)
+      }
+      else{
+        BotServer.streamSender = Some(system.spawn(GrpcStreamSender.create(botHolder), "grpcStreamSender"))
+        BotServer.streamSender.get ! GrpcStreamSender.ObservationObserver(responseObserver)
+      }
+    }
+    else{
+      responseObserver.onCompleted()
+    }
   }
 
 
