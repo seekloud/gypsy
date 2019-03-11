@@ -24,6 +24,7 @@ object BotServer {
   var streamSender: Option[ActorRef[GrpcStreamSender.Command]] = None
   var isObservationConnect = false
   var isFrameConnect = false
+  var state: State = State.unknown // 原来这个state在class里，不能被类外调用，现在写在object里，因为GrpcStreamSender需要查看
 
   def build(port: Int, executionContext: ExecutionContext, botActor:ActorRef[BotActor.Command], botHolder: BotHolder): Server = {
     val service = new BotServer(botActor, botHolder)
@@ -42,7 +43,8 @@ class BotServer(
 ) extends EsheepAgent {
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
-  private var state: State = State.unknown
+//  private var state: State = State.unknown
+  import BotServer.state
 
   override def createRoom(request: CreateRoomReq): Future[CreateRoomRsp] = {
     if(checkBotToken(request.credit.get.apiToken)){
