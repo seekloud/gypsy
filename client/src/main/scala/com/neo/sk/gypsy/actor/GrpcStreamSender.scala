@@ -2,10 +2,12 @@ package com.neo.sk.gypsy.actor
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
+import com.neo.sk.gypsy.botService.BotServer
 import com.neo.sk.gypsy.holder.BotHolder
 import org.slf4j.LoggerFactory
 import io.grpc.stub.StreamObserver
 import org.seekloud.esheepapi.pb.api.{CurrentFrameRsp, ObservationRsp, ObservationWithInfoRsp, State}
+import com.neo.sk.gypsy.shared.ptcl.Game._
 
 /**
   * create by zhaoyin
@@ -68,22 +70,20 @@ object GrpcStreamSender {
           }
 
         case NewObservation(observation) =>
-//          MedusaServer.state = if (gameController.getLiveState) State.in_game else State.killed
-//          TODO 判断死亡状态
+          if(BotHolder.gameState == GameState.play){
+            BotServer.state = State.in_game
+          }
+          if(BotHolder.gameState == GameState.dead){
+            BotServer.state = State.killed
+          }
           val rsp = ObservationWithInfoRsp(
             observation.layeredObservation, observation.humanObservation,
-            //TODO 获取分数
-            100,
-            //TODO 获取击杀
-            100,
-            //TODO 获取生命
-            1,
-            //TODO 获取帧号
-            123,
-            //errCode
+            botHolder.getInform._1,
+            botHolder.getInform._2,
+            botHolder.getInform._3,
+            botHolder.getFrameCount,
             0,
-            //TODO BotServer 状态
-            State.unknown,
+            BotServer.state,
             "ok")
           try {
             observationObserver.onNext(rsp)
