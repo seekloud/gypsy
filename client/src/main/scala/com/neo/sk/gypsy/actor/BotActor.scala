@@ -127,7 +127,9 @@ object BotActor {
                       //启动BotServer
                       ctx.self ! StartSdkServer(stream, botHolder)
                       //启动BotClient test
-                      timer.startSingleTimer(TimerKeyForTest, ClientTest(1),5.seconds)
+                      if(AppSettings.botTest){
+                        timer.startSingleTimer(TimerKeyForTest, ClientTest(1),5.seconds)
+                      }
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
