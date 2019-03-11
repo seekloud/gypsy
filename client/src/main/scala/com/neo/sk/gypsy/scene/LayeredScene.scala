@@ -114,7 +114,7 @@ class LayeredScene {
   pointerCanvas.setLayoutX(0)                               //07鼠标指针位置
   pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace)
   informCanvas.setLayoutX(layeredCanvasWidth+canvasSpace)   //08当前用户状态视图
-  informCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
+  informCanvas.setLayoutY(humanCanvasHeight+canvasSpace)
 
 
   group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,kernelCanvas,
