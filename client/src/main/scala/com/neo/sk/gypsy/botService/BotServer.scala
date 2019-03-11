@@ -146,7 +146,7 @@ class BotServer(
   //按空格键复活
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
     if (checkBotToken(request.apiToken)) {
-      //TODO 下面给客户端传递了消息，需要给后台传递消息
+      //TODO 下面给客户端传递了消息，需要给后台传递消息？
       //TODO swing? 暂时为None
       BotActor.botHolder.gameActionReceiver(KeyEvent.VK_SPACE, None)
       Future.successful(SimpleRsp(state = state, msg = "ok"))
@@ -157,7 +157,7 @@ class BotServer(
   //
   override def systemInfo(request: Credit): Future[SystemInfoRsp] = {
     if(checkBotToken(request.apiToken)) {
-      //FIXME 下面150是帧时长，需要写在配置文件等地方
+      //FIXME 下面150是帧时长，需要写在配置文件等地方？
       val rsp = SystemInfoRsp(framePeriod = 150, state = state, msg = "ok")
       Future.successful(rsp)
     } else {
