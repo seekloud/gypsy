@@ -73,13 +73,13 @@ object GrpcStreamSender {
           val rsp = ObservationWithInfoRsp(
             observation.layeredObservation, observation.humanObservation,
             //TODO 获取分数
-            100,
+            botHolder.getInform._1,
             //TODO 获取击杀
-            100,
+            botHolder.getInform._2,
             //TODO 获取生命
-            1,
+            botHolder.getInform._3,
             //TODO 获取帧号
-            123,
+            botHolder.getFrameCount,
             //errCode
             0,
             //TODO BotServer 状态
