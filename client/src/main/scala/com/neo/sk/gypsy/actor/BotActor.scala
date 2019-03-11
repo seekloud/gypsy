@@ -12,16 +12,14 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketRequest}
 import akka.stream.OverflowStrategy
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import akka.util.{ByteStringBuilder}
 import com.google.protobuf.ByteString
 import com.neo.sk.gypsy.ClientBoot
 import org.seekloud.byteobject.ByteObject.{bytesDecode, _}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
-
+import java.awt.event.KeyEvent
 import scala.concurrent.Future
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, tokenActor}
-import com.neo.sk.gypsy.actor.BotActor.LeaveRoom
 import com.neo.sk.gypsy.common.Api4GameAgent.{botKey2Token, linkGameAgent}
 import com.neo.sk.gypsy.common.Constant.{layeredCanvasHeight, layeredCanvasWidth}
 import com.neo.sk.gypsy.holder.BotHolder
@@ -33,7 +31,6 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.observations.{ImgData, LayeredObservation}
-//import com.google.protobuf.ByteString
 
 
 /**
@@ -61,6 +58,8 @@ object BotActor {
   case class Action(key:Int, swing: Option[Swing],sender:ActorRef[ActionRsp]) extends Command
 
   case class Inform(sender:ActorRef[InformRsp]) extends Command
+
+  case class Reincarnation(sender:ActorRef[SimpleRsp]) extends Command
 
   case class ReturnObservation(sender:ActorRef[ObservationRsp]) extends Command
 
@@ -203,9 +202,22 @@ object BotActor {
           sender ! ActionRsp(frameIndex = botHolder.getFrameCount, msg = "ok")
           Behaviors.same
 
+        case Reincarnation(sender) =>
+          botHolder.gameActionReceiver(KeyEvent.VK_SPACE, None)
+          sender ! SimpleRsp(msg = "ok")
+          Behaviors.same
 
+
+        case Inform(sender) =>
+          sender ! InformRsp(score = botHolder.getInform._1.toInt, kills = botHolder.getInform._2,heath = botHolder.getInform._3)
+          Behaviors.same
+
+        case LeaveRoom =>
+          log.info("BotActor now stop.")
+          Behaviors.stopped
+
+          /**botServer持续给sdk推送observation**/
         case GetByte(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte) =>
-          //TODO 这里模仿ReturnObservation，但ReturnObservation有TODO，需一起修改
           val layerInfo = LayeredObservation(
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._1.length,ByteString.copyFrom(byteInfo._1))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._2.length,ByteString.copyFrom(byteInfo._2))),
@@ -222,8 +234,8 @@ object BotActor {
           }
           gaming(actor,(localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte))
 
+          /**sdk主动调接口获取observation**/
         case ReturnObservation(sender) =>
-          //TODO
           val layerInfo = LayeredObservation(
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._1.length,ByteString.copyFrom(byteInfo._1))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._2.length,ByteString.copyFrom(byteInfo._2))),
@@ -237,14 +249,6 @@ object BotActor {
           val observation = ObservationRsp(Some(layerInfo),Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._9.length,ByteString.copyFrom(byteInfo._9))))
           sender ! observation
           Behaviors.same
-
-        case Inform(sender) =>
-          sender ! InformRsp(score = botHolder.getInform._1.toInt, kills = botHolder.getInform._2,heath = botHolder.getInform._3)
-          Behaviors.same
-
-        case LeaveRoom =>
-          log.info("BotActor now stop.")
-          Behaviors.stopped
 
         case Stop =>
           Behaviors.stopped

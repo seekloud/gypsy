@@ -34,6 +34,8 @@ object AppSettings {
   val isBot = appConfig.getBoolean("isBot")
 
   val botServerPort = appConfig.getInt("botServerPort")
+  val framePeriod = appConfig.getInt("framePeriod")
+
 
 
 }

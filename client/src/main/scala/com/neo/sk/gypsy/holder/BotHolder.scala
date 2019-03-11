@@ -103,7 +103,6 @@ class BotHolder(
   }
 
   def init() = {
-
     //    layeredScene.gameView.drawGameOn()
     //    layeredScene.middleView.drawRankMap()
   }
@@ -249,19 +248,6 @@ class BotHolder(
     val kill = player.kill
     val health = if (gameState == GameState.dead) 0 else 1
     (score, kill, health)
-  }
-
-  //TODO
-  def getObservation = {
-    //          val layer = LayeredObservation(
-    //            Some(ImgData(400, 200, mapByte.length,ByteString.copyFrom())),
-    //            Some(ImgData(400, 200, bgByte.length, ByteString.copyFrom())),
-    //            Some(ImgData(400, 200, appleByte.length, ByteString.copyFrom())),
-    //            Some(ImgData(400, 200, allSnakesByte.length, ByteString.copyFrom())),
-    //            Some(ImgData(400, 200, mySnakeByte.length, ByteString.copyFrom())),
-    //            Some(ImgData(400, 200, infoByte.length, ByteString.copyFrom())))
-    //          val observation = ObservationRsp(Some(layer), Some(ImgData(800, 400, 0, ByteString.copyFrom())))
-    ObservationRsp()
   }
 
 
