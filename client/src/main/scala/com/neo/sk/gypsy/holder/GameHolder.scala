@@ -160,12 +160,6 @@ class GameHolder(
       justSynced = false
     }
 
-//    if(AppSettings.isBot){
-//      ClientBoot.addToPlatform {
-//
-//      }
-//    }
-
   }
 
   def gameRender() = {
@@ -199,7 +193,6 @@ class GameHolder(
           keyInFlame = true
           val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
           serverActor ! reliveMsg
-//          webSocketClient.sendMsg(reliveMsg)
         } else {
           println(s"down+${e.toString}")
           //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
@@ -207,7 +200,6 @@ class GameHolder(
           val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
           if(key == KeyCode.E){
             grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
-//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
           }
           serverActor ! keyCode
         }
@@ -217,12 +209,10 @@ class GameHolder(
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-//        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
 
       val mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-//      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
         mouseInFlame = true
         FormerDegree = getDegree(e.getX,e.getY)
@@ -233,13 +223,11 @@ class GameHolder(
     }
   })
 
+
+
   def cleanCtx() = {
     gameScene.topView.cleanCtx()
   }
-
-//  def reLive(id: String) = {
-//    serverActor ! ReLiveAck(id)
-//  }
 
   def gameClose = {
     //停止gameLoop

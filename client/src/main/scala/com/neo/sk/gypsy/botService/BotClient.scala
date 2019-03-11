@@ -26,11 +26,9 @@ class BotClient(
   //3.调用服务端的服务方法.相当于发送请求,并获取服务端的回应.
   val credit = Credit(apiToken = apiToken)
 
-  //TODO
-  def createAction(r:Float,d:Float) = { actionReq = ActionReq(Move.up,Some(Swing(r,d)),0,0,Some(credit))}
-
   var actionReq=ActionReq(Move.up,Some(Swing((Math.PI/2).toFloat,2.5F)),0,0,Some(credit))
 
+  def createAction(r:Float,d:Float) = { actionReq = ActionReq(Move.up,Some(Swing(r,d)),0,0,Some(credit))}
 
   def createRoom(password:String): Future[CreateRoomRsp] = esheepStub.createRoom(CreateRoomReq(Some(credit),password))
 
@@ -44,7 +42,7 @@ class BotClient(
 
   val stream = new StreamObserver[ObservationWithInfoRsp] {
     override def onNext(value: ObservationWithInfoRsp): Unit = {
-      println(value)
+//      println(value)
     }
 
     override def onCompleted(): Unit = {
@@ -78,7 +76,7 @@ object BotClient{
 
     val host = "127.0.0.1"
     val port = 5321
-    val playerId = "10000018"
+    val playerId = "test"
     val apiToken = "test"
     val  b = new BotClient(host,port,playerId,apiToken)
     b.createRoom("").onComplete{

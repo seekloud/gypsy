@@ -35,6 +35,7 @@ object AppSettings {
 
   val botServerPort = appConfig.getInt("botServerPort")
   val framePeriod = appConfig.getInt("framePeriod")
+  val isGray = appConfig.getBoolean("isGray")
 
 
 

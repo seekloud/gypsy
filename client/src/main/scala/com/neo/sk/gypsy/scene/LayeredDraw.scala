@@ -244,7 +244,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
       }
       ctx.setFill(Color.web(circleColor))
-      println(s"name: ${name}  has cell num:${cells.size} ")
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
@@ -307,7 +306,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
       }
       ctx.setFill(Color.web(circleColor))
-      println(s"name: ${name}  has cell num:${cells.size} ")
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
@@ -430,6 +428,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
     if(!mouseActionMap.isEmpty){
       mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+        ctx.setFill(Color.WHITE)
         ctx.beginPath()
         ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,10,10,0,360)
         ctx.fill()

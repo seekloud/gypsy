@@ -31,6 +31,8 @@ import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import org.seekloud.esheepapi.pb.api._
 import org.seekloud.esheepapi.pb.observations.{ImgData, LayeredObservation}
+import scala.concurrent.duration._
+import com.neo.sk.gypsy.botService.BotClient
 
 
 /**
@@ -75,6 +77,16 @@ object BotActor {
 
   var botHolder:BotHolder = _
 
+  /**botClient test**/
+  case object TimerKeyForTest
+  case class ClientTest(roomId:Long) extends Command
+  val host = "127.0.0.1"
+  val port = 5321
+  val playerId = "test"
+  val apiToken = "test"
+  val botClient = new BotClient(host,port,playerId,apiToken)
+
+
 
   def create(
               gameClient: ActorRef[WsMsgSource],
@@ -112,16 +124,10 @@ object BotActor {
                   val connected = response.flatMap{ upgrade =>
                     if(upgrade.response.status == StatusCodes.SwitchingProtocols){
                       tokenActor ! TokenActor.InitToken(value.token,value.expireTime,playerId)
-
-                      //暂时用普通玩家登陆流程
-//                      stream ! Protocol.JoinRoom(None)
-
-//                      val layeredScene = new LayeredScene
-//                      botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
-//                      botHolder.connectToGameServer()
-
-                      // fixme bot登录流程
+                      //启动BotServer
                       ctx.self ! StartSdkServer(stream, botHolder)
+                      //启动BotClient test
+                      timer.startSingleTimer(TimerKeyForTest, ClientTest(1),5.seconds)
                       Future.successful("BotActor webscoket connect success.")
                     }else{
                       throw new RuntimeException(s"BotActor webscoket connection failed: ${upgrade.response.status}")
@@ -139,20 +145,10 @@ object BotActor {
           ClientBoot.sdkServer ! SdkServer.BuildServer(AppSettings.botServerPort, executor, ctx.self, botHolder)
           waitingGame(gameClient,stageCtx,stream)
 
-//        case Work(stream) =>
-//          //启动BotService
-//          val port = 5321
-//          val server = BotServer.build(port, executor, ctx.self)
-//          server.start()
-//          log.debug(s"Server started at $port")
-//          sys.addShutdownHook {
-//            log.debug("JVM SHUT DOWN.")
-//            server.shutdown()
-//            log.debug("SHUT DOWN.")
-//          }
-////          server.awaitTermination()
-////          log.debug("DONE.")
-//          waitingGame(gameClient,stageCtx,stream)
+        case ClientTest(roomId)=>
+          log.info("get clientTest")
+          val rsp = botClient.createRoom("")
+          Behaviors.same
 
         case unknown@_ =>
           log.debug(s"i receive an unknown msg:$unknown")
@@ -167,11 +163,17 @@ object BotActor {
                  )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
+
+        case ClientTest(roomId)=>
+          log.info("get clientTest")
+          val rsp = botClient.createRoom("")
+          Behaviors.same
+
         case CreateRoom(sender) =>
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
           val layeredScene = new LayeredScene
-          botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
@@ -179,7 +181,7 @@ object BotActor {
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
           val layeredScene = new LayeredScene
-          botHolder = new BotHolder(stageCtx,layeredScene,stream,ctx.self)
+          botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
