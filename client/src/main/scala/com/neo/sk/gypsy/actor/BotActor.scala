@@ -174,7 +174,8 @@ object BotActor {
         case CreateRoom(sender) =>
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
-          val layeredScene = new LayeredScene
+          //TODO 写在配置文件里？
+          val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
@@ -182,7 +183,8 @@ object BotActor {
         case JoinRoom(roomId, sender) =>
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
-          val layeredScene = new LayeredScene
+          //TODO 写在配置文件里？
+          val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
