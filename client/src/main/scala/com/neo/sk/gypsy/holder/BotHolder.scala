@@ -7,7 +7,7 @@ import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.{LayeredDraw, LayeredScene}
+import com.neo.sk.gypsy.scene.{LayeredScene}
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
 import java.awt.event.KeyEvent
 
@@ -173,8 +173,7 @@ class BotHolder(
     //TODO 生成分层视图数据
     if(AppSettings.isLayer){
       ClientBoot.addToPlatform {
-        val ld = new LayeredDraw(grid.myId, layeredScene, grid, true)
-        val ByteInfo = ld.drawLayered()
+        val ByteInfo = layeredScene.drawLayered()
         botActor ! GetByte(ByteInfo._1,ByteInfo._2,ByteInfo._3,ByteInfo._4,ByteInfo._5,ByteInfo._6,ByteInfo._7,ByteInfo._8,ByteInfo._9)
       }
     }
@@ -242,13 +241,13 @@ class BotHolder(
       }
     }
 
-    //TODO 鼠标事件不起作用
+    //TODO
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-        atan2(y -layeredScene.humanView.realWindow.x/2,x - layeredScene.humanView.realWindow.y/2 )
+        atan2(y - layeredScene.humanView.realWindow.y/2, x - layeredScene.humanView.realWindow.x/2)
       }
-      println("get mousemove!!   "+e)
+//      println("degree:  " + getDegree(e.getX,e.getY))
       if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
         FormerDegree = getDegree(e.getX,e.getY)
         botClient.actionReq = ActionReq(Move.up,Some(Swing(getDegree(e.getX,e.getY).toFloat,
@@ -263,21 +262,19 @@ class BotHolder(
       //使用E、F
       val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
-      //      grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
       serverActor ! keyCode
     }
     if (swing.nonEmpty) {
       def getDegree(x: Double, y: Double) = {
-        //        atan2(y -layeredScene.gameView.realWindow.x/2,x - layeredScene.gameView.realWindow.y/2 )
+        //        atan2(y -layeredScene.gameView.humanView.y/2,x - layeredScene.humanView.realWindow.x/2 )
         atan2(y, x)
       }
 
       var FormerDegree = 0D
       val (x, y) = Constant.swingToXY(swing.get)
-      //      val mp = MousePosition(botId, x.toFloat - layeredScene.gameView.realWindow.x / 2, y.toFloat - layeredScene.gameView.realWindow.y / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
       val mp = MP(None, x.toShort, y.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-      if (math.abs(getDegree(x, y) - FormerDegree) * 180 / math.Pi > 5) {
-        FormerDegree = getDegree(x, y)
+      if (math.abs(swing.get.radian - FormerDegree) * 180 / math.Pi > 5) {
+        FormerDegree = swing.get.radian
         grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame))
         serverActor ! mp
       }
