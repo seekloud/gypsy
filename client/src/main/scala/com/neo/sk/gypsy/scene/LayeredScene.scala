@@ -89,9 +89,9 @@ class LayeredScene(
   playerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+canvasSpace*2) //06视野内的当前玩家资产视图
   playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
   pointerCanvas.setLayoutX(0)                               //07鼠标指针位置
-  pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace)
+  pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace*2)
   informCanvas.setLayoutX(layeredCanvasWidth+canvasSpace)   //08当前用户状态视图
-  informCanvas.setLayoutY(humanCanvasHeight+canvasSpace)
+  informCanvas.setLayoutY(humanCanvasHeight+canvasSpace*2)
 
 
   group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,kernelCanvas,
@@ -125,6 +125,7 @@ class LayeredScene(
         playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
         pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
         infoByte = informView.drawInform()
+        //TODO 显示击杀弹幕
       case None =>
         humanView.drawGameWait(firstCome)
     }

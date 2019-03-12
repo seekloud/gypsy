@@ -271,9 +271,7 @@ class BotHolder(
       }
 
       var FormerDegree = 0D
-      var (x, y) = Constant.swingToXY(swing.get)
-      x += layeredScene.humanView.realWindow.x/2
-      y += layeredScene.humanView.realWindow.y/2
+      val (x, y) = Constant.swingToXY(swing.get)
       val mp = MP(None, x.toShort, y.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
       if (math.abs(swing.get.radian - FormerDegree) * 180 / math.Pi > 5) {
         FormerDegree = swing.get.radian

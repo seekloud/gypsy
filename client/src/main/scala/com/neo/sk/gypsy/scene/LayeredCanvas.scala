@@ -385,14 +385,12 @@ class LayeredCanvas(canvas: Canvas,
 
   /*********************7.鼠标指针位置************************************/
   def drawPointer(mouseActionMap:Map[Int, Map[String, MP]],basePoint:(Double,Double),scale:Double) = {
-    val layeredOffX = realWindow.x/2 - basePoint._1
-    val layeredOffY = realWindow.y/2 - basePoint._2
+    val layeredOffX = realWindow.x/2
+    val layeredOffY = realWindow.y/2
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
-
     ctx.save()
     centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
-
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
@@ -400,11 +398,12 @@ class LayeredCanvas(canvas: Canvas,
       mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
         ctx.setFill(Color.WHITE)
         ctx.beginPath()
-        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,10,10,0,360)
+        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,15,15,0,360)
         ctx.fill()
       }
     }
 
+    ctx.restore()
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{
@@ -623,7 +622,6 @@ class LayeredCanvas(canvas: Canvas,
     }
     virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
-
       ctx.drawImage(img,x-radius+ offx,y-radius+ offy,radius*2,radius*2)
       ctx.restore()
     }
