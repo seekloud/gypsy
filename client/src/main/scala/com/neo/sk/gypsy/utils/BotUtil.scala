@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.utils
 
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
-
+import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.common.AppSettings.botSecure
 import javafx.embed.swing.SwingFXUtils
 import javafx.scene.SnapshotParameters
@@ -33,8 +33,7 @@ object BotUtil {
       params.setFill(Color.TRANSPARENT)
       canvas.snapshot(params, wi) //从画布中复制绘图并复制到writableImage
       val reader = wi.getPixelReader
-      //TODO 是否灰度
-      if(false) {
+      if(!AppSettings.isGray) {
         val byteBuffer = ByteBuffer.allocate(4 * w * h)
         for (y <- 0 until h; x <- 0 until w) {
           val color = reader.getArgb(x, y)

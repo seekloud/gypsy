@@ -19,7 +19,6 @@ import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 import com.neo.sk.gypsy.common.AppSettings
-
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
@@ -123,6 +122,7 @@ object WsClient {
       }
     }
   }
+
   //客户端发消息给后台
   def getSource(wsClient: ActorRef[WsCommand]) = ActorSource.actorRef[WsSendMsg](
     completionMatcher = {

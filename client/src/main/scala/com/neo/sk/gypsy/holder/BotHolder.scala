@@ -17,14 +17,14 @@ import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.{BotActor, GrpcStreamSender}
 import com.neo.sk.gypsy.actor.BotActor.GetByte
 import com.neo.sk.gypsy.actor.GameClient._
-import com.neo.sk.gypsy.botService.BotServer
+import com.neo.sk.gypsy.botService.{BotClient, BotServer}
 import org.seekloud.esheepapi.pb.actions._
 
 import scala.math.atan2
 import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import org.seekloud.esheepapi.pb.api.ObservationRsp
+import org.seekloud.esheepapi.pb.api.{ActionReq, ObservationRsp}
 
 object BotHolder {
 
@@ -42,6 +42,12 @@ object BotHolder {
   val timeline = new Timeline()
 
   var exitFullScreen = false
+
+  var FormerDegree = 0D
+
+  //每帧动作限制
+  var mouseInFlame = false
+  var keyInFlame = false
 
   var usertype = 0
 
@@ -70,10 +76,11 @@ object BotHolder {
 }
 
 class BotHolder(
-  stageCtx: StageContext,
-  layeredScene: LayeredScene,
-  serverActor: ActorRef[Protocol.WsSendMsg],
-  botActor:ActorRef[BotActor.Command]
+                 stageCtx: StageContext,
+                 layeredScene: LayeredScene,
+                 serverActor: ActorRef[Protocol.WsSendMsg],
+                 botClient: BotClient,
+                 botActor:ActorRef[BotActor.Command]
 ) {
   import BotHolder._
 
@@ -191,9 +198,7 @@ class BotHolder(
     grid.update()
   }
 
-//  def reLive(id: String) = {
-//    serverActor ! ReLiveAck(id)
-//  }
+
 
   def gameClose = {
     //停止gameLoop
@@ -211,6 +216,47 @@ class BotHolder(
 
 
   /** BotService的功能 **/
+
+  layeredScene.setLayeredSceneListener(new LayeredScene.LayeredSceneListener {
+    //TODO 改成跟OnMouseMoved一样的
+    override def onKeyPressed(e: KeyCode): Unit = {
+      val key=e
+      if (key == KeyCode.ESCAPE && !isDead) {
+        gameClose
+      } else if (watchKeys.contains(key) && keyInFlame == false) {
+        if (key == KeyCode.SPACE) {
+          println(s"down+ Space ReLive Press!")
+          keyInFlame = true
+          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+          serverActor ! reliveMsg
+        } else {
+          println(s"down+${e.toString}")
+          //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
+          keyInFlame = true
+          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          if(key == KeyCode.E){
+            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
+          }
+          serverActor ! keyCode
+        }
+      }
+    }
+
+    //TODO 鼠标事件不起作用
+    override def OnMouseMoved(e: MouseEvent): Unit = {
+      //在画布上监听鼠标事件
+      def getDegree(x:Double,y:Double)={
+        atan2(y -layeredScene.humanView.realWindow.x/2,x - layeredScene.humanView.realWindow.y/2 )
+      }
+      println("get mousemove!!   "+e)
+      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
+        FormerDegree = getDegree(e.getX,e.getY)
+        botClient.actionReq = ActionReq(Move.up,Some(Swing(getDegree(e.getX,e.getY).toFloat,
+          math.sqrt(math.pow(e.getX-layeredScene.humanView.realWindow.x/2,2)+math.pow(e.getY-layeredScene.humanView.realWindow.y/2,2)).toFloat)),0,0,Some(botClient.credit))
+        botClient.action()
+      }
+    }
+  })
 
   def gameActionReceiver(key: Int, swing: Option[Swing]) = {
     if (key != 0) {

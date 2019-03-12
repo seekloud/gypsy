@@ -1,5 +1,6 @@
 package com.neo.sk.gypsy.botService
 
+
 import java.awt.event.KeyEvent
 
 import akka.actor.typed.ActorRef
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.ClientBoot.{executor, materializer, scheduler, system, timeout}
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.holder.BotHolder
+import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
 import io.grpc.stub.StreamObserver
 

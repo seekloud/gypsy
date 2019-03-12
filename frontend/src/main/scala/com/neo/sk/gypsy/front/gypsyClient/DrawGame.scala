@@ -226,7 +226,6 @@ case class DrawGame(
     ctx.font = "70px Helvetica"
     ctx.fillText(""+time+"s", 718, 350)
     timeNum = timeNum+1
-    println(timeNum)
   }
   //清除计数
   def cleanClock():Unit={
