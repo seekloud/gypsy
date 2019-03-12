@@ -42,7 +42,21 @@ class BotClient(
 
   val stream = new StreamObserver[ObservationWithInfoRsp] {
     override def onNext(value: ObservationWithInfoRsp): Unit = {
-//      println(value)
+      println(value)
+    }
+
+    override def onCompleted(): Unit = {
+
+    }
+
+    override def onError(t: Throwable): Unit = {
+
+    }
+  }
+
+  val fStream = new StreamObserver[CurrentFrameRsp] {
+    override def onNext(value: CurrentFrameRsp): Unit = {
+      println(value)
     }
 
     override def onCompleted(): Unit = {
@@ -56,6 +70,8 @@ class BotClient(
 
   //建立接受后台推来的observation的流(stream)
   def observationWithInfo() = esheepStub.observationWithInfo(credit, stream)
+
+  def currentFrame() = esheepStub.currentFrame(credit, fStream)
 
   //主动去获取observation，一般不用
   def observation(): Future[ObservationRsp] = esheepStub.observation(credit)
@@ -79,9 +95,9 @@ object BotClient{
     val playerId = "test"
     val apiToken = "test"
     val  b = new BotClient(host,port,playerId,apiToken)
-    b.createRoom("").onComplete{
-      a => println(a)
-    }
+//    b.createRoom("").onComplete{
+//      a => println(a)
+//    }
     Thread.sleep(3000)
     var i = 0
     while(true){

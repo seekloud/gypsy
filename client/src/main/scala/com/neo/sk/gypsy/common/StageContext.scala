@@ -33,7 +33,8 @@ class StageContext(stage: Stage) {
       stage.setFullScreen(true)
     }
 //    stage.getWidth
-    stage.show()
+    if(AppSettings.isView)
+      stage.show()
   }
 
   var stageListener: StageListener = _
