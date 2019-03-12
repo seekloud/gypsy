@@ -278,6 +278,7 @@ class GameHolder(replay:Boolean = false) {
       fmp = mp
       grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount+delayFrame ))
       grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
+      println(s"send: $mp")
       webSocketClient.sendMsg(mp)
     }
   }
@@ -423,8 +424,9 @@ class GameHolder(replay:Boolean = false) {
         grid.virusMap --= virus.keySet.toList
 
       case data: Protocol.GridDataSync =>
-        println("获取全量数据  get ALL GRID===================")
+        println(s"获取全量数据  now frame: ${grid.frameCount}")
         syncGridData = Some(data)
+        println(s"获取全量数据  backend frame: ${data.frameCount}")
         justSynced = true
 
       case PlayerIdBytes(playerIdByteMap)=>
