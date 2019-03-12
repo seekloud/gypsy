@@ -77,7 +77,11 @@ object Constant {
   val humanCanvasWidth = 800
   val humanCanvasHeight = 400
 
-//  val humanCanvasWidth = 400
+  val viewRatio = humanCanvasHeight/layeredCanvasHeight
+
+
+
+  //  val humanCanvasWidth = 400
 //  val humanCanvasHeight = 200
 
 }

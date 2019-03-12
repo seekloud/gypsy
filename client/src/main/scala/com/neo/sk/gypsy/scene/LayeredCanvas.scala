@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informWidth}
+import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informWidth,viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -77,8 +77,6 @@ class LayeredCanvas(canvas: Canvas,
 
   //文本高度
   val textLineHeight = 14
-
-  val ranks = grid.currentRank
 
   var realWindow = Point(size.x,size.y)
 
@@ -221,24 +219,24 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
+        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -283,24 +281,24 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
+        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -353,24 +351,24 @@ class LayeredCanvas(canvas: Canvas,
     cells.sortBy(_.id).foreach{ cell=>
       ctx.save()
       ctx.beginPath()
-      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius,cell.radius,0,360)
+      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
       ctx.fill()
 
       if(protect){
         ctx.setFill(Color.web(MyColors.halo))
         ctx.beginPath()
-        ctx.arc(x+layeredOffX,y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
         ctx.fill()
       }
       var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
       nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-      ctx.setFont(Font.font("Helvetica",nameFont))
+      ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
       val txt3=new Text(name)
       val nameWidth = txt3.getLayoutBounds.getWidth
       ctx.setStroke(Color.web("grey"))
-      ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
+      ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2 )
       ctx.setFill(Color.web(MyColors.background))
-      ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
+      ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2)
       ctx.restore()
     }
 
@@ -417,6 +415,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     //自己放第一个
+    val ranks = grid.currentRank
     if(ranks.nonEmpty){
       //面板中最大分值的数值的显示占比
       val infoScale = 4.0/3.0
@@ -681,6 +680,7 @@ class LayeredCanvas(canvas: Canvas,
     drawTextLine(s"————排行榜————", realWindow.x -mapLeft, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
+    val ranks = grid.currentRank
     ranks.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == grid.myId).foreach{rank=>
       val score = rank._1.score
       //      val index = rank._2+1
