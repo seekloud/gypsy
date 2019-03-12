@@ -244,7 +244,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
       }
       ctx.setFill(Color.web(circleColor))
-      println(s"name: ${name}  has cell num:${cells.size} ")
+//      println(s"name: ${name}  has cell num:${cells.size} ")
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
@@ -307,7 +307,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
       }
       ctx.setFill(Color.web(circleColor))
-      println(s"name: ${name}  has cell num:${cells.size} ")
+//      println(s"name: ${name}  has cell num:${cells.size} ")
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()

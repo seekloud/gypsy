@@ -8,6 +8,7 @@ import javafx.embed.swing.SwingFXUtils
 import javafx.scene.SnapshotParameters
 import javafx.scene.canvas.Canvas
 import javafx.scene.image.WritableImage
+import javafx.scene.paint.Color
 /**
   * @author zhaoyin
   * 2018/12/11  3:02 PM
@@ -29,20 +30,29 @@ object BotUtil {
       val w = canvas.getWidth.toInt
       val h = canvas.getHeight.toInt
       val wi = new WritableImage(w, h)
-      val bi = new BufferedImage(w, h, 2)
+      params.setFill(Color.TRANSPARENT)
       canvas.snapshot(params, wi) //从画布中复制绘图并复制到writableImage
-      SwingFXUtils.fromFXImage(wi, bi)
-      val argb =  bi.getRGB(0, 0, w, h, null, 0, w)
-      //TODO 这里800*400 总觉得应该改成w*h
-      val byteBuffer = ByteBuffer.allocate(4 * 800 * 400)
-      argb.foreach{ e =>
-        byteBuffer.putInt(e)
+      val reader = wi.getPixelReader
+      //TODO 是否灰度
+      if(false) {
+        val byteBuffer = ByteBuffer.allocate(4 * w * h)
+        for (y <- 0 until h; x <- 0 until w) {
+          val color = reader.getArgb(x, y)
+          byteBuffer.putInt(color)
+        }
+        byteBuffer.flip()
+        byteBuffer.array().take(byteBuffer.limit)
+      } else {
+        //获取灰度图，每个像素点1Byte
+        val byteArray = new Array[Byte](1 * w * h)
+        for (y <- 0 until h; x <- 0 until w) {
+          val color = reader.getColor(x, y).grayscale()
+          val gray = (color.getRed * 255).toByte
+          byteArray(y * h + x) = gray
+        }
+        byteArray
       }
-      byteBuffer.flip()
-      byteBuffer.array().take(byteBuffer.limit)
-      argb
-      new Array[Byte](0)
-    }catch {
+    } catch {
       case e: Exception=>
         emptyArray
     }
