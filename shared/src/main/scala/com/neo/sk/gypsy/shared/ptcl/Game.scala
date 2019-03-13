@@ -109,11 +109,13 @@ object Game {
                   speed:Float = 0
                   )
 
+  /**地图大小**/
   object Boundary{
     val w = 4800
     val h = 2400
   }
 
+  /**窗口实际显示内容**/
   object Window{
     val w = 1200.0 //1200
     val h = 600.0 //600

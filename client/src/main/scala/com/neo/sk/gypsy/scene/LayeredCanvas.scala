@@ -111,7 +111,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
     ctx.setFill(Color.BLACK)
     //TODO 偏移要看
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -131,7 +131,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -152,7 +152,7 @@ class LayeredCanvas(canvas: Canvas,
         //        ctx.beginPath()
         //        ctx.arc(x + offx,y + offy,10,10,0,360)
         //        ctx.fill()
-        ctx.fillRect(x + layeredOffX,y + layeredOffY,10/viewRatio,10/viewRatio)
+        ctx.fillRect(x + layeredOffX,y + layeredOffY,10,10)
       }
     }
 
@@ -170,14 +170,13 @@ class LayeredCanvas(canvas: Canvas,
       a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
 
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5/viewRatio,r*0.5/viewRatio,0,360)
+        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5,r*0.5,0,360)
         ctx.fill()
       }
     }
 
     data.virusDetails.values.toList.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
-      println("virusX:   " + x +"  " + layeredOffX)
-      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius/viewRatio,radius/viewRatio)
+      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius,radius)
     }
 
     ctx.restore()
@@ -197,7 +196,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -219,18 +218,18 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
@@ -259,7 +258,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -281,18 +280,18 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
@@ -321,7 +320,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -351,18 +350,18 @@ class LayeredCanvas(canvas: Canvas,
     cells.sortBy(_.id).foreach{ cell=>
       ctx.save()
       ctx.beginPath()
-      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius,cell.radius,0,360)
       ctx.fill()
 
       if(protect){
         ctx.setFill(Color.web(MyColors.halo))
         ctx.beginPath()
-        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
         ctx.fill()
       }
       var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
       nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-      ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+      ctx.setFont(Font.font("Helvetica",nameFont))
       val txt3=new Text(name)
       val nameWidth = txt3.getLayoutBounds.getWidth
       ctx.setStroke(Color.web("grey"))
@@ -388,7 +387,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
