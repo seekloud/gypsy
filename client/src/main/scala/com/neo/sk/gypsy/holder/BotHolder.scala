@@ -156,6 +156,7 @@ class BotHolder(
     //差不多每三秒同步一次
     //不同步
     if (!justSynced) {
+      keyInFlame = false
       update()
     } else {
       if (syncGridData.nonEmpty) {
@@ -217,26 +218,20 @@ class BotHolder(
   /** BotService的功能 **/
 
   layeredScene.setLayeredSceneListener(new LayeredScene.LayeredSceneListener {
-    //TODO 改成跟OnMouseMoved一样的
     override def onKeyPressed(e: KeyCode): Unit = {
-      val key=e
-      if (key == KeyCode.ESCAPE && !isDead) {
+      if (e == KeyCode.ESCAPE && !isDead) {
         gameClose
-      } else if (watchKeys.contains(key) && keyInFlame == false) {
-        if (key == KeyCode.SPACE) {
-          println(s"down+ Space ReLive Press!")
+      }
+      else if (watchKeys.contains(e) && !keyInFlame) {
+        if (e == KeyCode.SPACE) {
           keyInFlame = true
-          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
-          serverActor ! reliveMsg
-        } else {
-          println(s"down+${e.toString}")
+          botClient.reincarnation()
+        }
+        else {
           //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
           keyInFlame = true
-          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-          if(key == KeyCode.E){
-            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
-          }
-          serverActor ! keyCode
+          botClient.actionReq = ActionReq(Move.up, None, 0, keyCode2Int(e), Some(botClient.credit))
+          botClient.action()
         }
       }
     }
@@ -259,10 +254,22 @@ class BotHolder(
 
   def gameActionReceiver(key: Int, swing: Option[Swing]) = {
     if (key != 0) {
-      //使用E、F
-      val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-      grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
-      serverActor ! keyCode
+      //使用E、F、Space
+      if(key == KeyEvent.VK_SPACE){
+        if(gameState == GameState.dead){
+          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+          serverActor ! reliveMsg
+        }
+        else if(gameState == GameState.victory){
+          val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+          serverActor ! rejoinMsg
+        }
+      }
+      else{
+        val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+        grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
+        serverActor ! keyCode
+      }
     }
     if (swing.nonEmpty) {
       def getDegree(x: Double, y: Double) = {
