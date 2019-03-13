@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informWidth,viewRatio}
+import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informHeight,viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -176,6 +176,7 @@ class LayeredCanvas(canvas: Canvas,
     }
 
     data.virusDetails.values.toList.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
+      println("virusX:   " + x +"  " + layeredOffX)
       ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius/viewRatio,radius/viewRatio)
     }
 
@@ -424,11 +425,13 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     //自己放第一个
-    val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
-    ctx.setFill(ColorsSetting.scoreColor)
-    ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informWidth)
-    ctx.setFill(ColorsSetting.splitNumColor)
-    ctx.fillRect(0, 20+informWidth*2,realWindow.x * myRank.k/VirusSplitNumber,informWidth)
+    if(grid.currentRank.filter(_.score.id == grid.myId).nonEmpty){
+      val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
+      ctx.setFill(ColorsSetting.scoreColor)
+      ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informHeight)
+      ctx.setFill(ColorsSetting.splitNumColor)
+      ctx.fillRect(0, 20+informHeight*2,realWindow.x * myRank.k/VirusSplitNumber,informHeight)
+    }
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{
