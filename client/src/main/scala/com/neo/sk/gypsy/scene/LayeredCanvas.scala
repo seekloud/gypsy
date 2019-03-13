@@ -833,7 +833,11 @@ class LayeredCanvas(canvas: Canvas,
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
       ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Please wait.", 350, 180)
-    } else {
+    }
+    else if(gameState == GameState.dead){
+      (drawDeadState(deadInfo.get),1.toDouble)
+    }
+    else {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
       ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Ops, Loading....", 350, 250)
