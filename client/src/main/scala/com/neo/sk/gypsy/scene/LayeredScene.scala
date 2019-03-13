@@ -127,7 +127,7 @@ class LayeredScene(
             allplayerByte = allPlayerView.drawAllPlayer(data,basePoint,humanReturn._2)
             playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
             pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
-            infoByte = informView.drawInform()
+            infoByte = informView.drawInform(data)
           //TODO 显示击杀弹幕
           case None =>
             humanView.drawGameWait(firstCome)

@@ -389,18 +389,15 @@ class LayeredCanvas(canvas: Canvas,
   }
 
   /*********************8.当前用户状态视图************************************/
-  def drawInform() = {
+  def drawInform(data:Protocol.GridDataSync) = {
     /**包括总分数、分裂个数**/
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
-    //自己放第一个
-    if(grid.currentRank.filter(_.score.id == grid.myId).nonEmpty){
-      val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
-      ctx.setFill(ColorsSetting.scoreColor)
-      ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informHeight)
-      ctx.setFill(ColorsSetting.splitNumColor)
-      ctx.fillRect(0, 20+informHeight*2,realWindow.x * myRank.k/VirusSplitNumber,informHeight)
-    }
+    val player = data.playerDetails.filter(_.id ==grid.myId).head
+    ctx.setFill(ColorsSetting.scoreColor)
+    ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight)
+    ctx.setFill(ColorsSetting.splitNumColor)
+    ctx.fillRect(0, informHeight*3,realWindow.x * player.cells.length /VirusSplitNumber,informHeight)
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{

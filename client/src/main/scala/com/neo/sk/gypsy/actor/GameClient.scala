@@ -120,7 +120,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -160,7 +159,6 @@ object GameClient {
 
 
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
             if(!grid.playerMap.contains(player.id)){
               grid.playerMap += (player.id -> player)
@@ -416,7 +414,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -457,7 +454,6 @@ object GameClient {
 
 
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
             if(grid.playerByte2IdMap.get(id).isEmpty){
               grid.playerMap += (player.id -> player)
