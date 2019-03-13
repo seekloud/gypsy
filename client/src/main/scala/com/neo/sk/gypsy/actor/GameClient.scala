@@ -459,7 +459,7 @@ object GameClient {
         case Protocol.PlayerJoin(id,player) =>
           println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            if(grid.playerByte2IdMap.get(id).isDefined){
+            if(grid.playerByte2IdMap.get(id).isEmpty){
               grid.playerMap += (player.id -> player)
               grid.playerByte2IdMap += (id -> player.id)
             }
