@@ -54,6 +54,7 @@ class LayeredCanvas(canvas: Canvas,
   val  star22 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-22.png"))
   val  star23 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-23.png"))
   val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
+  val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
 
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
   private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
@@ -695,29 +696,31 @@ class LayeredCanvas(canvas: Canvas,
   def drawDeadState(msg:Protocol.UserDeadMessage) = {
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0, 0, realWindow.x , realWindow.y )
-//    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
+    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
     ctx.setFont(Font.font("Helvetica",50))
     ctx.setFill(Color.web("#CD3700"))
     val Width = realWindow.x
     val Height = realWindow.y
-    ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
+    ctx.fillText(s"You Dead!", Width*0.3, Height*0.1)
 
     ctx.setFont(Font.font("Comic Sans MS",Window.w *0.02))
 
-    var DrawLeft = Width*0.35
-    var DrawHeight = Height*0.3
-    ctx.fillText(s"The   Killer  Is    :", DrawLeft, DrawHeight + Height*0.07)
-    ctx.fillText(s"Your  Final   Score:", DrawLeft, DrawHeight + Height*0.07*2)
-    ctx.fillText(s"Your  Final   LifeTime  :", DrawLeft, DrawHeight+Height*0.07*3)
-    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*4)
+    var DrawLeft = Width*0.30
+    var DrawHeight = Height*0.2
+    ctx.fillText(s"The   Killer  Is       :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score    :", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Your  Final   LifeTime :", DrawLeft, DrawHeight+Height*0.07*3)
+    ctx.fillText(s"Your  Kill    Num      :", DrawLeft, DrawHeight + Height*0.07*4)
     ctx.setFill(Color.WHITE)
     //    DrawLeft = Width*0.56+Width*0.12
-    DrawLeft = Width*0.56
+    DrawLeft = Width*0.65
     //    DrawLeft = ctx.measureText("Your  Final   LifeTime  :").width +  Width*0.35 + 30
     ctx.fillText(s"${msg.killerName}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${MTime2HMS (msg.lifeTime)}", DrawLeft, DrawHeight + Height * 0.07 * 3)
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
+    val reStart = "Press Space to ReStart ￣へ￣#  "
+    ctx.fillText(reStart, Width*0.3, DrawHeight + Height*0.07*5)
 
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)

@@ -159,6 +159,7 @@ object RoomActor {
           userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId,group))
           playerMap.put(playerInfo.playerId,playerInfo.nickname)
           subscribersMap.put(playerInfo.playerId, userActor)
+          grid.getSubscribersMap(subscribersMap,botMap)
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
             case None => userSyncMap.put(group,Set(playerInfo.playerId))
@@ -216,6 +217,7 @@ object RoomActor {
           /**观察者加入**/
         case JoinRoom4Watch(playerInfo,watchId,userActor) =>
           subscribersMap.put(playerInfo.playerId,userActor)
+          grid.getSubscribersMap(subscribersMap,botMap)
           userActor ! JoinRoomSuccess4Watch(ctx.self,roomId)
           watchId match{
             case Some(wid) =>
@@ -353,6 +355,7 @@ object RoomActor {
           userMap.remove(playerInfo.playerId)
 
           subscribersMap.remove(playerInfo.playerId)
+          grid.getSubscribersMap(subscribersMap,botMap)
 
           val allPlayerNum = playerMap.size + botMap.size
 //            if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
@@ -375,6 +378,7 @@ object RoomActor {
             }
           }
           subscribersMap.remove(playerInfo.playerId)
+          grid.getSubscribersMap(subscribersMap,botMap)
           Behaviors.same
 
         /**鼠标、键盘消息**/
