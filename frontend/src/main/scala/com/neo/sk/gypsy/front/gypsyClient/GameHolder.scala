@@ -276,7 +276,7 @@ class GameHolder(replay:Boolean = false) {
   def updateMousePos ={
     if(fmp != mp){
       fmp = mp
-      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount+delayFrame ))
+      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame ))
       grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
       webSocketClient.sendMsg(mp)
     }

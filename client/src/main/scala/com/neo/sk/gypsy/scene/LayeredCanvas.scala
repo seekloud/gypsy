@@ -383,8 +383,8 @@ class LayeredCanvas(canvas: Canvas,
 
   /*********************7.鼠标指针位置************************************/
   def drawPointer(mouseActionMap:Map[Int, Map[String, MP]],basePoint:(Double,Double),scale:Double) = {
-    val layeredOffX = realWindow.x/2
-    val layeredOffY = realWindow.y/2
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
@@ -393,12 +393,21 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     if(!mouseActionMap.isEmpty){
-      mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+      //myId --> MP
+      val myMouseAction = mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId)
+      if(myMouseAction.nonEmpty){
+        val p  = myMouseAction.head
         ctx.setFill(Color.WHITE)
         ctx.beginPath()
-        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,15,15,0,360)
+        ctx.arc(p._2.cX + realWindow.x/2, p._2.cY + realWindow.y/2,15,15,0,360)
         ctx.fill()
       }
+//      mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+//        ctx.setFill(Color.WHITE)
+//        ctx.beginPath()
+//        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,15,15,0,360)
+//        ctx.fill()
+//      }
     }
 
     ctx.restore()

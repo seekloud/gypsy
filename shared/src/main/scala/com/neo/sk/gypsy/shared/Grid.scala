@@ -91,7 +91,8 @@ trait Grid {
     updateSpots()
     updatePlayer()//    updateScoreList()
     actionMap -= frameCount
-    mouseActionMap -= frameCount
+    mouseActionMap = mouseActionMap.filter(_._1 > frameCount - delayFrame)
+//    mouseActionMap -= frameCount
     ActionEventMap -= (frameCount-5)
     GameEventMap -= (frameCount-5)
     frameCount += 1
