@@ -61,7 +61,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private var roomId = 0l
 
   /**只针对bot的待复活列表**/
-  var ReLiveMap = Map.empty[String,Long]   //(BotId -> 时间)
+  var ReLiveMap = mutable.Map.empty[String,Long]   //(BotId -> 时间)
 
 
   def setRoomId(id:Long)={
@@ -279,7 +279,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 case Some(bot) =>
                   println(s"${player.name} not relive")
                   bot ! BotActor.KillBot
-                  AppSettings.starNames += (player.name -> false)
+//                  AppSettings.starNames += (player.name -> false)
                 case None =>
               }
             }

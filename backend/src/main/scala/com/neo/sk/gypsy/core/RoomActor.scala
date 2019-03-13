@@ -27,6 +27,7 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
+import scala.collection.mutable.Map
 import scala.util.Random
 
 
@@ -101,6 +102,7 @@ object RoomActor {
 
   val BotMaxMass = 500
 
+
   private var isJoin = false
 
   def create(roomId:Long):Behavior[Command] = {
@@ -113,7 +115,8 @@ object RoomActor {
             val userMap = mutable.HashMap[String, (String,Long,Long)]()
             val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
-//            val userList = mutable.ListBuffer[UserInfo]()
+            var starNames = Map(("清纯女大学生",false),("无敌小坏坏",false),("冥王星",false),("地球",false),("富强民主文明和谐",false),("嫦娥",false),("雪碧哥哥",false),("性感渣男",false),("织女星",false),("牛郎星",false))
+            //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer = new MiddleBufferInJvm(81920)
             /**每个房间都有一个自己的gird**/
             val grid = new GameServer(bounds)
@@ -126,7 +129,7 @@ object RoomActor {
 //            createBotActor(AppSettings.botNum-1,roomId,ctx,grid)
 
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
-            idle(roomId, userMap,playermap,botMap,subscribersMap,userSyncMap ,grid, 0l,0)
+            idle(roomId, userMap,playermap,botMap,subscribersMap,userSyncMap ,grid, 0l,0,starNames)
         }
     }
   }
@@ -140,7 +143,8 @@ object RoomActor {
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
             tickCount:Long,
-            StartFrame:Int
+            StartFrame:Int,
+            starNames:mutable.Map[String,Boolean]
           )(
             implicit timer:TimerScheduler[Command],
             sendBuffer:MiddleBufferInJvm
@@ -180,7 +184,7 @@ object RoomActor {
           if (playerMap.size + botMap.size < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
             println("joinroom create")
-            createBotActor(needAdd, roomId, ctx, grid)
+            createBotActor(needAdd, roomId, ctx, grid,starNames)
           }
 
 
@@ -284,7 +288,7 @@ object RoomActor {
           if(playerMap.size + botMap.size < AppSettings.botNum){
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
             println("rejoin create")
-            createBotActor(needAdd,roomId,ctx,grid)
+            createBotActor(needAdd,roomId,ctx,grid,starNames)
           }
 
           /*if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
@@ -355,7 +359,7 @@ object RoomActor {
           if (allPlayerNum < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - allPlayerNum
             println("user left create")
-            createBotActor(needAdd, roomId, ctx, grid)
+            createBotActor(needAdd, roomId, ctx, grid,starNames)
 
           }
 
@@ -419,6 +423,7 @@ object RoomActor {
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
           botMap.remove(botId)
+          starNames += (grid.playerMap(botId).name -> false)
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
             val group = u._3
@@ -434,7 +439,7 @@ object RoomActor {
             grid.playerId2ByteQueue.enqueue(grid.playerId2ByteMap(botId))
             grid.playerId2ByteMap -= botId
           }
-          Behaviors.same
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNames)
 
         case Sync =>
           grid.update()
@@ -446,7 +451,7 @@ object RoomActor {
                 if(botMap.get(botId).isDefined){
                   botMap(botId) ! KillBot
                   killBigBot +=1
-                  AppSettings.starNames += (grid.playerMap(botId).name -> false)
+                  starNames += (grid.playerMap(botId).name -> false)
                   grid.playerMap -= botId
                 }
 
@@ -456,7 +461,7 @@ object RoomActor {
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
                 println("Sync create")
-                createBotActor(needAdd, roomId, ctx, grid)
+                createBotActor(needAdd, roomId, ctx, grid,starNames)
                 killBigBot = 0
               }
             }
@@ -496,7 +501,7 @@ object RoomActor {
             grid.ReLiveMap.foreach{live =>
               ctx.self ! ReStart(live._1)
             }
-            grid.ReLiveMap = Map.empty
+            grid.ReLiveMap = Map.empty[String,Long]
           }
 
 //          if(isclear && tickCount %20==0){
@@ -558,9 +563,9 @@ object RoomActor {
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
           if(isVictory){
-            idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,grid.frameCount)
+            idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,grid.frameCount,starNames)
           }else{
-            idle(roomId,userMap,playerMap,botMap, subscribersMap,userSyncMap,grid,tickCount+1,StartFrame)
+            idle(roomId,userMap,playerMap,botMap, subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNames)
           }
 
         case UserActor.NetTest(id, createTime) =>
@@ -666,18 +671,19 @@ object RoomActor {
   }*/
 
 
-  private def createBotActor(needNum:Int,roomId:Long,ctx: ActorContext[RoomActor.Command], grid: GameServer) = {
+  private def createBotActor(needNum:Int,roomId:Long,ctx: ActorContext[RoomActor.Command], grid: GameServer,starNames:mutable.Map[String,Boolean]
+                            ) = {
 
     if(AppSettings.addBotPlayer && needNum >0) {
       for( i <- 1 to needNum){
         try{
-          val botNum = AppSettings.starNames.values.toList.count(i=> !i )
+          val botNum = starNames.values.toList.count(i=> !i )
           if(botNum > 0){
             val num = new Random(System.nanoTime()).nextInt(botNum)
-            val botName = AppSettings.starNames.filter(i=> !i._2).keys.toList(num)
+            val botName = starNames.filter(i=> !i._2).keys.toList(num)
             val id = "bot_"+roomId + "_"+ botId.getAndIncrement()
             println(id)
-            AppSettings.starNames += (botName -> true)
+            starNames += (botName -> true)
             getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
           }
         }catch {
