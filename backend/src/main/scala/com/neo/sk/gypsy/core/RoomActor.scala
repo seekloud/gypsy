@@ -111,7 +111,7 @@ object RoomActor {
         Behaviors.withTimers[Command] {
           implicit timer =>
             val subscribersMap = mutable.HashMap[String,ActorRef[UserActor.Command]]()
-            val botMap = mutable.HashMap[String,ActorRef[BotActor.Command]]()
+            val botMap = mutable.HashMap[String,(String,ActorRef[BotActor.Command])]()
             val userMap = mutable.HashMap[String, (String,Long,Long)]()
             val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
@@ -138,7 +138,7 @@ object RoomActor {
             roomId:Long,
             userMap:mutable.HashMap[String,(String,Long,Long)],//[Id, (name, ballId,group)](包括人类+机器人)
             playerMap:mutable.HashMap[String,String], // [playId,nickName]  记录房间玩家数（包括等待复活） (仅人类，包括在玩及等待复活)
-            botMap:mutable.HashMap[String,ActorRef[BotActor.Command]], // [BotInfo.playerId,Actor] 记录BOT ws用于清除废弃actor线程
+            botMap:mutable.HashMap[String,(String,ActorRef[BotActor.Command])], // [BotInfo.playerId,Actor] 记录BOT ws用于清除废弃actor线程
             subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],
             userSyncMap:mutable.HashMap[Long,Set[String]], //FrameCount Group => List(Id)
             grid:GameServer,
@@ -197,7 +197,7 @@ object RoomActor {
           val createBallId = ballId.incrementAndGet()
           val group = tickCount % AppSettings.SyncCount
           userMap.put(botInfo.playerId, (botInfo.nickname, createBallId, group))
-          botMap.put(botInfo.playerId,botActor)
+          botMap.put(botInfo.playerId,(botInfo.nickname,botActor))
           botActor ! BotActor.StartTimer
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + botInfo.playerId)
@@ -422,8 +422,8 @@ object RoomActor {
         /**Bot死亡**/
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
+          starNames += (botMap.get(botId).get._1 -> false)
           botMap.remove(botId)
-          starNames += (grid.playerMap(botId).name -> false)
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
             val group = u._3
@@ -449,7 +449,7 @@ object RoomActor {
             bigBotMap.keys.foreach {
               botId =>
                 if(botMap.get(botId).isDefined){
-                  botMap(botId) ! KillBot
+                  botMap(botId)._2 ! KillBot
                   killBigBot +=1
                   starNames += (grid.playerMap(botId).name -> false)
                   grid.playerMap -= botId

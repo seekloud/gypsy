@@ -43,7 +43,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Short]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
-  private[this] var botSubscriber=mutable.HashMap[String,ActorRef[BotActor.Command]]()
+  private[this] var botSubscriber=mutable.HashMap[String,(String,ActorRef[BotActor.Command])]()
   var currentRank = List.empty[Score]
 
 //  val playerIdgenerator = new AtomicInteger(127)
@@ -278,7 +278,7 @@ class GameServer(override val boundary: Point) extends Grid {
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
                   println(s"${player.name} not relive")
-                  bot ! BotActor.KillBot
+                  bot._2 ! BotActor.KillBot
 //                  AppSettings.starNames += (player.name -> false)
                 case None =>
               }
@@ -815,7 +815,7 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,ActorRef[BotActor.Command]]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,(String,ActorRef[BotActor.Command])]) ={
     subscriber=subscribersMap
     botSubscriber=botMap
   }
