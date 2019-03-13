@@ -613,6 +613,7 @@ class LayeredCanvas(canvas: Canvas,
 
     drawSmallMap()
     drawRankMap(players,basePoint)
+    FpsComp.renderFps(ctx, 450, 10)
     scale
 
   }
@@ -685,8 +686,8 @@ class LayeredCanvas(canvas: Canvas,
 
         ctx.save()
         ctx.setFont(Font.font(" Helvetica",24))
-        ctx.fillText(s"KILL: ${score.k}", 250, 10)
-        ctx.fillText(s"SCORE: ${score.score}", 400, 10)
+        ctx.fillText(s"KILL: ${score.k}", 150, 10)
+        ctx.fillText(s"SCORE: ${score.score}", 250, 10)
         ctx.restore()
 
 
