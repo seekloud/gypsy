@@ -25,7 +25,7 @@ object Constant {
     val dieInfoBackgroundColor: Color = Color.rgb(51, 51, 51)
     val dieInfoFontColor: Color = Color.rgb(224, 238, 253)
     val scoreColor: Color = Color.rgb(119,205,251)
-    val killColor: Color = Color.rgb(246,186,113)
+    val splitNumColor: Color = Color.rgb(246,186,113)
   }
 
   def hex2Rgb(hex: String) = {
@@ -72,7 +72,7 @@ object Constant {
 //  val layeredCanvasWidth = 300
 //  val layeredCanvasHeight = 150
 
-  val informWidth = 15
+  val informHeight = 20
 
   val humanCanvasWidth = 800
   val humanCanvasHeight = 400

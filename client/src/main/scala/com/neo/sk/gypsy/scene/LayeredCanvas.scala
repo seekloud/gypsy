@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informWidth,viewRatio}
+import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informHeight,viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -14,7 +14,7 @@ import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MP}
 import javafx.geometry.VPos
-
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import scala.math.{abs, pow, sqrt}
 
 /**
@@ -112,7 +112,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
     ctx.setFill(Color.BLACK)
     //TODO 偏移要看
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -132,12 +132,11 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-//    val viewFood = food.filter()
     grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList.groupBy(_.color).foreach{a=>
       val foodColor = a._1 match{
         case 0 => "#f3456d"
@@ -198,7 +197,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
+    centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -220,18 +219,18 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
@@ -260,7 +259,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -282,18 +281,18 @@ class LayeredCanvas(canvas: Canvas,
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+        ctx.setFont(Font.font("Helvetica",nameFont))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
@@ -322,7 +321,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
@@ -352,18 +351,18 @@ class LayeredCanvas(canvas: Canvas,
     cells.sortBy(_.id).foreach{ cell=>
       ctx.save()
       ctx.beginPath()
-      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius,cell.radius,0,360)
       ctx.fill()
 
       if(protect){
         ctx.setFill(Color.web(MyColors.halo))
         ctx.beginPath()
-        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
+        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
         ctx.fill()
       }
       var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
       nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-      ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+      ctx.setFont(Font.font("Helvetica",nameFont))
       val txt3=new Text(name)
       val nameWidth = txt3.getLayoutBounds.getWidth
       ctx.setStroke(Color.web("grey"))
@@ -389,7 +388,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.setFill(Color.GRAY)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
+    centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
@@ -422,44 +421,17 @@ class LayeredCanvas(canvas: Canvas,
 
   /*********************8.当前用户状态视图************************************/
   def drawInform() = {
+    /**包括总分数、分裂个数**/
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     //自己放第一个
-    val ranks = grid.currentRank
-    if(ranks.nonEmpty){
-      //面板中最大分值的数值的显示占比
-      val infoScale = 4.0/3.0
-      val maxScore = ranks.map(_.score.score).max * infoScale
-      val maxKill = ranks.map(_.score.k).max * infoScale
-
-      val myRank = ranks.filter(_.score.id == grid.myId).head.score
-      val myScore = myRank.score
-      val myKill = myRank.k
-
-      def drawScoreKill(score: Double,kill: Int, index:Int) = {
-        //score
-        ctx.setFill(ColorsSetting.scoreColor)
-//        ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
-        ctx.fillRect(index * 35, 0, informWidth,
-          (realWindow.y * score / maxScore).toInt)
-        //kill
-        if(maxKill > 0) {
-          ctx.setFill(ColorsSetting.killColor)
-//          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
-          ctx.fillRect(index * 35 + informWidth, 0, informWidth, realWindow.y * kill / maxKill)
-        }
-      }
-      drawScoreKill(myScore,myKill,0)
-
-      val othersRank = ranks.filterNot(_.score.id == grid.myId)
-      //currentRanks 本身的长度就是不超过11的
-      for(i<-0 until othersRank.length){
-        val playerRank = othersRank(i).score
-        drawScoreKill(playerRank.score, playerRank.k, i+1)
-      }
+    if(grid.currentRank.filter(_.score.id == grid.myId).nonEmpty){
+      val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
+      ctx.setFill(ColorsSetting.scoreColor)
+      ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informHeight)
+      ctx.setFill(ColorsSetting.splitNumColor)
+      ctx.fillRect(0, 20+informHeight*2,realWindow.x * myRank.k/VirusSplitNumber,informHeight)
     }
-
-
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{
@@ -471,7 +443,6 @@ class LayeredCanvas(canvas: Canvas,
   /********************* 人类视图：800*400 ***********************************/
 
   def drawPlayState(data:Protocol.GridDataSync,basePoint:(Double,Double),zoom:(Double,Double))={
-    //TODO 这里不一定是1200和600
     val scale = drawPlayView(grid.myId,data,basePoint,zoom,grid)
     if(is2Byte){
       (BotUtil.canvas2byteArray(canvas),scale)
