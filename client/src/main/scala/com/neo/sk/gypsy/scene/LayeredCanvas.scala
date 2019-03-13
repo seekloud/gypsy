@@ -1,28 +1,32 @@
 package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.common.Constant.{ColorsSetting, informWidth, layeredCanvasHeight, layeredCanvasWidth}
+import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informWidth,viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
-import com.neo.sk.gypsy.shared.ptcl._
+import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
 import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
-import javafx.scene.canvas.GraphicsContext
+import javafx.scene.canvas.{Canvas, GraphicsContext}
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
-import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MP}
 import javafx.geometry.VPos
-
+import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import scala.math.{abs, pow, sqrt}
 
 /**
   * Created by YXY on Date: 2018/12/18
   */
 
-object LayeredDraw{
+class LayeredCanvas(canvas: Canvas,
+                    ctx:GraphicsContext,
+                    size:Point,
+                    is2Byte:Boolean
+                 ) {
+
   val img = new Image(ClientBoot.getClass.getResourceAsStream("/img/stone.png"))
   val  background1 = new Image(ClientBoot.getClass.getResourceAsStream("/img/b2small.jpg"))
 
@@ -74,98 +78,65 @@ object LayeredDraw{
   //文本高度
   val textLineHeight = 14
 
-}
-
-
-
-class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2Byte:Boolean) {
-  import LayeredDraw._
-
-  val ls = layeredScene
-//  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
-  val data = grid.getGridData(uid,Window.w.toInt,Window.h.toInt)
-  val screeScale = if( layeredCanvasWidth / Window.w > layeredCanvasHeight / Window.h) layeredCanvasHeight / Window.h else layeredCanvasWidth / Window.w
-  var scale = data.scale * screeScale
-//  val scale2 = getZoomRate(zoom._1,zoom._2,layeredCanvasWidth/2,layeredCanvasHeight/2) * screeScale
-
-  val food = grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
-  val virus = data.virusDetails.values.toList
-  val mass = data.massDetails
-  val player = data.playerDetails
-  val MyBallOpt = player.find(_.id == uid)
-  val X = if(MyBallOpt.isDefined){
-    MyBallOpt.get.x
-  }else{
-    0d
-  }
-  val Y = if(MyBallOpt.isDefined){
-    MyBallOpt.get.y
-  }else{
-    0d
-  }
-
-  val layeredOffX = layeredCanvasWidth/2 - X
-  val layeredOffY = layeredCanvasHeight/2 - Y
-
-  val ranks = grid.currentRank
-
+  var realWindow = Point(size.x,size.y)
 
   //TODO 可以考虑绘图和获取ByteString分开，但是目前测试阶段还是写到一起
+  def resetScreen(width:Int,height:Int)={
+    canvas.setHeight(height)
+    canvas.setWidth(width)
+    realWindow = Point(width,height)
+  }
 
   /*********************分层视图400*200****************************/
 
   /*******************1.视野在整个地图中的位置***********************/
-  def drawLocation()={
-    val ctx = ls.locationCanvasCtx
+  def drawLocation(basePoint:(Double,Double))={
     ctx.setFill(Color.BLACK)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     //TODO 视野缩放
-    data.playerDetails.foreach{player=>
-      if(player.id == uid){
-        ctx.setFill(Color.WHEAT)
-        ctx.fillRect((player.x-Window.w/2)/(Boundary.w/layeredCanvasWidth),(player.y - Window.h/2)/(Boundary.h/layeredCanvasHeight),layeredCanvasWidth*(Window.w/Boundary.w),layeredCanvasHeight*(Window.h/Boundary.h))
-      }
-    }
+    ctx.setFill(Color.WHITE)
+    ctx.fillRect((basePoint._1 - Window.w/2)/(Boundary.w/realWindow.x),(basePoint._2 - Window.h/2)/(Boundary.h/realWindow.y),
+      realWindow.x *(Window.w/Boundary.w),realWindow.y *(Window.h/Boundary.h))
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.locationCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
   }
 
   /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInteract() = {
-    val ctx = ls.nonInteractCanvasCtx
+  def drawNonInteract(basePoint:(Double,Double),scale:Double) = {
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
     ctx.setFill(Color.BLACK)
     //TODO 偏移要看
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
-
     ctx.restore()
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.nonInteractCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
   }
 
   /********************3.视野内可交互的元素（food，mass，virus）是否包含边界****************/
-  def drawInteract()={
-    val ctx = ls.interactCanvasCtx
+  def drawInteract(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double)={
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-//    val viewFood = food.filter()
-    food.groupBy(_.color).foreach{a=>
+    grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList.groupBy(_.color).foreach{a=>
       val foodColor = a._1 match{
         case 0 => "#f3456d"
         case 1 => "#f49930"
@@ -181,11 +152,11 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         //        ctx.beginPath()
         //        ctx.arc(x + offx,y + offy,10,10,0,360)
         //        ctx.fill()
-        ctx.fillRect(x + layeredOffX,y + layeredOffY,10,10)
+        ctx.fillRect(x + layeredOffX,y + layeredOffY,10/viewRatio,10/viewRatio)
       }
     }
 
-    mass.groupBy(_.color).foreach{ a=>
+    data.massDetails.groupBy(_.color).foreach{ a=>
       a._1 match{
         case 0 => ctx.setFill(Color.web("#f3456d"))
         case 1 => ctx.setFill(Color.web("#f49930"))
@@ -199,19 +170,19 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
 
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5,r*0.5,0,360)
+        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5/viewRatio,r*0.5/viewRatio,0,360)
         ctx.fill()
       }
     }
 
-    virus.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
-      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius,radius)
+    data.virusDetails.values.toList.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
+      ctx.drawImage(img,x-radius+layeredOffX,y-radius+layeredOffY,radius/viewRatio,radius/viewRatio)
     }
 
     ctx.restore()
 
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.interactCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
@@ -219,18 +190,18 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
   /********************4.视野内的玩家实体******************************/
-  def drawKernel() = {
-    val ctx = ls.kernelCanvasCtx
+  def drawKernel(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
-
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    centerScale(ctx,scale,realWindow.x /2,realWindow.y /2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
+    data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       val circleColor = color.toInt % 7 match{
         //纯色星球
         case 0 => "#b30e35"
@@ -247,24 +218,24 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
+        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -272,7 +243,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.restore()
 
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.kernelCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
@@ -280,19 +251,19 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
   /********************5.视野内的所有权视图******************************/
-  def drawAllPlayer() = {
-    val ctx = ls.allPlayerCanvasCtx
-
+  def drawAllPlayer(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
+    data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       val circleColor = color.toInt % 7 match{
         //纯色星球
         case 0 => "#b30e35"
@@ -309,24 +280,24 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
       cells.sortBy(_.id).foreach{ cell=>
         ctx.save()
         ctx.beginPath()
-        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc( cell.x+layeredOffX ,cell.y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
         ctx.fill()
 
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
-          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
+          ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
           ctx.fill()
         }
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
+        ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
         val txt3=new Text(name)
         val nameWidth = txt3.getLayoutBounds.getWidth
         ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - (nameFont.toInt / 2 + 2))
+        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -334,7 +305,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.restore()
 
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.allPlayerCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
@@ -342,101 +313,105 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
   /*********************6.视野内的当前玩家资产视图**************************/
-  def drawPlayer() = {
-    val ctx = ls.playerCanvasCtx
+  def drawPlayer(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
+    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
 
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
-    if(MyBallOpt.isDefined){
-      val my = MyBallOpt.get
-      val name = my.name
-      val color = my.color
-      val x = my.x
-      val y = my.y
-      val protect = my.protect
-      val cells = my.cells
+    val my = data.playerDetails.find(_.id == grid.myId).get
+    val name = my.name
+    val color = my.color
+    val x = my.x
+    val y = my.y
+    val protect = my.protect
+    val cells = my.cells
 
 
-      val circleColor = color.toInt % 7 match{
-        //纯色星球
-        case 0 => "#b30e35"
-        case 1 => "#a65d0a"
-        case 2  => "#917600"
-        case 3  => "#05851b"
-        case 4  => "#037da6"
-        case 5  => "#875a16"
-        case 6  => "#4174ab"
-        case _  => "#8f3284"
+    val circleColor = color.toInt % 7 match{
+      //纯色星球
+      case 0 => "#b30e35"
+      case 1 => "#a65d0a"
+      case 2  => "#917600"
+      case 3  => "#05851b"
+      case 4  => "#037da6"
+      case 5  => "#875a16"
+      case 6  => "#4174ab"
+      case _  => "#8f3284"
 
-      }
-      ctx.setFill(Color.web(circleColor))
-      cells.sortBy(_.id).foreach{ cell=>
-        ctx.save()
+    }
+    ctx.setFill(Color.web(circleColor))
+    cells.sortBy(_.id).foreach{ cell=>
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius/viewRatio,cell.radius/viewRatio,0,360)
+      ctx.fill()
+
+      if(protect){
+        ctx.setFill(Color.web(MyColors.halo))
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,cell.radius,cell.radius,0,360)
+        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15)/viewRatio,(cell.radius+15)/viewRatio,0,360)
         ctx.fill()
-
-        if(protect){
-          ctx.setFill(Color.web(MyColors.halo))
-          ctx.beginPath()
-          ctx.arc(x+layeredOffX,y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
-          ctx.fill()
-        }
-        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
-        val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds.getWidth
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
-        ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - (nameFont.toInt / 2 + 2))
-        ctx.restore()
       }
-
+      var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
+      nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
+      ctx.setFont(Font.font("Helvetica",nameFont/viewRatio))
+      val txt3=new Text(name)
+      val nameWidth = txt3.getLayoutBounds.getWidth
+      ctx.setStroke(Color.web("grey"))
+      ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2 )
+      ctx.setFill(Color.web(MyColors.background))
+      ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2)
       ctx.restore()
-      if(is2Byte){
-        BotUtil.canvas2byteArray(ls.playerCanvas)
-      }else{
-        BotUtil.emptyArray
-      }
+    }
 
+    ctx.restore()
+    if(is2Byte){
+      BotUtil.canvas2byteArray(canvas)
     }else{
-      ctx.restore()
       BotUtil.emptyArray
     }
 
   }
 
   /*********************7.鼠标指针位置************************************/
-  def drawPointer(mouseActionMap:Map[Int, Map[String, MP]]) = {
-    val ctx = ls.pointerCanvasCtx
+  def drawPointer(mouseActionMap:Map[Int, Map[String, MP]],basePoint:(Double,Double),scale:Double) = {
+    val layeredOffX = realWindow.x/2 - basePoint._1
+    val layeredOffY = realWindow.y/2 - basePoint._2
     ctx.setFill(Color.GRAY)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
-
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
-    centerScale(ctx,scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
-
+    centerScale(ctx,scale,realWindow.x/2,realWindow.y/2)
     ctx.setFill(Color.BLACK)
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     if(!mouseActionMap.isEmpty){
-      mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+      //myId --> MP
+      val myMouseAction = mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId)
+      if(myMouseAction.nonEmpty){
+        val p  = myMouseAction.head
         ctx.setFill(Color.WHITE)
         ctx.beginPath()
-        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,10,10,0,360)
+        ctx.arc(p._2.cX + realWindow.x/2, p._2.cY + realWindow.y/2,15,15,0,360)
         ctx.fill()
       }
+//      mouseActionMap.toList.sortBy(_._1).reverse.head._2.toList.filter(_._1==grid.myId).foreach{p=>
+//        ctx.setFill(Color.WHITE)
+//        ctx.beginPath()
+//        ctx.arc(p._2.cX + layeredOffX, p._2.cY + layeredOffY,15,15,0,360)
+//        ctx.fill()
+//      }
     }
 
+    ctx.restore()
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.pointerCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
@@ -445,99 +420,57 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   /*********************8.当前用户状态视图************************************/
   def drawInform() = {
-    val ctx = ls.informCanvasCtx
-
+    /**包括总分数、分裂个数**/
     ctx.setFill(Color.BLACK)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
+    ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     //自己放第一个
-    if(ranks.nonEmpty){
-      //面板中最大分值的数值的显示占比
-      val infoScale = 4.0/3.0
-      val maxScore = ranks.map(_.score.score).max * infoScale
-      val maxKill = ranks.map(_.score.k).max * infoScale
-
-      val myRank = ranks.filter(_.score.id == uid).head.score
-      val myScore = myRank.score
-      val myKill = myRank.k
-
-      def drawScoreKill(score: Double,kill: Int, index:Int) = {
-        //score
-        ctx.setFill(ColorsSetting.scoreColor)
-//        ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
-        ctx.fillRect(index * 35, 0, informWidth,
-          (layeredCanvasHeight * score / maxScore).toInt)
-        //kill
-        if(maxKill > 0) {
-          ctx.setFill(ColorsSetting.killColor)
-//          ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
-          ctx.fillRect(index * 35 + informWidth, 0, informWidth, layeredCanvasHeight * kill / maxKill)
-        }
-      }
-      drawScoreKill(myScore,myKill,0)
-
-      val othersRank = ranks.filterNot(_.score.id == uid)
-      //currentRanks 本身的长度就是不超过11的
-      for(i<-0 until othersRank.length){
-        val playerRank = othersRank(i).score
-        drawScoreKill(playerRank.score, playerRank.k, i+1)
-      }
-    }
-
-
+    val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
+    ctx.setFill(ColorsSetting.scoreColor)
+    ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informWidth)
+    ctx.setFill(ColorsSetting.splitNumColor)
+    ctx.fillRect(0, 20+informWidth*2,realWindow.x * myRank.k/VirusSplitNumber,informWidth)
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.informCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
 
   }
 
-
   /********************* 人类视图：800*400 ***********************************/
 
-  def drawPlayState()={
-//    val data = grid.getGridData(myId,1200,600)
-    val MyBallOpt = player.find(_.id == uid)
-    if(MyBallOpt.isDefined){
-      val myInfo = MyBallOpt.get
-      firstCome = false
-      drawPlayView(uid,data,(X,Y),(myInfo.width,myInfo.height),grid)
-    }else{
-      ls.humanView.drawGameWait(firstCome)
-    }
+  def drawPlayState(data:Protocol.GridDataSync,basePoint:(Double,Double),zoom:(Double,Double))={
+    val scale = drawPlayView(grid.myId,data,basePoint,zoom,grid)
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.humanCanvas)
+      (BotUtil.canvas2byteArray(canvas),scale)
     }else{
-      BotUtil.emptyArray
+      (BotUtil.emptyArray,scale)
     }
 
   }
 
   def drawPlayView(uid: String, data: GridDataSync,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient) = {
-    val ctx = ls.humanCtx
 
     /*
     正常游戏绘图
      */
-
-
     val players = data.playerDetails
     val foods =  grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
     val masses = data.massDetails
     val virus = data.virusDetails
     //计算偏移量
-    val offx = humanCanvasWidth/2 - basePoint._1
-    val offy = humanCanvasHeight/2 - basePoint._2
-    val screenIndex = if( humanCanvasWidth / Window.w > humanCanvasHeight / Window.h) humanCanvasHeight / Window.h else humanCanvasWidth / Window.w
-    val scale = getZoomRate(zoom._1,zoom._2,humanCanvasWidth,humanCanvasHeight) * screenIndex
+    val offx = realWindow.x/2 - basePoint._1
+    val offy = realWindow.y/2 - basePoint._2
+    val screenIndex = if( realWindow.x / Window.w > realWindow.y / Window.h) realWindow.y / Window.h else realWindow.x / Window.w
+    val scale = getZoomRate(zoom._1,zoom._2,realWindow.x,realWindow.y) * screenIndex
 
     /**这两部分代码不能交换，否则视图会无限缩小or放大**/
     //01
     ctx.setFill(Color.web("rgba(181, 181, 181, 1)"))
-    ctx.fillRect(0,0,humanCanvasWidth,humanCanvasHeight)
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
     ctx.save()
     //02
-    centerScale(ctx,scale,humanCanvasWidth /2.0,humanCanvasHeight/2.0)
+    centerScale(ctx,scale,realWindow.x /2.0, realWindow.y /2.0)
 
     //   /2
     ctx.drawImage(background1,offx,offy,bounds.x,bounds.y)
@@ -666,7 +599,6 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     }
     virus.values.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
       ctx.save()
-
       ctx.drawImage(img,x-radius+ offx,y-radius+ offy,radius*2,radius*2)
       ctx.restore()
     }
@@ -678,17 +610,17 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
     drawSmallMap()
     drawRankMap(players,basePoint)
+    scale
 
   }
 
   def drawSmallMap()= {
-    val ctx = ls.humanCtx
     /*
   小地图，排行版蒙版
    */
     ctx.save()
     ctx.setFill(Color.web(MyColors.rankList))
-    ctx.fillRect(humanCanvasWidth-mapLeft,20,150,250)
+    ctx.fillRect(realWindow.x -mapLeft,20,150,250)
 
     //绘制小地图
     ctx.setFont(Font.font("Helvetica",12))
@@ -719,15 +651,15 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
   }
 
   def drawRankMap(players:List[Game.Player],basePoint:(Double,Double)) = {
-    val ctx = ls.humanCtx
     //绘制当前排行
     ctx.setFont(Font.font("Helvetica",12))
     val currentRankBaseLine = 3
     ctx.setFill(Color.web(MyColors.background))
-    drawTextLine(s"————排行榜————", humanCanvasWidth-mapLeft, 0, currentRankBaseLine)
+    drawTextLine(s"————排行榜————", realWindow.x -mapLeft, 0, currentRankBaseLine)
 
     //这里过滤是为了防止回放的时候传全量的排行版数据
-    ranks.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == uid).foreach{rank=>
+    val ranks = grid.currentRank
+    ranks.zipWithIndex.filter(r=>r._2<GameConfig.rankShowNum || r._1.score.id == grid.myId).foreach{rank=>
       val score = rank._1.score
       //      val index = rank._2+1
       val index = rank._1.index
@@ -739,13 +671,13 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
         case _ => None
       }
       imgOpt.foreach{ img =>
-        ctx.drawImage(img, humanCanvasWidth-mapLeft, index * textLineHeight+30, 13, 13)
+        ctx.drawImage(img, realWindow.x-mapLeft, index * textLineHeight+30, 13, 13)
       }
-      if(score.id == uid){
+      if(score.id == grid.myId){
         ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
         ctx.setFill(Color.web("#FFFF33"))
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", humanCanvasWidth-mapLeft + 7, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-mapLeft + 7, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
         ctx.restore()
 
         ctx.save()
@@ -756,7 +688,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
 
       }else{
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", humanCanvasWidth-mapLeft + 7, index , currentRankBaseLine)
+        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-mapLeft + 7, index , currentRankBaseLine)
       }
 
     }
@@ -773,7 +705,7 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     //    }
 
     ctx.setFill(Color.web(MyColors.myHeader))
-    players.find(_.id == uid) match {
+    players.find(_.id == grid.myId) match {
       case Some(player)=>
         ctx.beginPath()
         ctx.arc(mapMargin + (basePoint._1/bounds.x) * littleMap, mapMargin + basePoint._2/bounds.y * littleMap,8,8,0,360)
@@ -786,20 +718,18 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
 
   //绘制一条信息
   def drawTextLine(str: String, x: Int, lineNum: Int, lineBegin: Int = 0) = {
-    ls.humanCtx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
+    ctx.fillText(str, x, (lineNum + lineBegin - 1) * textLineHeight)
   }
 
 
   def drawDeadState(msg:Protocol.UserDeadMessage) = {
-    val ctx = ls.humanCtx
-
     ctx.setFill(Color.web("#000"))
-    ctx.fillRect(0, 0, humanCanvasWidth , humanCanvasHeight )
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
 //    ctx.drawImage(deadbg,0,0, realWindow.x, realWindow.y)
     ctx.setFont(Font.font("Helvetica",50))
     ctx.setFill(Color.web("#CD3700"))
-    val Width = humanCanvasWidth
-    val Height = humanCanvasHeight
+    val Width = realWindow.x
+    val Height = realWindow.y
     ctx.fillText(s"You Dead!", Width*0.42, Height*0.3)
 
     ctx.setFont(Font.font("Comic Sans MS",Window.w *0.02))
@@ -820,58 +750,41 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     ctx.fillText(s"${msg.killNum}", DrawLeft,DrawHeight + Height*0.07*4)
 
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.humanCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
   }
 
-
   def drawFinishState() = {
-    val ctx = ls.humanCtx
     val msg = "存在异地登录"
 
     ctx.setFill(Color.web("#000"))
-    ctx.fillRect(0,0,humanCanvasWidth,humanCanvasHeight)
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
     //这里1600是窗口的长以后换
-    ctx.setFont(Font.font("Helvetica",30 * humanCanvasWidth / 1600))
+    ctx.setFont(Font.font("Helvetica",30 * realWindow.x / 1600))
     ctx.setFill(Color.web("#fff"))
     val txt = new Text(msg)
-    ctx.fillText(msg, humanCanvasWidth * 0.5 - txt.getLayoutBounds.getWidth* 0.5,humanCanvasHeight * 0.5)
+    ctx.fillText(msg, realWindow.x * 0.5 - txt.getLayoutBounds.getWidth* 0.5,realWindow.y * 0.5)
 
     if(is2Byte){
-      BotUtil.canvas2byteArray(ls.humanCanvas)
+      BotUtil.canvas2byteArray(canvas)
     }else{
       BotUtil.emptyArray
     }
   }
 
-
-  def drawViewByState() ={
+  def drawViewByState(data:Protocol.GridDataSync,basePoint:(Double,Double),zoom:(Double,Double)) ={
     gameState match {
       case GameState.play =>
-        drawPlayState()
+        drawPlayState(data,basePoint,zoom)
       case GameState.dead =>
-        drawDeadState(deadInfo.get)
+        (drawDeadState(deadInfo.get),1.toDouble)
       case GameState.allopatry =>
-        drawFinishState()
+        (drawFinishState(),1.toDouble)
       case _ =>
-        BotUtil.emptyArray
+        (BotUtil.emptyArray,1.toDouble)
     }
-  }
-
-  def drawLayered() = {
-    val localByte = drawLocation()
-    val noninteractByte = drawNonInteract()
-    val interactByte = drawInteract()
-    val kernelByte = drawKernel()
-    val allplayerByte = drawAllPlayer()
-    val playerByte = drawPlayer()
-    val pointerByte = drawPointer(grid.mouseActionMap)
-    val infoByte = drawInform()
-    val humanByte = drawViewByState()
-
-    (localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanByte)
   }
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {
@@ -879,5 +792,24 @@ class LayeredDraw(uid :String,layeredScene: LayeredScene,grid: GridOnClient,is2B
     //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
+  }
+
+  //等待文字
+  def drawGameWait(firstCome:Boolean): Unit = {
+    ctx.setFill(Color.web("rgba(255, 255, 255, 0)"))
+    ctx.fillRect(0, 0, realWindow.x , realWindow.y )
+    if(firstCome) {
+      ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
+      ctx.setFont(Font.font("Helvetica",36))
+      ctx.fillText("Please wait.", 350, 180)
+    }
+    else if(gameState == GameState.dead){
+      (drawDeadState(deadInfo.get),1.toDouble)
+    }
+    else {
+      ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
+      ctx.setFont(Font.font("Helvetica",36))
+      ctx.fillText("Ops, Loading....", 350, 250)
+    }
   }
 }

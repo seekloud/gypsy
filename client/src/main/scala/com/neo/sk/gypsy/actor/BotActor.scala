@@ -174,7 +174,8 @@ object BotActor {
         case CreateRoom(sender) =>
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
-          val layeredScene = new LayeredScene
+          //TODO 写在配置文件里？
+          val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
@@ -182,7 +183,8 @@ object BotActor {
         case JoinRoom(roomId, sender) =>
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
-          val layeredScene = new LayeredScene
+          //TODO 写在配置文件里？
+          val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
@@ -229,8 +231,8 @@ object BotActor {
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._4.length,ByteString.copyFrom(byteInfo._4))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._5.length,ByteString.copyFrom(byteInfo._5))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6))),
-            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._8))),
-            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._7))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._8.length,ByteString.copyFrom(byteInfo._8))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._7.length,ByteString.copyFrom(byteInfo._7))),
           )
           val observation = ObservationRsp(Some(layerInfo), Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._9.length,ByteString.copyFrom(byteInfo._9))))
           if(BotServer.isObservationConnect) {
@@ -247,8 +249,8 @@ object BotActor {
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._4.length,ByteString.copyFrom(byteInfo._4))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._5.length,ByteString.copyFrom(byteInfo._5))),
             Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._6))),
-            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._8))),
-            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._6.length,ByteString.copyFrom(byteInfo._7))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._8.length,ByteString.copyFrom(byteInfo._8))),
+            Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._7.length,ByteString.copyFrom(byteInfo._7))),
           )
           val observation = ObservationRsp(Some(layerInfo),Some(ImgData(layeredCanvasWidth,layeredCanvasHeight,byteInfo._9.length,ByteString.copyFrom(byteInfo._9))))
           sender ! observation

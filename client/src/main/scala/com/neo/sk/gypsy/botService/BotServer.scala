@@ -102,7 +102,7 @@ class BotServer(
   }
 
   override def action(request: ActionReq): Future[ActionRsp] = {
-    println(s"action Called by [$request")
+//    println(s"action Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
       val actionRsp: Future[ActionRsp] = botActor ? (BotActor.Action(request.apply, request.swing, _))
       actionRsp.map{

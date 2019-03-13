@@ -9,7 +9,7 @@ import javafx.util.Duration
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.{AppSettings, StageContext}
-import com.neo.sk.gypsy.scene.{GameScene, LayeredDraw, LayeredScene}
+import com.neo.sk.gypsy.scene.{GameScene}
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.ControllerInitial
 import java.awt.event.KeyEvent
@@ -75,7 +75,6 @@ object GameHolder {
 class GameHolder(
                   stageCtx: StageContext,
                   gameScene: GameScene,
-                  layerScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
