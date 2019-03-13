@@ -194,7 +194,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
               GameHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlike")
+//              ClientMusic.playMusic("godlike")
             }
           }
           Behaviors.same
@@ -452,7 +452,7 @@ object GameClient {
 
 
         case Protocol.PlayerRestart(id) =>
-          ClientMusic.playMusic("bg")
+//          ClientMusic.playMusic("bg")
           Behaviors.same
 
 
@@ -491,7 +491,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlikeM")
+//              ClientMusic.playMusic("godlikeM")
             }
           }
           Behaviors.same

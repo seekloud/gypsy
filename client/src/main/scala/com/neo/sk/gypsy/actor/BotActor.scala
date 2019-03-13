@@ -149,7 +149,8 @@ object BotActor {
 
         case ClientTest(roomId)=>
           log.info("get clientTest")
-          val rsp = botClient.joinRoom("1","")
+//          val rsp = botClient.joinRoom("1","")
+          val rsp = botClient.createRoom("")
           Behaviors.same
 
         case unknown@_ =>
@@ -168,7 +169,8 @@ object BotActor {
 
         case ClientTest(roomId)=>
           log.info("get clientTest")
-          val rsp = botClient.joinRoom("1","")
+//          val rsp = botClient.joinRoom("1","")
+          val rsp = botClient.createRoom("")
           Behaviors.same
 
         case CreateRoom(sender) =>

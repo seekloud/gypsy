@@ -7,7 +7,7 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
 import javafx.scene.layout._
 import com.neo.sk.gypsy.holder.BotHolder._
-import com.neo.sk.gypsy.utils.FpsComp
+import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -108,27 +108,44 @@ class LayeredScene(
     var playerByte = new Array[Byte](0)
     var pointerByte = new Array[Byte](0)
     var infoByte = new Array[Byte](0)
-    //TODO 这里不一定是1200和600
-    val data = grid.getGridData(grid.myId,1200,600)
-    data.playerDetails.find(_.id == grid.myId) match {
-      case Some(p) =>
-        firstCome=false
-        //TODO zoom是否正确
-        zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
-        val basePoint = (p.x.toDouble, p.y.toDouble)
-        humanReturn = humanView.drawViewByState(data,basePoint,zoom)
-        localByte = locationView.drawLocation(basePoint)
-        noninteractByte = nonInteractView.drawNonInteract(basePoint,humanReturn._2)
-        interactByte = interactView.drawInteract(data,basePoint,humanReturn._2)
-        kernelByte = kernelView.drawKernel(data,basePoint,humanReturn._2)
-        allplayerByte = allPlayerView.drawAllPlayer(data,basePoint,humanReturn._2)
-        playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
-        pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
-        infoByte = informView.drawInform()
-        //TODO 显示击杀弹幕
-      case None =>
-        humanView.drawGameWait(firstCome)
+    //TODO 这里其他数据设置为空
+    gameState match {
+      case GameState.play if grid.myId != ""=>
+        //TODO 这里不一定是1200和600
+        val data = grid.getGridData(grid.myId,Window.w.toInt,Window.h.toInt)
+        data.playerDetails.find(_.id == grid.myId) match {
+          case Some(p) =>
+            firstCome=false
+            //TODO zoom是否正确
+            zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
+            val basePoint = (p.x.toDouble, p.y.toDouble)
+            humanReturn = humanView.drawPlayState(data,basePoint,zoom)
+            localByte = locationView.drawLocation(basePoint)
+            noninteractByte = nonInteractView.drawNonInteract(basePoint,humanReturn._2)
+            interactByte = interactView.drawInteract(data,basePoint,humanReturn._2)
+            kernelByte = kernelView.drawKernel(data,basePoint,humanReturn._2)
+            allplayerByte = allPlayerView.drawAllPlayer(data,basePoint,humanReturn._2)
+            playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
+            pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
+            infoByte = informView.drawInform()
+          //TODO 显示击杀弹幕
+          case None =>
+            humanView.drawGameWait(firstCome)
+        }
+      case GameState.dead if deadInfo.isDefined =>
+        humanReturn = (humanView.drawDeadState(deadInfo.get),1.toDouble)
+
+      case GameState.victory if victoryInfo.isDefined=>
+        humanReturn = (humanView.drawVictory(victoryInfo.get),1.toDouble)
+
+      case GameState.allopatry =>
+        humanReturn = (humanView.drawFinishState(),1.toDouble)
+
+      case _ =>
+        (BotUtil.emptyArray,1.toDouble)
     }
+
+
     (localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanReturn._1)
   }
 
