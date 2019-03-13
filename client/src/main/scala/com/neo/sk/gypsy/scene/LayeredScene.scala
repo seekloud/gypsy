@@ -76,17 +76,17 @@ class LayeredScene(
   val canvasSpace = 5
 
   //设置分层视图
-  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace) //01视野在整个地图中的位置
+  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2) //01视野在整个地图中的位置
   locationCanvas.setLayoutY(0)
-  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace) //02视野内的不可变元素
+  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+3*canvasSpace) //02视野内的不可变元素
   nonInteractCanvas.setLayoutY(0)
-  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)  //03视野内的可变元素
+  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2)  //03视野内的可变元素
   interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  kernelCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace) //04视野内的玩家实体
+  kernelCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+3*canvasSpace) //04视野内的玩家实体
   kernelCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  allPlayerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)  //05视野内的所有权视图
+  allPlayerCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2)  //05视野内的所有权视图
   allPlayerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
-  playerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+canvasSpace*2) //06视野内的当前玩家资产视图
+  playerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+canvasSpace*3) //06视野内的当前玩家资产视图
   playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
   pointerCanvas.setLayoutX(0)                               //07鼠标指针位置
   pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace*2)

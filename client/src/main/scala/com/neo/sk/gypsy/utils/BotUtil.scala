@@ -24,14 +24,14 @@ object BotUtil {
 
   val emptyArray = new Array[Byte](0)
 
+  val params = new SnapshotParameters
   def canvas2byteArray(canvas: Canvas):Array[Byte] = {
     try {
-      val params = new SnapshotParameters
       val w = canvas.getWidth.toInt
       val h = canvas.getHeight.toInt
-      val wi = new WritableImage(w, h)
-      params.setFill(Color.TRANSPARENT)
-      canvas.snapshot(params, wi) //从画布中复制绘图并复制到writableImage
+      //      val wi = new WritableImage(w, h)
+      //      params.setFill(Color.TRANSPARENT)
+      val wi = canvas.snapshot(params, null) //从画布中复制绘图并复制到writableImage
       val reader = wi.getPixelReader
       if(!AppSettings.isGray) {
         val byteBuffer = ByteBuffer.allocate(4 * w * h)

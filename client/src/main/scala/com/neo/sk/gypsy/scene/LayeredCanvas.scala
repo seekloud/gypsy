@@ -203,7 +203,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
-      val circleColor = color.toInt % 7 match{
+      var circleColor = color.toInt % 7 match{
         //纯色星球
         case 0 => "#b30e35"
         case 1 => "#a65d0a"
@@ -214,6 +214,9 @@ class LayeredCanvas(canvas: Canvas,
         case 6  => "#4174ab"
         case _  => "#8f3284"
 
+      }
+      if(id==grid.myId){
+        circleColor = "#f5c673"
       }
       ctx.setFill(Color.web(circleColor))
       cells.sortBy(_.id).foreach{ cell=>
@@ -228,15 +231,6 @@ class LayeredCanvas(canvas: Canvas,
           ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
           ctx.fill()
         }
-        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
-        val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds.getWidth
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
-        ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -265,7 +259,7 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
-      val circleColor = color.toInt % 7 match{
+      var circleColor = color.toInt % 7 match{
         //纯色星球
         case 0 => "#b30e35"
         case 1 => "#a65d0a"
@@ -276,6 +270,9 @@ class LayeredCanvas(canvas: Canvas,
         case 6  => "#4174ab"
         case _  => "#8f3284"
 
+      }
+      if(id==grid.myId){
+        circleColor = "#f5c673"
       }
       ctx.setFill(Color.web(circleColor))
       cells.sortBy(_.id).foreach{ cell=>
@@ -290,15 +287,6 @@ class LayeredCanvas(canvas: Canvas,
           ctx.arc(cell.x+layeredOffX,cell.y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
           ctx.fill()
         }
-        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
-        val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds.getWidth
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
-        ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", cell.x + layeredOffX - (nameWidth*nameFont/12.0) / 2, cell.y + layeredOffY - nameFont.toInt / 2)
         ctx.restore()
       }
     }
@@ -335,18 +323,7 @@ class LayeredCanvas(canvas: Canvas,
     val cells = my.cells
 
 
-    val circleColor = color.toInt % 7 match{
-      //纯色星球
-      case 0 => "#b30e35"
-      case 1 => "#a65d0a"
-      case 2  => "#917600"
-      case 3  => "#05851b"
-      case 4  => "#037da6"
-      case 5  => "#875a16"
-      case 6  => "#4174ab"
-      case _  => "#8f3284"
-
-    }
+    val circleColor = "#f5c673"
     ctx.setFill(Color.web(circleColor))
     cells.sortBy(_.id).foreach{ cell=>
       ctx.save()
@@ -357,18 +334,9 @@ class LayeredCanvas(canvas: Canvas,
       if(protect){
         ctx.setFill(Color.web(MyColors.halo))
         ctx.beginPath()
-        ctx.arc(x+layeredOffX,y+layeredOffY,(cell.radius+15),(cell.radius+15),0,360)
+        ctx.arc(x+layeredOffX,y+layeredOffY,cell.radius+15,cell.radius+15,0,360)
         ctx.fill()
       }
-      var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-      nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-      ctx.setFont(Font.font("Helvetica",nameFont))
-      val txt3=new Text(name)
-      val nameWidth = txt3.getLayoutBounds.getWidth
-      ctx.setStroke(Color.web("grey"))
-      ctx.strokeText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2 )
-      ctx.setFill(Color.web(MyColors.background))
-      ctx.fillText(s"$name", x + layeredOffX - (nameWidth*nameFont/12.0) / 2, y + layeredOffY - nameFont.toInt / 2)
       ctx.restore()
     }
 
