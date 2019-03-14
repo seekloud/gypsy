@@ -477,24 +477,26 @@ class GameHolder(replay:Boolean = false) {
 
       //针对所有玩家发送的死亡消息
       case Protocol.KillMessage(killerId,deadId)=>
-        val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-        if(deadId != grid.myId){
-          if(!isDead){
-            isDead = true
-            killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
-          }else{
-            killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+        if(grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined) {
+          val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+          grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort))
+          if (deadId != grid.myId) {
+            if (!isDead) {
+              isDead = true
+              killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+            } else {
+              killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+            }
           }
-        }
-        grid.removePlayer(deadId)
-        var deadByte = 0.toByte
-        grid.playerByte2IdMap.foreach{elem =>
-          if(elem._2 == deadId){
-            deadByte = elem._1
+          grid.removePlayer(deadId)
+          var deadByte = 0.toByte
+          grid.playerByte2IdMap.foreach { elem =>
+            if (elem._2 == deadId) {
+              deadByte = elem._1
+            }
           }
+          grid.playerByte2IdMap -= deadByte
         }
-        grid.playerByte2IdMap -= deadByte
 
       case Protocol.UserMerge(playerMap)=>
         val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()

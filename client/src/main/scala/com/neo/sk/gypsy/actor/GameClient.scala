@@ -131,6 +131,7 @@ object GameClient {
           Behaviors.same
 
         case data: Protocol.GridDataSync =>
+//          println("---: "+data)
           ClientBoot.addToPlatform{
             GameHolder.syncGridData = Some(data)
             GameHolder.justSynced = true
@@ -199,26 +200,30 @@ object GameClient {
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadId)=>
+//          println("--------------------------:  "+Protocol.KillMessage(killerId,deadId)+"   -----:  "+grid.playerMap)
           ClientBoot.addToPlatform{
-            val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != grid.myId){
-              if(!GameHolder.isDead){
-                GameHolder.isDead = true
-                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
-              }else{
-                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+            if(grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined){
+              val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+              grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
+              if(deadId != grid.myId){
+                if(!GameHolder.isDead){
+                  GameHolder.isDead = true
+                  GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+                }else{
+                  GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+                }
               }
-            }
-            grid.removePlayer(deadId)
-            var deadByte = 0.toByte
-            grid.playerByte2IdMap.foreach{elem =>
-              if(elem._2 == deadId){
-                deadByte = elem._1
+              grid.removePlayer(deadId)
+              var deadByte = 0.toByte
+              grid.playerByte2IdMap.foreach{elem =>
+                if(elem._2 == deadId){
+                  deadByte = elem._1
+                }
               }
+              grid.playerByte2IdMap -= deadByte
             }
-            grid.playerByte2IdMap -= deadByte
-          }
+            }
+
           Behaviors.same
 
 
@@ -494,25 +499,28 @@ object GameClient {
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadId)=>
-          ClientBoot.addToPlatform{
-            val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != grid.myId){
-              if(!BotHolder.isDead){
-                BotHolder.isDead = true
-                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
-              }else{
-                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+          ClientBoot.addToPlatform {
+            if (grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined) {
+
+              val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+              grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort))
+              if (deadId != grid.myId) {
+                if (!BotHolder.isDead) {
+                  BotHolder.isDead = true
+                  BotHolder.killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+                } else {
+                  BotHolder.killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+                }
               }
-            }
-            grid.removePlayer(deadId)
-            var playerIdByte = 0.toByte
-            grid.playerByte2IdMap.foreach{item =>
-              if(item._2 == deadId){
-                playerIdByte = item._1
+              grid.removePlayer(deadId)
+              var playerIdByte = 0.toByte
+              grid.playerByte2IdMap.foreach { item =>
+                if (item._2 == deadId) {
+                  playerIdByte = item._1
+                }
               }
+              grid.playerByte2IdMap -= playerIdByte
             }
-            grid.playerByte2IdMap -= playerIdByte
           }
           Behaviors.same
 
