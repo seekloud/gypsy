@@ -458,7 +458,6 @@ object RoomActor {
                   starNames += (grid.playerMap(botId).name -> false)
                   grid.playerMap -= botId
                 }
-
             }
             if (killBigBot>0) {
               val allPlayerNum = playerMap.size + botPlayerNum - killBigBot
