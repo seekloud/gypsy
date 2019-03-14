@@ -395,9 +395,9 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     val player = data.playerDetails.filter(_.id ==grid.myId).head
     ctx.setFill(ColorsSetting.scoreColor)
-    ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight)
+    ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1.5)
     ctx.setFill(ColorsSetting.splitNumColor)
-    ctx.fillRect(0, informHeight*3,realWindow.x * player.cells.length /VirusSplitNumber,informHeight)
+    ctx.fillRect(0, informHeight*5,realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1.5)
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{

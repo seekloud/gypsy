@@ -27,8 +27,8 @@ object GameScene {
 class GameScene {
   import GameScene._
   var gameSceneListener: GameSceneListener = _
-  var canvasWidth=1200
-  var canvasHeight=600
+  var canvasWidth= Window.w.toInt
+  var canvasHeight= Window.h.toInt
   var bigPlayerMass = 500.0
   val window=Point(canvasWidth,canvasHeight)
   val group = new Group()
