@@ -84,7 +84,6 @@ class GameServer(override val boundary: Point) extends Grid {
         val playerIdByte = playerId2ByteQueue.dequeue()
         playerId2ByteMap += id -> playerIdByte
       }
-//      /**--------------------**/
 //      var addPlayerByteId = true
 //      var playerIdByte = Random.nextInt(127).toByte
 //      playerId2ByteMap.foreach{item=>
