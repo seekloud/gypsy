@@ -9,7 +9,7 @@ object GameConfig {
 
 //  val historyRankLength = 5
 
-  val version = "20190306"
+  val version = "20190313"
 
   val slowBase = 10
   val initMassLog = utils.logSlowDown(10,slowBase)
