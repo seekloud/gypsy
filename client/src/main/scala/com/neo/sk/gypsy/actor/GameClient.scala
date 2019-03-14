@@ -202,6 +202,13 @@ object GameClient {
           ClientBoot.addToPlatform{
             val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
             grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
+            try{
+              val name = grid.playerMap.get(deadId).get.name
+            }catch {
+              case e: Exception =>
+                println("get deadId error------------------")
+                throw e
+            }
             if(deadId != grid.myId){
               if(!GameHolder.isDead){
                 GameHolder.isDead = true
