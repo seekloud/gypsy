@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.scene
 
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.common.Constant.{ColorsSetting,informHeight,viewRatio}
+import com.neo.sk.gypsy.common.Constant.{ColorsSetting, informHeight, viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GridOnClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -15,6 +15,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MP}
 import javafx.geometry.VPos
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+
 import scala.math.{abs, pow, sqrt}
 
 /**
@@ -55,6 +56,7 @@ class LayeredCanvas(canvas: Canvas,
   val  star23 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-23.png"))
   val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
   val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
+  val  youkill = new Image(ClientBoot.getClass.getResourceAsStream("/img/youkill.png"))
 
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
   private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
@@ -70,6 +72,7 @@ class LayeredCanvas(canvas: Canvas,
     val otherHeader = "rgba(78,69,69,0.82)"
     val otherBody = "#696969"
     val bigPlayer = "#FF8C69"
+    val kill = "#f27c02"
   }
 
   val littleMap = 120
@@ -574,6 +577,7 @@ class LayeredCanvas(canvas: Canvas,
       ctx.restore()
     }
 
+
     ctx.restore()
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setTextAlign(TextAlignment.LEFT)
@@ -581,8 +585,53 @@ class LayeredCanvas(canvas: Canvas,
 
     drawSmallMap()
     drawRankMap(players,basePoint)
+    val paraBack = drawKill(grid.myId,grid,isDead,killList)
+    killList=paraBack._1
+    isDead=paraBack._2
     scale
 
+  }
+
+  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
+    if(isKill){
+      val showTime = killList.head._1
+      val killerName = killList.head._2
+      val deadName = killList.head._3
+      val txt1=new Text(killerName)
+      val txt2=new Text(deadName)
+      val killNameLength=txt1.getLayoutBounds.getWidth
+      val deadNameLength=txt2.getLayoutBounds.getWidth
+      val allWidth = (killNameLength + deadNameLength + 32 + 25 + 50)/2
+      /* val killImg = if (deadPlayer.kill > 3) shutdown
+       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
+       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
+       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
+       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
+       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
+       else if (killerId == myId) youkill
+       else kill*/
+      if (showTime > 0) {
+        ctx.save()
+        ctx.setFont(Font.font("Helvetica",25))
+        //        ctx.setStroke(Color.web("#f32705"))
+        //        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
+        ctx.setFill(Color.web("#f27c02"))
+        ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
+        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 50,realWindow.y*0.15,32,32)
+        //        ctx.setStroke(Color.web("#f32705"))
+        //        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
+        //        ctx.setFill(Color.web("#f27c02"))
+        ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
+        //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
+        ctx.restore()
+        val killList1 = if (showTime > 1) (showTime - 10, killerName, deadName) :: killList.tail else killList.tail
+        if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
+      }else{
+        (killList,isKill)
+      }
+    }else{
+      (killList,isKill)
+    }
   }
 
   def drawSmallMap()= {
@@ -759,6 +808,8 @@ class LayeredCanvas(canvas: Canvas,
         (BotUtil.emptyArray,1.toDouble)
     }
   }
+
+
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)

@@ -7,7 +7,7 @@ import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import akka.actor.typed.ActorRef
-import com.neo.sk.gypsy.scene.{LayeredScene}
+import com.neo.sk.gypsy.scene.{LayeredCanvas, LayeredScene}
 import com.neo.sk.gypsy.common.{AppSettings, Constant, StageContext}
 import java.awt.event.KeyEvent
 
@@ -117,20 +117,26 @@ class BotHolder(
   def start() = {
     //TODO 这里改改
     init()
-    //    val animationTimer = new AnimationTimer() {
-    //      override def handle(now: Long): Unit = {
-    //        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
-    //        val ld = new LayeredDraw(botId, layeredScene, grid, false)
-    //        ld.drawLayered()
-    //      }
-    //    }
+//    val animationTimer = new AnimationTimer() {
+//      override def handle(now: Long): Unit = {
+//        //TODO Bot模式下不补帧的话，这里应该可以不用画，之后确认
+//        val data = grid.getGridData(grid.myId,1200,600)
+//        data.playerDetails.find(_.id == grid.myId) match {
+//          case Some(p) =>
+//            val zoom = (p.cells.map(a => a.x + a.radius).max - p.cells.map(a => a.x - a.radius).min, p.cells.map(a => a.y + a.radius).max - p.cells.map(a => a.y - a.radius).min)
+//            val basePoint = (p.x.toDouble, p.y.toDouble)
+//            layeredScene.humanView.drawViewByState(data,basePoint,(zoom._1.toDouble,zoom._2.toDouble))
+//          case None =>
+//        }
+//      }
+//    }
     timeline.setCycleCount(Animation.INDEFINITE)
     val keyFrame = new KeyFrame(Duration.millis(frameRate), { _ =>
       //游戏循环
       gameLoop()
     })
     timeline.getKeyFrames.add(keyFrame)
-    //    animationTimer.start()
+//    animationTimer.start()
     timeline.play()
   }
 
@@ -179,20 +185,20 @@ class BotHolder(
       }
     }
   }
-
-  /*  def gameRender() = {
-      val offsetTime=System.currentTimeMillis()-logicFrameTime
-      gameState match {
-        case GameState.play if botId!= ""=>
-          layeredScene.draw(botId,offsetTime)
-        case GameState.dead if deadInfo.isDefined =>
-          layeredScene.drawWhenDead(deadInfo.get)
-        case GameState.allopatry =>
-          layeredScene.drawWhenFinish("存在异地登录")
-          gameClose
-        case _ =>
-      }
-    }*/
+//
+//    def gameRender() = {
+//      val offsetTime=System.currentTimeMillis()-logicFrameTime
+//      gameState match {
+//        case GameState.play =>
+//          layeredScene.
+//        case GameState.dead if deadInfo.isDefined =>
+//          layeredScene.drawWhenDead(deadInfo.get)
+//        case GameState.allopatry =>
+//          layeredScene.drawWhenFinish("存在异地登录")
+//          gameClose
+//        case _ =>
+//      }
+//    }
 
   def update(): Unit = {
     grid.update()
