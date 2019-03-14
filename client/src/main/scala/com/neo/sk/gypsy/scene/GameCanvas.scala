@@ -172,7 +172,7 @@ class GameCanvas(canvas: Canvas,
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFill(Color.web(MyColors.rankList))
-    ctx.fillRect(realWindow.x-200,20,150,230)
+    ctx.fillRect(realWindow.x-200,20,170,230)
 
 
     println(s"realWindow排行榜背景${realWindow}")
@@ -225,12 +225,15 @@ class GameCanvas(canvas: Canvas,
 //        ctx.setStroke(Color.web("#f32705"))
 //        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
-        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 50,realWindow.y*0.15,32,32)
+        ctx.setTextAlign(TextAlignment.RIGHT)
+        ctx.fillText(killerName, realWindow.x*0.5 - 50, realWindow.y*0.15)
+        ctx.setTextAlign(TextAlignment.CENTER)
+        ctx.drawImage(youkill,realWindow.x * 0.5 - 16,realWindow.y*0.15,32,32)
 //        ctx.setStroke(Color.web("#f32705"))
 //        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
+        ctx.setTextAlign(TextAlignment.LEFT)
+        ctx.fillText(deadName, realWindow.x * 0.5 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerName, deadName) :: killList.tail else killList.tail
@@ -464,16 +467,17 @@ class GameCanvas(canvas: Canvas,
       imgOpt.foreach{ img =>
         ctx.drawImage(img, realWindow.x-200, index * textLineHeight+24, 13, 13)
       }
+      ctx.save()
       if(score.id == uid){
-        ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
         ctx.setFill(Color.web("#FFFF33"))
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
-        ctx.restore()
+        drawTextLine(if(score.n.length < 5) s"【$index】: ${score.n.+("   ").take(4)}" else s"【$index】: ${score.n.take(4) + "..."}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", realWindow.x - 90, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index, currentRankBaseLine)
       }else{
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(if(score.n.length < 5) s"【$index】: ${score.n.+("   ").take(4)}" else s"【$index】: ${score.n.take(4) + "..."}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", realWindow.x - 90, index, currentRankBaseLine)
       }
-
+      ctx.restore()
     }
 
     //绘制小地图
@@ -540,7 +544,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFont(Font.font("Comic Sans MS",Width *0.03))
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
-    var DrawLeft = Width*0.35
+    var DrawLeft = Width*0.30
     var DrawHeight = BaseHeight + Height * 0.1
 
     val congratulation =if(isVictory){
@@ -548,18 +552,19 @@ class GameCanvas(canvas: Canvas,
     }else{
       "Good Game!  Congratulations to: "
     }
-    val text = new Text(congratulation)
-    ctx.fillText(congratulation, Width * 0.5 - text.getLayoutBounds.getWidth.toInt/2, BaseHeight)
-
+//    val text = new Text(congratulation)
     ctx.save()
+    ctx.setTextAlign(TextAlignment.CENTER)
+    ctx.fillText(congratulation, Width * 0.5, BaseHeight)
+
     ctx.setFill(Color.YELLOW)
     val winner = s"${msg.name}"
-    val winnerText = new Text(winner)
-    ctx.fillText(winner, Width * 0.5 - winnerText.getLayoutBounds.getWidth/2, BaseHeight+Height *0.1 )
-    ctx.restore()
+//    val winnerText = new Text(winner)
+    ctx.fillText(winner, Width * 0.5, BaseHeight+Height *0.1 )
     DrawHeight = BaseHeight + Height * 0.15
     ctx.setFont(Font.font("Comic Sans MS",Width *0.02))
 
+    ctx.setTextAlign(TextAlignment.LEFT)
     val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
     ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
@@ -567,14 +572,15 @@ class GameCanvas(canvas: Canvas,
     //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
     ctx.setFill(Color.WHITE)
     val winnerScore = new Text("The   Winner  Score  :")
-    DrawLeft = winnerScore.getLayoutBounds.getWidth +  Width*0.35 + 60
+    DrawLeft = DrawLeft + 350
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
 
     val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
-    val reStartText = new Text(reStart)
-    ctx.fillText(reStart, Width * 0.5 - reStartText.getLayoutBounds.getWidth / 2,DrawHeight + Height*0.07*5)
+//    val reStartText = new Text(reStart)
+    ctx.fillText(reStart, Width * 0.5, DrawHeight + Height*0.07*5)
+    ctx.restore()
 
   }
 
