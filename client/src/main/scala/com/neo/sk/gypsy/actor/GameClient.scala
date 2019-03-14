@@ -120,7 +120,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -160,7 +159,6 @@ object GameClient {
 
 
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
             if(!grid.playerMap.contains(player.id)){
               grid.playerMap += (player.id -> player)
@@ -194,7 +192,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
               GameHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlike")
+//              ClientMusic.playMusic("godlike")
             }
           }
           Behaviors.same
@@ -416,7 +414,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -452,12 +449,11 @@ object GameClient {
 
 
         case Protocol.PlayerRestart(id) =>
-          ClientMusic.playMusic("bg")
+//          ClientMusic.playMusic("bg")
           Behaviors.same
 
 
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
             if(grid.playerByte2IdMap.get(id).isEmpty){
               grid.playerMap += (player.id -> player)
@@ -491,7 +487,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlikeM")
+//              ClientMusic.playMusic("godlikeM")
             }
           }
           Behaviors.same

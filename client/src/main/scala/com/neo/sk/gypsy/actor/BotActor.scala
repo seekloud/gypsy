@@ -148,8 +148,8 @@ object BotActor {
           waitingGame(gameClient,stageCtx,stream)
 
         case ClientTest(roomId)=>
-          log.info("get clientTest")
           val rsp = botClient.joinRoom("1","")
+//          val rsp = botClient.createRoom("")
           Behaviors.same
 
         case unknown@_ =>
@@ -167,8 +167,8 @@ object BotActor {
       msg match {
 
         case ClientTest(roomId)=>
-          log.info("get clientTest")
           val rsp = botClient.joinRoom("1","")
+//          val rsp = botClient.createRoom("")
           Behaviors.same
 
         case CreateRoom(sender) =>

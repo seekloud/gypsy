@@ -79,8 +79,11 @@ class GameServer(override val boundary: Point) extends Grid {
       val color = new Random(System.nanoTime()).nextInt(24)
       val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
       playerMap += id -> player
-      val playerIdByte = playerId2ByteQueue.dequeue()
-//      /**--------------------**/
+      if(playerId2ByteMap.get(id).isEmpty){
+        /**新玩家/bot加入，而非复活**/
+        val playerIdByte = playerId2ByteQueue.dequeue()
+        playerId2ByteMap += id -> playerIdByte
+      }
 //      var addPlayerByteId = true
 //      var playerIdByte = Random.nextInt(127).toByte
 //      playerId2ByteMap.foreach{item=>
@@ -94,16 +97,14 @@ class GameServer(override val boundary: Point) extends Grid {
 //        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
 //          playerIdByte = Random.nextInt(127).toByte
 //        }
-        playerId2ByteMap += id -> playerIdByte
 //      }
-      dispatch(subscriber)(PlayerJoin(playerIdByte,player))
-      /**-------------------**/
-      val event = UserJoinRoom(roomId,player,frameCount+2)
-      AddGameEvent(event)
       println(s" ${id} 加入事件！！  ${frameCount+2}")
       //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
+      dispatch(subscriber)(PlayerJoin(playerId2ByteMap(id),player))
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
+      val event = UserJoinRoom(roomId,player,frameCount+2)
+      AddGameEvent(event)
     }
     waitingJoin = Map.empty[String, String]
   }

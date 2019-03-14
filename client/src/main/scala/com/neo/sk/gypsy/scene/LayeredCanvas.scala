@@ -15,7 +15,6 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridDataSync, MP}
 import javafx.geometry.VPos
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-
 import scala.math.{abs, pow, sqrt}
 
 /**
@@ -57,6 +56,7 @@ class LayeredCanvas(canvas: Canvas,
   val  star24 = new Image(ClientBoot.getClass.getResourceAsStream("/img/yuzhouxingqiu-24.png"))
   val deadbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/deadbg.jpg"))
   val  youkill = new Image(ClientBoot.getClass.getResourceAsStream("/img/youkill.png"))
+  private val Vicbg = new Image(ClientBoot.getClass.getResourceAsStream("/img/Victory.jpg"))
 
   private val  goldImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/gold.png"))
   private val  silverImg = new Image(ClientBoot.getClass.getResourceAsStream("/img/silver.png"))
@@ -391,18 +391,15 @@ class LayeredCanvas(canvas: Canvas,
   }
 
   /*********************8.当前用户状态视图************************************/
-  def drawInform() = {
+  def drawInform(data:Protocol.GridDataSync) = {
     /**包括总分数、分裂个数**/
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
-    //自己放第一个
-    if(grid.currentRank.filter(_.score.id == grid.myId).nonEmpty){
-      val myRank = grid.currentRank.filter(_.score.id == grid.myId).head.score
-      ctx.setFill(ColorsSetting.scoreColor)
-      ctx.fillRect(0, 20, realWindow.x * myRank.score/VictoryScore,informHeight)
-      ctx.setFill(ColorsSetting.splitNumColor)
-      ctx.fillRect(0, 20+informHeight*2,realWindow.x * myRank.k/VirusSplitNumber,informHeight)
-    }
+    val player = data.playerDetails.filter(_.id ==grid.myId).head
+    ctx.setFill(ColorsSetting.scoreColor)
+    ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1.5)
+    ctx.setFill(ColorsSetting.splitNumColor)
+    ctx.fillRect(0, informHeight*5,realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1.5)
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{
@@ -577,7 +574,6 @@ class LayeredCanvas(canvas: Canvas,
       ctx.restore()
     }
 
-
     ctx.restore()
     ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
     ctx.setTextAlign(TextAlignment.LEFT)
@@ -588,6 +584,7 @@ class LayeredCanvas(canvas: Canvas,
     val paraBack = drawKill(grid.myId,grid,isDead,killList)
     killList=paraBack._1
     isDead=paraBack._2
+    FpsComp.renderFps(ctx, 450, 10)
     scale
 
   }
@@ -702,8 +699,8 @@ class LayeredCanvas(canvas: Canvas,
 
         ctx.save()
         ctx.setFont(Font.font(" Helvetica",24))
-        ctx.fillText(s"KILL: ${score.k}", 250, 10)
-        ctx.fillText(s"SCORE: ${score.score}", 400, 10)
+        ctx.fillText(s"KILL: ${score.k}", 150, 10)
+        ctx.fillText(s"SCORE: ${score.score}", 250, 10)
         ctx.restore()
 
 
@@ -796,26 +793,69 @@ class LayeredCanvas(canvas: Canvas,
     }
   }
 
-  def drawViewByState(data:Protocol.GridDataSync,basePoint:(Double,Double),zoom:(Double,Double)) ={
-    gameState match {
-      case GameState.play =>
-        drawPlayState(data,basePoint,zoom)
-      case GameState.dead =>
-        (drawDeadState(deadInfo.get),1.toDouble)
-      case GameState.allopatry =>
-        (drawFinishState(),1.toDouble)
-      case _ =>
-        (BotUtil.emptyArray,1.toDouble)
-    }
-  }
-
-
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
     //视角缩放
     ctx.scale(rate,rate)
     ctx.translate(-x,-y)
+  }
+
+  def drawVictory(VictoryMsg:(Protocol.VictoryMsg,Short,Boolean))={
+    val msg = VictoryMsg._1
+    val isVictory = VictoryMsg._3
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0, 0, Boundary.w , Boundary.h )
+    ctx.drawImage(Vicbg, 0,0, realWindow.x, realWindow.y)
+    //    ctx.font = "30px Helvetica"
+    ctx.setFill(Color.web("#CD3700"))
+    val Width = realWindow.x
+    val Height = realWindow.y
+    ctx.setFont(Font.font("Comic Sans MS",Width *0.03))
+    //    val BaseHeight = Height*0.3
+    val BaseHeight = Height*0.15
+    var DrawLeft = Width*0.35
+    var DrawHeight = BaseHeight + Height * 0.1
+
+    val congratulation =if(isVictory){
+      "Good Game!  Congratulations to: You~"
+    }else{
+      "Good Game!  Congratulations to: "
+    }
+    val text = new Text(congratulation)
+    ctx.fillText(congratulation, Width * 0.5 - text.getLayoutBounds.getWidth.toInt/2, BaseHeight)
+
+    ctx.save()
+    ctx.setFill(Color.YELLOW)
+    val winner = s"${msg.name}"
+    val winnerText = new Text(winner)
+    ctx.fillText(winner, Width * 0.5 - winnerText.getLayoutBounds.getWidth/2, BaseHeight+Height *0.1 )
+    ctx.restore()
+    DrawHeight = BaseHeight + Height * 0.15
+    ctx.setFont(Font.font("Comic Sans MS",Width *0.02))
+
+    val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
+    ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
+    ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
+    ctx.fillText(s"Game  Time   :", DrawLeft, DrawHeight + Height*0.07*3)
+    //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
+    ctx.setFill(Color.WHITE)
+    val winnerScore = new Text("The   Winner  Score  :")
+    DrawLeft = winnerScore.getLayoutBounds.getWidth +  Width*0.35 + 60
+    ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
+    ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
+    ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
+
+    val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
+    val reStartText = new Text(reStart)
+    ctx.fillText(reStart, Width * 0.5 - reStartText.getLayoutBounds.getWidth / 2,DrawHeight + Height*0.07*5)
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(canvas)
+    }else{
+      BotUtil.emptyArray
+    }
+
   }
 
   //等待文字
@@ -826,11 +866,7 @@ class LayeredCanvas(canvas: Canvas,
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
       ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Please wait.", 350, 180)
-    }
-    else if(gameState == GameState.dead){
-      (drawDeadState(deadInfo.get),1.toDouble)
-    }
-    else {
+    } else {
       ctx.setFill(Color.web("rgba(99, 99, 99, 1)"))
       ctx.setFont(Font.font("Helvetica",36))
       ctx.fillText("Ops, Loading....", 350, 250)
