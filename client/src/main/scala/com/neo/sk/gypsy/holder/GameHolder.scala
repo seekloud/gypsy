@@ -33,7 +33,7 @@ object GameHolder {
   val bounds = Point(Boundary.w,Boundary.h)
   val grid = new GridOnClient(bounds)
   var justSynced = false
-  var isDead = false
+  var isDead = false //是否有玩家死亡
   var firstCome=true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
