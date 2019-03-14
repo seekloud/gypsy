@@ -71,10 +71,10 @@ object utils {
   }
 
   def checkScreenRangeAll(center:Point, centerWidth: Double, centerHeight: Double, obj: Point, objWidth: Double, objHeight: Double) ={
-    if(obj.y + objHeight/2 <= center.y - centerHeight ||
-      obj.y - objHeight/2 >= center.y + centerHeight ||
-      obj.x + objWidth/2 <= center.x - centerWidth ||
-      obj.x - objWidth/2 >= center.x + centerWidth)
+    if(obj.y + objHeight/2 <= center.y - centerHeight/2 ||
+      obj.y - objHeight/2 >= center.y + centerHeight/2 ||
+      obj.x + objWidth/2 <= center.x - centerWidth/2 ||
+      obj.x - objWidth/2 >= center.x + centerWidth/2)
       false
     else
       true

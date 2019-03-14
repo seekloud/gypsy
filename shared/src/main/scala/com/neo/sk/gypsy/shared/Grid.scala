@@ -516,6 +516,7 @@ trait Grid {
   /**
     * method: getGridData
     * describe: 获取自己视角中的全量数据
+    * winWidth & winHeight:当前窗口的宽高
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int) = {
 //    myId = id
@@ -525,8 +526,8 @@ trait Grid {
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
       Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     }
-    val width = 600/ Scale
-    val height = 300/ Scale
+    val width = Window.w / Scale
+    val height = Window.h / Scale
 
     var playerDetails: List[Player] = Nil
 
@@ -546,7 +547,6 @@ trait Grid {
       massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       Scale
-     // allPlayerPosition
     )
   }
 

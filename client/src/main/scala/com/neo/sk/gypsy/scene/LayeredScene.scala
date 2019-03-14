@@ -111,8 +111,7 @@ class LayeredScene(
     //TODO 这里其他数据设置为空
     gameState match {
       case GameState.play if grid.myId != ""=>
-        //TODO 这里不一定是1200和600
-        val data = grid.getGridData(grid.myId,Window.w.toInt,Window.h.toInt)
+        val data = grid.getGridData(grid.myId,humanCanvasWidth,humanCanvasHeight)
         data.playerDetails.find(_.id == grid.myId) match {
           case Some(p) =>
             firstCome=false
