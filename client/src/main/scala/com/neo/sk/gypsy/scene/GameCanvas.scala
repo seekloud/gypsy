@@ -202,7 +202,8 @@ class GameCanvas(canvas: Canvas,
   }
 
   def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
-    if(isKill){
+    //fixme killList
+    if(isKill && killList.length!=0){
       val showTime = killList.head._1
       val killerName = killList.head._2
       val deadName = killList.head._3

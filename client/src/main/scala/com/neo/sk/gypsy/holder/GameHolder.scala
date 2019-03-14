@@ -33,7 +33,7 @@ object GameHolder {
   val bounds = Point(Boundary.w,Boundary.h)
   val grid = new GridOnClient(bounds)
   var justSynced = false
-  var isDead = false
+  var isDead = false //是否有玩家死亡
   var firstCome=true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
@@ -146,7 +146,6 @@ class GameHolder(
     //差不多每三秒同步一次
     //不同步
     if (!justSynced) {
-
       mouseInFlame = false
       keyInFlame = false
       update()

@@ -154,9 +154,8 @@ object GameClient {
           }
           Behaviors.same
 
-
-        case Protocol.PlayerRestart(id) =>
-          Behaviors.same
+//        case Protocol.PlayerRestart(id) =>
+//          Behaviors.same
 
 
         case Protocol.PlayerJoin(id,player) =>
@@ -452,10 +451,9 @@ object GameClient {
           }
           Behaviors.same
 
-
-        case Protocol.PlayerRestart(id) =>
+//        case Protocol.PlayerRestart(id) =>
 //          ClientMusic.playMusic("bg")
-          Behaviors.same
+//          Behaviors.same
 
 
         case Protocol.PlayerJoin(id,player) =>
