@@ -103,6 +103,7 @@ class GameServer(override val boundary: Point) extends Grid {
       dispatch(subscriber)(PlayerJoin(playerId2ByteMap(id),player))
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
+      println("lalallala  send!!!!!")
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
     }

@@ -159,11 +159,11 @@ object RoomActor {
           userMap.put(playerInfo.playerId, (playerInfo.nickname, createBallId,group))
           playerMap.put(playerInfo.playerId,playerInfo.nickname)
           subscribersMap.put(playerInfo.playerId, userActor)
-          grid.getSubscribersMap(subscribersMap,botMap)
           userSyncMap.get(group) match{
             case Some(s) =>userSyncMap.update(group,s + playerInfo.playerId)
             case None => userSyncMap.put(group,Set(playerInfo.playerId))
           }
+          grid.getSubscribersMap(subscribersMap,botMap)
           grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
           userActor ! JoinRoomSuccess(roomId,ctx.self)
 
