@@ -438,8 +438,8 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
 
-      case Protocol.PlayerRestart(id) =>
-        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
+//      case Protocol.PlayerRestart(id) =>
+//        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
 //        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>

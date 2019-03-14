@@ -166,12 +166,10 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap,botMap)
           grid.addPlayer(playerInfo.playerId, playerInfo.nickname)
           userActor ! JoinRoomSuccess(roomId,ctx.self)
-
           dispatchTo(subscribersMap)(playerInfo.playerId, Protocol.Id(playerInfo.playerId))
 //          dispatchTo(subscribersMap)(playerInfo.playerId, grid.getAllGridData)
           val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
-
 
           //主要针对胜利后重新加进来
           if(!isJoin){
@@ -253,7 +251,7 @@ object RoomActor {
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
-          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
+//          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
           Behaviors.same
 
 //        case ReStartAck(id) =>
@@ -409,9 +407,8 @@ object RoomActor {
           case KC(id,keyCode,frame,n) =>
             if (keyCode == KeyEvent.VK_SPACE) {
               grid.addPlayer(botId, userMap.getOrElse(botId, ("Unknown",0l,0l))._1)
-              dispatchTo(subscribersMap)(botId,Protocol.PlayerRestart(botId))
+//              dispatchTo(subscribersMap)(botId,Protocol.PlayerRestart(botId))
             } else {
-//              println(s"get keyCode $keyCode")
               grid.addActionWithFrame(botId, KC(id,keyCode,math.max(grid.frameCount,frame),n))
               dispatch(subscribersMap)(KC(id,keyCode,math.max(grid.frameCount,frame),n))
             }
