@@ -621,7 +621,7 @@ class LayeredCanvas(canvas: Canvas,
         ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
         //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
-        val killList1 = if (showTime > 1) (showTime - 10, killerName, deadName) :: killList.tail else killList.tail
+        val killList1 = if (showTime > 10) (showTime - 10, killerName, deadName) :: killList.tail else killList.tail
         if (killList1.isEmpty) (killList1,false) else (killList1,isKill)
       }else{
         (killList,isKill)
