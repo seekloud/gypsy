@@ -34,7 +34,7 @@ class GameClient (override val boundary: Point) extends Grid {
   var playerByte2IdMap = new mutable.HashMap[Byte, String]()
 
   override def getAllGridData: GridDataSync={
-    GridDataSync(0, Nil, Nil, Map.empty, 1.0)
+    GridDataSync(0, Nil, Nil, Map.empty)
   }
 
   //这里用不到id！！！

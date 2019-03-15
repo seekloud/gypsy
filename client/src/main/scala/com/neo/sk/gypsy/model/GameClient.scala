@@ -35,7 +35,7 @@ class GameClient(override val boundary: Point) extends Grid {
 
   override def getAllGridData: GridDataSync={
     //    WsMsgProtocol.GridDataSync(0l, Nil, Nil, Nil, Nil, 1.0)
-    GridDataSync(0, Nil, Nil, Map.empty, 1.0, Nil)
+    GridDataSync(0, Nil, Nil, Map.empty, Nil)
   }
 
   override def checkCellMerge: Boolean = {
