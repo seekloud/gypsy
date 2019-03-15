@@ -57,7 +57,7 @@ object BotActor {
 
   case object ActionSpace extends Command
 
-  case class Action(key:Int, swing: Option[Swing],sender:ActorRef[ActionRsp]) extends Command
+  case class Action(apply:Int, swing: Option[Swing],sender:ActorRef[ActionRsp]) extends Command
 
   case class Inform(sender:ActorRef[InformRsp]) extends Command
 
@@ -203,8 +203,8 @@ object BotActor {
             )(implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]): Behavior[Command] = {
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
-        case Action(key,swing,sender) =>
-          botHolder.gameActionReceiver(key,swing)
+        case Action(apply,swing,sender) =>
+          botHolder.gameActionReceiver(apply,swing)
           sender ! ActionRsp(frameIndex = botHolder.getFrameCount, msg = "ok")
           Behaviors.same
 

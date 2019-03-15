@@ -91,7 +91,6 @@ class BotServer(
     }
   }
 
-  //TODO apply这边有点问题
   override def actionSpace(request: Credit): Future[ActionSpaceRsp] = {
     println(s"actionSpace Called by [$request")
     if(checkBotToken(request.apiToken)){
@@ -146,7 +145,7 @@ class BotServer(
 
   }
 
-  /**按空格键复活**/
+  /**死亡后按空格键复活/胜利后重新进入游戏**/
   override def reincarnation(request: Credit):Future[SimpleRsp] = {
     if (checkBotToken(request.apiToken)) {
       //统一为给BotActor发消息

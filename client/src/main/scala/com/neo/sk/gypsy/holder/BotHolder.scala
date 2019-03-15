@@ -242,7 +242,6 @@ class BotHolder(
       }
     }
 
-    //TODO
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={

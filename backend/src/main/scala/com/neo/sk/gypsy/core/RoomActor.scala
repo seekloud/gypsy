@@ -96,11 +96,12 @@ object RoomActor {
 
   val botId = new AtomicLong(1)
 
-  var isclear = false
+//  var isclear = false
 
+  //TODO 重构时放在create里面
   var killBigBot = 0
 
-  val BotMaxMass = 500
+//  val BotMaxMass = 500
 
 
   private var isJoin = false

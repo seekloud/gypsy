@@ -141,17 +141,18 @@ class LayeredCanvas(canvas: Canvas,
     ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList.groupBy(_.color).foreach{a=>
-      val foodColor = a._1 match{
-        case 0 => "#f3456d"
-        case 1 => "#f49930"
-        case 2 => "#f4d95b"
-        case 3 => "#4cd964"
-        case 4 => "#9fe0f6"
-        case 5 => "#bead92"
-        case 6 => "#cfe6ff"
-        case _ => "#de9dd6"
-      }
-      ctx.setFill(Color.web(foodColor))
+//      val foodColor = a._1 match{
+//        case 0 => "#f3456d"
+//        case 1 => "#f49930"
+//        case 2 => "#f4d95b"
+//        case 3 => "#4cd964"
+//        case 4 => "#9fe0f6"
+//        case 5 => "#bead92"
+//        case 6 => "#cfe6ff"
+//        case _ => "#de9dd6"
+//      }
+      val foodColor = "#de9dd6"
+        ctx.setFill(Color.web(foodColor))
       a._2.foreach{ case Food(color, x, y)=>
         //        ctx.beginPath()
         //        ctx.arc(x + offx,y + offy,10,10,0,360)
@@ -161,16 +162,17 @@ class LayeredCanvas(canvas: Canvas,
     }
 
     data.massDetails.groupBy(_.color).foreach{ a=>
-      a._1 match{
-        case 0 => ctx.setFill(Color.web("#f3456d"))
-        case 1 => ctx.setFill(Color.web("#f49930"))
-        case 2  => ctx.setFill(Color.web("#f4d95b"))
-        case 3  => ctx.setFill(Color.web("#4cd964"))
-        case 4  => ctx.setFill(Color.web("#9fe0f6"))
-        case 5  => ctx.setFill(Color.web("#bead92"))
-        case 6  => ctx.setFill(Color.web("#cfe6ff"))
-        case _  => ctx.setFill(Color.web("#de9dd6"))
-      }
+//      a._1 match{
+//        case 0 => ctx.setFill(Color.web("#f3456d"))
+//        case 1 => ctx.setFill(Color.web("#f49930"))
+//        case 2  => ctx.setFill(Color.web("#f4d95b"))
+//        case 3  => ctx.setFill(Color.web("#4cd964"))
+//        case 4  => ctx.setFill(Color.web("#9fe0f6"))
+//        case 5  => ctx.setFill(Color.web("#bead92"))
+//        case 6  => ctx.setFill(Color.web("#cfe6ff"))
+//        case _  => ctx.setFill(Color.web("#de9dd6"))
+//      }
+      ctx.setFill(Color.web("#cfe6ff"))
       a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
 
         ctx.beginPath()
