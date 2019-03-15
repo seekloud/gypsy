@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.scene
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.Constant.{ColorsSetting, informHeight, viewRatio}
 import com.neo.sk.gypsy.holder.BotHolder._
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
 import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
@@ -420,7 +420,7 @@ class LayeredCanvas(canvas: Canvas,
 
   }
 
-  def drawPlayView(uid: String, data: GridDataSync,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient) = {
+  def drawPlayView(uid: String, data: GridDataSync,basePoint:(Double,Double),zoom:(Double,Double),grid: GameClient) = {
 
     /*
     正常游戏绘图
@@ -589,7 +589,7 @@ class LayeredCanvas(canvas: Canvas,
 
   }
 
-  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
+  def drawKill(myId:String, grid:GameClient, isKill:Boolean, killList:List[(Int,String,String)])={
     if(isKill){
       val showTime = killList.head._1
       val killerName = killList.head._2

@@ -2,7 +2,7 @@ package com.neo.sk.gypsy.holder
 
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
@@ -29,7 +29,7 @@ import org.seekloud.esheepapi.pb.api.{ActionReq, ObservationRsp}
 object BotHolder {
 
   val bounds = Point(Boundary.w, Boundary.h)
-  val grid = new GridOnClient(bounds)
+  val grid = new GameClient(bounds)
   var justSynced = false
   var isDead = false
   var firstCome = true

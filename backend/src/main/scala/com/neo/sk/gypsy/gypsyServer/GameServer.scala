@@ -227,110 +227,8 @@ class GameServer(override val boundary: Point) extends Grid {
       case None => GameEventMap.put(event.frame,List(event))
     }
   }
-  /**碰撞事件检测**/
-  override def checkPlayer2PlayerCrash(): Unit = {
-    var p2pCrash = false
-    var changedPlayers = Map[Byte,List[Cell]]()
-    val newPlayerMap = playerMap.values.map {
-      player =>
-        var playerChange = false
-        var newProtected = player.protect
-        var killerId = ""
-        val score = player.cells.map(_.mass).sum
-        var changedCells = List[Cell]()
-        val newCells = player.cells.sortBy(_.radius).reverse.map {
-          cell =>
-            var cellChange = false
-            var newMass = cell.newmass
-            var newRadius = cell.radius
-//            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
-            playerMap.filterNot(a => a._1 == player.id).foreach { p =>
-              p._2.cells.foreach { otherCell =>
-                if (cell.mass * 1.1 < otherCell.mass && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
-                  //被吃了
-                  playerChange = true
-                  p2pCrash = true
-                  newMass = 0
-                  newRadius = 0
-                  killerId = p._1
-                  cellChange = true
-                } else if (cell.mass > otherCell.mass * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
-                  //吃掉别人了
-                  playerChange = true
-                  p2pCrash = true
-                  newMass = (newMass + otherCell.newmass).toShort
-                  newRadius = Mass2Radius(newMass)
-                  cellChange = true
-                  if(newProtected)
-                    newProtected = false
-                }
-              }
-            }
-            val newCell = cell.copy(newmass = newMass,radius = newRadius)
-            if(cellChange){
-              changedCells = newCell :: changedCells
-            }
-            newCell
-        }.filterNot(c => c.newmass < 1 || c.radius < 1 )
-        if (newCells.isEmpty) {
-          /**陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot**/
-          if(player.id.startsWith("bot_")){
-            val playerNum = playerMap.keySet.size
-            if(playerNum>AppSettings.botNum){
-              botSubscriber.get(player.id) match {
-                case Some(bot) =>
-                  println(s"${player.name} not relive")
-                  bot._2 ! BotActor.KillBot
-//                  AppSettings.starNames += (player.name -> false)
-                case None =>
-              }
-            }
-            else ReLiveMap += (player.id -> System.currentTimeMillis())
-          }else{
-            esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
-          }
 
-          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(playerMap.get(killerId).get.name,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
-          dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
-          val event = KillMsg(killerId,playerMap.get(killerId).get.name,player,score,System.currentTimeMillis()-player.startTime,frameCount)
-          AddGameEvent(event)
-          Left(killerId)
-        } else {
-          if (playerChange){
-            changedPlayers+=(playerId2ByteMap(player.id) ->changedCells)
-          }
-          val length = newCells.length
-          val newX = newCells.map(_.x).sum / length
-          val newY = newCells.map(_.y).sum / length
-          val left = newCells.map(a => a.x - a.radius).min
-          val right = newCells.map(a => a.x + a.radius).max
-          val bottom = newCells.map(a => a.y - a.radius).min
-          val top = newCells.map(a => a.y + a.radius).max
-          Right(player.copy(x = newX.toShort, y = newY.toShort, width = right - left, height = top - bottom, cells = newCells))
-        }
-    }
-    //先把死亡的玩家清除
-    playerMap = newPlayerMap.map {
-      case Right(s) => (s.id, s)
-      case Left(_) => ("", Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-    }.filterNot(_._1 == "").toMap
-
-    //再把杀人的玩家kill + 1
-    newPlayerMap.foreach {
-      case Left(killId) =>
-        val a = playerMap.getOrElse(killId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-        playerMap += (killId -> a.copy(kill = (a.kill + 1).toShort ))
-      case Right(_) =>
-    }
-
-    if(p2pCrash){
-      val event = PlayerInfoChange(playerMap,frameCount)
-      AddGameEvent(event)
-      dispatch(subscriber)(UserCrash(changedPlayers))
-    }
-  }
-
-  /**融合事件检测**/
+  /**cell融合事件检测**/
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
     var mergePlayer = Map[Byte,List[(Long,Long)]]()
@@ -407,6 +305,7 @@ class GameServer(override val boundary: Point) extends Grid {
     mergeInFlame
   }
 
+  /**玩家病毒碰撞检测**/
   override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
     var removeVirus = Map.empty[Long,Virus]
     var splitPlayer = Map.empty[Byte,Player]
@@ -473,6 +372,109 @@ class GameServer(override val boundary: Point) extends Grid {
       //只发送改变的玩家
       dispatch(subscriber)(PlayerSplit(splitPlayer))
       dispatch(subscriber)(RemoveVirus(removeVirus))
+    }
+  }
+
+  /**碰撞事件检测**/
+  override def checkPlayer2PlayerCrash(): Unit = {
+    var p2pCrash = false
+    var changedPlayers = Map[Byte,List[Cell]]()
+    val newPlayerMap = playerMap.values.map {
+      player =>
+        var playerChange = false
+        var newProtected = player.protect
+        var killerId = ""
+        val score = player.cells.map(_.mass).sum
+        var changedCells = List[Cell]()
+        val newCells = player.cells.sortBy(_.radius).reverse.map {
+          cell =>
+            var cellChange = false
+            var newMass = cell.newmass
+            var newRadius = cell.radius
+            //            playerMap.filterNot(a => a._1 == player.id || a._2.protect).foreach { p =>
+            playerMap.filterNot(a => a._1 == player.id).foreach { p =>
+              p._2.cells.foreach { otherCell =>
+                if (cell.mass * 1.1 < otherCell.mass && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (otherCell.radius - cell.radius * 0.8) && !player.protect) {
+                  //被吃了
+                  playerChange = true
+                  p2pCrash = true
+                  newMass = 0
+                  newRadius = 0
+                  killerId = p._1
+                  cellChange = true
+                } else if (cell.mass > otherCell.mass * 1.1 && sqrt(pow(cell.x - otherCell.x, 2.0) + pow(cell.y - otherCell.y, 2.0)) < (cell.radius - otherCell.radius * 0.8) && !p._2.protect) {
+                  //吃掉别人了
+                  playerChange = true
+                  p2pCrash = true
+                  newMass = (newMass + otherCell.newmass).toShort
+                  newRadius = Mass2Radius(newMass)
+                  cellChange = true
+                  if(newProtected)
+                    newProtected = false
+                }
+              }
+            }
+            val newCell = cell.copy(newmass = newMass,radius = newRadius)
+            if(cellChange){
+              changedCells = newCell :: changedCells
+            }
+            newCell
+        }.filterNot(c => c.newmass < 1 || c.radius < 1 )
+        if (newCells.isEmpty) {
+          /**陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot**/
+          if(player.id.startsWith("bot_")){
+            val playerNum = playerMap.keySet.size
+            if(playerNum>AppSettings.botNum){
+              botSubscriber.get(player.id) match {
+                case Some(bot) =>
+                  println(s"${player.name} not relive")
+                  bot._2 ! BotActor.KillBot
+                //                  AppSettings.starNames += (player.name -> false)
+                case None =>
+              }
+            }
+            else ReLiveMap += (player.id -> System.currentTimeMillis())
+          }else{
+            esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
+          }
+
+          dispatchTo(subscriber)(player.id,Protocol.UserDeadMessage(playerMap.get(killerId).get.name,player.id,player.kill,score,System.currentTimeMillis()-player.startTime))
+          dispatch(subscriber)(Protocol.KillMessage(killerId, player.id))
+          val event = KillMsg(killerId,playerMap.get(killerId).get.name,player,score,System.currentTimeMillis()-player.startTime,frameCount)
+          AddGameEvent(event)
+          Left(killerId)
+        } else {
+          if (playerChange){
+            changedPlayers+=(playerId2ByteMap(player.id) ->changedCells)
+          }
+          val length = newCells.length
+          val newX = newCells.map(_.x).sum / length
+          val newY = newCells.map(_.y).sum / length
+          val left = newCells.map(a => a.x - a.radius).min
+          val right = newCells.map(a => a.x + a.radius).max
+          val bottom = newCells.map(a => a.y - a.radius).min
+          val top = newCells.map(a => a.y + a.radius).max
+          Right(player.copy(x = newX.toShort, y = newY.toShort, width = right - left, height = top - bottom, cells = newCells))
+        }
+    }
+    //先把死亡的玩家清除
+    playerMap = newPlayerMap.map {
+      case Right(s) => (s.id, s)
+      case Left(_) => ("", Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+    }.filterNot(_._1 == "").toMap
+
+    //再把杀人的玩家kill + 1
+    newPlayerMap.foreach {
+      case Left(killId) =>
+        val a = playerMap.getOrElse(killId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+        playerMap += (killId -> a.copy(kill = (a.kill + 1).toShort ))
+      case Right(_) =>
+    }
+
+    if(p2pCrash){
+      val event = PlayerInfoChange(playerMap,frameCount)
+      AddGameEvent(event)
+      dispatch(subscriber)(UserCrash(changedPlayers))
     }
   }
 

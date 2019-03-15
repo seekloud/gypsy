@@ -8,7 +8,7 @@ import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
@@ -174,8 +174,6 @@ class GameCanvas(canvas: Canvas,
     ctx.setFill(Color.web(MyColors.rankList))
     ctx.fillRect(realWindow.x-200,20,170,230)
 
-
-    println(s"realWindow排行榜背景${realWindow}")
     //绘制小地图
     ctx.setFont(Font.font("Helvetica",12))
     ctx.setFill(Color.web(MyColors.rankList))
@@ -201,7 +199,7 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
+  def drawKill(myId:String, grid:GameClient, isKill:Boolean, killList:List[(Int,String,String)])={
     //fixme killList
     if(isKill && killList.length!=0){
       val showTime = killList.head._1
@@ -249,7 +247,7 @@ class GameCanvas(canvas: Canvas,
 
 
 //  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
-  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient)= {
+  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GameClient)= {
     //offScreenCanvas:Canvas
     val players = data.playerDetails
     val foods =  grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
