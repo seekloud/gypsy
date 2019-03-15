@@ -235,7 +235,7 @@ class GameHolder(replay:Boolean = false) {
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
               val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
-              if(e.keyCode != KeyCode.F){
+              if(e.keyCode == KeyCode.E){
                 grid.addActionWithFrame(grid.myId, keyCode.copy(f=grid.frameCount + delayFrame))
               }
               webSocketClient.sendMsg(keyCode)

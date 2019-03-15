@@ -400,7 +400,6 @@ class GameClient (override val boundary: Point) extends Grid {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
     frameCount = data.frameCount
-//    println(s"同步数据：\n now:${playerMap.get(myId).map(_.cells.map(_.mass).sum)} \n next:${data.playerDetails.find(s => s.id == myId).map(_.cells.map(_.mass).sum)}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
     if(food.nonEmpty && data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{

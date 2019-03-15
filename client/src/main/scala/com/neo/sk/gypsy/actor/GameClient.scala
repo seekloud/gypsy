@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
 import com.neo.sk.gypsy.holder.GameHolder
@@ -31,7 +31,7 @@ object GameClient {
   case class ControllerInitialBot(controller: BotHolder) extends GameBeginning
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
-  private[this] var grid: GridOnClient = _
+  private[this] var grid: GameClient = _
 
   def create(): Behavior[WsMsgSource] = {
     Behaviors.setup[WsMsgSource]{ ctx =>
@@ -132,7 +132,6 @@ object GameClient {
           Behaviors.same
 
         case data: Protocol.GridDataSync =>
-//          println("---: "+data)
           ClientBoot.addToPlatform{
             GameHolder.syncGridData = Some(data)
             GameHolder.justSynced = true
@@ -200,7 +199,6 @@ object GameClient {
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadId)=>
-//          println("--------------------------:  "+Protocol.KillMessage(killerId,deadId)+"   -----:  "+grid.playerMap)
           ClientBoot.addToPlatform{
             if(grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined){
               val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))

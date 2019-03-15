@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import akka.actor.typed.ActorRef
@@ -31,7 +31,7 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 object GameHolder {
 
   val bounds = Point(Boundary.w,Boundary.h)
-  val grid = new GridOnClient(bounds)
+  val grid = new GameClient(bounds)
   var justSynced = false
   var isDead = false //是否有玩家死亡
   var firstCome=true
@@ -186,11 +186,18 @@ class GameHolder(
       if (key == KeyCode.ESCAPE && !isDead) {
         gameClose
       } else if (watchKeys.contains(key) && keyInFlame == false) {
-        if (key == KeyCode.SPACE) {
-          println(s"down+ Space ReLive Press!")
+        if(gameState == GameState.dead){
+          if(key == KeyCode.SPACE){
+            println(s"down+ Space ReLive Press!")
+            keyInFlame = true
+            val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+            serverActor ! reliveMsg
+          }
+        }else if(gameState == GameState.victory){
+          println(s"down+ Press After Success!!")
           keyInFlame = true
-          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
-          serverActor ! reliveMsg
+          val rejoinMsg = Protocol.ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+          serverActor ! rejoinMsg
         } else {
           println(s"down+${e.toString}")
           //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下

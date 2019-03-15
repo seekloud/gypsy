@@ -15,7 +15,7 @@ import com.neo.sk.gypsy.shared.util.utils._
   * @author zhaoyin
   *  2018/10/30  1:53 PM
   */
-class GridOnClient(override val boundary: Point) extends Grid {
+class GameClient(override val boundary: Point) extends Grid {
 
   var myId = ""
 
@@ -93,58 +93,58 @@ class GridOnClient(override val boundary: Point) extends Grid {
     mergeInFlame
   }
 
-  //  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {}
+  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {}
 
-  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
-    var removeVirus = Map.empty[Long,Virus]
-    val newPlayerMap = playerMap.values.map {
-      player =>
-        var newSplitTime = player.lastSplit
-        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-          cell =>
-            var vSplitCells = List[Cell]()
-            var newMass = cell.newmass
-            var newRadius = cell.radius
-            //病毒碰撞检测
-            virusMap.foreach { vi =>
-              val v = vi._2
-              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
-                //                virus = virus.filterNot(_ == v)
-                removeVirus += (vi._1->vi._2)
-                val cellMass = (newMass / (VirusSplitNumber + 1)).toShort
-                val cellRadius = Mass2Radius(cellMass)
-                newMass = ((newMass / (VirusSplitNumber + 1)) + (v.mass * 0.5)).toShort
-                newRadius = Mass2Radius(newMass)
-                newSplitTime = System.currentTimeMillis()
-                val baseAngle = 2 * Pi / VirusSplitNumber
-                for (i <- 0 until VirusSplitNumber) {
-                  val degX = cos(baseAngle * i)
-                  val degY = sin(baseAngle * i)
-                  val startLen = (newRadius + cellRadius) * 1.2*3
-                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
-                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
-                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
-                  //TODO 这里前端来让CellID 增加？？
-                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort , (cell.y + startLen * degY).toShort , cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
-                }
-              }
-            }
-            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
-        }
-
-        val length = newCells.length
-        val newX = newCells.map(_.x).sum / length
-        val newY = newCells.map(_.y).sum / length
-        val left = newCells.map(a => a.x - a.radius).min
-        val right = newCells.map(a => a.x + a.radius).max
-        val bottom = newCells.map(a => a.y - a.radius).min
-        val top = newCells.map(a => a.y + a.radius).max
-        player.copy(x = newX , y = newY , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
-    }
-    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-    virusMap --= removeVirus.keySet.toList
-  }
+//  override def checkPlayerVirusCrash(mergeInFlame: Boolean): Unit = {
+//    var removeVirus = Map.empty[Long,Virus]
+//    val newPlayerMap = playerMap.values.map {
+//      player =>
+//        var newSplitTime = player.lastSplit
+//        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
+//          cell =>
+//            var vSplitCells = List[Cell]()
+//            var newMass = cell.newmass
+//            var newRadius = cell.radius
+//            //病毒碰撞检测
+//            virusMap.foreach { vi =>
+//              val v = vi._2
+//              if ((sqrt(pow(v.x - cell.x, 2.0) + pow(v.y - cell.y, 2.0)) < cell.radius) && (cell.radius > v.radius * 1.2) && !mergeInFlame) {
+//                //                virus = virus.filterNot(_ == v)
+//                removeVirus += (vi._1->vi._2)
+//                val cellMass = (newMass / (VirusSplitNumber + 1)).toShort
+//                val cellRadius = Mass2Radius(cellMass)
+//                newMass = ((newMass / (VirusSplitNumber + 1)) + (v.mass * 0.5)).toShort
+//                newRadius = Mass2Radius(newMass)
+//                newSplitTime = System.currentTimeMillis()
+//                val baseAngle = 2 * Pi / VirusSplitNumber
+//                for (i <- 0 until VirusSplitNumber) {
+//                  val degX = cos(baseAngle * i)
+//                  val degY = sin(baseAngle * i)
+//                  val startLen = (newRadius + cellRadius) * 1.2*3
+//                  // vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong,(cell.x + startLen * degX).toInt,(cell.y + startLen * degY).toInt,cellMass,cellRadius,cell.speed)
+//                  val speedx = (cos(baseAngle * i) * cell.speed).toFloat*3
+//                  val speedy = (sin(baseAngle * i) * cell.speed).toFloat*3
+//                  //TODO 这里前端来让CellID 增加？？
+//                  vSplitCells ::= Cell(cellIdgenerator.getAndIncrement().toLong, (cell.x + startLen * degX).toShort , (cell.y + startLen * degY).toShort , cellMass, newMass,cellRadius, cell.speed, speedx, speedy)
+//                }
+//              }
+//            }
+//            List(Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
+//        }
+//
+//        val length = newCells.length
+//        val newX = newCells.map(_.x).sum / length
+//        val newY = newCells.map(_.y).sum / length
+//        val left = newCells.map(a => a.x - a.radius).min
+//        val right = newCells.map(a => a.x + a.radius).max
+//        val bottom = newCells.map(a => a.y - a.radius).min
+//        val top = newCells.map(a => a.y + a.radius).max
+//        player.copy(x = newX , y = newY , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
+//      //Player(player.id, player.name, player.color, player.x, player.y, player.targetX, player.targetY, player.kill, player.protect, newSplitTime, player.killerName, player.width, player.height, newCells)
+//    }
+//    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
+//    virusMap --= removeVirus.keySet.toList
+//  }
 
   override def checkPlayer2PlayerCrash(): Unit = {}
 
@@ -209,7 +209,6 @@ class GridOnClient(override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX , y = newY , protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -276,6 +275,7 @@ class GridOnClient(override val boundary: Point) extends Grid {
       }
       virus = virus1
     }*/
+
   override def checkVirusMassCrash(): Unit = {
     //TODO 这边病毒的运动有待商榷
     val virus1 = virusMap.flatMap{vi=>
@@ -382,13 +382,8 @@ class GridOnClient(override val boundary: Point) extends Grid {
   def setSyncGridData(data:GridDataSync): Unit = {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
     mouseActionMap = mouseActionMap.filterKeys(_ > data.frameCount-maxDelayFrame)
-    //    println(s"前端帧${grid.frameCount}，后端帧${data.frameCount}")
     frameCount = data.frameCount
-    //    println(s"**********************前端帧${grid.frameCount}，后端帧${data.frameCount}")
     playerMap = data.playerDetails.map(s => s.id -> s).toMap
-    /*if(data.foodDetails.nonEmpty){
-      food = data.foodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
-    }*/
     if(food.nonEmpty && data.eatenFoodDetails.nonEmpty){
       data.eatenFoodDetails.foreach{
         f=>
@@ -396,16 +391,9 @@ class GridOnClient(override val boundary: Point) extends Grid {
       }
     }
     //food改为增量传输这里暂时不用
-    //    food ++= data.newFoodDetails.map(a => Point(a.x, a.y) -> a.color).toMap
     massList = data.massDetails
-    //    virus = data.virusDetails
-    virusMap ++= data.virusDetails
-    /*    val myCell=playerMap.find(_._1==myId)
-        if(myCell.isDefined){
-          for(i<- advanceFrame to 1 by -1){
-            update()
-          }
-        }*/
+    virusMap = data.virusDetails
+//    virusMap ++= data.virusDetails
   }
 
   //从第frame开始回滚到现在
