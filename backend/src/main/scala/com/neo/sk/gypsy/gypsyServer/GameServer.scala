@@ -724,7 +724,7 @@ class GameServer(override val boundary: Point) extends Grid {
     )
   }
 
-  override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
+//  override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
 
   def getDataForBot(id:String,winWidth:Int,winHeight:Int):GridData4Bot =  {
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(( winWidth/2 ,winHeight/2 ))

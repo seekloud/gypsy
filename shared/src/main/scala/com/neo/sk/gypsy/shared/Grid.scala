@@ -517,8 +517,9 @@ trait Grid {
     * method: getGridData
     * describe: 获取自己视角中的全量数据
     * winWidth & winHeight:当前窗口的宽高
+    * screenScale 屏幕缩放比例
     */
-  def getGridData(id:String,winWidth:Int,winHeight:Int) = {
+  def getGridData(id:String,winWidth:Int,winHeight:Int,screenScale:Double) = {
 //    myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
@@ -526,8 +527,8 @@ trait Grid {
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
       Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     }
-    val width = Window.w / Scale
-    val height = Window.h / Scale
+    val width = winWidth / Scale / screenScale
+    val height = winHeight / Scale / screenScale
 
     var playerDetails: List[Player] = Nil
 

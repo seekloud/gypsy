@@ -111,7 +111,8 @@ class LayeredScene(
     //TODO 这里其他数据设置为空
     gameState match {
       case GameState.play if grid.myId != ""=>
-        val data = grid.getGridData(grid.myId,humanCanvasWidth,humanCanvasHeight)
+        //screenScale为0.75，即从(800,400)->(1200,600)
+        val data = grid.getGridData(grid.myId,humanCanvasWidth,humanCanvasHeight,0.75)
         data.playerDetails.find(_.id == grid.myId) match {
           case Some(p) =>
             firstCome=false

@@ -295,7 +295,7 @@ class GameHolder(replay:Boolean = false) {
   def draw(offsetTime:Long)={
     if (webSocketClient.getWsState) {
       var zoom = (30.0, 30.0)
-      val data=grid.getGridData(grid.myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt)
+      val data=grid.getGridData(grid.myId, dom.window.innerWidth.toInt, dom.window.innerHeight.toInt,drawGameView.screeScale)
       val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
       data.playerDetails.find(_.id == grid.myId) match {
         case Some(p) =>
