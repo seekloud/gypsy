@@ -12,7 +12,8 @@ import com.neo.sk.gypsy.holder.GameHolder
 import com.neo.sk.gypsy.holder.BotHolder
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+//import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+import com.neo.sk.gypsy.utils.{FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._

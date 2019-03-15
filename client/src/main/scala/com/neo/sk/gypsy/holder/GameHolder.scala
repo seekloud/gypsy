@@ -16,7 +16,7 @@ import java.awt.event.KeyEvent
 
 import javafx.scene.image.Image
 import scala.math.atan2
-import com.neo.sk.gypsy.utils.ClientMusic
+//import com.neo.sk.gypsy.utils.ClientMusic
 
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
@@ -231,7 +231,7 @@ class GameHolder(
     //停止gameLoop
     timeline.stop()
     //停止背景音乐
-    ClientMusic.stopMusic()
+//    ClientMusic.stopMusic()
   }
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {
