@@ -609,7 +609,7 @@ class GameHolder(replay:Boolean = false) {
         val data = e.gState
         syncGridData = Some(GridDataSync(data.frameCount,
           data.playerDetails,data.massDetails,
-          data.virusDetails,0.toDouble,Nil,Nil))
+          data.virusDetails,Nil,Nil))
         grid.food = e.gState.foodDetails.map(a => Point(a.x,a.y) -> a.color).toMap
         grid.currentRank = e.gState.currentRank
         justSynced = true
