@@ -179,17 +179,17 @@ object RoomActor {
             isJoin = !isJoin
           }
           //添加机器人
-
+          var starNamesCopy = starNames
           if (playerMap.size + botMap.size < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
             println("joinroom create")
-            createBotActor(needAdd, roomId, ctx, grid,starNames)
+             starNamesCopy = createBotActor(needAdd, roomId, ctx, grid,starNames)
           }
 
 
           val event = UserWsJoin(roomId, playerInfo.playerId, playerInfo.nickname, createBallId, grid.frameCount,-1)
           grid.AddGameEvent(event)
-          Behaviors.same
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNamesCopy)
 
           /**机器人加入**/
         case JoinRoom4Bot(botInfo,botActor)=>
@@ -284,11 +284,11 @@ object RoomActor {
             }
             isJoin = !isJoin
           }
-
+          var starNamesCopy = starNames
           if(playerMap.size + botMap.size < AppSettings.botNum){
             val needAdd = AppSettings.botNum - playerMap.size - botMap.size
             println("rejoin create")
-            createBotActor(needAdd,roomId,ctx,grid,starNames)
+            starNamesCopy=createBotActor(needAdd,roomId,ctx,grid,starNames)
           }
 
           /*if(playerMap.size < AppSettings.botNum){ // 感觉这个判断其实也可以不用加
@@ -308,7 +308,7 @@ object RoomActor {
           }*/
 
 
-          Behaviors.same
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNamesCopy)
 
         /**玩家离开**/
         case UserActor.Left(playerInfo) =>
@@ -354,17 +354,18 @@ object RoomActor {
 
           subscribersMap.remove(playerInfo.playerId)
           grid.getSubscribersMap(subscribersMap,botMap)
+          var starNamesCopy = starNames
 
           val allPlayerNum = playerMap.size + botMap.size
 //            if(playerNum<AppSettings.botNum && allPlayerNum<AppSettings.botNum){
           if (allPlayerNum < AppSettings.botNum) {
             val needAdd = AppSettings.botNum - allPlayerNum
             println("user left create")
-            createBotActor(needAdd, roomId, ctx, grid,starNames)
+            starNamesCopy=createBotActor(needAdd, roomId, ctx, grid,starNames)
 
           }
 
-          Behaviors.same
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNamesCopy)
 
         case UserActor.Left4Watch(playerInfo) =>
           //userSyncMap 中删去数据
@@ -423,7 +424,7 @@ object RoomActor {
         /**Bot死亡**/
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
-          starNames += (botMap.get(botId).get._1 -> false)
+          starNames.update(botMap.get(botId).get._1 , false)
           botMap.remove(botId)
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
@@ -445,6 +446,8 @@ object RoomActor {
         case Sync =>
           grid.update()
           val botPlayerNum = botMap.size
+          var starNamesCopy = starNames
+
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > (KillBotScore) )
           if(bigBotMap.nonEmpty){
             bigBotMap.keys.foreach {
@@ -452,16 +455,18 @@ object RoomActor {
                 if(botMap.get(botId).isDefined){
                   botMap(botId)._2 ! KillBot
                   killBigBot +=1
-                  starNames += (grid.playerMap(botId).name -> false)
+                  starNames.update(grid.playerMap(botId).name ,false)
                   grid.playerMap -= botId
                 }
             }
+
             if (killBigBot>0) {
               val allPlayerNum = playerMap.size + botPlayerNum - killBigBot
+
               if (allPlayerNum < AppSettings.botNum) {
                 val needAdd = AppSettings.botNum - allPlayerNum
                 println("Sync create")
-                createBotActor(needAdd, roomId, ctx, grid,starNames)
+                starNamesCopy=createBotActor(needAdd, roomId, ctx, grid,starNames)
                 killBigBot = 0
               }
             }
@@ -563,9 +568,9 @@ object RoomActor {
             dispatch(subscribersMap)(Protocol.FeedApples(foodlists))
           }
           if(isVictory){
-            idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,grid.frameCount,starNames)
+            idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,grid.frameCount,starNamesCopy)
           }else{
-            idle(roomId,userMap,playerMap,botMap, subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNames)
+            idle(roomId,userMap,playerMap,botMap, subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNamesCopy)
           }
 
         case UserActor.NetTest(id, createTime) =>
@@ -683,7 +688,7 @@ object RoomActor {
             val botName = starNames.filter(i=> !i._2).keys.toList(num)
             val id = "bot_"+roomId + "_"+ botId.getAndIncrement()
             println(id)
-            starNames += (botName -> true)
+            starNames.update(botName , true)
             getBotActor(ctx, id) ! BotActor.InitInfo(botName, grid, ctx.self)
           }
         }catch {
@@ -695,7 +700,7 @@ object RoomActor {
       }
     }
 
-
+    starNames
   }
 
 }
