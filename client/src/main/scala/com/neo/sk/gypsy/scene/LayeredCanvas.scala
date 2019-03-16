@@ -112,13 +112,13 @@ class LayeredCanvas(canvas: Canvas,
   def drawNonInteract(basePoint:(Double,Double),scale:Double) = {
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
-    ctx.setFill(Color.BLACK)
-    //TODO 偏移要看
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
     ctx.restore()
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
@@ -131,14 +131,14 @@ class LayeredCanvas(canvas: Canvas,
   def drawInteract(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double)={
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
-
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList.groupBy(_.color).foreach{a=>
 //      val foodColor = a._1 match{
@@ -199,13 +199,14 @@ class LayeredCanvas(canvas: Canvas,
   def drawKernel(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x /2,realWindow.y /2)
 
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       var circleColor = color.toInt % 7 match{
@@ -254,14 +255,15 @@ class LayeredCanvas(canvas: Canvas,
   def drawAllPlayer(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     data.playerDetails.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
       var circleColor = color.toInt % 7 match{
@@ -310,14 +312,15 @@ class LayeredCanvas(canvas: Canvas,
   def drawPlayer(data:Protocol.GridDataSync,basePoint:(Double,Double),scale:Double) = {
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
 
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
 
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     val my = data.playerDetails.find(_.id == grid.myId).get
     val name = my.name
@@ -358,12 +361,13 @@ class LayeredCanvas(canvas: Canvas,
   def drawPointer(mouseActionMap:Map[Int, Map[String, MP]],basePoint:(Double,Double),scale:Double) = {
     val layeredOffX = realWindow.x/2 - basePoint._1
     val layeredOffY = realWindow.y/2 - basePoint._2
-    ctx.setFill(Color.GRAY)
+    ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
     ctx.save()
     centerScale(ctx,scale/viewRatio,realWindow.x/2,realWindow.y/2)
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
+    ctx.setStroke(Color.WHITE)
+    ctx.setLineWidth(5)
+    ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     if(!mouseActionMap.isEmpty){
       //myId --> MP

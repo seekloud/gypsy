@@ -525,10 +525,10 @@ trait Grid {
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
     if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
-      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight) * screenScale
+      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
     }
-    val width = winWidth / Scale
-    val height = winHeight / Scale
+    val width = winWidth / Scale / screenScale
+    val height = winHeight / Scale / screenScale
 
     var playerDetails: List[Player] = Nil
 
@@ -547,6 +547,7 @@ trait Grid {
       playerDetails,
       massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),m.radius,width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
+      Scale
     )
   }
 

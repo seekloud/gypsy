@@ -717,6 +717,7 @@ class GameServer(override val boundary: Point) extends Grid {
       playerDetails,
       massList,
       virusMap,
+      1.0,
       //playerPosition,
       newFoodDetails,
       eatenFoodDetails

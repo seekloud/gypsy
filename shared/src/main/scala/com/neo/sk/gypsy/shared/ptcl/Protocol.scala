@@ -31,6 +31,7 @@ object Protocol {
                            playerDetails: List[Player],
                            massDetails: List[Mass],
                            virusDetails: Map[Long,Virus],
+                           scale: Double, //缩放比例
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
