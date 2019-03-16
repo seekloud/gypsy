@@ -524,12 +524,11 @@ trait Grid {
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
-//    if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
-//      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
-//    }
-    Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight) * screenScale
-    val width = winWidth / Scale
-    val height = winHeight / Scale
+    if(getZoomRate(zoom._1,zoom._2,winWidth,winHeight)!=1){
+      Scale = getZoomRate(zoom._1,zoom._2,winWidth,winHeight)
+    }
+    val width = winWidth / Scale / screenScale
+    val height = winHeight / Scale / screenScale
 
     var playerDetails: List[Player] = Nil
 
