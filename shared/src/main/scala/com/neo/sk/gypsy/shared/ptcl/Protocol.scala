@@ -134,9 +134,9 @@ object Protocol {
 
   case class Ping(timestamp: Long) extends UserAction
 
-  case object CreateRoom extends UserAction
+  case class CreateRoom(password: String) extends UserAction
 
-  case class JoinRoom(roomId:Option[Long]) extends UserAction
+  case class JoinRoom(roomId:Option[Long], password: Option[String]) extends UserAction
 
 
   /**

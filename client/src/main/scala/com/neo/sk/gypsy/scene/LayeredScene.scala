@@ -160,7 +160,10 @@ class LayeredScene(
         humanReturn = (humanView.drawVictory(victoryInfo.get),1.toDouble)
 
       case GameState.allopatry =>
-        humanReturn = (humanView.drawFinishState(),1.toDouble)
+        humanReturn = (humanView.drawFinishState("存在异地登录"),1.toDouble)
+
+      case GameState.passwordError =>
+        humanReturn = (humanView.drawFinishState("房间密码错误"),1.toDouble)
 
       case _ =>
         (BotUtil.emptyArray,1.toDouble)

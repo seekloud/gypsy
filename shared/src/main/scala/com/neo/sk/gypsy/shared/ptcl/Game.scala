@@ -146,6 +146,7 @@ object Game {
     val dead:Int = 1
     val allopatry:Int = 2
     val victory:Int = 3
+    val passwordError:Int = 4
   }
 
   case class XAxis(

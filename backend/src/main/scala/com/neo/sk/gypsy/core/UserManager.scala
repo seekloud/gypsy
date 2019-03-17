@@ -67,7 +67,7 @@ object UserManager {
           }
           val userActor = getUserActor(ctx,playerInfo)
           replyTo ! getWebSocketFlow(playerInfo,0L,userActor)
-          userActor ! UserActor.StartGame(roomIdOpt)
+          userActor ! UserActor.StartGame(roomIdOpt, None)
           Behaviors.same
 
         case GetWatchWebSocketFlow(playerInfoOpt,watchIdOpt,roomId,replyTo) =>

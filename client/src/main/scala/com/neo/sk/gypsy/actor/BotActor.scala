@@ -167,13 +167,13 @@ object BotActor {
       msg match {
 
         case ClientTest(roomId)=>
-          val rsp = botClient.joinRoom("1","")
+          val rsp = botClient.joinRoom("1","123456")
 //          val rsp = botClient.createRoom("")
           Behaviors.same
 
         case CreateRoom(password, sender) =>
           SDKReplyTo = sender
-          stream ! Protocol.CreateRoom
+          stream ! Protocol.CreateRoom(password)
           //TODO 写在配置文件里？
           val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)
@@ -182,7 +182,7 @@ object BotActor {
 
         case JoinRoom(password, roomId, sender) =>
           SDKReplyTo = sender
-          stream ! Protocol.JoinRoom(Some(roomId.toLong))
+          stream ! Protocol.JoinRoom(Some(roomId.toLong), Some(password))
           //TODO 写在配置文件里？
           val layeredScene = new LayeredScene(true)
           botHolder = new BotHolder(stageCtx,layeredScene,stream,botClient,ctx.self)

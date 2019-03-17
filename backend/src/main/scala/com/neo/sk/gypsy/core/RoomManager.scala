@@ -29,6 +29,9 @@ object RoomManager {
   case class GetGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
   case class GetRoomList(replyTo:ActorRef[RoomListRsp]) extends Command
 
+  //FixMe 1房间默认密码123456
+  val defaultPassword = "123456"
+
   val behaviors:Behavior[Command] ={
     log.debug(s"RoomManager start...")
     Behaviors.setup[Command]{
@@ -36,25 +39,54 @@ object RoomManager {
         Behaviors.withTimers[Command]{
           implicit timer =>
             val roomIdGenerator = new AtomicLong(1L)
+            val roomPassword = mutable.HashMap((1l, defaultPassword))
             val roomInUse = mutable.HashMap((1l,List.empty[(String,String)]))
-            idle(roomIdGenerator,roomInUse)
+            idle(roomIdGenerator,roomPassword,roomInUse)
         }
     }
   }
 
   /**
-    * @param roomInUse (roomId,List(玩家id，玩家name))
-    *
+    * @param roomInUse (roomId, List(玩家id，玩家name))
+    * @param roomPassword (roomId, password)
     *
     * */
-  def idle(roomIdGenerator:AtomicLong,roomInUse:mutable.HashMap[Long,List[(String,String)]])(implicit timer:TimerScheduler[Command])=
+  def idle(
+    roomIdGenerator:AtomicLong,
+    roomPassword: mutable.HashMap[Long, String],
+    roomInUse:mutable.HashMap[Long,List[(String,String)]]
+  )(implicit timer:TimerScheduler[Command])=
     Behaviors.receive[Command]{
       (ctx,msg)=>
         msg match {
-          case JoinRoom(playerInfo,roomIdOpt,userActor) =>
-            roomIdOpt match{
-                /**玩家要求加入指定房间**/
-              case Some(roomId) =>
+          case JoinRoom(passwordOpt, playerInfo,roomIdOpt,userActor) =>
+            (passwordOpt, roomIdOpt) match{
+                //2019.3.17 add: password join
+              case (Some(password), Some(roomId)) =>
+                roomInUse.get(roomId) match{
+                  case Some(ls) =>
+                    roomInUse.find(p => p._2.length < AppSettings.limitCount) match {
+                      case Some(t) =>
+                        roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match {
+                          case Some(t) => /**此时是relive的情况**/
+                          case None =>
+                            if(password == roomPassword(roomId)){
+                              roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
+                              getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                            }
+                            else{
+                              userActor ! JoinRoomFailure(roomId, 123456, "password error")
+                            }
+                        }
+                      case None =>
+                    }
+                  case None => //默认密码创建
+                    roomPassword.put(roomId, defaultPassword)
+                    roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
+                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                }
+                /**玩家要求加入指定房间, 无需密码**/
+              case (None, Some(roomId)) =>
                 roomInUse.get(roomId) match{
                   case Some(ls) =>
                     roomInUse.find(p => p._2.length < AppSettings.limitCount) match {
@@ -67,11 +99,12 @@ object RoomManager {
                         }
                       case None =>
                     }
-                  case None =>
+                  case None => //默认密码创建
+                    roomPassword.put(roomId, defaultPassword)
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
                     getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
                 }
-              case None =>
+              case (_, None) =>
                 /**后台为玩家分配房间**/
 //                val botNum = if(AppSettings.addBotPlayer) AppSettings.botNum else 0
                 roomInUse.find(p => p._2.length < AppSettings.limitCount) match{
@@ -86,6 +119,7 @@ object RoomManager {
                   case None =>
                     var roomId = roomIdGenerator.getAndIncrement()
                     while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
+                    roomPassword.put(roomId, defaultPassword)
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
                     getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
                 }
@@ -102,9 +136,10 @@ object RoomManager {
             }
             Behaviors.same
 
-          case JoinRoomByCreate(playerInfo,userActor) =>
+          case JoinRoomByCreate(playerInfo,userActor,password) =>
             var roomId = roomIdGenerator.getAndIncrement()
             while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
+            roomPassword.put(roomId,password)
             roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
             getRoomActor(ctx, roomId) ! RoomActor.JoinRoom(playerInfo, roomId, userActor)
             Behaviors.same

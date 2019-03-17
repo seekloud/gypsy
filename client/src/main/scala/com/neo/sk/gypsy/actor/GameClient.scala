@@ -357,6 +357,7 @@ object GameClient {
               BotActor.SDKReplyTo ! JoinRoomRsp(-1,errorCode,errMsg)
             }
           }
+          BotHolder.gameState = GameState.passwordError
           Behaviors.stopped
 
         case Protocol.Id(id) =>

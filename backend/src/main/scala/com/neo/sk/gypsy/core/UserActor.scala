@@ -35,9 +35,9 @@ object UserActor {
 
   case class DispatchMsg(msg:Protocol.WsMsgSource) extends Command
 
-  case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoom(passwordOpt: Option[String],playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomByCreate(playerInfo: PlayerInfo,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomByCreate(playerInfo: PlayerInfo,userActor:ActorRef[UserActor.Command],password: String) extends Command with RoomManager.Command
 
   case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
@@ -78,9 +78,9 @@ object UserActor {
 
   case class TimeOut(msg: String) extends Command
 
-  case class StartGame(roomId:Option[Long]) extends Command
+  case class StartGame(roomId:Option[Long], password: Option[String]) extends Command
 
-  case object CreateRoom extends Command
+  case class CreateRoom(password: String) extends Command
 
   case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
 
@@ -134,12 +134,11 @@ object UserActor {
                    case ReJoinMsg(frame) =>
                      UserReJoinMsg(frame)
 
-                   case Protocol.CreateRoom =>
-                     CreateRoom
+                   case Protocol.CreateRoom(password) =>
+                     CreateRoom(password)
 
-                   case Protocol.JoinRoom(roomIdOp) =>
-                     log.info("JoinRoom!!!!!!")
-                     StartGame(roomIdOp)
+                   case Protocol.JoinRoom(roomIdOp, password) =>
+                     StartGame(roomIdOp, password)
 
                    case _=>
                      UnKnowAction
@@ -223,8 +222,8 @@ object UserActor {
   ):Behavior[Command] =
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
-        case StartGame(roomIdOp) =>
-          roomManager ! UserActor.JoinRoom(userInfo,roomIdOp,ctx.self)
+        case StartGame(roomIdOp, passwordOpt) =>
+          roomManager ! UserActor.JoinRoom(passwordOpt,userInfo,roomIdOp,ctx.self)
           Behaviors.same
 
         case StartWatch(roomId,watchId) =>
@@ -236,8 +235,8 @@ object UserActor {
           val gamePlayer = getGameReply(ctx,recordId)
           switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
 
-        case CreateRoom =>
-          roomManager ! UserActor.JoinRoomByCreate(userInfo,ctx.self)
+        case CreateRoom(password) =>
+          roomManager ! UserActor.JoinRoomByCreate(userInfo,ctx.self, password)
           Behaviors.same
 
         case UserLeft(actor) =>

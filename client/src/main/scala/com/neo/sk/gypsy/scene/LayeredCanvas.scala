@@ -789,8 +789,7 @@ class LayeredCanvas(canvas: Canvas,
     }
   }
 
-  def drawFinishState() = {
-    val msg = "存在异地登录"
+  def drawFinishState(msg: String) = {
 
     ctx.setFill(Color.web("#000"))
     ctx.fillRect(0,0,realWindow.x,realWindow.y)
@@ -807,6 +806,23 @@ class LayeredCanvas(canvas: Canvas,
     }
   }
 
+  def drawPasswordErrorState() = {
+    val msg = "房间密码错误"
+
+    ctx.setFill(Color.web("#000"))
+    ctx.fillRect(0,0,realWindow.x,realWindow.y)
+    //这里1600是窗口的长以后换
+    ctx.setFont(Font.font("Helvetica",30 * realWindow.x / 1600))
+    ctx.setFill(Color.web("#fff"))
+    val txt = new Text(msg)
+    ctx.fillText(msg, realWindow.x * 0.5 - txt.getLayoutBounds.getWidth* 0.5,realWindow.y * 0.5)
+
+    if(is2Byte){
+      BotUtil.canvas2byteArray(canvas)
+    }else{
+      BotUtil.emptyArray
+    }
+  }
 
   def centerScale(ctx:GraphicsContext,rate:Double,x:Double,y:Double) = {
     ctx.translate(x,y)
