@@ -36,7 +36,7 @@ class LayeredScene(
 
   val actionSerialNumGenerator = new AtomicInteger(0)
 
-  /**分层视图：8个**/
+  /**分层视图：8个, 状态显示log: 1个**/
   val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
   val locationCanvasCtx = locationCanvas.getGraphicsContext2D
@@ -63,6 +63,11 @@ class LayeredScene(
   val informCanvasCtx = informCanvas.getGraphicsContext2D
   val informView = new LayeredCanvas(informCanvas,informCanvasCtx,layerWindow,is2Byte)
 
+  val actionLogWindow = Point(actionLogCanvasWidth,actionLogCanvasHeight)
+  val actionLogCanvas = new Canvas(actionLogCanvasWidth,actionLogCanvasHeight) //09状态log
+  val actionLogCanvasCtx = actionLogCanvas.getGraphicsContext2D
+  val actionLogView = new ActionLogCanvas(actionLogCanvas,actionLogCanvasCtx,actionLogWindow)
+
 
   /**javafx的布局**/
 
@@ -73,29 +78,39 @@ class LayeredScene(
   group.getChildren.add(humanCanvas)
 
 
-  val canvasSpace = 5
+  val canvasSpace = 3
 
   //设置分层视图
-  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2) //01视野在整个地图中的位置
+  locationCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace) //01视野在整个地图中的位置
   locationCanvas.setLayoutY(0)
-  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+3*canvasSpace) //02视野内的不可变元素
+
+  nonInteractCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //02视野内的不可变元素
   nonInteractCanvas.setLayoutY(0)
-  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2)  //03视野内的可变元素
-  interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  kernelCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+3*canvasSpace) //04视野内的玩家实体
-  kernelCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  allPlayerCanvas.setLayoutX(humanCanvasWidth+canvasSpace*2)  //05视野内的所有权视图
-  allPlayerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
-  playerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+canvasSpace*3) //06视野内的当前玩家资产视图
-  playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
-  pointerCanvas.setLayoutX(0)                               //07鼠标指针位置
-  pointerCanvas.setLayoutY(humanCanvasHeight+canvasSpace*2)
-  informCanvas.setLayoutX(layeredCanvasWidth+canvasSpace)   //08当前用户状态视图
-  informCanvas.setLayoutY(humanCanvasHeight+canvasSpace*2)
+
+  interactCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)  //03视野内的可变元素
+  interactCanvas.setLayoutY(canvasSpace + layeredCanvasHeight)
+
+  kernelCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //04视野内的玩家实体
+  kernelCanvas.setLayoutY(canvasSpace + layeredCanvasHeight)
+
+  allPlayerCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)  //05视野内的所有权视图
+  allPlayerCanvas.setLayoutY(2 * canvasSpace + 2 * layeredCanvasHeight)
+
+  playerCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //06视野内的当前玩家资产视图
+  playerCanvas.setLayoutY(2 * canvasSpace + 2 * layeredCanvasHeight)
+
+  pointerCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)//07鼠标指针位置
+  pointerCanvas.setLayoutY(3 * canvasSpace + 3 * layeredCanvasHeight)
+
+  informCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth)   //08当前用户状态视图
+  informCanvas.setLayoutY(3 * canvasSpace + 3 * layeredCanvasHeight)
+
+  actionLogCanvas.setLayoutX(0)   //09 actionLog
+  actionLogCanvas.setLayoutY(humanCanvasHeight + 1 * canvasSpace)
 
 
   group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,kernelCanvas,
-    allPlayerCanvas,playerCanvas,pointerCanvas,informCanvas)
+    allPlayerCanvas,playerCanvas,pointerCanvas,informCanvas,actionLogCanvas)
 
   def drawLayered() = {
     var zoom = (30.0, 30.0)
@@ -111,6 +126,11 @@ class LayeredScene(
     //TODO 这里其他数据设置为空
     gameState match {
       case GameState.play if grid.myId != ""=>
+
+        actionLogView.addFrameCountActionLog(grid.actionMap.get(grid.frameCount).flatMap(t => t.get(grid.myId)))
+        actionLogView.addFrameCountActionLog(grid.mouseActionMap.get(grid.frameCount).flatMap(t => t.get(grid.myId)))
+        actionLogView.drawLog()
+
         //screenScale为0.75，即从(800,400)->(1200,600)
         val data = grid.getGridData(grid.myId,humanCanvasWidth,humanCanvasHeight,0.75)
         data.playerDetails.find(_.id == grid.myId) match {
@@ -127,13 +147,14 @@ class LayeredScene(
             allplayerByte = allPlayerView.drawAllPlayer(data,basePoint,humanReturn._2)
             playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
             pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
-            infoByte = informView.drawInform(data)
+            infoByte = informView.drawInform(Some(data))
           //TODO 显示击杀弹幕
           case None =>
             humanView.drawGameWait(firstCome)
         }
       case GameState.dead if deadInfo.isDefined =>
         humanReturn = (humanView.drawDeadState(deadInfo.get),1.toDouble)
+        infoByte = informView.drawInform(None)
 
       case GameState.victory if victoryInfo.isDefined=>
         humanReturn = (humanView.drawVictory(victoryInfo.get),1.toDouble)

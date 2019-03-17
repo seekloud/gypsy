@@ -91,7 +91,7 @@ class LayeredCanvas(canvas: Canvas,
     realWindow = Point(width,height)
   }
 
-  /*********************分层视图400*200****************************/
+  /*********************分层视图2:1****************************/
 
   /*******************1.视野在整个地图中的位置***********************/
   def drawLocation(basePoint:(Double,Double))={
@@ -397,15 +397,23 @@ class LayeredCanvas(canvas: Canvas,
   }
 
   /*********************8.当前用户状态视图************************************/
-  def drawInform(data:Protocol.GridDataSync) = {
-    /**包括总分数、分裂个数**/
+  def drawInform(data: Option[Protocol.GridDataSync]) = {
+    /**包括总分数、分裂个数、是否死亡**/
     ctx.setFill(Color.BLACK)
     ctx.fillRect(0, 0, realWindow.x, realWindow.y)
-    val player = data.playerDetails.filter(_.id ==grid.myId).head
-    ctx.setFill(ColorsSetting.scoreColor)
-    ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1.5)
-    ctx.setFill(ColorsSetting.splitNumColor)
-    ctx.fillRect(0, informHeight*5,realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1.5)
+    if(data.nonEmpty){
+      val player = data.get.playerDetails.filter(_.id ==grid.myId).head
+      ctx.setFill(ColorsSetting.scoreColor)
+      ctx.fillRect(0, informHeight*1, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1)
+      ctx.setFill(ColorsSetting.splitNumColor)
+      ctx.fillRect(0, informHeight*3, realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1)
+      ctx.setFill(ColorsSetting.isDiedColor)
+      ctx.fillRect(0, informHeight*5, 0 ,informHeight*1)
+    }
+    else{
+      ctx.setFill(ColorsSetting.isDiedColor)
+      ctx.fillRect(0, informHeight*5, 80 ,informHeight*1)
+    }
     if(is2Byte){
       BotUtil.canvas2byteArray(canvas)
     }else{

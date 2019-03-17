@@ -49,9 +49,9 @@ object BotActor {
 
   case class Work(stream: ActorRef[Protocol.WsSendMsg]) extends Command
 
-  case class CreateRoom(sender:ActorRef[JoinRoomRsp]) extends Command
+  case class CreateRoom(password: String, sender:ActorRef[JoinRoomRsp]) extends Command
 
-  case class JoinRoom(roomId: String,sender:ActorRef[JoinRoomRsp] ) extends Command
+  case class JoinRoom(password: String, roomId: String,sender:ActorRef[JoinRoomRsp] ) extends Command
 
   case object LeaveRoom extends Command
 
@@ -171,7 +171,7 @@ object BotActor {
 //          val rsp = botClient.createRoom("")
           Behaviors.same
 
-        case CreateRoom(sender) =>
+        case CreateRoom(password, sender) =>
           SDKReplyTo = sender
           stream ! Protocol.CreateRoom
           //TODO 写在配置文件里？
@@ -180,7 +180,7 @@ object BotActor {
           botHolder.connectToGameServer()
           gaming(stream,(Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty,Array.empty))
 
-        case JoinRoom(roomId, sender) =>
+        case JoinRoom(password, roomId, sender) =>
           SDKReplyTo = sender
           stream ! Protocol.JoinRoom(Some(roomId.toLong))
           //TODO 写在配置文件里？

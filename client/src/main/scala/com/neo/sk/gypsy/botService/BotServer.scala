@@ -50,7 +50,7 @@ class BotServer(
     if(checkBotToken(request.credit.get.apiToken)){
       BotServer.state = State.init_game
       log.info(s"createRoom Called by [$request")
-      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ? (BotActor.CreateRoom(_))
+      val getRoomIdRsp: Future[JoinRoomRsp] = botActor ? (BotActor.CreateRoom(request.password, _))
       getRoomIdRsp.map{
         rsp =>
           if (rsp.errCode == 0) CreateRoomRsp(rsp.roomId.toString, 0, BotServer.state, "ok")
@@ -65,7 +65,7 @@ class BotServer(
     println(s"joinRoom Called by [$request")
     if(checkBotToken(request.credit.get.apiToken)){
       BotServer.state = State.in_game
-      val joinRoomRsp: Future[JoinRoomRsp] = botActor ? (BotActor.JoinRoom(request.roomId, _))
+      val joinRoomRsp: Future[JoinRoomRsp] = botActor ? (BotActor.JoinRoom(request.password, request.roomId, _))
       joinRoomRsp.map{
         rsp =>
           if (rsp.errCode == 0) SimpleRsp(0, BotServer.state, "ok")
