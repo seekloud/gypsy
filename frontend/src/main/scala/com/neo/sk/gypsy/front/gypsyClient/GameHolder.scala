@@ -424,8 +424,8 @@ class GameHolder(replay:Boolean = false) {
 
       case data: Protocol.GridDataSync =>
         if(grid.playerMap.get(grid.myId).isDefined && data.playerDetails.find(_.id==grid.myId).isDefined){
-          println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).x )
-          println(s"获取全量数据  backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
+          println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).y )
+          println(s"            backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
             data.playerDetails.find(_.id==grid.myId).get.y)
         }
         syncGridData = Some(data)

@@ -85,10 +85,15 @@ class GameClient (override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()>newSplitTime + 2*1000) {
-                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+//                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+//                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+//                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+//                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+
+                  if (cell.x < cell2.x) cellX -= 1
+                  else if (cell.x > cell2.x) cellX += 1
+                  if (cell.y < cell2.y) cellY -= 1
+                  else if (cell.y > cell2.y) cellY += 1
                 }
 //                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval)) {
 //                  /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
