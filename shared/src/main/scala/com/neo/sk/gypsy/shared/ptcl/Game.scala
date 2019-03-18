@@ -84,7 +84,7 @@ object Game {
                    speed:Float = 12,
                    speedX:Float = 0,
                    speedY:Float = 0,
-                   parallel:Boolean = false,
+                   parallel:Boolean = false,//TODO 有啥作用？
                    isCorner:Boolean =false
                  )
 //吐出的小球

@@ -10,9 +10,10 @@ object GameConfig {
 //  val historyRankLength = 5
 
   val version = "20190313"
-
-  val slowBase = 10
-  val initMassLog = utils.logSlowDown(10,slowBase)
+  //  初始质量
+  val initMass:Short = 10
+  val slowBase = 4.5
+  val initMassLog = utils.logSlowDown(initMass,slowBase)
   val initSpeed = 40
   val acceleration  = 2
   //质量转半径率
@@ -20,7 +21,7 @@ object GameConfig {
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
   val coverRate = 0
   //合并时间间隔
-  val mergeInterval = 6 * 1000 // 12 * 1000
+  val mergeInterval = 15 * 1000 // 12 * 1000
   //分裂时间间隔
   val splitInterval = 2 * 1000
   //最小分裂大小
@@ -60,8 +61,7 @@ object GameConfig {
 
   val maxDelayFrame = 3
 
-//  初始质量
-  val initMass:Short = 10
+
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
