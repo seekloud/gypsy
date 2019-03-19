@@ -460,10 +460,12 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSplit(player) =>
+      case Protocol.PlayerSplit(f,player) =>
         player.keys.foreach(item =>{
-          if(grid.playerByte2IdMap.get(item).isDefined)
+          if(grid.playerByte2IdMap.get(item).isDefined){
             grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
+            println("frameCount:  "+grid.frameCount+"  backframecount:   "+f+"   playerSplit:     "+grid.playerMap)
+          }
         }
         )
 

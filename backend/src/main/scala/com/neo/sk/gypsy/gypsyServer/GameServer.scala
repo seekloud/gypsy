@@ -103,7 +103,6 @@ class GameServer(override val boundary: Point) extends Grid {
       dispatch(subscriber)(PlayerJoin(playerId2ByteMap(id),player))
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
-      println("lalallala  send!!!!!")
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
     }
@@ -375,7 +374,7 @@ class GameServer(override val boundary: Point) extends Grid {
       val event2 = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event2)
       //只发送改变的玩家
-      dispatch(subscriber)(PlayerSplit(splitPlayer))
+      dispatch(subscriber)(PlayerSplit(frameCount,splitPlayer))
       dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
@@ -684,7 +683,7 @@ class GameServer(override val boundary: Point) extends Grid {
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
     if(SplitPlayerMap.nonEmpty){
-      val msg = PlayerSplit(SplitPlayerMap)
+      val msg = PlayerSplit(frameCount,SplitPlayerMap)
       dispatch(subscriber)(msg)
     }
 
@@ -698,7 +697,6 @@ class GameServer(override val boundary: Point) extends Grid {
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
-    //var playerPosition:List[PlayerPosition] = Nil
     newFoods.foreach{
       case (p,mass) =>
         newFoodDetails ::= Food(mass, p.x, p.y)
@@ -708,7 +706,6 @@ class GameServer(override val boundary: Point) extends Grid {
         val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
-        //playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
         item.copy(_2 = newplayer)
     }
     eatenFoods.foreach{
@@ -723,7 +720,6 @@ class GameServer(override val boundary: Point) extends Grid {
       massList,
       virusMap,
       1.0,
-      //playerPosition,
       newFoodDetails,
       eatenFoodDetails
     )
