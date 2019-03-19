@@ -404,9 +404,11 @@ class LayeredCanvas(canvas: Canvas,
     if(data.nonEmpty){
       val player = data.get.playerDetails.filter(_.id ==grid.myId).head
       ctx.setFill(ColorsSetting.scoreColor)
-      ctx.fillRect(0, informHeight*1, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1)
+      ctx.fillRect(0, informHeight*0.5, realWindow.x * player.cells.map(_.mass).sum /VictoryScore,informHeight*1)
       ctx.setFill(ColorsSetting.splitNumColor)
-      ctx.fillRect(0, informHeight*3, realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1)
+      ctx.fillRect(0, informHeight*2, realWindow.x * player.cells.length /VirusSplitNumber,informHeight*1)
+      ctx.setFill(ColorsSetting.greenColor)
+      ctx.fillRect(0, informHeight*3.5, if(player.protect) 80 else 0 ,informHeight*1)
       ctx.setFill(ColorsSetting.isDiedColor)
       ctx.fillRect(0, informHeight*5, 0 ,informHeight*1)
     }
