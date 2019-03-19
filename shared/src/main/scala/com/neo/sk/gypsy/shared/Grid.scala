@@ -88,12 +88,14 @@ trait Grid {
 
 
   def update() = {
+//    println(frameCount + "    start-----")
     updatePlayer()//    updateScoreList()
     updateSpots()
-    actionMap -= frameCount
+    actionMap = actionMap.filter(_._1 > frameCount - delayFrame)
     mouseActionMap = mouseActionMap.filter(_._1 > frameCount - delayFrame)
     ActionEventMap = ActionEventMap.filter(_._1 > frameCount - 5)
     GameEventMap = GameEventMap.filter(_._1 > frameCount - 5)
+//    println(frameCount + "    end-----")
     frameCount += 1
   }
 
@@ -150,9 +152,12 @@ trait Grid {
     //TODO 确认下是不是frameCount
     /**碰撞检测要放在玩家移动之前**/
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MP])
+//    println("mouseAct:    "+mouseAct)
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KC])
     tick = tick+1
+    //碰撞检测
     checkCrash(keyAct,mouseAct)
+//    println(s"updatePlayer-----------------$frameCount")
 
     //先移动到指定位置，同时进行质量衰减
     playerMap = if(tick%10==1){
@@ -169,8 +174,9 @@ trait Grid {
         updatePlayerMove(player,mouseActMap)
       }
     }
+//    println(s"updatePlayerMap-----------------$frameCount")
 
-    //碰撞检测
+
   }
     //碰撞检测
   def checkCrash(keyAct: Map[String,KC], mouseAct: Map[String, MP])={
@@ -388,7 +394,7 @@ trait Grid {
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
-      var target=Position(player.targetX,player.targetY)
+//      var target=Position(player.targetX,player.targetY)
 
       //转换成极坐标
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
@@ -399,7 +405,11 @@ trait Grid {
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
       //   if(System.currentTimeMillis() - player.lastSplit > 1500){
-      target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
+//      var target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
+
+      //todo 平行的时候如何处理
+      var target = Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort)
+
       //   }
       val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
       val deg = atan2(target.clientY, target.clientX)

@@ -685,6 +685,7 @@ class GameServer(override val boundary: Point) extends Grid {
     if(SplitPlayerMap.nonEmpty){
       val msg = PlayerSplit(frameCount,SplitPlayerMap)
       dispatch(subscriber)(msg)
+//      println("send SplitPlayerMap")
     }
 
   }
@@ -789,6 +790,11 @@ class GameServer(override val boundary: Point) extends Grid {
     super.update()
     genWaitingStar()  //新增
     updateRanks()  //排名
+//    if(playerMap.get("guest1541338979393").isDefined){
+//      val x = playerMap("guest1541338979393").x
+//      val y = playerMap("guest1541338979393").y
+//      println("frameCount:   "+ frameCount +"   xy:   " + x + "  " + y)
+//    }
   }
 
   def getApples = food

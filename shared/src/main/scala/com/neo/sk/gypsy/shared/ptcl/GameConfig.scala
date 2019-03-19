@@ -10,9 +10,10 @@ object GameConfig {
 //  val historyRankLength = 5
 
   val version = "20190313"
-
-  val slowBase = 10
-  val initMassLog = utils.logSlowDown(10,slowBase)
+  //  初始质量
+  val initMass:Short = 10
+  val slowBase = 4.5 //10
+  val initMassLog = utils.logSlowDown(initMass,slowBase)
   val initSpeed = 40
   val acceleration  = 2
   //质量转半径率
@@ -54,14 +55,12 @@ object GameConfig {
   // 统计分数时候存的最大容量（按一分钟多少帧来记 现在是400）
   val ScoreListMax = 60*1000 / frameRate
 
-  val advanceFrame = 0 //客户端提前的帧数
+  val advanceFrame = 2 //客户端提前的帧数 //0
 
   val delayFrame = 1 //延时帧数，抵消网络延时
 
   val maxDelayFrame = 3
 
-//  初始质量
-  val initMass:Short = 10
 //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽

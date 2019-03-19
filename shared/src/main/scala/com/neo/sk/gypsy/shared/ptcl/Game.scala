@@ -141,7 +141,7 @@ object Game {
 
 
   object GameState{
-    val waiting:Int = -1
+    val firstcome:Int = -1
     val play:Int = 0
     val dead:Int = 1
     val allopatry:Int = 2
