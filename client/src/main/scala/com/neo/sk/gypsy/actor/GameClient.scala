@@ -176,7 +176,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSplit(player) =>
+        case Protocol.PlayerSplit(f,player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>{
               if(grid.playerByte2IdMap.get(item).isDefined)
@@ -475,7 +475,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSplit(player) =>
+        case Protocol.PlayerSplit(f,player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
               if(grid.playerByte2IdMap.get(item).isDefined)

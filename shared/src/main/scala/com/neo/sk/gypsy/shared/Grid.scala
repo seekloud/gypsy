@@ -54,9 +54,9 @@ trait Grid {
 
   var mouseActionMap = Map.empty[Int, Map[String, MP]]
 
-  val ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
+  var ActionEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
-  val GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
+  var GameEventMap = mutable.HashMap[Int,List[GameEvent]]() //frame -> List[GameEvent]
 
   var deadPlayerMap=Map.empty[Long,Player]
 
@@ -88,13 +88,12 @@ trait Grid {
 
 
   def update() = {
-    updateSpots()
     updatePlayer()//    updateScoreList()
+    updateSpots()
     actionMap -= frameCount
     mouseActionMap = mouseActionMap.filter(_._1 > frameCount - delayFrame)
-//    mouseActionMap -= frameCount
-    ActionEventMap -= (frameCount-5)
-    GameEventMap -= (frameCount-5)
+    ActionEventMap = ActionEventMap.filter(_._1 > frameCount - 5)
+    GameEventMap = GameEventMap.filter(_._1 > frameCount - 5)
     frameCount += 1
   }
 
@@ -148,18 +147,12 @@ trait Grid {
   //玩家更新
   private[this] def updatePlayer()={
 
-    def updatePlayerMap(player: Player, mouseActMap: Map[String, MP],decrease:Boolean)={
-      if(decrease){
-        updatePlayerMove(massDecrease(player),mouseActMap)
-      }else{
-        updatePlayerMove(player,mouseActMap)
-      }
-    }
     //TODO 确认下是不是frameCount
-
+    /**碰撞检测要放在玩家移动之前**/
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MP])
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KC])
     tick = tick+1
+    checkCrash(keyAct,mouseAct)
 
     //先移动到指定位置，同时进行质量衰减
     playerMap = if(tick%10==1){
@@ -168,19 +161,27 @@ trait Grid {
     }else{
       playerMap.values.map(updatePlayerMap(_,mouseAct,false)).map(s=>(s.id,s)).toMap
     }
+
+    def updatePlayerMap(player: Player, mouseActMap: Map[String, MP],decrease:Boolean)={
+      if(decrease){
+        updatePlayerMove(massDecrease(player),mouseActMap)
+      }else{
+        updatePlayerMove(player,mouseActMap)
+      }
+    }
+
     //碰撞检测
-    checkCrash(keyAct,mouseAct)
   }
     //碰撞检测
   def checkCrash(keyAct: Map[String,KC], mouseAct: Map[String, MP])={
-    checkPlayerFoodCrash() //已看 前后端都有
-    checkPlayerMassCrash()  //已看  前后端都有
-    checkPlayer2PlayerCrash() //已看  只后台
-    checkVirusMassCrash()  //已看  前后端都有  但后台跟前端不同
-    val mergeInFlame=checkCellMerge() //已看  前后端都有  同时后台还发送数据避免前后端不一致
-    checkPlayerVirusCrash(mergeInFlame) //已看 只后台
-    checkPlayerShotMass(keyAct,mouseAct)
     checkPlayerSplit(keyAct,mouseAct)
+    val mergeInFlame=checkCellMerge()
+    checkPlayerVirusCrash(mergeInFlame)
+    checkPlayer2PlayerCrash()
+    checkPlayerFoodCrash()
+    checkPlayerMassCrash()
+    checkVirusMassCrash()
+    checkPlayerShotMass(keyAct,mouseAct)
   }
 
   //更新病毒的位置

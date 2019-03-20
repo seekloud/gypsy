@@ -403,7 +403,7 @@ class GameServer(
       val event2 = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event2)
       //只发送改变的玩家
-      dispatch(subscriber)(PlayerSplit(splitPlayer))
+      dispatch(subscriber)(PlayerSplit(frameCount,splitPlayer))
       dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
@@ -712,7 +712,7 @@ class GameServer(
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
 
     if(SplitPlayerMap.nonEmpty){
-      val msg = PlayerSplit(SplitPlayerMap)
+      val msg = PlayerSplit(frameCount,SplitPlayerMap)
       dispatch(subscriber)(msg)
     }
 
@@ -726,7 +726,6 @@ class GameServer(
     var playerDetails: List[Player] = Nil
     var newFoodDetails: List[Food] = Nil
     var eatenFoodDetails:List[Food] = Nil
-    //var playerPosition:List[PlayerPosition] = Nil
     newFoods.foreach{
       case (p,mass) =>
         newFoodDetails ::= Food(mass, p.x, p.y)
@@ -736,7 +735,6 @@ class GameServer(
         val  newcells  = item._2.cells.filterNot(_.newmass==0).map(cell => cell.copy(mass = cell.newmass))
         val newplayer = item._2.copy(cells = newcells)
         playerDetails ::= newplayer
-        //playerPosition ::= PlayerPosition(item._1,item._2.x,item._2.y,item._2.targetX,item._2.targetY)
         item.copy(_2 = newplayer)
     }
     eatenFoods.foreach{
@@ -751,7 +749,6 @@ class GameServer(
       massList,
       virusMap,
       1.0,
-      //playerPosition,
       newFoodDetails,
       eatenFoodDetails
     )
