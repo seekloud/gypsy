@@ -79,7 +79,7 @@ object RoomActor {
 
   final case class ChildDead[U](name:String,childRef:ActorRef[U]) extends Command
 
-  private case object UnKnowAction extends Command
+//  private case object UnKnowAction extends Command
 
   case class CheckName(name:String,replyTo:ActorRef[CheckNameRsp])extends Command
   case class GetGamePlayerList(roomId:Long ,replyTo:ActorRef[RoomPlayerInfoRsp]) extends Command
@@ -157,7 +157,7 @@ object RoomActor {
 
           // add players into subscribersMap, grid's messages will send to the players in subscribersMap
           subscribersMap.put(playerInfo.playerId, userActor)
-          grid.getSubscribersMap(subscribersMap,botMap)//TODO omit this
+          grid.getSubscribersMap(subscribersMap,botMap)
 
           // ballId is used in record(video), group is used to send GameState in different times
           val createBallId = ballId.incrementAndGet()
@@ -239,8 +239,8 @@ object RoomActor {
             case None => userSyncMap.put(group,Set(playerInfo.playerId))
           }
 
-          val foodlists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
-          dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodlists))
+          val foodLists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
+          dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodLists))
           Behaviors.same
 
         /*
@@ -256,8 +256,12 @@ object RoomActor {
         case ReStart(id) =>
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
-          //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
-//          dispatchTo(subscribersMap)(id,Protocol.PlayerRestart(id))
+          // add bot
+          if(playerMap.size+botMap.size<=8){
+            botMap.filter(!_._2._3).foreach{ b=>
+              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+            }
+          }
           Behaviors.same
 
         /*
@@ -402,7 +406,7 @@ object RoomActor {
         /**Bot死亡**/
         case DeleteBot(botId) =>
           log.info(s"Delete Bot : $botId")
-          botMap.update(botId,(botMap.get(botId).get._1,botMap.get(botId).get._2,false))
+          botMap.update(botId,(botMap(botId)._1,botMap(botId)._2,false))
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
             val group = u._3
@@ -418,7 +422,8 @@ object RoomActor {
             grid.playerId2ByteQueue.enqueue(grid.playerId2ByteMap(botId))
             grid.playerId2ByteMap -= botId
           }
-          if(playerMap.size+botMap.size<=8){
+
+          if(userMap.size < 8){
             botMap.filter(!_._2._3).foreach{ b=>
               ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
             }
@@ -491,7 +496,7 @@ object RoomActor {
 
           }
 
-          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNamesCopy)
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNames)
 
 
         case UserActor.NetTest(id, createTime) =>
