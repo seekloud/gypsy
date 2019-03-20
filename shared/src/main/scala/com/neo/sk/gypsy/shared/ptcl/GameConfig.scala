@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import com.neo.sk.gypsy.shared.util.utils
+import com.neo.sk.gypsy.shared.util.Utils
 
 import scala.math.sqrt
 
@@ -12,7 +12,7 @@ object GameConfig {
   val version = "20190313"
 
   val slowBase = 10
-  val initMassLog = utils.logSlowDown(10,slowBase)
+  val initMassLog = Utils.logSlowDown(10,slowBase)
   val initSpeed = 40
   val acceleration  = 2
   //质量转半径率

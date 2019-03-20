@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.util.utils.{Mass2Radius, checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.Utils.{Mass2Radius, checkCollision, normalization}
 
 import scala.collection.mutable
 import scala.math._

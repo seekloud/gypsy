@@ -17,7 +17,7 @@ import com.neo.sk.gypsy.shared.ptcl.{Game, _}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils.Mass2Radius
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.NetDelay
 import com.neo.sk.gypsy.front.utils.Shortcut

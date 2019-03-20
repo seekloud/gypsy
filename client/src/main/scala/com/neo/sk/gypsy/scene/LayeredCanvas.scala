@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
-import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
+import com.neo.sk.gypsy.shared.util.Utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.{Canvas, GraphicsContext}
 import javafx.scene.image.Image

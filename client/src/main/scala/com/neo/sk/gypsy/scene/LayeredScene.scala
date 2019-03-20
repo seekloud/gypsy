@@ -12,7 +12,7 @@ import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.util.utils.getZoomRate
+import com.neo.sk.gypsy.shared.util.Utils.getZoomRate
 import javafx.scene.input.{KeyCode, MouseEvent}
 
 object LayeredScene {

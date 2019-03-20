@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable

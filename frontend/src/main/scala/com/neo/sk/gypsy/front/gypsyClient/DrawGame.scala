@@ -6,7 +6,7 @@ import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
 import org.scalajs.dom.html.Canvas
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
 import com.neo.sk.gypsy.front.utils.EchartsJs

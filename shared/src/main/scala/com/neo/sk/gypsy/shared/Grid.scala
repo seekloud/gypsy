@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable.ListBuffer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KC, MP}
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils._
-import com.neo.sk.gypsy.shared.util.utils
+import com.neo.sk.gypsy.shared.util.Utils._
+import com.neo.sk.gypsy.shared.util.Utils
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
@@ -282,7 +282,7 @@ trait Grid {
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
-      val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
+      val slowdown = Utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
