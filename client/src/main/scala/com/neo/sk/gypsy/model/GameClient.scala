@@ -1,7 +1,7 @@
 package com.neo.sk.gypsy.model
 
 import com.neo.sk.gypsy.shared._
-import com.neo.sk.gypsy.shared.util.utils.{checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.Utils.{checkCollision, normalization}
 import scala.collection.mutable
 import scala.math._
 
@@ -9,7 +9,7 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 
 /**
   * @author zhaoyin

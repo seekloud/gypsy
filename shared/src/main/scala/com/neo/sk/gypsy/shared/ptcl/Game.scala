@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.shared.ptcl
 import scala.math._
 
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 
 /**
   * User: Taoz

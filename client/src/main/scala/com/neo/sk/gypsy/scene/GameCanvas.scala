@@ -9,7 +9,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GameClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
+import com.neo.sk.gypsy.shared.util.Utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 

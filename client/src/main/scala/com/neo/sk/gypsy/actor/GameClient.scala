@@ -17,7 +17,7 @@ import com.neo.sk.gypsy.utils.{FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils.Mass2Radius
 
 import scala.collection.mutable
 

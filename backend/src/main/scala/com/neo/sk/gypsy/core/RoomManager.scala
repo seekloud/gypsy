@@ -21,7 +21,6 @@ object RoomManager {
   trait Command
   case object TimeKey
   case object TimeOut extends Command
-  case class LeftRoom(playerInfo: PlayerInfo) extends Command
   case class LeftRoom4Watch(playerInfo: PlayerInfo,roomId:Long) extends Command
   case class CheckName(name:String,roomId:Long,replyTo:ActorRef[CheckNameRsp])extends Command
   case class RemoveRoom(id:Long) extends Command
@@ -145,7 +144,7 @@ object RoomManager {
             Behaviors.same
 
 
-          case LeftRoom(playerInfo) =>
+          case Left(playerInfo) =>
             roomInUse.find(_._2.exists(_._1 == playerInfo.playerId)) match{
               case Some(t) =>
                 roomInUse.put(t._1,t._2.filterNot(_._1 == playerInfo.playerId))
