@@ -139,11 +139,6 @@ class GameHolder(replay:Boolean = false) {
 
   def update(): Unit = {
     grid.update()
-//    if(grid.playerMap.get("guest1541338979393").isDefined){
-//      val x = grid.playerMap("guest1541338979393").x
-//      val y = grid.playerMap("guest1541338979393").y
-//      println("frameCount:   "+ grid.frameCount +"   xy:   " + x + "  " + y)
-//    }
   }
 
   def start(): Unit = {

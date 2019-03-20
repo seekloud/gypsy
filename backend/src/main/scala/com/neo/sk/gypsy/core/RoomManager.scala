@@ -72,7 +72,7 @@ object RoomManager {
                           case None =>
                             if(password == roomPassword(roomId)){
                               roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
-                              getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                              getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,userActor)
                             }
                             else{
                               userActor ! JoinRoomFailure(roomId, 123456, "password error")
@@ -83,7 +83,7 @@ object RoomManager {
                   case None => //默认密码创建
                     roomPassword.put(roomId, defaultPassword)
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
-                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,userActor)
                 }
                 /**玩家要求加入指定房间, 无需密码**/
               case (None, Some(roomId)) =>
@@ -95,14 +95,14 @@ object RoomManager {
                           case Some(t) => /**此时是relive的情况**/
                           case None =>
                             roomInUse.put(roomId,(playerInfo.playerId,playerInfo.nickname) :: ls)
-                            getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                            getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,userActor)
                         }
                       case None =>
                     }
                   case None => //默认密码创建
                     roomPassword.put(roomId, defaultPassword)
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
-                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,userActor)
                 }
               case (_, None) =>
                 /**后台为玩家分配房间**/
@@ -114,14 +114,14 @@ object RoomManager {
                       case Some(t) => /**此时是relive的情况**/
                       case None =>
                         roomInUse.put(t._1,(playerInfo.playerId,playerInfo.nickname) :: t._2)
-                        getRoomActor(ctx,t._1) ! RoomActor.JoinRoom(playerInfo,t._1,userActor)
+                        getRoomActor(ctx,t._1) ! RoomActor.JoinRoom(playerInfo,userActor)
                     }
                   case None =>
                     var roomId = roomIdGenerator.getAndIncrement()
                     while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
                     roomPassword.put(roomId, defaultPassword)
                     roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
-                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,roomId,userActor)
+                    getRoomActor(ctx,roomId) ! RoomActor.JoinRoom(playerInfo,userActor)
                 }
             }
             log.debug(s"now roomInUse:$roomInUse")
@@ -141,7 +141,7 @@ object RoomManager {
             while(roomInUse.exists(_._1 == roomId))roomId = roomIdGenerator.getAndIncrement()
             roomPassword.put(roomId,password)
             roomInUse.put(roomId,List((playerInfo.playerId,playerInfo.nickname)))
-            getRoomActor(ctx, roomId) ! RoomActor.JoinRoom(playerInfo, roomId, userActor)
+            getRoomActor(ctx, roomId) ! RoomActor.JoinRoom(playerInfo, userActor)
             Behaviors.same
 
 
