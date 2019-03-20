@@ -96,13 +96,6 @@ object RoomActor {
 
   val botId = new AtomicLong(1)
 
-//  var isclear = false
-
-  //TODO 重构时放在create里面
-  var killBigBot = 0
-
-//  val BotMaxMass = 500
-
   def create(roomId:Long):Behavior[Command] = {
     log.debug(s"RoomActor-$roomId start...")
     Behaviors.setup[Command] { ctx =>
@@ -120,7 +113,7 @@ object RoomActor {
             val grid = new GameServer(bounds, ctx.self)
             grid.setRoomId(roomId)
 
-            starNames = createBotActor(AppSettings.botNum, roomId, ctx, grid, starNames)
+            starNames = createBotActor(AppSettings.botNum - 1, roomId, ctx, grid, starNames)
             if (AppSettings.gameRecordIsWork) {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
@@ -441,28 +434,24 @@ object RoomActor {
           var starNamesCopy = starNames
 
           val bigBotMap=grid.playerMap.filter(player=> player._1.startsWith("bot_") && player._2.cells.map(_.newmass).sum > KillBotScore )
-          if(bigBotMap.nonEmpty){
+          if(bigBotMap.nonEmpty) {
             bigBotMap.keys.foreach {
               botId =>
-                if(botMap.get(botId).isDefined){
+                if (botMap.get(botId).isDefined) {
                   botMap(botId)._2 ! KillBot
-                  killBigBot +=1
-                  starNames.update(grid.playerMap(botId).name ,false)
+                  starNames.update(grid.playerMap(botId).name, false)
                   grid.playerMap -= botId
                 }
             }
-
-            if (killBigBot>0) {
-              val allPlayerNum = playerMap.size + botPlayerNum - killBigBot
-
-              if (allPlayerNum < AppSettings.botNum) {
-                val needAdd = AppSettings.botNum - allPlayerNum
-                println("Sync create")
-                starNamesCopy=createBotActor(needAdd, roomId, ctx, grid,starNames)
-                killBigBot = 0
-              }
-            }
           }
+
+          val allPlayerNum = playerMap.size + botPlayerNum
+          if (allPlayerNum <= AppSettings.botNum) {
+            val needAdd = AppSettings.botNum - allPlayerNum
+            println("Sync create")
+            starNamesCopy=createBotActor(needAdd, roomId, ctx, grid,starNames)
+          }
+
           grid.getSubscribersMap(subscribersMap,botMap)
 
           val feedapples = grid.getNewApples

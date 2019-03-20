@@ -100,7 +100,7 @@ class GameServer(
     }
 
     // add players when it isn't in playerMap,
-    // "genWaitingStar" executed in logic frame, but user join room doesn't have event
+    // "genWaitingStar" executes in logic frame, but user join room doesn't have event
     waitingJoin.filterNot( kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
 
       val player = createNewPlayer(id, name)
