@@ -221,20 +221,20 @@ object UserManager {
                 timer = System.currentTimeMillis()
                 val total =  sync + food + connect + rank + merge +crash +virus + ping + mouse + key + other
 
-                log.info(s"STATISTICS:" +
-                  s"TOTAL:$total" +
-                  s"SYNC:$sync" +
-                  s"FOOD:$food" +
-                  s"VIRUS:$virus" +
-                  s"MOUSE:$mouse" +
-                  s"KEY:$key" +
-                  s"CONNECT:$connect" +
-                  s"PING:$ping" +
-                  s"RANK:$rank" +
-                  s"MERGE:$merge" +
-                  s"CRASH:$crash" +
-                  s"SPLIT:$split" +
-                  s"OTHER:$other")
+//                log.info(s"STATISTICS:" +
+//                  s"TOTAL:$total" +
+//                  s"SYNC:$sync" +
+//                  s"FOOD:$food" +
+//                  s"VIRUS:$virus" +
+//                  s"MOUSE:$mouse" +
+//                  s"KEY:$key" +
+//                  s"CONNECT:$connect" +
+//                  s"PING:$ping" +
+//                  s"RANK:$rank" +
+//                  s"MERGE:$merge" +
+//                  s"CRASH:$crash" +
+//                  s"SPLIT:$split" +
+//                  s"OTHER:$other")
                 sync = 0.0
                 food = 0.0
                 connect = 0.0

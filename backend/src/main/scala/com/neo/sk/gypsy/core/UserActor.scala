@@ -46,7 +46,7 @@ object UserActor {
 
   case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
 
-  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
+  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command with RoomManager.Command
 
   case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
@@ -304,13 +304,13 @@ object UserActor {
 
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           Behaviors.stopped
 
         case e: NetTest=>
