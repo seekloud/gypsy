@@ -9,7 +9,7 @@ import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
 import com.neo.sk.gypsy.model.GameClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
+import com.neo.sk.gypsy.shared.util.Utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
@@ -300,7 +300,7 @@ class GameCanvas(canvas: Canvas,
         case 6  => ctx.setFill(Color.web("#cfe6ff"))
         case _  => ctx.setFill(Color.web("#de9dd6"))
       }
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+      a._2.foreach{case Mass(id,x,y,tx,ty,color,speed) =>
         val deg = Math.atan2(ty, tx)
         val deltaY = speed * Math.sin(deg)
         val deltaX = speed * Math.cos(deg)
@@ -309,11 +309,11 @@ class GameCanvas(canvas: Canvas,
 
         val cellx = x +xPlus*offsetTime.toFloat /frameRate
         val celly = y  +yPlus*offsetTime.toFloat / frameRate
-        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
-        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
-        //centerScale(scale,window.x/2,window.y/2)
+        val borderCalc = Mass2Radius(shotMass) + 5
+        val xfix  = if(cellx> bounds.x  - borderCalc) bounds.x  - borderCalc else if(cellx < borderCalc) borderCalc else cellx
+        val yfix = if(celly> bounds.y  - borderCalc) bounds.y  - borderCalc else if(celly < borderCalc)  borderCalc else celly
         ctx.beginPath()
-        ctx.arc( xfix+offx ,yfix+offy ,r,r,0,360)
+        ctx.arc( xfix+offx ,yfix+offy ,Mass2Radius(shotMass),Mass2Radius(shotMass),0,360)
         ctx.fill()
       }
     }

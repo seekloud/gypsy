@@ -17,7 +17,7 @@ import com.neo.sk.gypsy.utils.{FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils.Mass2Radius
 
 import scala.collection.mutable
 
@@ -67,7 +67,7 @@ object GameClient {
       msg match {
         case Protocol.Id(id) =>
           grid.myId = id
-//          ClientMusic.playMusic("bg")
+          GameHolder.gameState = GameState.play
           Behaviors.same
 
         case m:Protocol.KC =>
@@ -133,6 +133,11 @@ object GameClient {
 
         case data: Protocol.GridDataSync =>
           ClientBoot.addToPlatform{
+//            if(grid.playerMap.get(grid.myId).isDefined && data.playerDetails.find(_.id==grid.myId).isDefined){
+//              println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).y )
+//              println(s"            backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
+//                data.playerDetails.find(_.id==grid.myId).get.y)
+//            }
             GameHolder.syncGridData = Some(data)
             GameHolder.justSynced = true
           }
@@ -154,9 +159,6 @@ object GameClient {
           }
           Behaviors.same
 
-//        case Protocol.PlayerRestart(id) =>
-//          Behaviors.same
-
 
         case Protocol.PlayerJoin(id,player) =>
           ClientBoot.addToPlatform{
@@ -166,7 +168,6 @@ object GameClient {
             }
             if(grid.myId == player.id){
               if(GameHolder.gameState == GameState.dead || GameHolder.gameState == GameState.victory){
-//                gameHolder.reLive(id)
                 GameHolder.deadInfo = None
                 GameHolder.victoryInfo = None
                 GameHolder.gameState = GameState.play
@@ -363,7 +364,7 @@ object GameClient {
         case Protocol.Id(id) =>
           println(s"lallalal$id")
           grid.myId = id
-//          ClientMusic.playMusic("bg")
+          BotHolder.gameState = GameState.play
           Behaviors.same
 
         case m:Protocol.KC =>
@@ -395,10 +396,9 @@ object GameClient {
             if(current.exists(r=>r.score.id ==grid.myId)){
               grid.currentRank = current
             }else{
-              //          发来的未含有我的
+              // 发来的未含有我的
               grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
             }
-            //            grid.currentRank = current
           }
           Behaviors.same
 
@@ -410,7 +410,6 @@ object GameClient {
           Behaviors.same
 
         case Protocol.FeedApples(foods) =>
-//          log.info("ClientFood:  " + foods)
           ClientBoot.addToPlatform{
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
@@ -450,11 +449,6 @@ object GameClient {
             FpsComp.receivePingPackage(p)
           }
           Behaviors.same
-
-//        case Protocol.PlayerRestart(id) =>
-//          ClientMusic.playMusic("bg")
-//          Behaviors.same
-
 
         case Protocol.PlayerJoin(id,player) =>
           ClientBoot.addToPlatform{
