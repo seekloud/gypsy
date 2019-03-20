@@ -207,8 +207,6 @@ class BotHolder(
   def gameClose = {
     //停止gameLoop
     timeline.stop()
-    //停止背景音乐
-//    ClientMusic.stopMusic()
   }
 
   stageCtx.setStageListener(new StageContext.StageListener {

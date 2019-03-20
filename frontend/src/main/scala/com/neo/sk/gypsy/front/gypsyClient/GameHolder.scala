@@ -139,6 +139,11 @@ class GameHolder(replay:Boolean = false) {
 
   def update(): Unit = {
     grid.update()
+    if(grid.playerMap.get("").isDefined){
+      val x = grid.playerMap("").x
+      val y = grid.playerMap("").y
+      println()
+    }
   }
 
   def start(): Unit = {
@@ -166,7 +171,6 @@ class GameHolder(replay:Boolean = false) {
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
-//        drawTopView.drawEcharts()
       case GameState.victory if victoryInfo.isDefined =>
         drawTopView.drawVictory(victoryInfo.get)
       case GameState.allopatry =>

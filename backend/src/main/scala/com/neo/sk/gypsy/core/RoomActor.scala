@@ -72,7 +72,7 @@ object RoomActor {
 
   case class DeleteBot(botId:String) extends Command
 
-  case class ReStart(id: String) extends Command
+//  case class ReStart(id: String) extends Command
 
   case class KeyR(id:String, keyCode: Int,frame:Int,n:Int) extends Command
 
@@ -107,7 +107,6 @@ object RoomActor {
             val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
             var starNames = mutable.Map(("清纯女大学生",false),("无敌小坏坏",false),("冥王星",false),("地球",false),("富强民主文明和谐",false),("嫦娥",false),("雪碧哥哥",false),("性感渣男",false),("织女星",false),("牛郎星",false))
-            //val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer: MiddleBufferInJvm = new MiddleBufferInJvm(81920)
             /**每个房间都有一个自己的gird**/
             val grid = new GameServer(bounds, ctx.self)
@@ -265,7 +264,8 @@ object RoomActor {
         * */
 
         // 6> "ReStart" is private before, it's public now. I think it's no problem.
-        case ReStart(id) =>
+        /**玩家复活**/
+        case UserReLive(id,frame) =>
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           //这里的消息只是在重播背景音乐,真正是在addPlayer里面发送加入消息
@@ -448,7 +448,6 @@ object RoomActor {
           val allPlayerNum = playerMap.size + botPlayerNum
           if (allPlayerNum <= AppSettings.botNum) {
             val needAdd = AppSettings.botNum - allPlayerNum
-            println("Sync create")
             starNamesCopy=createBotActor(needAdd, roomId, ctx, grid,starNames)
           }
 
@@ -463,7 +462,7 @@ object RoomActor {
           /**复活bot**/
           if(grid.ReLiveMap.nonEmpty){
             grid.ReLiveMap.foreach{live =>
-              ctx.self ! ReStart(live._1)
+              ctx.self ! UserReLive(live._1,grid.frameCount)
             }
             grid.ReLiveMap = mutable.Map.empty[String,Long]
           }
