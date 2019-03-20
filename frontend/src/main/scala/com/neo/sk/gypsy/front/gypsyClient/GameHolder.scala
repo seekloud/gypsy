@@ -17,7 +17,7 @@ import com.neo.sk.gypsy.shared.ptcl.{Game, _}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils._
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.NetDelay
 import com.neo.sk.gypsy.front.utils.Shortcut
@@ -371,8 +371,6 @@ class GameHolder(replay:Boolean = false) {
       case Protocol.Id(id) =>
         grid.myId = id
         gameState = GameState.play
-      //        Shortcut.playMusic("bg")
-//        println(s"myID:$myId")
 
       case m:Protocol.KC =>
         if(m.id.isDefined){
@@ -413,7 +411,6 @@ class GameHolder(replay:Boolean = false) {
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
       case Protocol.AddVirus(virus) =>
-//        println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
       case Protocol.RemoveVirus(virus) =>
@@ -436,10 +433,6 @@ class GameHolder(replay:Boolean = false) {
       //网络延迟检测
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
-
-//      case Protocol.PlayerRestart(id) =>
-//        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
-//        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")

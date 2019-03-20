@@ -6,7 +6,7 @@ import com.neo.sk.gypsy.holder.BotHolder._
 import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.{Protocol, _}
-import com.neo.sk.gypsy.shared.util.utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
+import com.neo.sk.gypsy.shared.util.Utils.{MTime2HMS, Mass2Radius, getZoomRate, normalization}
 import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import javafx.scene.canvas.{Canvas, GraphicsContext}
 import javafx.scene.image.Image
@@ -141,16 +141,6 @@ class LayeredCanvas(canvas: Canvas,
     ctx.strokeRect(layeredOffX, layeredOffY, bounds.x, bounds.y)
 
     grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList.groupBy(_.color).foreach{a=>
-//      val foodColor = a._1 match{
-//        case 0 => "#f3456d"
-//        case 1 => "#f49930"
-//        case 2 => "#f4d95b"
-//        case 3 => "#4cd964"
-//        case 4 => "#9fe0f6"
-//        case 5 => "#bead92"
-//        case 6 => "#cfe6ff"
-//        case _ => "#de9dd6"
-//      }
       val foodColor = "#de9dd6"
         ctx.setFill(Color.web(foodColor))
       a._2.foreach{ case Food(color, x, y)=>
@@ -162,21 +152,10 @@ class LayeredCanvas(canvas: Canvas,
     }
 
     data.massDetails.groupBy(_.color).foreach{ a=>
-//      a._1 match{
-//        case 0 => ctx.setFill(Color.web("#f3456d"))
-//        case 1 => ctx.setFill(Color.web("#f49930"))
-//        case 2  => ctx.setFill(Color.web("#f4d95b"))
-//        case 3  => ctx.setFill(Color.web("#4cd964"))
-//        case 4  => ctx.setFill(Color.web("#9fe0f6"))
-//        case 5  => ctx.setFill(Color.web("#bead92"))
-//        case 6  => ctx.setFill(Color.web("#cfe6ff"))
-//        case _  => ctx.setFill(Color.web("#de9dd6"))
-//      }
       ctx.setFill(Color.web("#cfe6ff"))
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
-
+      a._2.foreach{case Mass(id,x,y,tx,ty,color,speed) =>
         ctx.beginPath()
-        ctx.arc( x+layeredOffX ,y+layeredOffY ,r*0.5,r*0.5,0,360)
+        ctx.arc( x+layeredOffX ,y+layeredOffY ,Mass2Radius(shotMass), Mass2Radius(shotMass),0,360)
         ctx.fill()
       }
     }
@@ -493,9 +472,9 @@ class LayeredCanvas(canvas: Canvas,
         case 6  => ctx.setFill(Color.web("#cfe6ff"))
         case _  => ctx.setFill(Color.web("#de9dd6"))
       }
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+      a._2.foreach{case Mass(id,x,y,tx,ty,color,speed) =>
         ctx.beginPath()
-        ctx.arc(x + offx,y+ offy ,r,r,0,360)
+        ctx.arc(x + offx,y+ offy ,Mass2Radius(shotMass), Mass2Radius(shotMass),0,360)
         ctx.fill()
       }
     }
@@ -536,7 +515,6 @@ class LayeredCanvas(canvas: Canvas,
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,cell.x+ offx-radius-6 ,cell.y+ offy-radius-6,2*(radius+6),2*(radius+6))
-        //        ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.setFill(Color.web(MyColors.halo))
           ctx.beginPath()
@@ -547,7 +525,6 @@ class LayeredCanvas(canvas: Canvas,
         var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
         nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius*0.8 else nameFont
         ctx.setFont(Font.font("Helvetica",nameFont))
-//        var playermass=cell.mass.toInt
         var playermass=cell.newmass.toInt
         val txt3=new Text(name)
         val txt4=new Text(playermass.toString)
@@ -615,14 +592,6 @@ class LayeredCanvas(canvas: Canvas,
       val killNameLength=txt1.getLayoutBounds.getWidth
       val deadNameLength=txt2.getLayoutBounds.getWidth
       val allWidth = (killNameLength + deadNameLength + 32 + 25 + 50)/2
-      /* val killImg = if (deadPlayer.kill > 3) shutdown
-       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 3) {killingspree}
-       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 4) {dominating}
-       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 5) {unstoppable}
-       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill == 6) {godlike}
-       else if (grid.playerMap.getOrElse(killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill >= 7) {legendary}
-       else if (killerId == myId) youkill
-       else kill*/
       if (showTime > 0) {
         ctx.save()
         ctx.setFont(Font.font("Helvetica",25))

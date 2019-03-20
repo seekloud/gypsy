@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable.ListBuffer
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{UserAction, KC, MP}
 import com.neo.sk.gypsy.shared.ptcl._
-import com.neo.sk.gypsy.shared.util.utils._
-import com.neo.sk.gypsy.shared.util.utils
+import com.neo.sk.gypsy.shared.util.Utils._
+import com.neo.sk.gypsy.shared.util.Utils
 import scala.collection.mutable
 import scala.math._
 import scala.util.Random
@@ -99,43 +99,6 @@ trait Grid {
     frameCount += 1
   }
 
-  //统计分数跟新
-//  def updateScoreList() = {
-//    if(playerMap.get(myId).isDefined){
-//      val myInfo = playerMap(myId)
-//      var myScore = 0
-//      myInfo.cells.foreach{c=>
-//        myScore += c.newmass.toInt
-//      }
-//      tempScoreList += myScore
-//      if(tempScoreList.length > Compress_times){
-//        var TotalScore = tempScoreList.sum.toDouble / Compress_times
-//        tempScoreList.clear()
-//        ScoreList ::= TotalScore
-//      }
-//
-//      if(ScoreList.length > GameConfig.ScoreListMax){
-//        var resultScore = List.empty[Double]
-//        val evenScore = ScoreList.zipWithIndex.filter(_._2 %2 == 0)
-//        val oddScore = ScoreList.zipWithIndex.filter(_._2 %2 == 1)
-//        val a = Array.empty[Int]
-//        resultScore = evenScore.map{temp =>
-//          val index = temp._2
-//          val EScore = temp._1
-//          //这里用index来获取感觉有点危险
-//          val OScore = oddScore(index)._2
-//          (EScore+OScore)/2
-//        }
-//        ScoreList = resultScore
-//        Compress_times *=2
-//
-////        var tempList = ScoreList match {
-////          case a :: tail => (a+tail.head)/2 :: tail
-////        }
-//      }
-//
-//    }
-//  }
 
   //食物更新
   private[this] def updateSpots() = {
@@ -175,8 +138,6 @@ trait Grid {
       }
     }
 //    println(s"updatePlayerMap-----------------$frameCount")
-
-
   }
     //碰撞检测
   def checkCrash(keyAct: Map[String,KC], mouseAct: Map[String, MP])={
@@ -219,16 +180,14 @@ trait Grid {
       val deltaX = mass.speed * Math.cos(deg)
 
       var newSpeed = mass.speed
-      var newX = mass.x
-      var newY = mass.y
       newSpeed -= massSpeedDecayRate
       if (newSpeed < 0) newSpeed = 0
-      if (!(deltaY).isNaN) newY = (newY + deltaY).toShort
-      if (!(deltaX).isNaN) newX = (newX + deltaX).toShort
+      var newX = mass.x
+      var newY = mass.y
+      if (!deltaY.isNaN) newY = (newY + deltaY).toShort
+      if (!deltaX.isNaN) newX = (newX + deltaX).toShort
 
-      // val borderCalc = mass.radius.ceil.toInt
-
-      val borderCalc = 0
+      val borderCalc = Mass2Radius(shotMass) + 5
       if (newX > boundary.x - borderCalc) newX = (boundary.x - borderCalc).toShort
       if (newY > boundary.y - borderCalc) newY = (boundary.y - borderCalc).toShort
       if (newX < borderCalc) newX = borderCalc.toShort
@@ -241,7 +200,7 @@ trait Grid {
   def feedApple(appleCount: Int): Unit
   def addVirus(virus: Int): Unit
 
-//边界超越校验
+  //边界超越校验
   def ExamBoundary(newX:Short,newY:Short)={
     var disappear = false
     val x = if(newX>boundary.x){
@@ -266,145 +225,20 @@ trait Grid {
     (x.toShort ,y.toShort,disappear)
   }
 
-//  private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
-//    var MouseScale = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
-//    val mouseAct = mouseActMap.getOrElse(player.id,MP(None,player.targetX, player.targetY,0,0))
-//    //对每个cell计算新的方向、速度和位置
-//    val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
-//      var newSpeed = cell.speed
-//      var target=Position(player.targetX,player.targetY)
-//
-//      //转换成极坐标
-//      val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
-//      val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
-//      val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
-//      //速度*方向==向某个方向移动的距离
-////      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
-//      val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
-//
-//   //   if(System.currentTimeMillis() - player.lastSplit > 1500){
-//        target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
-//   //   }
-//      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
-//      val deg = atan2(target.clientY, target.clientX)
-//      val degX = if (cos(deg).isNaN) 0 else cos(deg)
-//      val degY = if (sin(deg).isNaN) 0 else sin(deg)
-//      val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
-//      //指针在圆内，静止
-//      if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
-//        newSpeed = (target.clientX / degX).toFloat
-//      } else {
-//        if (cell.speed > initSpeed / slowdown) {
-//          newSpeed -= acceleration
-////          newSpeed = 30 / slowdown
-//
-//        } else {
-//          if (distance < cell.radius) {
-//            if (cell.speed > 0) {
-//              newSpeed = cell.speed - acceleration
-//
-//            } else newSpeed = 0
-//          } else {
-//            newSpeed = if (cell.speed < initSpeed / slowdown) {
-//              cell.speed + acceleration
-//            } else (initSpeed / slowdown).toFloat
-//          }
-//        }
-//      }
-//
-//
-//      //cell移动+边界检测
-//      var newX = if ((cell.x + move.x) > boundary.x-15)  boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
-//      var newY = if ((cell.y + move.y) > boundary.y-15) boundary.y-15 else if ((cell.y + move.y) <= 15) 15 else cell.y + move.y
-//
-//      var isCorner= false
-//      var isParallel =false
-//      if((newX<=15&&newY<=15)||
-//        (newX>=boundary.x-15&&newY<=15)||
-//        (newX<=15&&newY>=boundary.y-15)||
-//        (newX>=boundary.x-15&&newY>=boundary.y-15)){
-//        isCorner=true
-//      }
-//      //遍历计算每个cell的新速度
-//      player.cells.filterNot(p => p == cell).sortBy(_.isCorner).reverse.foreach { cell2 =>
-//        val distance = sqrt(pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))
-//        val deg= acos(abs(newX-cell2.x)/distance)
-//        val radiusTotal = cell.radius + cell2.radius+2
-//        if (distance < radiusTotal) {
-//          if (player.lastSplit > System.currentTimeMillis() - mergeInterval&&System.currentTimeMillis()-player.lastSplit>1000) {
-//            val mouseX=mouseAct.cX/MouseScale+player.x
-//            val mouseY=mouseAct.cY/MouseScale+player.y
-//            val cos1=((cell2.x-cell.x)*(mouseX-cell.x)+(cell2.y-cell.y)*(mouseY-cell.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(newY - mouseY, 2) + pow(newX - mouseX, 2)))
-//            val cos2=((cell.x-cell2.x)*(mouseX-cell2.x)+(cell.y-cell2.y)*(mouseY-cell2.y))/sqrt((pow(newY - cell2.y, 2) + pow(newX - cell2.x, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
-//            val cos3=((cell.x-mouseX)*(cell2.x-mouseX)+(cell.y-mouseY)*(cell2.y-mouseY))/sqrt((pow(newY - mouseY, 2) + pow(newX - mouseX, 2))*(pow(cell2.y - mouseY, 2) + pow(cell2.x - mouseX, 2)))
-//            if(cos1<=0){
-//              if(newX==15&&newY==15){}
-//              else if(newX==15&&newY==boundary.y-15){}
-//              else if(newX==boundary.x-15&&newY==15){}
-//              else if(newX==boundary.x-15&&newY==boundary.y-15){}
-//              else{
-//                newSpeed+=2
-//              }
-//            }else if(cos2<=0){
-//              if(!cell2.isCorner){
-//                if(newSpeed>cell2.speed){
-//                  newSpeed=if(cell2.speed-2>=0)cell2.speed-2 else 0
-//                }
-//                if((cell2.x<=15&&cell2.y<=15)||
-//                  (cell2.x>=boundary.x-15&&cell2.y<=15)||
-//                  (cell2.x<=15&&cell2.y>=boundary.y-15)||
-//                  (cell2.x>=boundary.x-15&&cell2.y>=boundary.y-15)){
-//                  newX=cell.x
-//                  newY=cell.y
-//                }
-//              }else{
-//                isCorner=true
-//                newSpeed = 0
-//                newX=cell.x
-//                newY=cell.y
-//              }
-//            }else if(cos3<=0){
-//              newSpeed=0
-//            }else{
-//              if (cell.x < cell2.x) newX -= ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-//              else if (cell.x > cell2.x) newX += ((cell.radius+cell2.radius-distance)*cos(deg)).toInt/4
-//              if (cell.y < cell2.y) newY -= ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
-//              else if (cell.y > cell2.y) newY += ((cell.radius+cell2.radius-distance)*sin(deg)).toInt/4
-//              isParallel=true
-//            }
-//          }
-//        }
-//      }
-//      List(Cell(cell.id, newX.toShort , newY.toShort , cell.mass, cell.newmass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
-//    }
-//    val length = newCells.length
-//    val newX = newCells.map(_.x).sum / length
-//    val newY = newCells.map(_.y).sum / length
-//    val left = newCells.map(a => a.x - a.radius).min
-//    val right = newCells.map(a => a.x + a.radius).max
-//    val bottom = newCells.map(a => a.y - a.radius).min
-//    val top = newCells.map(a => a.y + a.radius).max
-//    player.copy(x = newX.toShort , y = newY.toShort , targetX = mouseAct.cX , targetY = mouseAct.cY , protect = player.protect, kill = player.kill, lastSplit = player.lastSplit, width = right - left, height = top - bottom, cells = newCells)
-//  }
-
-
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
     var MouseScale = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
     val mouseAct = mouseActMap.getOrElse(player.id,MP(None,player.targetX, player.targetY,0,0))
     //对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       var newSpeed = cell.speed
-//      var target=Position(player.targetX,player.targetY)
 
       //转换成极坐标
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
       //速度*方向==向某个方向移动的距离
-      //      println(s"moveX:${newSpeed*degX1},moveY:${newSpeed*degY1}")
       val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
 
-      //   if(System.currentTimeMillis() - player.lastSplit > 1500){
 //      var target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
 
       //todo 平行的时候如何处理
@@ -415,7 +249,7 @@ trait Grid {
       val deg = atan2(target.clientY, target.clientX)
       val degX = if (cos(deg).isNaN) 0 else cos(deg)
       val degY = if (sin(deg).isNaN) 0 else sin(deg)
-      val slowdown = utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
+      val slowdown = Utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
       //指针在圆内，静止
       if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
         newSpeed = (target.clientX / degX).toFloat
@@ -557,14 +391,11 @@ trait Grid {
             if (shot && newMass > shotMass * 3) {
               newMass = (newMass - shotMass).toShort
               newRadius = Mass2Radius(newMass)
-              val massRadius = Mass2Radius(shotMass)
               val massX = (cell.x + (newRadius - 50) * degX).toInt
               val massY = (cell.y + (newRadius - 50) * degY).toInt
-//              massList ::= game.Mass(massX, massY, player.targetX, player.targetY, player.color.toInt, shotMass, massRadius, shotSpeed)
-              newMassList ::= Game.Mass(massX.toShort , massY.toShort , player.targetX, player.targetY, player.color, shotMass, massRadius, shotSpeed)
+              newMassList ::= Game.Mass(player.id,massX.toShort , massY.toShort , player.targetX, player.targetY, player.color, shotSpeed)
             }
             massList :::=newMassList
-//            println(cell.mass + "    " + newMass)
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
         }.filterNot(e=>e.newmass <= 0 && e.mass <= 0)
         val length = newCells.length
@@ -581,60 +412,7 @@ trait Grid {
 
   //TODO 暂时前后不同 ，后台有广播哪些玩家分裂
   //分裂检测
-  def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
-//    val newPlayerMap = playerMap.values.map {
-//      player =>
-//        var newSplitTime = player.lastSplit
-//        val mouseAct = mouseActMap.getOrElse(player.id,MousePosition(Some(player.id),player.targetX, player.targetY,0,0))
-//        val split = actMap.get(player.id) match {
-//          case Some(keyEvent) => keyEvent.keyCode==KeyEvent.VK_F
-//          case _ => false
-//        }
-//        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-//          cell =>
-//            var newMass = cell.newmass
-//            var newRadius = cell.radius
-//            val target = Position( (mouseAct.clientX + player.x - cell.x).toShort , (mouseAct.clientY + player.y - cell.y).toShort )
-//            val deg = atan2(target.clientY, target.clientX)
-//            val degX = if (cos(deg).isNaN) 0 else cos(deg)
-//            val degY = if (sin(deg).isNaN) 0 else sin(deg)
-//            var splitX:Short = 0
-//            var splitY:Short = 0
-//            var splitMass:Short = 0
-//            var splitRadius:Short = 0
-//            var splitSpeed = 0.0
-//            var cellId = 0L
-//            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
-//              newSplitTime = System.currentTimeMillis()
-//              splitMass = (newMass / 2).toShort
-//              newMass = (newMass- splitMass).toShort
-//              splitRadius = Mass2Radius(splitMass)
-//              newRadius = Mass2Radius(newMass)
-//              splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
-//              splitX = (cell.x + (newRadius + splitRadius) * degX).toShort
-//              splitY = (cell.y + (newRadius + splitRadius) * degY).toShort
-//              cellId = cellIdgenerator.getAndIncrement().toLong
-//            }
-//            /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
-//            //            println(cell.mass + "   " + newMass)
-////            println(s"cellId:${cellId} id:${cell.id} ")
-//            List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
-//              Cell(cellId,  splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
-//
-//
-//        }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
-//        val length = newCells.length
-//        val newX = newCells.map(_.x).sum / length
-//        val newY = newCells.map(_.y).sum / length
-//        val left = newCells.map(a => a.x - a.radius).min
-//        val right = newCells.map(a => a.x + a.radius).max
-//        val bottom = newCells.map(a => a.y - a.radius).min
-//        val top = newCells.map(a => a.y + a.radius).max
-//        player.copy(x = newX.toShort , y = newY.toShort , lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-//    }
-//    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-  }
-
+  def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {}
 
   def massDecrease(player:Player)={
     val newCells=player.cells.map{cell=>
@@ -653,7 +431,6 @@ trait Grid {
     * screenScale 屏幕缩放比例
     */
   def getGridData(id:String,winWidth:Int,winHeight:Int,screenScale:Double) = {
-//    myId = id
     //FIXME 编译时候有出现格式匹配出错的问题，一般是currentPlayer的getorelse里面toshort导致的
     val currentPlayerWH = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse((winWidth/2,winHeight/2 ))
     val zoom = playerMap.get(id).map(a=>(a.width,a.height)).getOrElse((30.0,30.0))
@@ -667,9 +444,6 @@ trait Grid {
 
     playerMap.foreach{
       case (_,player) =>
-//        val score = player.cells.map(_.newmass).sum
-//        if (checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(player.x,player.y),sqrt(pow(player.width/2,2.0)+pow(player.height/2,2.0)),width,height) || score > bigPlayerMass)
-//        playerDetails ::= player
         if(checkScreenRangeAll(Point(currentPlayerWH._1,currentPlayerWH._2),width,height,Point(player.x,player.y),player.width,player.height)){
           playerDetails ::= player
         }
@@ -678,7 +452,7 @@ trait Grid {
     Protocol.GridDataSync(
       frameCount,
       playerDetails,
-      massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),m.radius,width,height)),
+      massList.filter(m=>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m.x,m.y),Mass2Radius(shotMass),width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayerWH._1,currentPlayerWH._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       Scale
     )
@@ -686,21 +460,6 @@ trait Grid {
 
 
   def clearAllData = {
-//    food
-//    virusMap
-//    playerMap
-//    actionMap
-//    mouseActionMap
-//    massList
-//
-//    ActionEventMap
-//    GameEventMap
-//    deadPlayerMap
-//
-//    tick
-//    Scale
-
-//    myId = ""
     //grid中数据清除
     food = Map[Point, Short]()
     playerMap = Map.empty[String,Player]
@@ -717,7 +476,6 @@ trait Grid {
 
     tick = 0
     Scale = 1.0
-
 
   }
 

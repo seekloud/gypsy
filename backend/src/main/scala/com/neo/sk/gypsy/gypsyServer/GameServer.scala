@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import com.neo.sk.gypsy.shared.Grid
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol.UserJoinRoom
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -46,15 +46,11 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var botSubscriber=mutable.HashMap[String,(String,ActorRef[BotActor.Command])]()
   var currentRank = List.empty[Score]
 
-//  val playerIdgenerator = new AtomicInteger(127)
   val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
   val playerId2ByteQueue = new mutable.Queue[Byte]()
   for( i <- 0 to 126){
     playerId2ByteQueue.enqueue(i.toByte)
   }
-//  private[this] var historyRankMap = Map.empty[String, Score]
-//  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
-//  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
   def addPlayer(id: String, name: String) = waitingJoin += (id -> name)
 
@@ -121,23 +117,6 @@ class GameServer(override val boundary: Point) extends Grid {
 
   private[this] def updateRanks() = {
     currentRank = playerMap.values.map(s => Score(s.id, s.name, s.kill, s.cells.map(_.mass).sum)).toList.sorted
-//    var historyChange = false
-//    currentRank.foreach { cScore =>
-//      historyRankMap.get(cScore.id) match {
-//        case Some(oldScore) if cScore.score > oldScore.score =>
-//          historyRankMap += (cScore.id -> cScore)
-//          historyChange = true
-//        case None if cScore.score > historyRankThreshold =>
-//          historyRankMap += (cScore.id -> cScore)
-//          historyChange = true
-//        case _ => //do nothing.
-//      }
-//    }
-//    if (historyChange) {
-//      historyRankList = historyRankMap.values.toList.sorted.take(historyRankLength)
-//      historyRankThreshold = historyRankList.lastOption.map(_.score.toInt).getOrElse(-1)
-//      historyRankMap = historyRankList.map(s => s.id -> s).toMap
-//    }
   }
 
   override def feedApple(appleCount: Int): Unit = {
@@ -351,6 +330,7 @@ class GameServer(override val boundary: Point) extends Grid {
                 }
               }
             }
+            //TODO 修改策略
             /**1+13**/
             List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)) ::: vSplitCells
         }
@@ -534,13 +514,17 @@ class GameServer(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
-              case p: Mass =>
-                if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass = (newMass + p.mass).toShort
-                  newRadius = Mass2Radius(newMass)
-                  massList = massList.filterNot(l => l == p)
-                  if(newProtected)
-                    newProtected = false
+              case m: Mass =>
+                if (checkCollision(Point(cell.x, cell.y), Point(m.x, m.y), cell.radius, Mass2Radius(shotMass), coverRate)) {
+                  if(m.id == player.id && m.speed>0){
+                    //小球刚从玩家体内发射出，此时不吃小球
+                  }else {
+                    newMass = (newMass + shotMass).toShort
+                    newRadius = Mass2Radius(newMass)
+                    massList = massList.filterNot(l => l == m)
+                    if(newProtected)
+                      newProtected = false
+                  }
                 }
             }
             Cell(cell.id, cell.x, cell.y,cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
@@ -553,7 +537,6 @@ class GameServer(override val boundary: Point) extends Grid {
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -573,22 +556,21 @@ class GameServer(override val boundary: Point) extends Grid {
       var hasMoved = false
       val (nx,ny)= normalization(newTargetX,newTargetY)
       massList.foreach {
-        case p: Mass =>
-          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
-            val (mx,my)=normalization(p.targetX,p.targetY)
-            var vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusRatio ) /(newMass+p.mass)
-            var vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusRatio) /(newMass+p.mass)
+        case m: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(m.x, m.y), v.radius, Mass2Radius(shotMass), coverRate)) {
+            val (mx,my)=normalization(m.targetX, m.targetY)
+            var vx = (nx * newMass * newSpeed + mx * shotMass * m.speed * initVirusRatio ) /(newMass + shotMass)
+            var vy = (ny * newMass * newSpeed + my * shotMass * m.speed * initVirusRatio) /(newMass + shotMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
             val degree =atan2(vy,vx)
             vx = newSpeed * cos(degree)
             vy = newSpeed * sin(degree)
             hasMoved =true
-            newMass = (newMass + p.mass).toShort
+            newMass = (newMass + shotMass).toShort
             newRadius = Mass2Radius(newMass)
-//            newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
             newTargetX = vx.toShort
             newTargetY = vy.toShort
-            massList = massList.filterNot(l => l == p)
+            massList = massList.filterNot(l => l == m)
           }
       }
       if(newMass > virusMassLimit){
@@ -654,13 +636,9 @@ class GameServer(override val boundary: Point) extends Grid {
               cellId = cellIdgenerator.getAndIncrement().toLong
               isSplit = true
             }
-            /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
-            //            println(cell.mass + "   " + newMass)
-//            println(s"cellId:${cellId} id:${cell.id} ")
+            /**效果：大球：缩小，小球：从0增大，且从大球中滑出**/
             List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner),
               Cell(cellId,  splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
-
-
         }.filterNot(e=> e.newmass <= 0 && e.mass <=0 )
 
         if(isSplit){
@@ -750,7 +728,7 @@ class GameServer(override val boundary: Point) extends Grid {
     Protocol.GridData4Bot(
       frameCount,
       playerDetails,
-      massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),m.radius,width,height)),
+      massList.filter(m=>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m.x,m.y),Mass2Radius(shotMass),width,height)),
       virusMap.filter(m =>checkScreenRange(Point(currentPlayer._1,currentPlayer._2),Point(m._2.x,m._2.y),m._2.radius,width,height)),
       foodList
     )
@@ -782,7 +760,6 @@ class GameServer(override val boundary: Point) extends Grid {
     val ge = GameEventMap.getOrElse(frameCount-1,List.empty)
     val ae = ActionEventMap.getOrElse(frameCount-1,List.empty)
     (ge:::ae).filter(_.isInstanceOf[GameEvent])
-
   }
 
 
@@ -790,11 +767,6 @@ class GameServer(override val boundary: Point) extends Grid {
     super.update()
     genWaitingStar()  //新增
     updateRanks()  //排名
-//    if(playerMap.get("guest1541338979393").isDefined){
-//      val x = playerMap("guest1541338979393").x
-//      val y = playerMap("guest1541338979393").y
-//      println("frameCount:   "+ frameCount +"   xy:   " + x + "  " + y)
-//    }
   }
 
   def getApples = food

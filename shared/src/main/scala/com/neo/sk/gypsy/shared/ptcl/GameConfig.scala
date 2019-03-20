@@ -1,6 +1,6 @@
 package com.neo.sk.gypsy.shared.ptcl
 
-import com.neo.sk.gypsy.shared.util.utils
+import com.neo.sk.gypsy.shared.util.Utils
 
 import scala.math.sqrt
 
@@ -13,7 +13,7 @@ object GameConfig {
   //  初始质量
   val initMass:Short = 10
   val slowBase = 4.5 //10
-  val initMassLog = utils.logSlowDown(initMass,slowBase)
+  val initMassLog = Utils.logSlowDown(initMass,slowBase)
   val initSpeed = 40
   val acceleration  = 2
   //质量转半径率
@@ -37,15 +37,16 @@ object GameConfig {
   //病毒质量上限
   var virusMassLimit:Int = 150
   val shotMass:Short = 10
-  val shotSpeed = 100
   //最大分裂个数
   val maxCellNum = 16
   //质量衰减下限
   val decreaseLimit = 200
   //衰减率
   val decreaseRate = 0.995
-  //小球速度衰减率
-  val massSpeedDecayRate = 25
+
+  //吐出mass速度及衰减率
+  val shotSpeed = 100  //100
+  val massSpeedDecayRate = 10.5f//25
 
   // 排行版显示玩家数
   val rankShowNum = 10
@@ -61,7 +62,7 @@ object GameConfig {
 
   val maxDelayFrame = 3
 
-//病毒分裂个数
+  //病毒分裂个数
   val VirusSplitNumber = 13
 //  玩家初始长宽
   val initSize = 8 + sqrt(10)*12
