@@ -374,8 +374,6 @@ class GameHolder(replay:Boolean = false) {
     data match {
       case Protocol.Id(id) =>
         grid.myId = id
-//        Shortcut.playMusic("bg")
-//        println(s"myID:$myId")
 
       case m:Protocol.KC =>
         if(m.id.isDefined){

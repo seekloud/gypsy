@@ -307,14 +307,13 @@ object UserActor {
 //          roomActor ! ReStartAck(id)
 //          Behaviors.same
 
-        case UserReLiveMsg(frame) =>
-//          println(s"UserActor got $id relive Msg")
-          roomActor ! UserReLive(userInfo.playerId,frame)
+        case UserReLiveMsg(_) =>
+          roomActor ! ReStart(userInfo.playerId)
           Behaviors.same
 
         case UserReJoinMsg(frame) =>
           println(s"UserActor got ${userInfo.playerId} relive Msg  ")
-          roomActor ! UserReJoin(userInfo.playerId,frame)
+          roomActor ! UserReJoin(userInfo, ctx.self, frame)
           Behaviors.same
 
         case DispatchMsg(m)=>

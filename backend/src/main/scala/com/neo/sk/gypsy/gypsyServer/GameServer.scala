@@ -11,15 +11,15 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.util.Random
-import com.neo.sk.gypsy.core.{BotActor, EsheepSyncClient, UserActor}
-import com.neo.sk.gypsy.core.RoomActor.{dispatch, dispatchTo}
+import com.neo.sk.gypsy.core.{BotActor, EsheepSyncClient, RoomActor, UserActor}
+import com.neo.sk.gypsy.core.RoomActor.{Victory, dispatch, dispatchTo}
 import com.neo.sk.gypsy.Boot.esheepClient
 import com.neo.sk.gypsy.common.AppSettings
 
 import scala.math.{Pi, abs, acos, atan2, cbrt, cos, pow, sin, sqrt}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
-import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.shared.ptcl.{Game, Protocol}
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
@@ -28,7 +28,10 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
   * Date: 9/3/2016
   * Time: 9:55 PM
   */
-class GameServer(override val boundary: Point) extends Grid {
+class GameServer(
+  override val boundary: Point,
+  roomActor: ActorRef[RoomActor.Command]
+) extends Grid {
 
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
@@ -46,7 +49,6 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var botSubscriber=mutable.HashMap[String,(String,ActorRef[BotActor.Command])]()
   var currentRank = List.empty[Score]
 
-//  val playerIdgenerator = new AtomicInteger(127)
   val playerId2ByteMap  = new mutable.HashMap[String, Byte]()
   val playerId2ByteQueue = new mutable.Queue[Byte]()
   for( i <- 0 to 126){
@@ -56,7 +58,7 @@ class GameServer(override val boundary: Point) extends Grid {
 //  var historyRankList = historyRankMap.values.toList.sortBy(_.k).reverse
 //  private[this] var historyRankThreshold = if (historyRankList.isEmpty) -1 else historyRankList.map(_.k).min
 
-  def addPlayer(id: String, name: String) = waitingJoin += (id -> name)
+  def addPlayer(id: String, name: String): Unit = waitingJoin += (id -> name)
 
   private var roomId = 0l
 
@@ -71,43 +73,69 @@ class GameServer(override val boundary: Point) extends Grid {
 
   init()  //初始化苹果以及病毒数据
 
-  implicit val sendBuffer = new MiddleBufferInJvm(81920)
+  implicit val sendBuffer: MiddleBufferInJvm = new MiddleBufferInJvm(81920)
 
-  private[this] def genWaitingStar() = {
-    waitingJoin.filterNot(kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
+  private[this] def genWaitingStar(): Unit = {
+
+    // create new player
+    def createNewPlayer(id: String, name: String): Game.Player ={
       val center = randomEmptyPoint()
       val color = new Random(System.nanoTime()).nextInt(24)
-      val player = Player(id,name,color.toShort,center.x.toShort,center.y.toShort,0,0,0,true,System.currentTimeMillis(),8 + sqrt(10)*12,8 + sqrt(10)*12,List(Cell(cellIdgenerator.getAndIncrement().toLong,center.x.toShort,center.y.toShort)),System.currentTimeMillis())
+      Player(
+        id,
+        name,
+        color.toShort,
+        center.x.toShort,
+        center.y.toShort,
+        targetX = 0,
+        targetY = 0,
+        kill = 0,
+        protect = true,
+        System.currentTimeMillis(),
+        width = 8 + sqrt(10) * 12,
+        height = 8 + sqrt(10) * 12,
+        List(Cell(cellIdgenerator.getAndIncrement().toLong, center.x.toShort, center.y.toShort)),
+        System.currentTimeMillis()
+      )
+    }
+
+    // add players when it isn't in playerMap,
+    // "genWaitingStar" executed in logic frame, but user join room doesn't have event
+    waitingJoin.filterNot( kv => playerMap.contains(kv._1)).foreach { case (id, name) =>
+
+      val player = createNewPlayer(id, name)
       playerMap += id -> player
       if(playerId2ByteMap.get(id).isEmpty){
         /**新玩家/bot加入，而非复活**/
         val playerIdByte = playerId2ByteQueue.dequeue()
         playerId2ByteMap += id -> playerIdByte
       }
-//      var addPlayerByteId = true
-//      var playerIdByte = Random.nextInt(127).toByte
-//      playerId2ByteMap.foreach{item=>
-//        if(item._1 == id){
-//          addPlayerByteId = false
-//          playerIdByte = item._2
-//        }
-//      }
-//      /**bot没有ByteId**/
-//      if(addPlayerByteId){
-//        while(playerId2ByteMap.values.toList.contains(playerIdByte)){
-//          playerIdByte = Random.nextInt(127).toByte
-//        }
-//      }
-      println(s" ${id} 加入事件！！  ${frameCount+2}")
-      //TODO 这里没带帧号 测试后记入和实际上看的帧号有差
+
+      /*
+      *   8> dispatch message when join success
+      *   not dispatch many messages, only dispatch three
+      *   "PlayerJoin": send byte id
+      *   "GridDataSync": game state
+      * */
       dispatch(subscriber)(PlayerJoin(playerId2ByteMap(id),player))
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
-      println("lalallala  send!!!!!")
+
+      // "UserJoinRoom" used in record
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
     }
     waitingJoin = Map.empty[String, String]
+  }
+
+  private[this] def checkVictory(): Unit ={
+    if(currentRank.nonEmpty){
+      val FirstPlayer = currentRank.head
+      if(FirstPlayer.score > VictoryScore){
+        val finalFrame =  frameCount
+        roomActor ! Victory(FirstPlayer.id,FirstPlayer.n,FirstPlayer.score,finalFrame)
+      }
+    }
   }
 
   implicit val scoreOrdering = new Ordering[Score] {
@@ -791,6 +819,7 @@ class GameServer(override val boundary: Point) extends Grid {
 
   override def update(): Unit = {
     super.update()
+    checkVictory()
     genWaitingStar()  //新增
     updateRanks()  //排名
   }
@@ -815,13 +844,9 @@ class GameServer(override val boundary: Point) extends Grid {
   }
 
 
+  // 生成随机点
   def randomEmptyPoint(): Point = {
-    val p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
-    //    while (grid.contains(p)) {
-    //      p = Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
-    //      //TODO 随机点的生成位置需要限制
-    //    }
-    p
+    Point(random.nextInt(boundary.x), random.nextInt(boundary.y))
   }
 
   def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,(String,ActorRef[BotActor.Command])]) ={
