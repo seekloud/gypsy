@@ -38,7 +38,7 @@ object BotHolder {
   //显示击杀弹幕
   var killList = List.empty[(Int, String, String)] //time killerName deadName
   var deadInfo: Option[Protocol.UserDeadMessage] = None
-  var gameState = GameState.play
+  var gameState = GameState.firstcome
   val timeline = new Timeline()
 
   var exitFullScreen = false
@@ -86,8 +86,6 @@ class BotHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
-
-//  var getByte: GetByte = _
 
 
   def getActionSerialNum = layeredScene.actionSerialNumGenerator.getAndIncrement()
@@ -247,12 +245,13 @@ class BotHolder(
       def getDegree(x:Double,y:Double)={
         atan2(y - layeredScene.humanView.realWindow.y/2, x - layeredScene.humanView.realWindow.x/2)
       }
-//      println("degree:  " + getDegree(e.getX,e.getY))
-      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
-        FormerDegree = getDegree(e.getX,e.getY)
-        botClient.actionReq = ActionReq(Move.up,Some(Swing(getDegree(e.getX,e.getY).toFloat,
-          math.sqrt(math.pow(e.getX-layeredScene.humanView.realWindow.x/2,2)+math.pow(e.getY-layeredScene.humanView.realWindow.y/2,2)).toFloat)),0,0,Some(botClient.credit))
-        botClient.action()
+      if(gameState == GameState.play){
+        if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5){
+          FormerDegree = getDegree(e.getX,e.getY)
+          botClient.actionReq = ActionReq(Move.up,Some(Swing(getDegree(e.getX,e.getY).toFloat,
+            math.sqrt(math.pow(e.getX-layeredScene.humanView.realWindow.x/2,2)+math.pow(e.getY-layeredScene.humanView.realWindow.y/2,2)).toFloat)),0,0,Some(botClient.credit))
+          botClient.action()
+        }
       }
     }
   })
@@ -262,23 +261,22 @@ class BotHolder(
       //使用E、F、Space
       if(key == KeyEvent.VK_SPACE){
         if(gameState == GameState.dead){
-          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame) //+ delayFrame
           serverActor ! reliveMsg
         }
         else if(gameState == GameState.victory){
-          val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+          val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame) //+ delayFrame
           serverActor ! rejoinMsg
         }
       }
       else{
-        val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-        grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
+        val keyCode = Protocol.KC(None, key, grid.frameCount + advanceFrame , getActionSerialNum) //+ delayFrame
+        grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + advanceFrame))
         serverActor ! keyCode
       }
     }
     if (swing.nonEmpty) {
       def getDegree(x: Double, y: Double) = {
-        //        atan2(y -layeredScene.gameView.humanView.y/2,x - layeredScene.humanView.realWindow.x/2 )
         atan2(y, x)
       }
 

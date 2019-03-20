@@ -81,7 +81,7 @@ object Game {
                    mass:Short = initMass,  //小球体重
                    newmass:Short = initMass,
                    radius:Short = Mass2Radius(initMass),
-                   speed:Float = 12,
+                   speed:Float = 25, //12
                    speedX:Float = 0,
                    speedY:Float = 0,
                    parallel:Boolean = false,
@@ -89,15 +89,15 @@ object Game {
                  )
 //吐出的小球
   case class Mass(
+                 id:String,
                  x:Short,
                  y:Short,
                  targetX:Short,
                  targetY:Short,
                  color:Short,
-                 mass:Short,
-                 radius:Short,
                  speed:Float
                  )
+
   case class Virus(
                   vid:Long,
                   x:Short,
@@ -141,7 +141,7 @@ object Game {
 
 
   object GameState{
-    val waiting:Int = -1
+    val firstcome:Int = -1
     val play:Int = 0
     val dead:Int = 1
     val allopatry:Int = 2

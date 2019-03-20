@@ -39,7 +39,7 @@ object GameHolder {
   var syncGridData: scala.Option[GridDataSync] = None
   var killList = List.empty[(Int,String,String)] //time killerId deadId
   var deadInfo :Option[Protocol.UserDeadMessage] = None
-  var gameState = GameState.play
+  var gameState = GameState.firstcome
   val timeline = new Timeline()
 
   var exitFullScreen = false
@@ -81,6 +81,9 @@ class GameHolder(
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
+
+  var mp = MP(None,0,0,0,0)
+  var fmp = MP(None,0,0,0,0)
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
@@ -148,6 +151,9 @@ class GameHolder(
     if (!justSynced) {
       mouseInFlame = false
       keyInFlame = false
+      if(grid.frameCount % 2 ==0){
+        updateMousePos
+      }
       update()
     } else {
       if (syncGridData.nonEmpty) {
@@ -158,6 +164,15 @@ class GameHolder(
       justSynced = false
     }
 
+  }
+
+  def updateMousePos ={
+    if(fmp != mp){
+      fmp = mp
+      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + advanceFrame))
+      //      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
+      serverActor ! mp.copy(f = grid.frameCount + advanceFrame)
+    }
   }
 
   def gameRender() = {
@@ -190,21 +205,21 @@ class GameHolder(
           if(key == KeyCode.SPACE){
             println(s"down+ Space ReLive Press!")
             keyInFlame = true
-            val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+            val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame) //+ delayFrame
             serverActor ! reliveMsg
           }
         }else if(gameState == GameState.victory){
           println(s"down+ Press After Success!!")
           keyInFlame = true
-          val rejoinMsg = Protocol.ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+          val rejoinMsg = Protocol.ReJoinMsg(grid.frameCount +advanceFrame) //+ delayFrame
           serverActor ! rejoinMsg
         } else {
           println(s"down+${e.toString}")
           //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
           keyInFlame = true
-          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame , getActionSerialNum) //+ delayFrame
           if(key == KeyCode.E){
-            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
+            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + advanceFrame )) //+ delayFrame
           }
           serverActor ! keyCode
         }
@@ -216,14 +231,10 @@ class GameHolder(
       def getDegree(x:Double,y:Double)={
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
-
-      val mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
-        mouseInFlame = true
-        FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame ))
-        grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
-        serverActor ! mp
+      if(gameState == GameState.play){
+        if(math.abs(getDegree(e.getX,e.getY)-FormerDegree) * 180/math.Pi > 5   &&  mouseInFlame == false){
+          mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame, getActionSerialNum)
+        }
       }
     }
   })
@@ -237,8 +248,6 @@ class GameHolder(
   def gameClose = {
     //停止gameLoop
     timeline.stop()
-    //停止背景音乐
-//    ClientMusic.stopMusic()
   }
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {

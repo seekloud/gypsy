@@ -58,10 +58,15 @@ class GameClient(override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if (newSplitTime > System.currentTimeMillis() - mergeInterval) {
-                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+//                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+//                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+//                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+//                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+
+                  if (cell.x < cell2.x) cellX -= 1
+                  else if (cell.x > cell2.x) cellX += 1
+                  if (cell.y < cell2.y) cellY -= 1
+                  else if (cell.y > cell2.y) cellY += 1
                 }
                 //                 else if (distance < radiusTotal / 2) {
                 //                  if (cell.radius > cell2.radius) {
@@ -192,11 +197,17 @@ class GameClient(override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
-              case p: Mass =>
-                if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass = (newMass + p.mass).toShort
-                  newRadius = Mass2Radius(newMass)
-                  massList = massList.filterNot(l => l == p)
+              case m: Mass =>
+                if (checkCollision(Point(cell.x, cell.y), Point(m.x, m.y), cell.radius, Mass2Radius(shotMass), coverRate)) {
+                  if(m.id == player.id && m.speed>0){
+                    //小球刚从玩家体内发射出，此时不吃小球
+                  }else {
+                    newMass = (newMass + shotMass).toShort
+                    newRadius = Mass2Radius(newMass)
+                    massList = massList.filterNot(l => l == m)
+                    if(newProtected)
+                      newProtected = false
+                  }
                 }
             }
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
@@ -290,18 +301,18 @@ class GameClient(override val boundary: Point) extends Grid {
       var hasMoved = false
       val (nx,ny)= normalization(newTargetX,newTargetY)
       massList.foreach {
-        case p: Mass =>
-          if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
-            val (mx,my)=normalization(p.targetX,p.targetY)
-            val vx = (nx*newMass*newSpeed + mx*p.mass*p.speed)/(newMass+p.mass)
-            val vy = (ny*newMass*newSpeed + my*p.mass*p.speed)/(newMass+p.mass)
+        case m: Mass =>
+          if (checkCollision(Point(v.x, v.y), Point(m.x, m.y), v.radius, Mass2Radius(shotMass), coverRate)) {
+            val (mx,my)=normalization(m.targetX,m.targetY)
+            val vx = (nx*newMass*newSpeed + mx * shotMass * m.speed)/(newMass + shotMass)
+            val vy = (ny*newMass*newSpeed + my * shotMass * m.speed)/(newMass + shotMass)
             hasMoved =true
-            newMass = (newMass + p.mass).toShort
+            newMass = (newMass + shotMass).toShort
             newRadius = Mass2Radius(newMass)
             newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
             newTargetX = vx.toShort
             newTargetY = vy.toShort
-            massList = massList.filterNot(l => l == p)
+            massList = massList.filterNot(l => l == m)
           }
       }
       if(newMass>virusMassLimit){
