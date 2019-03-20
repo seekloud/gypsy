@@ -468,8 +468,8 @@ case class DrawGame(
       var cellDifference = false
       val c = cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
       val newcells = c.map{ cell =>
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
+        val cellx = cell.x + cell.speedX * offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY * offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
@@ -478,8 +478,6 @@ case class DrawGame(
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
 
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
-
-        //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()

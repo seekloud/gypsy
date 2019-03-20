@@ -13,7 +13,7 @@ import com.neo.sk.gypsy.shared.util.Utils._
 object Game {
 
 
-////排行榜信息
+  //排行榜信息
   case class Score(id: String, n: String, k: Short, score: Short)
 
   case class RankInfo(
@@ -24,7 +24,7 @@ object Game {
   case class Food(color:Short, x:Int, y:Int)
 
 
-//网格上的一个点
+  //网格上的一个点
   //边界检测，超过边界后从另一边界出来
   case class Point(x: Int, y: Int) {
     def +(other: Point) = Point(x + other.x, y + other.y)
@@ -36,7 +36,6 @@ object Game {
     def %(other: Point) = Point(x % other.x, y % other.y)
   }
 
-//TODO 可以把里面的X，y改成Double
   case class Player(
                    id:String,
                    name:String,
@@ -48,7 +47,6 @@ object Game {
                    kill:Short = 0,
                    protect:Boolean = true,//出生保护
                    lastSplit:Long = System.currentTimeMillis(),
-//                   var killerName:String= "",
                    width:Double =  initSize,
                    height:Double =  initSize,
                    cells:List[Cell],//分裂
@@ -58,22 +56,9 @@ object Game {
   case class PlayerPosition(
                              id:String,
                              x:Int,
-                             y:Int,
-                             //targetX:Int = 0,//运动方向，大部分做了归一化
-                             //targetY:Int = 0,
+                             y:Int
                            )
-//  case class Cell(
-//                 id:Long,
-//                 x:Int,
-//                 y:Int,
-//                 mass:Double = 10,  //小球体重
-//                 radius:Double = 4 + sqrt(10)*6,
-//                 speed:Double = 12,
-//                 speedX:Float = 0,
-//                 speedY:Float = 0,
-//                 parallel:Boolean = false,
-//                 isCorner:Boolean =false
-//                 )
+
   case class Cell(
                    id:Long,
                    x:Int,

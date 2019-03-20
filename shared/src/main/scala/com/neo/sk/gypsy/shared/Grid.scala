@@ -228,51 +228,14 @@ trait Grid {
   private[this] def updatePlayerMove(player: Player, mouseActMap: Map[String, MP]) = {
     var MouseScale = getZoomRate(player.width,player.height,CanvasWidth,CanvasHeight)
     val mouseAct = mouseActMap.getOrElse(player.id,MP(None,player.targetX, player.targetY,0,0))
-    //对每个cell计算新的方向、速度和位置
+    //1> 对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
-      var newSpeed = cell.speed
-
-      //转换成极坐标
+      /**1> 计算该帧cell移动的距离**/
       val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
       val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
       val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
-      //速度*方向==向某个方向移动的距离
-      val move = Point((newSpeed * degX1).toInt, (newSpeed * degY1).toInt)
-
-//      var target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
-
-      //todo 平行的时候如何处理
-      var target = Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort)
-
-      //   }
-      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
-      val deg = atan2(target.clientY, target.clientX)
-      val degX = if (cos(deg).isNaN) 0 else cos(deg)
-      val degY = if (sin(deg).isNaN) 0 else sin(deg)
-      val slowdown = Utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
-      //指针在圆内，静止
-      if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
-        newSpeed = (target.clientX / degX).toFloat
-      } else {
-        if (cell.speed > initSpeed / slowdown) {
-          newSpeed -= acceleration
-          //          newSpeed = 30 / slowdown
-
-        } else {
-          if (distance < cell.radius) {
-            if (cell.speed > 0) {
-              newSpeed = cell.speed - acceleration
-
-            } else newSpeed = 0
-          } else {
-            newSpeed = if (cell.speed < initSpeed / slowdown) {
-              cell.speed + acceleration
-            } else (initSpeed / slowdown).toFloat
-          }
-        }
-      }
-
-
+      //3> 速度*方向==xy方向移动的距离
+      val move = Point((cell.speed * degX1).toInt, (cell.speed * degY1).toInt)
       //cell移动+边界检测
       var newX = if ((cell.x + move.x) > boundary.x-15)  boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
       var newY = if ((cell.y + move.y) > boundary.y-15) boundary.y-15 else if ((cell.y + move.y) <= 15) 15 else cell.y + move.y
@@ -284,6 +247,35 @@ trait Grid {
         (newX<=15&&newY>=boundary.y-15)||
         (newX>=boundary.x-15&&newY>=boundary.y-15)){
         isCorner=true
+      }
+
+      /**2> 计算下一帧cell的速度**/
+      var newSpeed = cell.speed
+      //todo 平行的时候如何处理
+      //var target = if(!cell.parallel) Position( (mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort  ) else Position(mouseAct.cX , mouseAct.cY)
+      var target = Position((mouseAct.cX + player.x - cell.x).toShort , (mouseAct.cY + player.y - cell.y).toShort)
+      val distance = sqrt(pow(target.clientX, 2) + pow(target.clientY, 2)) / MouseScale
+      val deg = atan2(target.clientY, target.clientX)
+      val degX = if (cos(deg).isNaN) 0 else cos(deg)
+      val degY = if (sin(deg).isNaN) 0 else sin(deg)
+      val slowdown = Utils.logSlowDown(cell.newmass, slowBase) - initMassLog + 1
+      //2.1> 鼠标位置距离cell的远近影响cell的速度
+      if (distance < sqrt(pow((newSpeed * degX).toInt, 2) + pow((newSpeed * degY).toInt, 2))) {
+        newSpeed = (target.clientX / degX).toFloat
+      } else {
+        if (cell.speed > initSpeed / slowdown) {
+          newSpeed -= acceleration
+        } else {
+          if (distance < cell.radius) {
+            if (cell.speed > 0) {
+              newSpeed = cell.speed - acceleration
+            } else newSpeed = 0
+          } else {
+            newSpeed = if (cell.speed < initSpeed / slowdown) {
+              cell.speed + acceleration
+            } else (initSpeed / slowdown).toFloat
+          }
+        }
       }
       //遍历计算每个cell的新速度
       player.cells.filterNot(p => p == cell).sortBy(_.isCorner).reverse.foreach { cell2 =>
@@ -335,6 +327,7 @@ trait Grid {
           }
         }
       }
+
       List(Cell(cell.id, newX.toShort , newY.toShort , cell.mass, cell.newmass, cell.radius, newSpeed, (newSpeed * degX).toFloat, (newSpeed * degY).toFloat,isParallel,isCorner))
     }
     val length = newCells.length
