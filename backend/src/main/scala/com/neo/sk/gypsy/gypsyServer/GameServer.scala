@@ -43,7 +43,7 @@ class GameServer(override val boundary: Point) extends Grid {
   private[this] var eatenFoods = Map[Point, Short]()
   private[this] var addedVirus:List[Virus] = Nil
   private [this] var subscriber=mutable.HashMap[String,ActorRef[UserActor.Command]]()
-  private[this] var botSubscriber=mutable.HashMap[String,(String,ActorRef[BotActor.Command])]()
+  private[this] var botSubscriber=mutable.HashMap[String,(String,ActorRef[BotActor.Command],Boolean)]()
   var currentRank = List.empty[Score]
 
 //  val playerIdgenerator = new AtomicInteger(127)
@@ -103,7 +103,6 @@ class GameServer(override val boundary: Point) extends Grid {
       dispatch(subscriber)(PlayerJoin(playerId2ByteMap(id),player))
       dispatchTo(subscriber)(id, getAllGridData)
       dispatchTo(subscriber)(id, Protocol.PlayerIdBytes(playerId2ByteMap.toMap))
-      println("lalallala  send!!!!!")
       val event = UserJoinRoom(roomId,player,frameCount+2)
       AddGameEvent(event)
     }
@@ -424,16 +423,13 @@ class GameServer(override val boundary: Point) extends Grid {
           /**陪玩机器人加入待复活列表,如果总人数过多则直接杀死该bot**/
           if(player.id.startsWith("bot_")){
             val playerNum = playerMap.keySet.size
-            if(playerNum>AppSettings.botNum){
+            if(playerNum>0){
               botSubscriber.get(player.id) match {
                 case Some(bot) =>
-                  println(s"${player.name} not relive")
                   bot._2 ! BotActor.KillBot
-                //                  AppSettings.starNames += (player.name -> false)
                 case None =>
               }
             }
-            else ReLiveMap += (player.id -> System.currentTimeMillis())
           }else{
             esheepClient ! EsheepSyncClient.InputRecord(player.id.toString,player.name,player.kill,1,player.cells.map(_.mass).sum.toInt, player.startTime, System.currentTimeMillis())
           }
@@ -650,6 +646,7 @@ class GameServer(override val boundary: Point) extends Grid {
               cellId = cellIdgenerator.getAndIncrement().toLong
               isSplit = true
             }
+
             /**效果：大球：缩小，小球：从0碰撞，且从大球中滑出**/
             //            println(cell.mass + "   " + newMass)
 //            println(s"cellId:${cellId} id:${cell.id} ")
@@ -819,7 +816,7 @@ class GameServer(override val boundary: Point) extends Grid {
     p
   }
 
-  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,(String,ActorRef[BotActor.Command])]) ={
+  def getSubscribersMap(subscribersMap:mutable.HashMap[String,ActorRef[UserActor.Command]],botMap:mutable.HashMap[String,(String,ActorRef[BotActor.Command],Boolean)]) ={
     subscriber=subscribersMap
     botSubscriber=botMap
   }

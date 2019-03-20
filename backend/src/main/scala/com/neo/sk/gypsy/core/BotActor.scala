@@ -160,7 +160,7 @@ object BotActor {
         case KillBot =>
           log.info(s"botActor:$botId go to die...")
           roomActor ! DeleteBot(botId)
-          Behaviors.stopped
+          Behaviors.same
 
         case unknownMsg@_ =>
           log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
@@ -183,7 +183,7 @@ object BotActor {
           Behaviors.same
 
         case KillBot =>
-          Behaviors.stopped
+          Behaviors.same
 
         case unknownMsg@_ =>
           log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
