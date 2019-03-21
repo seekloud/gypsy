@@ -15,9 +15,8 @@ import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-import com.neo.sk.gypsy.gypsyServer.GameServer
-import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReJoin, UserReLive}
-import com.neo.sk.gypsy.Boot.{esheepClient, roomManager}
+import com.neo.sk.gypsy.core.RoomActor.{UserReJoin, UserReLive}
+import com.neo.sk.gypsy.Boot.roomManager
 /**
   * @author zhaoyin
   *  2018/10/25  下午10:27
@@ -47,7 +46,7 @@ object UserActor {
 
   case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
 
-  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
+  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command with RoomManager.Command
 
   case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
@@ -56,8 +55,6 @@ object UserActor {
   case class Mouse(clientX:Short,clientY:Short,frame:Int,n:Int) extends Command with RoomActor.Command
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
-
-//  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
   case class UserReLiveMsg(frame: Int) extends Command with RoomActor.Command
 
@@ -245,12 +242,10 @@ object UserActor {
 
         case JoinRoomSuccess(roomId,roomActor)=>
           frontActor ! Protocol.Wrap(Protocol.JoinRoomSuccess(userInfo.playerId,roomId).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-//          frontActor ! Protocol.JoinRoomSuccess(userInfo.playerId,roomId)
           switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
 
         case JoinRoomFailure(roomId,errorCode,msg) =>
           frontActor ! Protocol.Wrap(Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-//          frontActor ! Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg)
           Behaviors.same
 
         case JoinRoomSuccess4Watch(roomActor,roomId) =>
@@ -263,14 +258,6 @@ object UserActor {
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
-
-//        case msg:GetUserInRecordMsg=>
-//          getGameReply(ctx,msg.recordId) ! msg
-//          Behaviors.same
-//
-//        case msg:GetRecordFrameMsg=>
-//          getGameReply(ctx,msg.recordId) ! msg
-//          Behaviors.same
 
         case unknowMsg=>
           stashBuffer.stash(unknowMsg)
@@ -302,19 +289,13 @@ object UserActor {
           roomActor ! RoomActor.MouseR(userInfo.playerId,x,y,frame,n)
           Behaviors.same
 
-//        case UserReLiveAck(id) =>
-//          println(s"UserActor got $id relive Ack ")
-//          roomActor ! ReStartAck(id)
-//          Behaviors.same
-
         case UserReLiveMsg(frame) =>
-//          println(s"UserActor got $id relive Msg")
           roomActor ! UserReLive(userInfo.playerId,frame)
           Behaviors.same
 
         case UserReJoinMsg(frame) =>
           println(s"UserActor got ${userInfo.playerId} relive Msg  ")
-          roomActor ! UserReJoin(userInfo.playerId,frame)
+          roomActor ! UserReJoin(userInfo, ctx.self, frame)
           Behaviors.same
 
         case DispatchMsg(m)=>
@@ -323,13 +304,13 @@ object UserActor {
 
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           Behaviors.stopped
 
         case e: NetTest=>

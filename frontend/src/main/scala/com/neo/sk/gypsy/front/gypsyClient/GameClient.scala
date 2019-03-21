@@ -3,7 +3,7 @@ package com.neo.sk.gypsy.front.gypsyClient
 import java.awt.event.KeyEvent
 
 import com.neo.sk.gypsy.shared.Grid
-import com.neo.sk.gypsy.shared.util.utils.{Mass2Radius, checkCollision, normalization}
+import com.neo.sk.gypsy.shared.util.Utils.{Mass2Radius, checkCollision, normalization}
 
 import scala.collection.mutable
 import scala.math._
@@ -64,7 +64,6 @@ class GameClient (override val boundary: Point) extends Grid {
     }
   }
 
-  /**细胞融合可以和玩家移动合并**/
   override def checkCellMerge: Boolean = {
     var mergeInFlame = false
     val newPlayerMap = playerMap.values.map {
@@ -86,34 +85,16 @@ class GameClient (override val boundary: Point) extends Grid {
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
                 if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()>newSplitTime + 2*1000) {
-//                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-//                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-//                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-//                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))).toShort
+                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))).toShort
+                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))).toShort
+                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))).toShort
 
-                  if (cell.x < cell2.x) cellX -= 1
-                  else if (cell.x > cell2.x) cellX += 1
-                  if (cell.y < cell2.y) cellY -= 1
-                  else if (cell.y > cell2.y) cellY += 1
+//                  if (cell.x < cell2.x) cellX -= 1
+//                  else if (cell.x > cell2.x) cellX += 1
+//                  if (cell.y < cell2.y) cellY -= 1
+//                  else if (cell.y > cell2.y) cellY += 1
                 }
-//                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval)) {
-//                  /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
-//                  if (cell.radius > cell2.radius) {
-//                    //被融合的细胞不能再被其他细胞融合
-//                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
-//                      playerIsMerge=true
-//                      newMass = (newMass + cell2.newmass).toShort
-//                      newRadius = Mass2Radius(newMass)
-//                      mergeCells = cell2 :: mergeCells
-//                    }
-//                  }
-//                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
-//                    playerIsMerge=true
-//                    newMass = 0
-//                    newRadius = 0
-//                    deleteCells = cell :: deleteCells
-//                  }
-//                }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
@@ -203,10 +184,6 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-//        if(player.id.startsWith("user") && eaten.nonEmpty){
-//          val score = player.cells.map(_.newmass).toList.sum
-//          println(s"${player.id} ${frameCount} ==> ${eaten.keySet} $score ")
-//        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
@@ -221,13 +198,17 @@ class GameClient (override val boundary: Point) extends Grid {
             var newMass = cell.newmass
             var newRadius = cell.radius
             massList.foreach {
-              case p: Mass =>
-                if (checkCollision(Point(cell.x, cell.y), Point(p.x, p.y), cell.radius, p.radius, coverRate)) {
-                  newMass = (newMass + p.mass).toShort
-                  newRadius = Mass2Radius(newMass)
-                  massList = massList.filterNot(l => l == p)
-                  if(newProtected)
-                    newProtected = false
+              case m: Mass =>
+                if (checkCollision(Point(cell.x, cell.y), Point(m.x, m.y), cell.radius, Mass2Radius(shotMass), coverRate)) {
+                  if(m.id == player.id && m.speed>0){
+                    //小球刚从玩家体内发射出，此时不吃小球
+                  }else {
+                    newMass = (newMass + shotMass).toShort
+                    newRadius = Mass2Radius(newMass)
+                    massList = massList.filterNot(l => l == m)
+                    if(newProtected)
+                      newProtected = false
+                  }
                 }
             }
             Cell(cell.id, cell.x, cell.y, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner)
@@ -258,22 +239,21 @@ class GameClient (override val boundary: Point) extends Grid {
     var hasMoved = false
     val (nx,ny)= normalization(newTargetX,newTargetY)
     massList.foreach {
-      case p: Mass =>
-        if (checkCollision(Point(v.x, v.y), Point(p.x, p.y), v.radius, p.radius, coverRate)) {
-          val (mx,my)=normalization(p.targetX,p.targetY)
-          var vx = (nx * newMass * newSpeed + mx * p.mass * p.speed * initVirusRatio ) /(newMass+p.mass)
-          var vy = (ny * newMass * newSpeed + my * p.mass*p.speed * initVirusRatio) /(newMass+p.mass)
+      case m: Mass =>
+        if (checkCollision(Point(v.x, v.y), Point(m.x, m.y), v.radius, Mass2Radius(shotMass), coverRate)) {
+          val (mx,my)=normalization(m.targetX,m.targetY)
+          var vx = (nx * newMass * newSpeed + mx * shotMass * m.speed * initVirusRatio ) /(newMass + shotMass)
+          var vy = (ny * newMass * newSpeed + my * shotMass * m.speed * initVirusRatio) /(newMass + shotMass)
           newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat + initVirusSpeed
           val degree =atan2(vy,vx)
           vx = newSpeed * cos(degree)
           vy = newSpeed * sin(degree)
           hasMoved =true
-          newMass = (newMass + p.mass).toShort
+          newMass = (newMass + shotMass).toShort
           newRadius = Mass2Radius(newMass)
-//          newSpeed = sqrt(pow(vx,2)+ pow(vy,2)).toFloat
           newTargetX = vx.toShort
           newTargetY = vy.toShort
-          massList = massList.filterNot(l => l == p)
+          massList = massList.filterNot(l => l == m)
         }
     }
     if(newMass>virusMassLimit){
@@ -290,117 +270,13 @@ class GameClient (override val boundary: Point) extends Grid {
   virusMap ++= virus1
 }
 
-  override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {
-    //TODO 前端不做分裂检测
-//    val newPlayerMap = playerMap.values.map {
-//      player =>
-//        var newSplitTime = player.lastSplit
-//        val mouseAct = mouseActMap.getOrElse(player.id, MousePosition(Some(player.id), player.targetX, player.targetY, 0, 0))
-//        val split = actMap.get(player.id) match {
-//          case Some(keyEvent) => keyEvent.keyCode == KeyEvent.VK_F
-//          case _ => false
-//        }
-//        val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
-//          cell =>
-//            var newMass = cell.newmass
-//            var newRadius = cell.radius
-//            val target = Position((mouseAct.clientX + player.x - cell.x).toShort, (mouseAct.clientY + player.y - cell.y).toShort)
-//            val deg = atan2(target.clientY, target.clientX)
-//            val degX = if (cos(deg).isNaN) 0 else cos(deg)
-//            val degY = if (sin(deg).isNaN) 0 else sin(deg)
-//            var splitX: Short = 0
-//            var splitY: Short = 0
-//            var splitMass: Short = 0
-//            var splitRadius: Short = 0
-//            var splitSpeed = 0.0
-//            var cellId = 0L
-//            if (split && cell.newmass > splitLimit && player.cells.size < maxCellNum) {
-//              newSplitTime = System.currentTimeMillis()
-//              splitMass = (newMass / 2).toShort
-//              newMass = (newMass - splitMass).toShort
-//              splitRadius = Mass2Radius(splitMass)
-//              newRadius = Mass2Radius(newMass)
-//              splitSpeed = splitBaseSpeed + 2 * cbrt(cell.radius)
-//              splitX = (cell.x + (newRadius + splitRadius) * degX).toShort
-//              splitY = (cell.y + (newRadius + splitRadius) * degY).toShort
-//              cellId = cellIdgenerator.getAndIncrement().toLong
-//            }
-//
-//            /** 效果：大球：缩小，小球：从0碰撞，且从大球中滑出 **/
-//            //            println(cell.mass + "   " + newMass)
-//            //            println(s"cellId:${cellId} id:${cell.id} ")
-//            List(Cell(cell.id, cell.x, cell.y, newMass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY, cell.parallel, cell.isCorner),
-//              Cell(cellId, splitX, splitY, splitMass, splitMass, splitRadius, splitSpeed.toFloat, (splitSpeed * degX).toFloat, (splitSpeed * degY).toFloat))
-//
-//
-//        }.filterNot(e => e.newmass <= 0 && e.mass <= 0)
-//        val length = newCells.length
-//        val newX = newCells.map(_.x).sum / length
-//        val newY = newCells.map(_.y).sum / length
-//        val left = newCells.map(a => a.x - a.radius).min
-//        val right = newCells.map(a => a.x + a.radius).max
-//        val bottom = newCells.map(a => a.y - a.radius).min
-//        val top = newCells.map(a => a.y + a.radius).max
-//        player.copy(x = newX.toShort, y = newY.toShort, lastSplit = newSplitTime, width = right - left, height = top - bottom, cells = newCells)
-//    }
-//    playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-  }
+  override def checkPlayerSplit(actMap: Map[String,KC], mouseActMap: Map[String, MP]): Unit = {}
 
 
   def addUncheckActionWithFrame(id: String, gameAction: UserAction, frame: Int) = {
     uncheckActionWithFrame.put(gameAction.sN,(frame,id,gameAction))
   }
 
-/*  def addActionWithFrameFromServer(id:String,gameAction:UserAction) = {
-    val frame=gameAction.frame
-    if(myId == id){
-      uncheckActionWithFrame.get(gameAction.serialNum) match {
-        case Some((f,playerId,a)) =>
-          if(f == frame){ //fixme 此处存在advanceFrame差异
-            uncheckActionWithFrame.remove(gameAction.serialNum)
-          }else{ //与预执下的操作数据不一致，进行回滚
-            uncheckActionWithFrame.remove(gameAction.serialNum)
-            if(frame < frameCount){
-//              rollback(frame)
-            }else{
-              removeActionWithFrame(playerId,a,f)
-              gameAction match {
-                case a:KeyCode=>
-                  addActionWithFrame(id,a)
-                case b:MousePosition=>
-                  addMouseActionWithFrame(id,b)
-                case _ =>
-              }
-            }
-          }
-        case None =>
-          gameAction match {
-            case a:KeyCode=>
-              addActionWithFrame(id,a)
-            case b:MousePosition=>
-              addMouseActionWithFrame(id,b)
-          }
-      }
-    }else{
-      if(frame < frameCount && frameCount - maxDelayFrame >= frame){
-        //回滚
-//        rollback(frame)
-      }else{
-        gameAction match {
-          case a:KeyCode=>
-            addActionWithFrame(id,a)
-          case b:MousePosition=>
-            addMouseActionWithFrame(id,b)
-        }
-      }
-    }
-  }*/
-
-/*  def rollback2State(d:GridDataSync) = {
-    actionMap=actionMap.filterKeys(_>=frameCount)
-    mouseActionMap=mouseActionMap.filterKeys(_>=frameCount)
-    setSyncGridData(d)
-  }*/
 
   def setSyncGridData(data:GridDataSync): Unit = {
     actionMap = actionMap.filterKeys(_ > data.frameCount- maxDelayFrame)
@@ -418,30 +294,9 @@ class GameClient (override val boundary: Point) extends Grid {
     virusMap = data.virusDetails
   }
 
-  //从第frame开始回滚到现在
-/*  def rollback(frame:Long) = {
-    gameSnapshotMap.get(frame) match {
-      case Some(state) =>
-        val curFrame = frameCount
-        rollback2State(state)
-        uncheckActionWithFrame.filter(_._2._1 > frame).foreach{t=>
-          t._2._3 match {
-            case a:KeyCode=>
-              addActionWithFrame(t._2._2,a)
-            case b:MousePosition=>
-              addMouseActionWithFrame(t._2._2,b)
-          }
-        }
-        (frame until curFrame).foreach{ f =>
-          frameCount = f
-          update()
-        }
-      case None =>
-    }
-  }*/
+
 
   def reStart={
-//    myId = ""
     frameCount = 0
     food = Map[Point, Short]()
     foodPool = 300

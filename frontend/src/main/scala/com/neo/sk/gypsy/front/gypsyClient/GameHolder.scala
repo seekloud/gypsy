@@ -17,7 +17,7 @@ import com.neo.sk.gypsy.shared.ptcl.{Game, _}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils._
 import com.neo.sk.gypsy.front.scalajs.FpsComponent._
 import com.neo.sk.gypsy.front.scalajs.NetDelay
 import com.neo.sk.gypsy.front.utils.Shortcut
@@ -77,7 +77,7 @@ class GameHolder(replay:Boolean = false) {
   val grid = new GameClient(bounds)
 
   //游戏状态
-  private[this] var gameState = GameState.play
+  private[this] var gameState = GameState.firstcome
   var deadInfo :Option[Protocol.UserDeadMessage] = None
 
   //(胜利玩家信息，自己分数，自己是否是胜利者，是就是true)
@@ -119,7 +119,6 @@ class GameHolder(replay:Boolean = false) {
     NetDelay.ping(webSocketClient)
     logicFrameTime = System.currentTimeMillis()
     if (webSocketClient.getWsState) {
-      //差不多每三秒同步一次
       //不同步
       if (!justSynced) {
         keyInFlame = false
@@ -167,7 +166,6 @@ class GameHolder(replay:Boolean = false) {
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
-//        drawTopView.drawEcharts()
       case GameState.victory if victoryInfo.isDefined =>
         drawTopView.drawVictory(victoryInfo.get)
       case GameState.allopatry =>
@@ -220,23 +218,23 @@ class GameHolder(replay:Boolean = false) {
             if (e.keyCode == KeyCode.Space) {
               println(s"down+${e.keyCode.toString} ReLive Press!")
               keyInFlame = true
-              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
+              val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame) //+ delayFrame
               webSocketClient.sendMsg(reliveMsg)
             }
           }else if(gameState ==  GameState.victory){
             if (e.keyCode == KeyCode.Space) {
               println(s"down+${e.keyCode.toString} Press After Success!")
               keyInFlame = true
-              val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame+ delayFrame)
+              val rejoinMsg = ReJoinMsg(grid.frameCount +advanceFrame) //+ delayFrame
               webSocketClient.sendMsg(rejoinMsg)
             }
           } else{
             if(e.keyCode == KeyCode.E || e.keyCode == KeyCode.F ){
               println(s"down+${e.keyCode.toString}")
               keyInFlame = true
-              val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame+ delayFrame, getActionSerialNum)
+              val keyCode = Protocol.KC(None, e.keyCode, grid.frameCount +advanceFrame, getActionSerialNum) //+ delayFrame
               if(e.keyCode == KeyCode.E){
-                grid.addActionWithFrame(grid.myId, keyCode.copy(f=grid.frameCount + delayFrame))
+                grid.addActionWithFrame(grid.myId, keyCode.copy(f=grid.frameCount  + advanceFrame)) //+ delayFrame
               }
               webSocketClient.sendMsg(keyCode)
             }
@@ -251,19 +249,11 @@ class GameHolder(replay:Boolean = false) {
     }
     if(!isTest){
       canvas3.onmousemove = { (e: dom.MouseEvent) =>
-            val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
-            val mpy = e.pageY - canvas3.offsetTop - window.y / 2
-            mp = MP(None, mpx.toShort, mpy.toShort, grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
-        //    if(math.abs(getDegree(e.pageX,e.pageY)-FormerDegree)*180/math.Pi>5){
-//              if(mouseInFlame == false){
-////              println(s"帧号${grid.frameCount},动作：$mp")
-//              mouseInFlame = true
-//              FormerDegree = getDegree(e.pageX,e.pageY)
-//              grid.addMouseActionWithFrame(myId, mp.copy(f = grid.frameCount+delayFrame ))
-//              grid.addUncheckActionWithFrame(myId, mp, mp.f)
-//              webSocketClient.sendMsg(mp)
-//          }
-       // }
+        if(gameState == GameState.play){
+          val mpx = e.pageX - window.x / 2 - canvas3.offsetLeft
+          val mpy = e.pageY - canvas3.offsetTop - window.y / 2
+          mp = MP(None, mpx.toShort, mpy.toShort, grid.frameCount + advanceFrame, getActionSerialNum) // + delayFrame
+        }
       }
     }else  {
       dom.window.setTimeout(() =>
@@ -276,9 +266,9 @@ class GameHolder(replay:Boolean = false) {
   def updateMousePos ={
     if(fmp != mp){
       fmp = mp
-      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame ))
-      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
-      webSocketClient.sendMsg(mp)
+      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + advanceFrame))
+//      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
+      webSocketClient.sendMsg(mp.copy(f = grid.frameCount + advanceFrame))
     }
   }
 
@@ -374,8 +364,7 @@ class GameHolder(replay:Boolean = false) {
     data match {
       case Protocol.Id(id) =>
         grid.myId = id
-//        Shortcut.playMusic("bg")
-//        println(s"myID:$myId")
+        gameState = GameState.play
 
       case m:Protocol.KC =>
         if(m.id.isDefined){
@@ -416,7 +405,6 @@ class GameHolder(replay:Boolean = false) {
         grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
 
       case Protocol.AddVirus(virus) =>
-//        println(s"接收新病毒 new Virus ${virus}")
         grid.virusMap ++= virus
 
       case Protocol.RemoveVirus(virus) =>
@@ -424,8 +412,8 @@ class GameHolder(replay:Boolean = false) {
 
       case data: Protocol.GridDataSync =>
         if(grid.playerMap.get(grid.myId).isDefined && data.playerDetails.find(_.id==grid.myId).isDefined){
-          println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).x )
-          println(s"获取全量数据  backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
+          println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).y )
+          println(s"            backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
             data.playerDetails.find(_.id==grid.myId).get.y)
         }
         syncGridData = Some(data)
@@ -439,10 +427,6 @@ class GameHolder(replay:Boolean = false) {
       //网络延迟检测
       case Protocol.Pong(createTime) =>
         NetDelay.receivePong(createTime ,webSocketClient)
-
-//      case Protocol.PlayerRestart(id) =>
-//        println(s" $id Receive  the ReStart &&&&&&&&&&&&& ")
-//        Shortcut.playMusic("bg")
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
@@ -460,17 +444,18 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSplit(player) =>
+      case Protocol.PlayerSplit(player,frame) =>
         player.keys.foreach(item =>{
-          if(grid.playerByte2IdMap.get(item).isDefined)
+          if(grid.playerByte2IdMap.get(item).isDefined){
             grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
+//            println("frameCount:  "+grid.frameCount+"  backframecount:   "+f+"   playerSplit:     "+grid.playerMap)
+          }
         }
         )
 
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
         if(deadId == grid.myId){
-          Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
           gameState = GameState.dead
         }
@@ -498,7 +483,7 @@ class GameHolder(replay:Boolean = false) {
           grid.playerByte2IdMap -= deadByte
         }
 
-      case Protocol.UserMerge(playerMap)=>
+      case Protocol.UserMerge(playerMap,frame)=>
         val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
         playerMap.foreach{player =>
           if(grid.playerByte2IdMap.get(player._1).isDefined){
@@ -541,9 +526,8 @@ class GameHolder(replay:Boolean = false) {
             }
           }
 
-      case Protocol.UserCrash(crashMap)=>
+      case Protocol.UserCrash(crashMap,frame)=>
         crashMap.foreach{p=>
-//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerByte2IdMap.get(p._1).isDefined){
             val playerId = grid.playerByte2IdMap(p._1)
             val player = grid.playerMap(playerId)
@@ -556,7 +540,6 @@ class GameHolder(replay:Boolean = false) {
           }
 
         }
-
 
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
@@ -658,25 +641,12 @@ class GameHolder(replay:Boolean = false) {
           }
           if(killMsg.killerId == grid.myId){
             Shortcut.playMusic("godlikeM")
-/*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-              case 1 => Shortcut.playMusic("1Blood")
-              case 2 => Shortcut.playMusic("2Kill")
-              case 3 => Shortcut.playMusic("3Kill")
-              case 4 => Shortcut.playMusic("4Kill")
-              case 5 => Shortcut.playMusic("5Kill")
-              case 6 => Shortcut.playMusic("godlikeM")
-              case 7 => Shortcut.playMusic("legendaryM")
-              case _ => Shortcut.playMusic("unstop")
-            }*/
           }
         }else{
           //根据map找到killerName
           val deadMsg = UserDeadMessage(killMsg.killerName, grid.myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
-          //TODO 商榷
-//          grid.removePlayer(myId)
-//          Shortcut.playMusic("shutdownM")
         }
         grid.removePlayer(killMsg.deadPlayer.id)
 
@@ -706,7 +676,6 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
-//    Shortcut.stopMusic("bg")
   }
 
 }

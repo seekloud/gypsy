@@ -4,7 +4,7 @@ import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 
 import scala.math._
-object utils {
+object Utils {
 //计算速度衰减
   def logSlowDown(n:Double,base:Double) = {
     val a = if (base>1) log(base) else 1

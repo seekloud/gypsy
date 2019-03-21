@@ -11,7 +11,7 @@ import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KC, MP, PressSpace}
-
+import com.neo.sk.gypsy.shared.util.Utils._
 import scala.math._
 import concurrent.duration._
 import scala.util.Random
@@ -130,7 +130,7 @@ object BotActor {
             }
               //吃mass
             else if(mass.nonEmpty){
-              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,Mass2Radius(shotMass))).head
               val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
               move = true
@@ -160,7 +160,7 @@ object BotActor {
         case KillBot =>
           log.info(s"botActor:$botId go to die...")
           roomActor ! DeleteBot(botId)
-          Behaviors.stopped
+          Behaviors.same
 
         case unknownMsg@_ =>
           log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
@@ -183,7 +183,7 @@ object BotActor {
           Behaviors.same
 
         case KillBot =>
-          Behaviors.stopped
+          Behaviors.same
 
         case unknownMsg@_ =>
           log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
