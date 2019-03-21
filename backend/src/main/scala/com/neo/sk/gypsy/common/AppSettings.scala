@@ -50,8 +50,8 @@ object AppSettings {
 //  val starNames = botConfig.getStringList("starName")
 //  var starNames = Map(("水星",false),("火星",false),("土星",false),("木星",false),("金星",false),("海王星",false),("天王星",false),("冥王星",false),("织女星",false),("牛郎星",false),("性感渣男",false),("多情少女",false))
 //  val starNames = List("水星", "金星", "火星", "木星", "土星", "地球","M78","天王星","海王星","摩羯座","水瓶座")
-  val botNum = botConfig.getInt("botNum")
   val addBotPlayer = botConfig.getBoolean("addBotPlayer")
+  val minpeopelNum = botConfig.getInt("minpeopelNum")
 
 
   val slickConfig = config.getConfig("slick.db")
@@ -116,7 +116,7 @@ object AppSettings {
   val gameDataDirectoryPath = appConfig.getString("gameDataDirectoryPath")
   val gameRecordIsWork = appConfig.getBoolean("gameRecordIsWork")
   val gameTest = appConfig.getBoolean("gameTest")
-//  val addBotPlayer = appConfig.getBoolean("addBotPlayer")
+
 
   val essfMapKeyName = "essfMap"
   val projectVersion = appConfig.getString("projectVersion")

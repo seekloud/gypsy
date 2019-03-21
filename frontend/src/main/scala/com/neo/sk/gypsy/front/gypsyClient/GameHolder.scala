@@ -64,7 +64,7 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
-//  var bigPlayerMass = 500.0
+  //  var bigPlayerMass = 500.0
   var mp = MP(None,0,0,0,0)
   var fmp = MP(None,0,0,0,0)
   private[this] var logicFrameTime = System.currentTimeMillis()
@@ -148,21 +148,14 @@ class GameHolder(replay:Boolean = false) {
       * gameRender: 约为16ms
       */
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-    dom.window.requestAnimationFrame(gameRender())
-  }
-
-  def animate():Double => Unit ={d =>
-    drawGameView.drawGameOn2()
-    if(grid.myId == ""){
-      dom.window.requestAnimationFrame(animate())
-    }
+    nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     gameState match {
-      case GameState.play if grid.myId!= ""=>
+      case GameState.play if grid.myId != "" && grid.playerMap.get(grid.myId).isDefined =>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
@@ -267,7 +260,6 @@ class GameHolder(replay:Boolean = false) {
     if(fmp != mp){
       fmp = mp
       grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + advanceFrame))
-//      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
       webSocketClient.sendMsg(mp.copy(f = grid.frameCount + advanceFrame))
     }
   }
@@ -288,6 +280,7 @@ class GameHolder(replay:Boolean = false) {
       val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
       data.playerDetails.find(_.id == grid.myId) match {
         case Some(p) =>
+          println(p.cells)
           firstCome=false
           var sumX = 0.0
           var sumY = 0.0
@@ -393,7 +386,7 @@ class GameHolder(replay:Boolean = false) {
         if(current.exists(r=>r.score.id == grid.myId)){
           grid.currentRank = current
         }else{
-//          发来的未含有我的
+        //发来的未含有我的
           grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
         }
 
@@ -430,12 +423,15 @@ class GameHolder(replay:Boolean = false) {
 
       case Protocol.PlayerJoin(id,player) =>
         println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
-        //防止复活后又发了一条Join消息
         if(!grid.playerMap.contains(player.id)){
-          grid.playerMap += (player.id -> player)
-          grid.playerByte2IdMap += (id-> player.id)
+          if(grid.myId != "" && player.id != grid.myId){
+            //别的玩家加入，自己加入是在同步全量数据里面加入的
+            grid.playerMap += (player.id -> player)
+            grid.playerByte2IdMap += (id-> player.id)
+          }
         }
         if(grid.myId == player.id){
+          //玩家复活或胜利后重新加入房间
           if(gameState == GameState.dead || gameState == GameState.victory){
             deadInfo = None
             victoryInfo = None
@@ -448,7 +444,6 @@ class GameHolder(replay:Boolean = false) {
         player.keys.foreach(item =>{
           if(grid.playerByte2IdMap.get(item).isDefined){
             grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
-//            println("frameCount:  "+grid.frameCount+"  backframecount:   "+f+"   playerSplit:     "+grid.playerMap)
           }
         }
         )

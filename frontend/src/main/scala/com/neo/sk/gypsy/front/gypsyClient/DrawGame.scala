@@ -369,9 +369,7 @@ case class DrawGame(
     val offy =this.canvas.height/2 - basePoint._2
 
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-//    if(getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale!=1){
-//      Scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-//    }
+
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
@@ -379,6 +377,7 @@ case class DrawGame(
     centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
+
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
@@ -476,8 +475,11 @@ case class DrawGame(
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
-
-        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
+//        if(id == "guest15413289559393"){
+//          val x = xfix +offx-radius-6
+//          val y = yfix+offy-radius-6
+//          println("x:  " + x + "  y:   " + y)
+//        }
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()

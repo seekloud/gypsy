@@ -116,14 +116,15 @@ object RoomActor {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
 
-            for(i <- 0 until 7){
-              val botId = "bot_"+roomId+"_"+i
-              val botName = starNames(i)
-              val botAct = getBotActor(ctx,botId)
-              botMap.put(botId,(botName,botAct,true))
-              botAct ! BotActor.InitInfo(botName, grid, ctx.self)
+            if(AppSettings.addBotPlayer){
+              for(i <- 0 until AppSettings.minpeopelNum){
+                val botId = "bot_"+roomId+"_"+i
+                val botName = starNames(i)
+                val botAct = getBotActor(ctx,botId)
+                botMap.put(botId,(botName,botAct,true))
+                botAct ! BotActor.InitInfo(botName, grid, ctx.self)
+              }
             }
-
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap,playermap,botMap,subscribersMap,userSyncMap ,grid, 0l,0,starNames)
         }
@@ -182,9 +183,11 @@ object RoomActor {
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodLists))
           userActor ! JoinRoomSuccess(roomId,ctx.self)
 
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+          if(AppSettings.addBotPlayer){
+            if(playerMap.size+botMap.size<=AppSettings.minpeopelNum){
+              botMap.filter(!_._2._3).foreach{ b=>
+                ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+              }
             }
           }
 
@@ -257,9 +260,11 @@ object RoomActor {
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           // add bot
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+          if(AppSettings.addBotPlayer){
+            if(playerMap.size+botMap.size<=AppSettings.minpeopelNum){
+              botMap.filter(!_._2._3).foreach{ b=>
+                ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+              }
             }
           }
           Behaviors.same
@@ -342,9 +347,11 @@ object RoomActor {
           subscribersMap.remove(playerInfo.playerId)
           grid.getSubscribersMap(subscribersMap,botMap)
 
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+          if(AppSettings.addBotPlayer){
+            if(playerMap.size+botMap.size<=AppSettings.minpeopelNum){
+              botMap.filter(!_._2._3).foreach{ b=>
+                ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+              }
             }
           }
           idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNames)
@@ -423,7 +430,7 @@ object RoomActor {
             grid.playerId2ByteMap -= botId
           }
 
-          if(userMap.size < 8){
+          if(userMap.size < AppSettings.minpeopelNum){
             botMap.filter(!_._2._3).foreach{ b=>
               ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
             }
