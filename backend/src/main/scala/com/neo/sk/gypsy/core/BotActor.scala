@@ -31,7 +31,7 @@ object BotActor {
   case object ChoseAction extends Command
 
   case object KillBot extends Command
-
+  case object UltimateKill extends Command
   case object BotDead extends Command
 
   case object Space extends Command
@@ -64,7 +64,7 @@ object BotActor {
             gaming(botId,grid,roomActor)
 
           case unknownMsg@_ =>
-            log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+            log.warn(s"${ctx.self.path} unknown msg when create: $unknownMsg")
             stashBuffer.stash(unknownMsg)
             Behaviors.unhandled
         }
@@ -158,12 +158,14 @@ object BotActor {
           dead(botId,grid,roomActor)
 
         case KillBot =>
-          log.info(s"botActor:$botId go to die...")
+//          log.info(s"botActor:$botId go to die...")
           roomActor ! DeleteBot(botId)
           Behaviors.same
-
+        case UltimateKill =>
+          log.info("kill all bot when user get victory at the gaming state")
+          Behavior.stopped
         case unknownMsg@_ =>
-          log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+          log.warn(s"${ctx.self.path} unknown msg when gaming: $unknownMsg")
           stashBuffer.stash(unknownMsg)
           Behaviors.unhandled
       }
@@ -171,7 +173,9 @@ object BotActor {
     }
 
   }
-
+ """
+   |actually this  state is of no use
+ """
   def dead(botId: String, grid: GameServer, roomActor: ActorRef[RoomActor.Command])
           (implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
@@ -184,9 +188,11 @@ object BotActor {
 
         case KillBot =>
           Behaviors.same
-
+        case UltimateKill =>
+          log.info("kill all bot when user get victory at the dead state")
+          Behavior.stopped
         case unknownMsg@_ =>
-          log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+          log.warn(s"${ctx.self.path} unknown msg when dead: $unknownMsg")
           stashBuffer.stash(unknownMsg)
           Behaviors.unhandled
       }

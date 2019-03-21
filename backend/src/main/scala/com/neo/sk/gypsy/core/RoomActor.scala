@@ -93,7 +93,7 @@ object RoomActor {
 
   val ballId = new AtomicLong(100000)
 
-  val botId = new AtomicLong(1)
+  val botIdA = new AtomicLong(1)
 
   val starNames = List[String]("清纯女大学生","无敌小坏坏","冥王星","地球","富强民主文明和谐","嫦娥","雪碧哥哥","性感渣男","织女星","牛郎星")
 
@@ -118,7 +118,7 @@ object RoomActor {
             }
 
             for(i <- 0 until 7){
-              val botId = "bot_"+roomId+"_"+i
+              val botId = "bot_"+roomId+"_"+i+"_"+botIdA.incrementAndGet()
               val botName = starNames(i)
               val botAct = getBotActor(ctx,botId)
               botMap.put(botId,(botName,botAct,true))
@@ -182,12 +182,17 @@ object RoomActor {
           val foodLists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodLists))
           userActor ! JoinRoomSuccess(roomId,ctx.self)
-
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
-            }
-          }
+//
+//          if(playerMap.size < 8){
+//            var i = 1
+//            var flag = true
+//            val botMapTmp = botMap.filter(!_._2._3)
+//            for((k,v) <- botMapTmp  if flag){
+//              ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
+//              if(i==playerMap.size) flag = false
+//              i += 1
+//            }
+//          }
 
           val event = UserWsJoin(roomId, playerInfo.playerId, playerInfo.nickname, createBallId, grid.frameCount,-1)
           grid.AddGameEvent(event)
@@ -213,7 +218,7 @@ object RoomActor {
 
           val event = UserWsJoin(roomId, botInfo.playerId, botInfo.nickname, createBallId, grid.frameCount,-1)
           grid.AddGameEvent(event)
-          Behaviors.same
+          idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNames)
 
           /**观察者加入**/
         case JoinRoom4Watch(playerInfo,watchId,userActor) =>
@@ -257,11 +262,12 @@ object RoomActor {
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           // add bot
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
-            }
-          }
+//          val aliveBotNum = botMap.count(p => p._2._3)
+//
+//          if(playerMap.size+ aliveBotNum <8){
+//            val bot = botMap.filter(!_._2._3).head
+//            ctx.self ! JoinRoom4Bot(PlayerInfo(bot._1,bot._2._1),bot._2._2)
+//          }
           Behaviors.same
 
         /*
@@ -274,29 +280,15 @@ object RoomActor {
             }
           }
           dispatch(subscribersMap)(VictoryMsg(id,name,kill,finalTime - StartFrame))
+          botMap.foreach{ b=>
+            b._2._2 ! BotActor.UltimateKill
+          }
           create(roomId)
 
         /**玩家胜利重开**/
         case UserReJoin(playerInfo, userActor, _) =>
           log.info(s"RoomActor Receive Rejoin from ${playerInfo.playerId} *******************")
           ctx.self ! JoinRoom(playerInfo, userActor)
-
-          /*
-          * 10> don't care the bot
-          *
-          if(!isJoin){
-            botMap.foreach{bot =>
-              ctx.self ! ReStart(bot._1)
-            }
-            isJoin = !isJoin
-          }
-          var starNamesCopy = starNames
-          if(playerMap.size + botMap.size < AppSettings.botNum){
-            val needAdd = AppSettings.botNum - playerMap.size - botMap.size
-            println("rejoin create")
-            starNamesCopy=createBotActor(needAdd,roomId,ctx,grid,starNames)
-          }
-          * */
 
           idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNames)
 
@@ -341,10 +333,16 @@ object RoomActor {
 
           subscribersMap.remove(playerInfo.playerId)
           grid.getSubscribersMap(subscribersMap,botMap)
+          val aliveBotNum = botMap.count(p => p._2._3)
 
-          if(playerMap.size+botMap.size<=8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+          if(playerMap.size+aliveBotNum < 8){
+            var i = 1
+            var flag = true
+            val botMapTmp = botMap.filter(!_._2._3)
+            for((k,v) <- botMapTmp  if flag){
+              ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
+              if(i==(8-playerMap.size-aliveBotNum)) flag = false
+              i += 1
             }
           }
           idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNames)
@@ -405,7 +403,7 @@ object RoomActor {
 
         /**Bot死亡**/
         case DeleteBot(botId) =>
-          log.info(s"Delete Bot : $botId")
+//          log.info(s"Delete Bot : $botId")
           botMap.update(botId,(botMap(botId)._1,botMap(botId)._2,false))
           userMap.remove(botId)
           userMap.get(botId).foreach{u=>
@@ -422,10 +420,18 @@ object RoomActor {
             grid.playerId2ByteQueue.enqueue(grid.playerId2ByteMap(botId))
             grid.playerId2ByteMap -= botId
           }
+          val aliveBotNum = botMap.count(p => p._2._3)
 
-          if(userMap.size < 8){
-            botMap.filter(!_._2._3).foreach{ b=>
-              ctx.self ! JoinRoom4Bot(PlayerInfo(b._1,b._2._1),b._2._2)
+          if(playerMap.size+aliveBotNum < 8){
+//            val botMapTmp = botMap.filter(!_._2._3).head
+//            ctx.self ! JoinRoom4Bot(PlayerInfo(botMapTmp._1,botMapTmp._2._1),botMapTmp._2._2)
+            var i = 1
+            var flag = true
+            val botMapTmp = botMap.filter(!_._2._3)
+            for((k,v) <- botMapTmp  if flag){
+              ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
+              if(i==(8-playerMap.size-aliveBotNum)) flag = false
+              i += 1
             }
           }
           idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount+1,StartFrame,starNames)
