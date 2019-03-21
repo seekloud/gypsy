@@ -444,7 +444,7 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSplit(f,player) =>
+      case Protocol.PlayerSplit(player,frame) =>
         player.keys.foreach(item =>{
           if(grid.playerByte2IdMap.get(item).isDefined){
             grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
@@ -456,7 +456,6 @@ class GameHolder(replay:Boolean = false) {
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
         if(deadId == grid.myId){
-//          Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
           gameState = GameState.dead
         }
@@ -484,7 +483,7 @@ class GameHolder(replay:Boolean = false) {
           grid.playerByte2IdMap -= deadByte
         }
 
-      case Protocol.UserMerge(playerMap)=>
+      case Protocol.UserMerge(playerMap,frame)=>
         val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
         playerMap.foreach{player =>
           if(grid.playerByte2IdMap.get(player._1).isDefined){
@@ -527,9 +526,8 @@ class GameHolder(replay:Boolean = false) {
             }
           }
 
-      case Protocol.UserCrash(crashMap)=>
+      case Protocol.UserCrash(crashMap,frame)=>
         crashMap.foreach{p=>
-//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerByte2IdMap.get(p._1).isDefined){
             val playerId = grid.playerByte2IdMap(p._1)
             val player = grid.playerMap(playerId)
@@ -542,7 +540,6 @@ class GameHolder(replay:Boolean = false) {
           }
 
         }
-
 
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
@@ -644,25 +641,12 @@ class GameHolder(replay:Boolean = false) {
           }
           if(killMsg.killerId == grid.myId){
             Shortcut.playMusic("godlikeM")
-/*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-              case 1 => Shortcut.playMusic("1Blood")
-              case 2 => Shortcut.playMusic("2Kill")
-              case 3 => Shortcut.playMusic("3Kill")
-              case 4 => Shortcut.playMusic("4Kill")
-              case 5 => Shortcut.playMusic("5Kill")
-              case 6 => Shortcut.playMusic("godlikeM")
-              case 7 => Shortcut.playMusic("legendaryM")
-              case _ => Shortcut.playMusic("unstop")
-            }*/
           }
         }else{
           //根据map找到killerName
           val deadMsg = UserDeadMessage(killMsg.killerName, grid.myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
-          //TODO 商榷
-//          grid.removePlayer(myId)
-//          Shortcut.playMusic("shutdownM")
         }
         grid.removePlayer(killMsg.deadPlayer.id)
 
@@ -692,7 +676,6 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
-//    Shortcut.stopMusic("bg")
   }
 
 }

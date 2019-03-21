@@ -311,7 +311,7 @@ class GameServer(
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
     if(mergeInFlame){
-      dispatch(subscriber)(UserMerge(mergePlayer))
+      dispatch(subscriber)(UserMerge(mergePlayer, frameCount))
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
     }
@@ -384,7 +384,7 @@ class GameServer(
       val event2 = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event2)
       //只发送改变的玩家
-      dispatch(subscriber)(PlayerSplit(frameCount,splitPlayer))
+      dispatch(subscriber)(PlayerSplit(splitPlayer, frameCount))
       dispatch(subscriber)(RemoveVirus(removeVirus))
     }
   }
@@ -483,9 +483,9 @@ class GameServer(
     }
 
     if(p2pCrash){
+      dispatch(subscriber)(UserCrash(changedPlayers, frameCount))
       val event = PlayerInfoChange(playerMap,frameCount)
       AddGameEvent(event)
-      dispatch(subscriber)(UserCrash(changedPlayers))
     }
   }
 
@@ -521,13 +521,7 @@ class GameServer(
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-//        if(player.id.startsWith("user") && eaten.nonEmpty){
-//            val score = newCells.map(_.newmass).toList.sum
-//            println(s"${player.id} ${frameCount} ==> ${eaten.keySet}  $score ")
-//        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
-
-      //Player(player.id,player.name,player.color,player.x,player.y,player.targetX,player.targetY,player.kill,newProtected,player.lastSplit,player.killerName,player.width,player.height,newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
   }
@@ -570,7 +564,6 @@ class GameServer(
 
   override def checkVirusMassCrash(): Unit = {
    var newVirus = Map.empty[Long,Virus]
-   //TODO 这边病毒的运动有待商榷
     val virus1 = virusMap.flatMap{vi=>
       val v = vi._2
       var newMass = v.mass
@@ -686,13 +679,10 @@ class GameServer(
 
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap
-
     if(SplitPlayerMap.nonEmpty){
-      val msg = PlayerSplit(frameCount,SplitPlayerMap)
+      val msg = PlayerSplit(SplitPlayerMap, frameCount)
       dispatch(subscriber)(msg)
-//      println("send SplitPlayerMap")
     }
-
   }
 
   /**
@@ -730,8 +720,6 @@ class GameServer(
       eatenFoodDetails
     )
   }
-
-//  override def getGridData(id: String, winWidth: Int, winHeight: Int): GridDataSync = super.getGridData(id, winWidth, winHeight)
 
   def getDataForBot(id:String,winWidth:Int,winHeight:Int):GridData4Bot =  {
     val currentPlayer = playerMap.get(id).map(a=>(a.x,a.y)).getOrElse(( winWidth/2 ,winHeight/2 ))
@@ -807,15 +795,11 @@ class GameServer(
 
   override def clearAllData: Unit ={
     super.clearAllData
-    //TODO 清空判别
-//    ReLiveMap 要清空吗？(不清)
-//    waitingJoin感觉不需要清空
     newFoods = Map.empty
     eatenFoods = Map.empty
     playerId2ByteMap.clear()
     currentRank = List.empty[Score]
   }
-
 
   // 生成随机点
   def randomEmptyPoint(): Point = {
