@@ -21,7 +21,7 @@ object GameConfig {
   //吞噬覆盖率  (-1,1) 刚接触->完全覆盖
   val coverRate = 0
   //合并时间间隔
-  val mergeInterval = 6 * 1000 // 12 * 1000
+  val mergeInterval = 12 * 1000 // 12 * 1000
   //分裂时间间隔
   val splitInterval = 2 * 1000
   //最小分裂大小

@@ -64,7 +64,7 @@ class GameHolder(replay:Boolean = false) {
   var FormerDegree = 0D
   var mouseInFlame = false
   var keyInFlame = false
-//  var bigPlayerMass = 500.0
+  //  var bigPlayerMass = 500.0
   var mp = MP(None,0,0,0,0)
   var fmp = MP(None,0,0,0,0)
   private[this] var logicFrameTime = System.currentTimeMillis()
@@ -148,25 +148,17 @@ class GameHolder(replay:Boolean = false) {
       * gameRender: 约为16ms
       */
     nextInt=dom.window.setInterval(() => gameLoop, frameRate)
-    dom.window.requestAnimationFrame(gameRender())
-  }
-
-  def animate():Double => Unit ={d =>
-    drawGameView.drawGameOn2()
-    if(grid.myId == ""){
-      dom.window.requestAnimationFrame(animate())
-    }
+    nextFrame = dom.window.requestAnimationFrame(gameRender())
   }
 
   def gameRender(): Double => Unit = { d =>
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     gameState match {
-      case GameState.play if grid.myId!= ""=>
+      case GameState.play if grid.myId != "" =>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
-//        drawTopView.drawEcharts()
       case GameState.victory if victoryInfo.isDefined =>
         drawTopView.drawVictory(victoryInfo.get)
       case GameState.allopatry =>
@@ -268,7 +260,6 @@ class GameHolder(replay:Boolean = false) {
     if(fmp != mp){
       fmp = mp
       grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + advanceFrame))
-//      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
       webSocketClient.sendMsg(mp.copy(f = grid.frameCount + advanceFrame))
     }
   }
@@ -394,7 +385,7 @@ class GameHolder(replay:Boolean = false) {
         if(current.exists(r=>r.score.id == grid.myId)){
           grid.currentRank = current
         }else{
-//          发来的未含有我的
+        //发来的未含有我的
           grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
         }
 
@@ -430,13 +421,16 @@ class GameHolder(replay:Boolean = false) {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case Protocol.PlayerJoin(id,player) =>
-        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
-        //防止复活后又发了一条Join消息
+//        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
         if(!grid.playerMap.contains(player.id)){
-          grid.playerMap += (player.id -> player)
-          grid.playerByte2IdMap += (id-> player.id)
+          if(grid.myId != "" && player.id != grid.myId){
+            //别的玩家加入，自己加入是在同步全量数据里面加入的
+            grid.playerMap += (player.id -> player)
+            grid.playerByte2IdMap += (id-> player.id)
+          }
         }
         if(grid.myId == player.id){
+          //玩家复活或胜利后重新加入房间
           if(gameState == GameState.dead || gameState == GameState.victory){
             deadInfo = None
             victoryInfo = None
@@ -445,11 +439,10 @@ class GameHolder(replay:Boolean = false) {
           drawTopView.cleanCtx()
         }
 
-      case Protocol.PlayerSplit(f,player) =>
+      case Protocol.PlayerSplit(player,frame) =>
         player.keys.foreach(item =>{
           if(grid.playerByte2IdMap.get(item).isDefined){
             grid.playerMap += (grid.playerByte2IdMap(item) -> player(item))
-//            println("frameCount:  "+grid.frameCount+"  backframecount:   "+f+"   playerSplit:     "+grid.playerMap)
           }
         }
         )
@@ -457,7 +450,6 @@ class GameHolder(replay:Boolean = false) {
         //只针对自己死亡发送的死亡消息
       case msg@Protocol.UserDeadMessage(killerName,deadId,killNum,score,lifeTime)=>
         if(deadId == grid.myId){
-//          Shortcut.playMusic("godlikeM")
           deadInfo = Some(msg)
           gameState = GameState.dead
         }
@@ -485,7 +477,7 @@ class GameHolder(replay:Boolean = false) {
           grid.playerByte2IdMap -= deadByte
         }
 
-      case Protocol.UserMerge(playerMap)=>
+      case Protocol.UserMerge(playerMap,frame)=>
         val playerHashMap = mutable.HashMap[String,List[(Long,Long)]]()
         playerMap.foreach{player =>
           if(grid.playerByte2IdMap.get(player._1).isDefined){
@@ -528,9 +520,8 @@ class GameHolder(replay:Boolean = false) {
             }
           }
 
-      case Protocol.UserCrash(crashMap)=>
+      case Protocol.UserCrash(crashMap,frame)=>
         crashMap.foreach{p=>
-//          println(s"${grid.frameCount} CRASH:  ${p._2.map{c=>(p._1,(c.id,c.newmass))} }")
           if(grid.playerByte2IdMap.get(p._1).isDefined){
             val playerId = grid.playerByte2IdMap(p._1)
             val player = grid.playerMap(playerId)
@@ -543,7 +534,6 @@ class GameHolder(replay:Boolean = false) {
           }
 
         }
-
 
       case msg@VictoryMsg(id,name,score,time) =>
         println(s"Receive Victory Msg $id,$name,$score,$time")
@@ -645,25 +635,12 @@ class GameHolder(replay:Boolean = false) {
           }
           if(killMsg.killerId == grid.myId){
             Shortcut.playMusic("godlikeM")
-/*            grid.playerMap.getOrElse(killMsg.killerId, Player("", "unknown", "", 0, 0, cells = List(Cell(0L, 0, 0)))).kill match {
-              case 1 => Shortcut.playMusic("1Blood")
-              case 2 => Shortcut.playMusic("2Kill")
-              case 3 => Shortcut.playMusic("3Kill")
-              case 4 => Shortcut.playMusic("4Kill")
-              case 5 => Shortcut.playMusic("5Kill")
-              case 6 => Shortcut.playMusic("godlikeM")
-              case 7 => Shortcut.playMusic("legendaryM")
-              case _ => Shortcut.playMusic("unstop")
-            }*/
           }
         }else{
           //根据map找到killerName
           val deadMsg = UserDeadMessage(killMsg.killerName, grid.myId, killMsg.deadPlayer.kill,killMsg.score,killMsg.lifeTime)
           deadInfo = Some(deadMsg)
           gameState = GameState.dead
-          //TODO 商榷
-//          grid.removePlayer(myId)
-//          Shortcut.playMusic("shutdownM")
         }
         grid.removePlayer(killMsg.deadPlayer.id)
 
@@ -693,7 +670,6 @@ class GameHolder(replay:Boolean = false) {
     webSocketClient.closeWs
     dom.window.cancelAnimationFrame(nextFrame)
     dom.window.clearInterval(nextInt)
-//    Shortcut.stopMusic("bg")
   }
 
 }

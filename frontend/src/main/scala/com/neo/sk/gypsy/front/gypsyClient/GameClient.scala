@@ -84,35 +84,16 @@ class GameClient (override val boundary: Point) extends Grid {
               val deg= acos(abs(cell.x-cell2.x)/distance)
               val radiusTotal = cell.radius + cell2.radius
               if (distance < radiusTotal) {
-                if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()>newSplitTime + 2*1000) {
-//                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-//                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
-//                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-//                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
-
+                if ((newSplitTime > System.currentTimeMillis() - mergeInterval) && System.currentTimeMillis()> newSplitTime + splitInterval) {
+                  //                  if (cell.x < cell2.x) cellX = (cellX - ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  //                  else if (cell.x > cell2.x) cellX = (cellX + ((cell.radius+cell2.radius-distance)*cos(deg))/4).toShort
+                  //                  if (cell.y < cell2.y) cellY = (cellY - ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
+                  //                  else if (cell.y > cell2.y) cellY = (cellY + ((cell.radius+cell2.radius-distance)*sin(deg))/4).toShort
                   if (cell.x < cell2.x) cellX -= 1
                   else if (cell.x > cell2.x) cellX += 1
                   if (cell.y < cell2.y) cellY -= 1
                   else if (cell.y > cell2.y) cellY += 1
                 }
-//                else if ((distance < radiusTotal / 2)&&(newSplitTime <= System.currentTimeMillis() - mergeInterval)) {
-//                  /**融合实质上是吃与被吃的关系：大球吃小球，同等大小没办法融合**/
-//                  if (cell.radius > cell2.radius) {
-//                    //被融合的细胞不能再被其他细胞融合
-//                    if (!mergeCells.exists(_.id == cell2.id) && !mergeCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell.id)) {
-//                      playerIsMerge=true
-//                      newMass = (newMass + cell2.newmass).toShort
-//                      newRadius = Mass2Radius(newMass)
-//                      mergeCells = cell2 :: mergeCells
-//                    }
-//                  }
-//                  else if (cell.radius < cell2.radius && !deleteCells.exists(_.id == cell.id) && !deleteCells.exists(_.id == cell2.id)) {
-//                    playerIsMerge=true
-//                    newMass = 0
-//                    newRadius = 0
-//                    deleteCells = cell :: deleteCells
-//                  }
-//                }
               }
             }
             List(Cell(cell.id, cellX, cellY, cell.mass, newMass, newRadius, cell.speed, cell.speedX, cell.speedY,cell.parallel,cell.isCorner))
@@ -202,10 +183,6 @@ class GameClient (override val boundary: Point) extends Grid {
         val right = newCells.map(a => a.x + a.radius).max
         val bottom = newCells.map(a => a.y - a.radius).min
         val top = newCells.map(a => a.y + a.radius).max
-//        if(player.id.startsWith("user") && eaten.nonEmpty){
-//          val score = player.cells.map(_.newmass).toList.sum
-//          println(s"${player.id} ${frameCount} ==> ${eaten.keySet} $score ")
-//        }
         player.copy(x = newX.toShort, y = newY.toShort, protect = newProtected, width = right - left, height = top - bottom, cells = newCells)
     }
     playerMap = newPlayerMap.map(s => (s.id, s)).toMap

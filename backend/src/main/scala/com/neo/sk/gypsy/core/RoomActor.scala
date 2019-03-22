@@ -71,7 +71,7 @@ object RoomActor {
 
   case class DeleteBot(botId:String) extends Command
 
-  case class ReStart(id: String) extends Command
+//  case class ReStart(id: String) extends Command
 
   case class KeyR(id:String, keyCode: Int,frame:Int,n:Int) extends Command
 
@@ -107,7 +107,6 @@ object RoomActor {
             val userMap = mutable.HashMap[String, (String,Long,Long)]()
             val playermap = mutable.HashMap[String,String]()
             val userSyncMap = mutable.HashMap[Long,Set[String]]()
-            //            val userList = mutable.ListBuffer[UserInfo]()
             implicit val sendBuffer: MiddleBufferInJvm = new MiddleBufferInJvm(81920)
             /**每个房间都有一个自己的gird**/
             val grid = new GameServer(bounds, ctx.self)
@@ -117,14 +116,15 @@ object RoomActor {
               getGameRecorder(ctx, grid, roomId.toInt)
             }
 
-            for(i <- 0 until 7){
-              val botId = "bot_"+roomId+"_"+i+"_"+botIdA.incrementAndGet()
-              val botName = starNames(i)
-              val botAct = getBotActor(ctx,botId)
-              botMap.put(botId,(botName,botAct,true))
-              botAct ! BotActor.InitInfo(botName, grid, ctx.self)
+            if(AppSettings.addBotPlayer){
+              for(i <- 0 until AppSettings.minpeopelNum){
+                val botId = "bot_"+roomId+"_"+i+"_"+botIdA.incrementAndGet()
+                val botName = starNames(i)
+                val botAct = getBotActor(ctx,botId)
+                botMap.put(botId,(botName,botAct,true))
+                botAct ! BotActor.InitInfo(botName, grid, ctx.self)
+              }
             }
-
             timer.startPeriodicTimer(SyncTimeKey, Sync, frameRate millis)
             idle(roomId, userMap,playermap,botMap,subscribersMap,userSyncMap ,grid, 0l,0,starNames)
         }
@@ -182,6 +182,7 @@ object RoomActor {
           val foodLists = grid.getApples.map(i=>Food(i._2,i._1.x,i._1.y)).toList
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodLists))
           userActor ! JoinRoomSuccess(roomId,ctx.self)
+
 //
 //          if(playerMap.size < 8){
 //            var i = 1
@@ -258,7 +259,8 @@ object RoomActor {
         * */
 
         // 6> "ReStart" is private before, it's public now. I think it's no problem.
-        case ReStart(id) =>
+        /**玩家复活**/
+        case UserReLive(id,frame) =>
           log.info(s"RoomActor Restart Receive $id Relive Msg!++++++++++++++")
           grid.addPlayer(id, userMap.getOrElse(id, ("Unknown",0l,0l))._1)
           // add bot
@@ -335,16 +337,19 @@ object RoomActor {
           grid.getSubscribersMap(subscribersMap,botMap)
           val aliveBotNum = botMap.count(p => p._2._3)
 
-          if(playerMap.size+aliveBotNum < 8){
-            var i = 1
-            var flag = true
-            val botMapTmp = botMap.filter(!_._2._3)
-            for((k,v) <- botMapTmp  if flag){
-              ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
-              if(i==(8-playerMap.size-aliveBotNum)) flag = false
-              i += 1
+          if(AppSettings.addBotPlayer){
+            if(playerMap.size+aliveBotNum < AppSettings.minpeopelNum){
+              var i = 1
+              var flag = true
+              val botMapTmp = botMap.filter(!_._2._3)
+              for((k,v) <- botMapTmp  if flag){
+                ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
+                if(i==(AppSettings.minpeopelNum -playerMap.size-aliveBotNum)) flag = false
+                i += 1
+              }
             }
           }
+
           idle(roomId,userMap,playerMap,botMap,subscribersMap,userSyncMap,grid,tickCount,StartFrame,starNames)
 
         case UserActor.Left4Watch(playerInfo) =>
@@ -422,7 +427,7 @@ object RoomActor {
           }
           val aliveBotNum = botMap.count(p => p._2._3)
 
-          if(playerMap.size+aliveBotNum < 8){
+          if(playerMap.size+aliveBotNum < AppSettings.minpeopelNum){
 //            val botMapTmp = botMap.filter(!_._2._3).head
 //            ctx.self ! JoinRoom4Bot(PlayerInfo(botMapTmp._1,botMapTmp._2._1),botMapTmp._2._2)
             var i = 1
@@ -430,7 +435,7 @@ object RoomActor {
             val botMapTmp = botMap.filter(!_._2._3)
             for((k,v) <- botMapTmp  if flag){
               ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
-              if(i==(8-playerMap.size-aliveBotNum)) flag = false
+              if(i==(AppSettings.minpeopelNum-playerMap.size-aliveBotNum)) flag = false
               i += 1
             }
           }
