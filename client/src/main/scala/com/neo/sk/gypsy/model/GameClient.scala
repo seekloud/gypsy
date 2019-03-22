@@ -43,9 +43,7 @@ class GameClient(override val boundary: Point) extends Grid {
     val newPlayerMap = playerMap.values.map {
       player =>
         val newSplitTime = player.lastSplit
-        //        var mergeCells = List[Cell]()
         //已经被本体其他cell融合的cell
-        //        var deleteCells = List[Cell]()
         //依据距离判断被删去的cell
         val newCells = player.cells.sortBy(_.radius).reverse.flatMap {
           cell =>

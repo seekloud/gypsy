@@ -155,7 +155,7 @@ class GameHolder(replay:Boolean = false) {
     val curTime = System.currentTimeMillis()
     val offsetTime = curTime - logicFrameTime
     gameState match {
-      case GameState.play if grid.myId != "" && grid.playerMap.get(grid.myId).isDefined =>
+      case GameState.play if grid.myId != "" =>
         draw(offsetTime)
       case GameState.dead if deadInfo.isDefined =>
         drawTopView.drawWhenDead(deadInfo.get)
@@ -280,7 +280,6 @@ class GameHolder(replay:Boolean = false) {
       val bigPlayerPosition=grid.playerMap.values.toList.filter(i=>i.cells.map(_.newmass).sum>bigPlayerMass).map(i=>PlayerPosition(i.id,i.x,i.y))
       data.playerDetails.find(_.id == grid.myId) match {
         case Some(p) =>
-          println(p.cells)
           firstCome=false
           var sumX = 0.0
           var sumY = 0.0
@@ -422,7 +421,7 @@ class GameHolder(replay:Boolean = false) {
         NetDelay.receivePong(createTime ,webSocketClient)
 
       case Protocol.PlayerJoin(id,player) =>
-        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
+//        println(s"${player.id}  加入游戏 ${grid.frameCount} MYID:${grid.myId} ")
         if(!grid.playerMap.contains(player.id)){
           if(grid.myId != "" && player.id != grid.myId){
             //别的玩家加入，自己加入是在同步全量数据里面加入的

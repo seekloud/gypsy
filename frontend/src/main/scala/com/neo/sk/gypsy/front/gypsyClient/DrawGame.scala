@@ -475,11 +475,6 @@ case class DrawGame(
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
-//        if(id == "guest15413289559393"){
-//          val x = xfix +offx-radius-6
-//          val y = yfix+offy-radius-6
-//          println("x:  " + x + "  y:   " + y)
-//        }
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()

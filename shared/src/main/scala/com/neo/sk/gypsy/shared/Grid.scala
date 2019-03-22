@@ -115,7 +115,6 @@ trait Grid {
     //TODO 确认下是不是frameCount
     /**碰撞检测要放在玩家移动之前**/
     val mouseAct = mouseActionMap.getOrElse(frameCount, Map.empty[String, MP])
-//    println("mouseAct:    "+mouseAct)
     val keyAct = actionMap.getOrElse(frameCount, Map.empty[String, KC])
     tick = tick+1
     //碰撞检测
@@ -353,11 +352,19 @@ trait Grid {
     //1> 对每个cell计算新的方向、速度和位置
     val newCells = player.cells.sortBy(_.radius).reverse.flatMap { cell =>
       /**1> 计算该帧cell移动的距离**/
-      val deg1 = atan2(player.targetY + player.y - cell.y, player.targetX + player.x - cell.x)
-      val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
-      val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
+      val x = player.targetY + player.y - cell.y
+      val y = player.targetX + player.x - cell.x
+      var move = Point(0,0)
+      if(x == 0 && y== 0){
+
+      }else{
+        val deg1 = atan2(x, y)
+        val degX1 = if (cos(deg1).isNaN) 0 else cos(deg1)
+        val degY1 = if (sin(deg1).isNaN) 0 else sin(deg1)
+        move = Point((cell.speed * degX1).toInt, (cell.speed * degY1).toInt)
+      }
       //3> 速度*方向==xy方向移动的距离
-      val move = Point((cell.speed * degX1).toInt, (cell.speed * degY1).toInt)
+
       //cell移动+边界检测
       var newX = if ((cell.x + move.x) > boundary.x-15)  boundary.x-15 else if ((cell.x + move.x) <= 15) 15 else cell.x + move.x
       var newY = if ((cell.y + move.y) > boundary.y-15) boundary.y-15 else if ((cell.y + move.y) <= 15) 15 else cell.y + move.y
