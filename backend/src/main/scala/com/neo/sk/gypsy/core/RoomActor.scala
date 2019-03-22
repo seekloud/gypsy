@@ -183,17 +183,6 @@ object RoomActor {
           dispatchTo(subscribersMap)(playerInfo.playerId,Protocol.FeedApples(foodLists))
           userActor ! JoinRoomSuccess(roomId,ctx.self)
 
-//
-//          if(playerMap.size < 8){
-//            var i = 1
-//            var flag = true
-//            val botMapTmp = botMap.filter(!_._2._3)
-//            for((k,v) <- botMapTmp  if flag){
-//              ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
-//              if(i==playerMap.size) flag = false
-//              i += 1
-//            }
-//          }
 
           val event = UserWsJoin(roomId, playerInfo.playerId, playerInfo.nickname, createBallId, grid.frameCount,-1)
           grid.AddGameEvent(event)
@@ -344,7 +333,7 @@ object RoomActor {
               val botMapTmp = botMap.filter(!_._2._3)
               for((k,v) <- botMapTmp  if flag){
                 ctx.self ! JoinRoom4Bot(PlayerInfo(k,v._1),v._2)
-                if(i==(AppSettings.minpeopelNum -playerMap.size-aliveBotNum)) flag = false
+                if(i==(AppSettings.minpeopelNum - playerMap.size - aliveBotNum)) flag = false
                 i += 1
               }
             }
