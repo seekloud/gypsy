@@ -28,8 +28,9 @@ class LoginHolder(
                  ) {
 
   private[this] val log = LoggerFactory.getLogger("LoginMessages")
-if(AppSettings.isView){  loginScene.setLoginListener(
-  new LoginScene.LoginSceneListener {
+  if(AppSettings.isView){
+    loginScene.setLoginListener(
+      new LoginScene.LoginSceneListener {
     override def onButtonScanLogin: Unit = {
       getLoginResponseFromEs().map {
         case Right(r) =>
@@ -85,10 +86,9 @@ if(AppSettings.isView){  loginScene.setLoginListener(
     }
   }
 )
-}else
+  }else
   {
     botActor ! BotLogin(AppSettings.botInfo._1.toLong, AppSettings.botInfo._2)
-
   }
 
 

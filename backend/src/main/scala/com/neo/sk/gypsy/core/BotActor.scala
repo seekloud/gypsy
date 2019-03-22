@@ -11,7 +11,7 @@ import com.neo.sk.gypsy.shared.ptcl.{ApiProtocol, Protocol}
 import org.slf4j.LoggerFactory
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.{GridData4Bot, KC, MP, PressSpace}
-
+import com.neo.sk.gypsy.shared.util.Utils._
 import scala.math._
 import concurrent.duration._
 import scala.util.Random
@@ -31,6 +31,8 @@ object BotActor {
   case object ChoseAction extends Command
 
   case object KillBot extends Command
+
+  case object UltimateKill extends Command
 
   case object BotDead extends Command
 
@@ -60,11 +62,11 @@ object BotActor {
         msg match {
           case InitInfo(botName, grid, roomActor) =>
             roomActor ! RoomActor.JoinRoom4Bot(ApiProtocol.PlayerInfo(botId,botName), ctx.self)
-         //   timer.startSingleTimer(ChoseActionKey, ChoseAction,(1 + scala.util.Random.nextInt(20)) * frameRate.millis)
+            println(s"$botId :init")
             gaming(botId,grid,roomActor)
 
           case unknownMsg@_ =>
-            log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+            log.warn(s"${ctx.self.path} unknown msg when create: $unknownMsg")
             stashBuffer.stash(unknownMsg)
             Behaviors.unhandled
         }
@@ -130,7 +132,7 @@ object BotActor {
             }
               //吃mass
             else if(mass.nonEmpty){
-              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,c.radius)).head
+              val closestP = mass.sortBy(c=>getDis(botCell.x,botCell.y,c.x,c.y,Mass2Radius(shotMass))).head
               val mp = MP(grid.playerId2ByteMap.get(botId),(closestP.x-botCell.x).toShort,(closestP.y-botCell.y).toShort,grid.frameCount, -1)
               roomActor ! botAction(botId,mp)
               move = true
@@ -158,12 +160,14 @@ object BotActor {
           dead(botId,grid,roomActor)
 
         case KillBot =>
-          log.debug(s"botActor:$botId go to die...")
+//          log.info(s"botActor:$botId go to die...")
           roomActor ! DeleteBot(botId)
-          Behaviors.stopped
-
+          Behaviors.same
+        case UltimateKill =>
+          log.info("kill all bot when user get victory at the gaming state")
+          Behavior.stopped
         case unknownMsg@_ =>
-          log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+          log.warn(s"${ctx.self.path} unknown msg when gaming: $unknownMsg")
           stashBuffer.stash(unknownMsg)
           Behaviors.unhandled
       }
@@ -171,7 +175,9 @@ object BotActor {
     }
 
   }
-
+ """
+   |actually this  state is of no use
+ """
   def dead(botId: String, grid: GameServer, roomActor: ActorRef[RoomActor.Command])
           (implicit stashBuffer: StashBuffer[Command], timer: TimerScheduler[Command]):Behavior[Command] = {
     Behaviors.receive[Command]{(ctx, msg) =>
@@ -183,10 +189,12 @@ object BotActor {
           Behaviors.same
 
         case KillBot =>
-          Behaviors.stopped
-
+          Behaviors.same
+        case UltimateKill =>
+          log.info("kill all bot when user get victory at the dead state")
+          Behavior.stopped
         case unknownMsg@_ =>
-          log.warn(s"${ctx.self.path} unknown msg: $unknownMsg")
+          log.warn(s"${ctx.self.path} unknown msg when dead: $unknownMsg")
           stashBuffer.stash(unknownMsg)
           Behaviors.unhandled
       }

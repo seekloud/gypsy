@@ -5,18 +5,19 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer, TimerSch
 import com.neo.sk.gypsy.holder.{BotHolder, GameHolder}
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import org.slf4j.LoggerFactory
-import com.neo.sk.gypsy.model.GridOnClient
+import com.neo.sk.gypsy.model.GameClient
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Protocol.GameMessage
 import com.neo.sk.gypsy.holder.GameHolder
 import com.neo.sk.gypsy.holder.BotHolder
 import akka.actor.typed.scaladsl.StashBuffer
 import com.neo.sk.gypsy.ClientBoot
-import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+//import com.neo.sk.gypsy.utils.{ClientMusic, FpsComp}
+import com.neo.sk.gypsy.utils.{FpsComp}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Protocol4Bot._
-import com.neo.sk.gypsy.shared.util.utils.Mass2Radius
+import com.neo.sk.gypsy.shared.util.Utils.Mass2Radius
 
 import scala.collection.mutable
 
@@ -30,7 +31,7 @@ object GameClient {
   case class ControllerInitialBot(controller: BotHolder) extends GameBeginning
 
   private[this] val log = LoggerFactory.getLogger(this.getClass)
-  private[this] var grid: GridOnClient = _
+  private[this] var grid: GameClient = _
 
   def create(): Behavior[WsMsgSource] = {
     Behaviors.setup[WsMsgSource]{ ctx =>
@@ -66,7 +67,7 @@ object GameClient {
       msg match {
         case Protocol.Id(id) =>
           grid.myId = id
-//          ClientMusic.playMusic("bg")
+          GameHolder.gameState = GameState.play
           Behaviors.same
 
         case m:Protocol.KC =>
@@ -120,7 +121,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -133,6 +133,11 @@ object GameClient {
 
         case data: Protocol.GridDataSync =>
           ClientBoot.addToPlatform{
+//            if(grid.playerMap.get(grid.myId).isDefined && data.playerDetails.find(_.id==grid.myId).isDefined){
+//              println(s"获取全量数据  now frame: ${grid.frameCount}" + "  player's xy:  " + grid.playerMap(grid.myId).x + "   " + grid.playerMap(grid.myId).y )
+//              println(s"            backend frame: ${data.frameCount}" + "  player's xy:  " + data.playerDetails.find(_.id==grid.myId).get.x+ "   " +
+//                data.playerDetails.find(_.id==grid.myId).get.y)
+//            }
             GameHolder.syncGridData = Some(data)
             GameHolder.justSynced = true
           }
@@ -154,13 +159,7 @@ object GameClient {
           }
           Behaviors.same
 
-
-        case Protocol.PlayerRestart(id) =>
-          Behaviors.same
-
-
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
             if(!grid.playerMap.contains(player.id)){
               grid.playerMap += (player.id -> player)
@@ -168,7 +167,6 @@ object GameClient {
             }
             if(grid.myId == player.id){
               if(GameHolder.gameState == GameState.dead || GameHolder.gameState == GameState.victory){
-//                gameHolder.reLive(id)
                 GameHolder.deadInfo = None
                 GameHolder.victoryInfo = None
                 GameHolder.gameState = GameState.play
@@ -178,7 +176,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSplit(player) =>
+        case Protocol.PlayerSplit(f,player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>{
               if(grid.playerByte2IdMap.get(item).isDefined)
@@ -194,7 +192,7 @@ object GameClient {
             ClientBoot.addToPlatform{
               GameHolder.deadInfo = Some(msg)
               GameHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlike")
+//              ClientMusic.playMusic("godlike")
             }
           }
           Behaviors.same
@@ -202,25 +200,27 @@ object GameClient {
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadId)=>
           ClientBoot.addToPlatform{
-            val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != grid.myId){
-              if(!GameHolder.isDead){
-                GameHolder.isDead = true
-                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
-              }else{
-                GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+            if(grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined){
+              val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+              grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
+              if(deadId != grid.myId){
+                if(!GameHolder.isDead){
+                  GameHolder.isDead = true
+                  GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+                }else{
+                  GameHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+                }
               }
-            }
-            grid.removePlayer(deadId)
-            var deadByte = 0.toByte
-            grid.playerByte2IdMap.foreach{elem =>
-              if(elem._2 == deadId){
-                deadByte = elem._1
+              grid.removePlayer(deadId)
+              var deadByte = 0.toByte
+              grid.playerByte2IdMap.foreach{elem =>
+                if(elem._2 == deadId){
+                  deadByte = elem._1
+                }
               }
+              grid.playerByte2IdMap -= deadByte
             }
-            grid.playerByte2IdMap -= deadByte
-          }
+            }
           Behaviors.same
 
 
@@ -356,12 +356,13 @@ object GameClient {
               BotActor.SDKReplyTo ! JoinRoomRsp(-1,errorCode,errMsg)
             }
           }
+          BotHolder.gameState = GameState.passwordError
           Behaviors.stopped
 
         case Protocol.Id(id) =>
           println(s"lallalal$id")
           grid.myId = id
-//          ClientMusic.playMusic("bg")
+          BotHolder.gameState = GameState.play
           Behaviors.same
 
         case m:Protocol.KC =>
@@ -393,10 +394,9 @@ object GameClient {
             if(current.exists(r=>r.score.id ==grid.myId)){
               grid.currentRank = current
             }else{
-              //          发来的未含有我的
+              // 发来的未含有我的
               grid.currentRank = current ::: grid.currentRank.filter(r=>r.score.id == grid.myId)
             }
-            //            grid.currentRank = current
           }
           Behaviors.same
 
@@ -408,7 +408,6 @@ object GameClient {
           Behaviors.same
 
         case Protocol.FeedApples(foods) =>
-//          log.info("ClientFood:  " + foods)
           ClientBoot.addToPlatform{
             grid.food ++= foods.map(a => Point(a.x, a.y) -> a.color)
           }
@@ -416,7 +415,6 @@ object GameClient {
 
         case Protocol.AddVirus(virus) =>
           ClientBoot.addToPlatform{
-            println(s"接收新病毒 new Virus ${virus}")
             grid.virusMap ++= virus
           }
           Behaviors.same
@@ -450,16 +448,9 @@ object GameClient {
           }
           Behaviors.same
 
-
-        case Protocol.PlayerRestart(id) =>
-          ClientMusic.playMusic("bg")
-          Behaviors.same
-
-
         case Protocol.PlayerJoin(id,player) =>
-          println(s"${id}  加入游戏 ${grid.frameCount}")
           ClientBoot.addToPlatform{
-            if(grid.playerByte2IdMap.get(id).isDefined){
+            if(grid.playerByte2IdMap.get(id).isEmpty){
               grid.playerMap += (player.id -> player)
               grid.playerByte2IdMap += (id -> player.id)
             }
@@ -476,7 +467,7 @@ object GameClient {
           }
           Behaviors.same
 
-        case Protocol.PlayerSplit(player) =>
+        case Protocol.PlayerSplit(f,player) =>
           ClientBoot.addToPlatform{
             player.keys.foreach(item =>
               if(grid.playerByte2IdMap.get(item).isDefined)
@@ -491,32 +482,34 @@ object GameClient {
             ClientBoot.addToPlatform{
               BotHolder.deadInfo = Some(msg)
               BotHolder.gameState = GameState.dead
-              ClientMusic.playMusic("godlikeM")
             }
           }
           Behaviors.same
 
         //针对所有玩家发送的死亡消息
         case Protocol.KillMessage(killerId,deadId)=>
-          ClientBoot.addToPlatform{
-            val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
-            grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort ))
-            if(deadId != grid.myId){
-              if(!BotHolder.isDead){
-                BotHolder.isDead = true
-                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
-              }else{
-                BotHolder.killList :+=(200,grid.playerMap.get(killerId).get.name,grid.playerMap.get(deadId).get.name)
+          ClientBoot.addToPlatform {
+            if (grid.playerMap.get(killerId).isDefined && grid.playerMap.get(deadId).isDefined) {
+
+              val a = grid.playerMap.getOrElse(killerId, Player("", "", 0.toShort, 0, 0, cells = List(Cell(0L, 0, 0))))
+              grid.playerMap += (killerId -> a.copy(kill = (a.kill + 1).toShort))
+              if (deadId != grid.myId) {
+                if (!BotHolder.isDead) {
+                  BotHolder.isDead = true
+                  BotHolder.killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+                } else {
+                  BotHolder.killList :+= (200, grid.playerMap.get(killerId).get.name, grid.playerMap.get(deadId).get.name)
+                }
               }
-            }
-            grid.removePlayer(deadId)
-            var playerIdByte = 0.toByte
-            grid.playerByte2IdMap.foreach{item =>
-              if(item._2 == deadId){
-                playerIdByte = item._1
+              grid.removePlayer(deadId)
+              var playerIdByte = 0.toByte
+              grid.playerByte2IdMap.foreach { item =>
+                if (item._2 == deadId) {
+                  playerIdByte = item._1
+                }
               }
+              grid.playerByte2IdMap -= playerIdByte
             }
-            grid.playerByte2IdMap -= playerIdByte
           }
           Behaviors.same
 

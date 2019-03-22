@@ -32,7 +32,6 @@ object Protocol {
                            massDetails: List[Mass],
                            virusDetails: Map[Long,Virus],
                            scale: Double, //缩放比例
-//                           playersPosition: List[PlayerPosition],
                            var newFoodDetails:List[Food]=Nil, //增量数据传输
                            var eatenFoodDetails:List[Food]=Nil
                          ) extends GameMessage
@@ -72,21 +71,18 @@ object Protocol {
   case class MatchRoomError() extends GameMessage
 
   /**cell改变事件：**/
-  /**1、玩家自己融合**/
-  case class UserMerge(playerMap:Map[Byte,List[(Long,Long)]])extends GameMessage
-  /**1、玩家和其他玩家融合**/
-  case class UserCrash(crashMap:Map[Byte,List[Cell]]) extends GameMessage
+  /** >1 玩家自己融合**/
+  case class UserMerge(playerMap:Map[Byte,List[(Long,Long)]], frame:Int)extends GameMessage
+  /** >2 玩家和其他玩家融合**/
+  case class UserCrash(crashMap:Map[Byte,List[Cell]], frame:Int) extends GameMessage
+  /** >3 玩家分裂**/
+  case class PlayerSplit(player: Map[Byte,Player],frame:Int) extends GameMessage
 
   case class Pong(timestamp: Long)extends GameMessage
 
   case class AddVirus(virus:Map[Long,Virus]) extends GameMessage
 
   case class VictoryMsg(id:String,name:String,score:Short,totalFrame:Int) extends GameMessage
-
-  //  按F分裂的球发送的全量消息
-//  case class SplitPlayer(splitPlayers:Map[String,List[Cell]]) extends GameMessage
-
-  case class PlayerSplit(player: Map[Byte,Player]) extends GameMessage
 
   case class PlayerJoin(id:Byte, player:Player) extends GameMessage //id: 映射id
 
@@ -99,10 +95,6 @@ object Protocol {
   /**
     * 前端发送的数据
     * */
-//  sealed trait WsSendMsg{
-//        val serialNum:Int = -1 //类似每一帧的动作顺序
-//        val frame:Int = -1
-//      }
   //sN -> serialNum; f -> frame
   sealed trait WsSendMsg{
     val sN:Int = -1 //类似每一帧的动作顺序
@@ -116,11 +108,9 @@ object Protocol {
   sealed trait UserAction extends WsSendMsg
 
   //MP -> MousePosition;  cX -> clientX;  cY -> clientY; sN -> serialNum; f -> frame
-//  case class MousePosition(id: Option[String],clientX:Short,clientY:Short, override val frame:Int, override val serialNum:Int) extends UserAction with GameMessage
   case class MP(id: Option[Byte],cX:Short,cY:Short, override val f:Int, override val sN:Int) extends UserAction with GameMessage
 
   //KC -> KeyCode; kC -> keyCode
-//  case class KeyCode(id: Option[String],keyCode: Int, override val frame:Int,override val serialNum:Int) extends UserAction with GameMessage
   case class KC(id: Option[Byte],kC: Int, override val f:Int,override val sN:Int) extends UserAction with GameMessage
 
   case object PressSpace extends UserAction
@@ -135,9 +125,9 @@ object Protocol {
 
   case class Ping(timestamp: Long) extends UserAction
 
-  case object CreateRoom extends UserAction
+  case class CreateRoom(password: String) extends UserAction
 
-  case class JoinRoom(roomId:Option[Long]) extends UserAction
+  case class JoinRoom(roomId:Option[Long], password: Option[String]) extends UserAction
 
 
   /**

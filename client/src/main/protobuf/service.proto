@@ -17,9 +17,16 @@ service EsheepAgent {
 
   rpc actionSpace (Credit) returns (ActionSpaceRsp);
 
+  rpc systemInfo (Credit) returns (SystemInfoRsp);
+
+  rpc currentFrame(Credit) returns (stream CurrentFrameRsp);
+  //  rpc currentFrame(Credit) returns (CurrentFrameRsp);
+
   rpc action (ActionReq) returns (ActionRsp);
 
   rpc observation (Credit) returns (ObservationRsp);
+
+  rpc observationWithInfo (Credit) returns (stream ObservationWithInfoRsp);
 
   rpc inform (Credit) returns (InformRsp);
 

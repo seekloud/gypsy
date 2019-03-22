@@ -5,7 +5,7 @@ name := "gypsy"
 val scalaV = "2.12.6"
 //val scalaV = "2.11.8"
 val projectName = "gypsy"
-val projectVersion = "2019.01.21"
+val projectVersion = "2019.03.13"
 
 
 val projectMainClass = "com.neo.sk.gypsy.Boot"

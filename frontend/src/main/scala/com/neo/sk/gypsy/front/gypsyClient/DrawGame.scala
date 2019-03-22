@@ -6,7 +6,7 @@ import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom
 import org.scalajs.dom.ext.Color
 import org.scalajs.dom.html.Canvas
-import com.neo.sk.gypsy.shared.util.utils._
+import com.neo.sk.gypsy.shared.util.Utils._
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.html
 import com.neo.sk.gypsy.front.utils.EchartsJs
@@ -226,7 +226,6 @@ case class DrawGame(
     ctx.font = "70px Helvetica"
     ctx.fillText(""+time+"s", 718, 350)
     timeNum = timeNum+1
-    println(timeNum)
   }
   //清除计数
   def cleanClock():Unit={
@@ -370,10 +369,7 @@ case class DrawGame(
     val offy =this.canvas.height/2 - basePoint._2
 
     val scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-//    if(getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale!=1){
-//      Scale = getZoomRate(zoom._1,zoom._2,this.canvas.width,this.canvas.height) * screeScale
-//    }
-//    println(s"domwidth:${dom.window.innerWidth.toInt} domheight:${dom.window.innerHeight.toInt}")
+
     //绘制背景
     ctx.fillStyle = "rgba(181, 181, 181, 1)"
     ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
@@ -381,7 +377,7 @@ case class DrawGame(
     centerScale(scale,this.canvas.width/2,this.canvas.height/2)
 
     ctx.drawImage(offScreenCanvas,offx,offy,bounds.x,bounds.y)
-    //ctx.drawImage(background,offx,offx,bounds.x,bounds.y)
+
     //为不同分值的苹果填充不同颜色
     //按颜色分类绘制，减少canvas状态改变
     foods.groupBy(_.color).foreach{a=>
@@ -412,20 +408,19 @@ case class DrawGame(
         case 6  => "#cfe6ff"
         case _  => "#de9dd6"
       }
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+      a._2.foreach{case Mass(id,x,y,tx,ty,color,speed) =>
         val deg = Math.atan2(ty, tx)
         val deltaY = speed * Math.sin(deg)
         val deltaX = speed * Math.cos(deg)
         val xPlus = if (!deltaX.isNaN) deltaX else 0
         val yPlus = if (!deltaY.isNaN) deltaY else 0
-
-        val cellx = x +xPlus*offsetTime.toFloat / frameRate
-        val celly = y  +yPlus*offsetTime.toFloat / frameRate
-        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
-        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
-        //centerScale(scale,window.x/2,window.y/2)
+        val cellx = x +xPlus * offsetTime.toFloat / frameRate
+        val celly = y  +yPlus * offsetTime.toFloat / frameRate
+        val borderCalc = Mass2Radius(shotMass) + 5
+        val xfix  = if(cellx> bounds.x  - borderCalc) bounds.x  - borderCalc else if(cellx < borderCalc) borderCalc else cellx
+        val yfix = if(celly> bounds.y  - borderCalc) bounds.y  - borderCalc else if(celly < borderCalc)  borderCalc else celly
         ctx.beginPath()
-        ctx.arc( xfix + offx ,yfix + offy ,r,0,2*Math.PI)
+        ctx.arc( xfix + offx ,yfix + offy ,Mass2Radius(shotMass),0,2*Math.PI)
         ctx.fill()
       }
     }
@@ -471,18 +466,14 @@ case class DrawGame(
       var cellDifference = false
       val c = cells.sortBy(sortRule)(Ordering.Tuple2(Ordering.Short, Ordering.Long))
       val newcells = c.map{ cell =>
-        val cellx = cell.x + cell.speedX *offsetTime.toFloat / frameRate
-        val celly = cell.y + cell.speedY *offsetTime.toFloat / frameRate
+        val cellx = cell.x + cell.speedX * offsetTime.toFloat / frameRate
+        val celly = cell.y + cell.speedY * offsetTime.toFloat / frameRate
         val xfix  = if(cellx>bounds.x-15) bounds.x-15 else if(cellx<15) 15 else cellx
         val yfix  = if(celly>bounds.y-15) bounds.y-15 else if(celly<15) 15 else celly
         ctx.save()
         /**关键：根据mass来改变大小**/
         val radius = 4 + sqrt(cell.mass)*6
         ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
-
-        ctx.drawImage(circleImg,xfix +offx-radius-6,yfix+offy-radius-6,2*(radius+6),2*(radius+6))
-
-        //ctx.drawImage(circleImg,xfix +offx-cell.radius-6,yfix+offy-cell.radius-6,2*(cell.radius+6),2*(cell.radius+6))
         if(protect){
           ctx.fillStyle = MyColors.halo
           ctx.beginPath()

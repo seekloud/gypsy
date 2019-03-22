@@ -3,21 +3,23 @@ package com.neo.sk.gypsy.holder
 
 import com.neo.sk.gypsy.ClientBoot
 import javafx.animation.{Animation, AnimationTimer, KeyFrame, Timeline}
-import com.neo.sk.gypsy.model.GridOnClient
+
+import com.neo.sk.gypsy.model.GameClient
 import javafx.scene.input.{KeyCode, MouseEvent}
 import javafx.util.Duration
 import akka.actor.typed.ActorRef
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.common.{AppSettings, StageContext}
-import com.neo.sk.gypsy.scene.{GameScene, LayeredDraw, LayeredScene}
+
+import com.neo.sk.gypsy.scene.{GameScene}
 import com.neo.sk.gypsy.ClientBoot.gameClient
 import com.neo.sk.gypsy.actor.GameClient.ControllerInitial
 import java.awt.event.KeyEvent
 
 import javafx.scene.image.Image
 import scala.math.atan2
-import com.neo.sk.gypsy.utils.ClientMusic
 
+//import com.neo.sk.gypsy.utils.ClientMusic
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl._
 import com.neo.sk.gypsy.shared.ptcl.Game._
@@ -31,15 +33,16 @@ import com.neo.sk.gypsy.shared.ptcl.GameConfig._
 object GameHolder {
 
   val bounds = Point(Boundary.w,Boundary.h)
-  val grid = new GridOnClient(bounds)
+
+  val grid = new GameClient(bounds)
   var justSynced = false
-  var isDead = false
+  var isDead = false //是否有玩家死亡
   var firstCome=true
   var logicFrameTime = System.currentTimeMillis()
   var syncGridData: scala.Option[GridDataSync] = None
   var killList = List.empty[(Int,String,String)] //time killerId deadId
   var deadInfo :Option[Protocol.UserDeadMessage] = None
-  var gameState = GameState.play
+  var gameState = GameState.firstcome
   val timeline = new Timeline()
 
   var exitFullScreen = false
@@ -75,13 +78,14 @@ object GameHolder {
 class GameHolder(
                   stageCtx: StageContext,
                   gameScene: GameScene,
-                  layerScene: LayeredScene,
                   serverActor: ActorRef[Protocol.WsSendMsg]
                 ) {
   import GameHolder._
 
   private var stageWidth = stageCtx.getStage.getWidth.toInt
   private var stageHeight = stageCtx.getStage.getHeight.toInt
+  var mp = MP(None,0,0,0,0)
+  var fmp = MP(None,0,0,0,0)
 
   def getActionSerialNum=gameScene.actionSerialNumGenerator.getAndIncrement()
 
@@ -147,9 +151,11 @@ class GameHolder(
     //差不多每三秒同步一次
     //不同步
     if (!justSynced) {
-
       mouseInFlame = false
       keyInFlame = false
+      if(grid.frameCount % 2 ==0){
+        updateMousePos
+      }
       update()
     } else {
       if (syncGridData.nonEmpty) {
@@ -159,13 +165,15 @@ class GameHolder(
       }
       justSynced = false
     }
+  }
 
-//    if(AppSettings.isBot){
-//      ClientBoot.addToPlatform {
-//
-//      }
-//    }
-
+  def updateMousePos ={
+    if(fmp != mp){
+      fmp = mp
+      grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + advanceFrame))
+      //      grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
+      serverActor ! mp.copy(f = grid.frameCount + advanceFrame)
+    }
   }
 
   def gameRender() = {
@@ -194,20 +202,25 @@ class GameHolder(
       if (key == KeyCode.ESCAPE && !isDead) {
         gameClose
       } else if (watchKeys.contains(key) && keyInFlame == false) {
-        if (key == KeyCode.SPACE) {
-          println(s"down+ Space ReLive Press!")
+        if(gameState == GameState.dead){
+          if(key == KeyCode.SPACE){
+            println(s"down+ Space ReLive Press!")
+            keyInFlame = true
+            val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame) //+ delayFrame
+            serverActor ! reliveMsg
+          }
+        }else if(gameState == GameState.victory){
+          println(s"down+ Press After Success!!")
           keyInFlame = true
-          val reliveMsg = Protocol.ReLiveMsg(grid.frameCount +advanceFrame+ delayFrame)
-          serverActor ! reliveMsg
-//          webSocketClient.sendMsg(reliveMsg)
+          val rejoinMsg = Protocol.ReJoinMsg(grid.frameCount +advanceFrame) //+ delayFrame
+          serverActor ! rejoinMsg
         } else {
           println(s"down+${e.toString}")
           //TODO 分裂只做后台判断，到时候客户端有BUG这里确认下
           keyInFlame = true
-          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame + delayFrame, getActionSerialNum)
+          val keyCode = Protocol.KC(None, keyCode2Int(e), grid.frameCount + advanceFrame , getActionSerialNum) //+ delayFrame
           if(key == KeyCode.E){
-            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + delayFrame))
-//            grid.addUncheckActionWithFrame(myId, keyCode, keyCode.frame)
+            grid.addActionWithFrame(grid.myId, keyCode.copy(f = grid.frameCount + advanceFrame )) //+ delayFrame
           }
           serverActor ! keyCode
         }
@@ -217,18 +230,12 @@ class GameHolder(
     override def OnMouseMoved(e: MouseEvent): Unit = {
       //在画布上监听鼠标事件
       def getDegree(x:Double,y:Double)={
-//        atan2(y -gameScene.window.y/2,x - gameScene.window.x/2 )
         atan2(y -gameScene.gameView.realWindow.x/2,x - gameScene.gameView.realWindow.y/2 )
       }
-
-      val mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-//      val mp = MousePosition(myId, e.getX.toFloat - gameScene.window.x / 2, e.getY.toFloat - gameScene.window.y.toDouble / 2, grid.frameCount +advanceFrame +delayFrame, getActionSerialNum)
-      if(math.abs(getDegree(e.getX,e.getY)-FormerDegree)*180/math.Pi>5   &&  mouseInFlame == false){
-        mouseInFlame = true
-        FormerDegree = getDegree(e.getX,e.getY)
-        grid.addMouseActionWithFrame(grid.myId, mp.copy(f = grid.frameCount + delayFrame ))
-        grid.addUncheckActionWithFrame(grid.myId, mp, mp.f)
-        serverActor ! mp
+      if(gameState == GameState.play){
+        if(math.abs(getDegree(e.getX,e.getY)-FormerDegree) * 180/math.Pi > 5   &&  mouseInFlame == false){
+          mp = MP(None, (e.getX - gameScene.gameView.realWindow.x / 2).toShort, (e.getY - gameScene.gameView.realWindow.y / 2).toShort, grid.frameCount +advanceFrame, getActionSerialNum)
+        }
       }
     }
   })
@@ -236,16 +243,9 @@ class GameHolder(
   def cleanCtx() = {
     gameScene.topView.cleanCtx()
   }
-
-//  def reLive(id: String) = {
-//    serverActor ! ReLiveAck(id)
-//  }
-
   def gameClose = {
     //停止gameLoop
     timeline.stop()
-    //停止背景音乐
-    ClientMusic.stopMusic()
   }
   stageCtx.setStageListener(new StageContext.StageListener {
     override def onCloseRequest(): Unit = {

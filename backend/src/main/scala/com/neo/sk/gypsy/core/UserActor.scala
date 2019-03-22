@@ -6,17 +6,17 @@ import akka.stream.OverflowStrategy
 import org.slf4j.LoggerFactory
 import akka.stream.scaladsl.Flow
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
-import com.neo.sk.gypsy.core.RoomActor.{ReStart, UserReJoin, UserReLive}
-import com.neo.sk.gypsy.Boot.{esheepClient, roomManager}
 import org.seekloud.byteobject.ByteObject._
 import org.seekloud.byteobject.MiddleBufferInJvm
-import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
-import com.neo.sk.gypsy.gypsyServer.GameServer
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+
 import com.neo.sk.gypsy.shared.ptcl.ApiProtocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import com.neo.sk.gypsy.shared.ptcl.Protocol
+import com.neo.sk.gypsy.ptcl.ReplayProtocol.{GetRecordFrameMsg, GetUserInRecordMsg}
+import com.neo.sk.gypsy.core.RoomActor.{UserReJoin, UserReLive}
+import com.neo.sk.gypsy.Boot.roomManager
 /**
   * @author zhaoyin
   *  2018/10/25  下午10:27
@@ -34,9 +34,9 @@ object UserActor {
 
   case class DispatchMsg(msg:Protocol.WsMsgSource) extends Command
 
-  case class JoinRoom(playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoom(passwordOpt: Option[String],playerInfo: PlayerInfo,roomIdOpt:Option[Long] = None,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
-  case class JoinRoomByCreate(playerInfo: PlayerInfo,userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
+  case class JoinRoomByCreate(playerInfo: PlayerInfo,userActor:ActorRef[UserActor.Command],password: String) extends Command with RoomManager.Command
 
   case class JoinRoom4Watch(playerInfo: PlayerInfo,roomId:Long,watchId:Option[String],userActor:ActorRef[UserActor.Command]) extends Command with RoomManager.Command
 
@@ -46,7 +46,7 @@ object UserActor {
 
   case class JoinRoomSuccess4Watch(roomActor: ActorRef[RoomActor.Command],roomId:Long) extends Command with RoomManager.Command
 
-  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command
+  case class Left(playerInfo: PlayerInfo) extends Command with RoomActor.Command with RoomManager.Command
 
   case class Left4Watch(playerInfo: PlayerInfo) extends Command with RoomActor.Command
 
@@ -55,8 +55,6 @@ object UserActor {
   case class Mouse(clientX:Short,clientY:Short,frame:Int,n:Int) extends Command with RoomActor.Command
 
   case class NetTest(id: String, createTime: Long) extends Command with RoomActor.Command with GamePlayer.Command
-
-//  case class UserReLiveAck(id: String) extends Command with RoomActor.Command
 
   case class UserReLiveMsg(frame: Int) extends Command with RoomActor.Command
 
@@ -77,9 +75,9 @@ object UserActor {
 
   case class TimeOut(msg: String) extends Command
 
-  case class StartGame(roomId:Option[Long]) extends Command
+  case class StartGame(roomId:Option[Long], password: Option[String]) extends Command
 
-  case object CreateRoom extends Command
+  case class CreateRoom(password: String) extends Command
 
   case class StartWatch(roomId:Long, watchId:Option[String]) extends Command
 
@@ -133,12 +131,11 @@ object UserActor {
                    case ReJoinMsg(frame) =>
                      UserReJoinMsg(frame)
 
-                   case Protocol.CreateRoom =>
-                     CreateRoom
+                   case Protocol.CreateRoom(password) =>
+                     CreateRoom(password)
 
-                   case Protocol.JoinRoom(roomIdOp) =>
-                     log.info("JoinRoom!!!!!!")
-                     StartGame(roomIdOp)
+                   case Protocol.JoinRoom(roomIdOp, password) =>
+                     StartGame(roomIdOp, password)
 
                    case _=>
                      UnKnowAction
@@ -222,8 +219,8 @@ object UserActor {
   ):Behavior[Command] =
     Behaviors.receive[Command] {(ctx,msg) =>
       msg match {
-        case StartGame(roomIdOp) =>
-          roomManager ! UserActor.JoinRoom(userInfo,roomIdOp,ctx.self)
+        case StartGame(roomIdOp, passwordOpt) =>
+          roomManager ! UserActor.JoinRoom(passwordOpt,userInfo,roomIdOp,ctx.self)
           Behaviors.same
 
         case StartWatch(roomId,watchId) =>
@@ -235,8 +232,8 @@ object UserActor {
           val gamePlayer = getGameReply(ctx,recordId)
           switchBehavior(ctx,"replay",replay(recordId,userInfo,frontActor,gamePlayer))
 
-        case CreateRoom =>
-          roomManager ! UserActor.JoinRoomByCreate(userInfo,ctx.self)
+        case CreateRoom(password) =>
+          roomManager ! UserActor.JoinRoomByCreate(userInfo,ctx.self, password)
           Behaviors.same
 
         case UserLeft(actor) =>
@@ -245,12 +242,10 @@ object UserActor {
 
         case JoinRoomSuccess(roomId,roomActor)=>
           frontActor ! Protocol.Wrap(Protocol.JoinRoomSuccess(userInfo.playerId,roomId).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-//          frontActor ! Protocol.JoinRoomSuccess(userInfo.playerId,roomId)
           switchBehavior(ctx,"play",play(userInfo,frontActor,roomActor))
 
         case JoinRoomFailure(roomId,errorCode,msg) =>
           frontActor ! Protocol.Wrap(Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg).asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-//          frontActor ! Protocol.JoinRoomFailure(userInfo.playerId,roomId,errorCode,msg)
           Behaviors.same
 
         case JoinRoomSuccess4Watch(roomActor,roomId) =>
@@ -263,14 +258,6 @@ object UserActor {
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
           ctx.unwatch(frontActor)
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
-
-//        case msg:GetUserInRecordMsg=>
-//          getGameReply(ctx,msg.recordId) ! msg
-//          Behaviors.same
-//
-//        case msg:GetRecordFrameMsg=>
-//          getGameReply(ctx,msg.recordId) ! msg
-//          Behaviors.same
 
         case unknowMsg=>
           stashBuffer.stash(unknowMsg)
@@ -302,19 +289,13 @@ object UserActor {
           roomActor ! RoomActor.MouseR(userInfo.playerId,x,y,frame,n)
           Behaviors.same
 
-//        case UserReLiveAck(id) =>
-//          println(s"UserActor got $id relive Ack ")
-//          roomActor ! ReStartAck(id)
-//          Behaviors.same
-
         case UserReLiveMsg(frame) =>
-//          println(s"UserActor got $id relive Msg")
           roomActor ! UserReLive(userInfo.playerId,frame)
           Behaviors.same
 
         case UserReJoinMsg(frame) =>
           println(s"UserActor got ${userInfo.playerId} relive Msg  ")
-          roomActor ! UserReJoin(userInfo.playerId,frame)
+          roomActor ! UserReJoin(userInfo, ctx.self, frame)
           Behaviors.same
 
         case DispatchMsg(m)=>
@@ -323,13 +304,13 @@ object UserActor {
 
         case ChangeBehaviorToInit=>
           frontActor ! Protocol.Wrap(Protocol.RebuildWebSocket.asInstanceOf[Protocol.GameMessage].fillMiddleBuffer(sendBuffer).result())
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           ctx.unwatch(frontActor) //这句是必须的，将不会受到UserLeft消息
           switchBehavior(ctx,"init",init(userInfo),InitTime,TimeOut("init"))
 
         case UserLeft(actor) =>
           ctx.unwatch(actor)
-          roomManager ! RoomManager.LeftRoom(userInfo)
+          roomManager ! Left(userInfo)
           Behaviors.stopped
 
         case e: NetTest=>

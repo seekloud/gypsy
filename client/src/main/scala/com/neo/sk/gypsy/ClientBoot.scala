@@ -12,6 +12,7 @@ import com.neo.sk.gypsy.common.AppSettings._
 import com.neo.sk.gypsy.common.StageContext
 import com.neo.sk.gypsy.holder.LoginHolder
 import com.neo.sk.gypsy.scene.LoginScene
+import com.neo.sk.gypsy.actor.SdkServer
 import concurrent.duration._
 
 /**
@@ -25,10 +26,10 @@ object ClientBoot{
   implicit val executor = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val scheduler: Scheduler = system.scheduler
-  val gameClient= system.spawn(GameClient.create(),"gameHolder")
   implicit val timeout: Timeout = Timeout(20.seconds) // for actor ask
   val tokenActor:ActorRef[TokenActor.Command] = system.spawn(TokenActor.create(),"esheepSyncClient")
-
+  val gameClient= system.spawn(GameClient.create(),"gameHolder")
+  val sdkServer: ActorRef[SdkServer.Command] = system.spawn(SdkServer.create(),"sdkServer")
   /**保证线程安全**/
   def addToPlatform(fun: => Unit) = {
     Platform.runLater(() => fun)

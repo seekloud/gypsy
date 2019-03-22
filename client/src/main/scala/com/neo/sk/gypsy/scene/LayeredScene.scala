@@ -5,111 +5,173 @@ import javafx.scene.{Group, Scene}
 import javafx.scene.canvas.Canvas
 import javafx.scene.text.Font
 import javafx.scene.layout._
-import com.neo.sk.gypsy.holder.GameHolder._
-import com.neo.sk.gypsy.utils.FpsComp
+import com.neo.sk.gypsy.holder.BotHolder._
+import com.neo.sk.gypsy.utils.{BotUtil, FpsComp}
 import com.neo.sk.gypsy.common.Constant._
-
 import com.neo.sk.gypsy.shared.ptcl.Protocol
 import com.neo.sk.gypsy.shared.ptcl.Game._
 import com.neo.sk.gypsy.shared.ptcl.GameConfig._
+import com.neo.sk.gypsy.shared.util.Utils.getZoomRate
+import javafx.scene.input.{KeyCode, MouseEvent}
 
-class LayeredScene {
-  import GameScene._
-  var gameSceneListener: GameSceneListener = _
+object LayeredScene {
+  trait LayeredSceneListener {
+    def onKeyPressed(e: KeyCode): Unit
+    def OnMouseMoved(e: MouseEvent):Unit
+  }
 
+}
+class LayeredScene(
+                    is2Byte:Boolean
+                  ) {
+  import LayeredScene._
+  var layeredSceneListener: LayeredSceneListener = _
 
   /**人类视图**/
   val humanWindow = Point(humanCanvasWidth,humanCanvasHeight)
   val humanCanvas = new Canvas(humanCanvasWidth,humanCanvasHeight)
   val humanCtx = humanCanvas.getGraphicsContext2D
-  val humanView = new GameCanvas(humanCanvas,humanCtx,humanWindow)
+  val humanView = new LayeredCanvas(humanCanvas,humanCtx,humanWindow,is2Byte)
 
-    val actionSerialNumGenerator = new AtomicInteger(0)
+  val actionSerialNumGenerator = new AtomicInteger(0)
 
-  /**分层视图**/
+  /**分层视图：8个, 状态显示log: 1个**/
   val layerWindow = Point(layeredCanvasWidth,layeredCanvasHeight)
   val locationCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //01视野在地图中的位置
   val locationCanvasCtx = locationCanvas.getGraphicsContext2D
-  val locationView = new GameCanvas(locationCanvas,locationCanvasCtx,layerWindow)
+  val locationView = new LayeredCanvas(locationCanvas,locationCanvasCtx,layerWindow,is2Byte)
   val nonInteractCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //02视野中不可交互的元素（背景）
   val nonInteractCanvasCtx = nonInteractCanvas.getGraphicsContext2D
-  val nonInteractView = new GameCanvas(nonInteractCanvas,nonInteractCanvasCtx,layerWindow)
+  val nonInteractView = new LayeredCanvas(nonInteractCanvas,nonInteractCanvasCtx,layerWindow,is2Byte)
   val interactCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)//03视野内可交互的元素
   val interactCanvasCtx = interactCanvas.getGraphicsContext2D
-  val interactView = new GameCanvas(interactCanvas,interactCanvasCtx,layerWindow)
-  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内包括自己的所有玩家
+  val interactView = new LayeredCanvas(interactCanvas,interactCanvasCtx,layerWindow,is2Byte)
+  val kernelCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //04视野内的玩家实体
+  val kernelCanvasCtx = kernelCanvas.getGraphicsContext2D
+  val kernelView = new LayeredCanvas(kernelCanvas,kernelCanvasCtx,layerWindow,is2Byte)
+  val allPlayerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //05视野内包括自己的所有玩家
   val allPlayerCanvasCtx = allPlayerCanvas.getGraphicsContext2D
-  val allPlayerView = new GameCanvas(allPlayerCanvas,allPlayerCanvasCtx,layerWindow)
-  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //05玩家自己
+  val allPlayerView = new LayeredCanvas(allPlayerCanvas,allPlayerCanvasCtx,layerWindow,is2Byte)
+  val playerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)    //06玩家自己
   val playerCanvasCtx = playerCanvas.getGraphicsContext2D
-  val playerView = new GameCanvas(playerCanvas,playerCanvasCtx,layerWindow)
-  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //06面板状态信息
+  val playerView = new LayeredCanvas(playerCanvas,playerCanvasCtx,layerWindow,is2Byte)
+  val pointerCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight)  //07鼠标指针位置
+  val pointerCanvasCtx = pointerCanvas.getGraphicsContext2D
+  val pointerView = new LayeredCanvas(pointerCanvas,pointerCanvasCtx,layerWindow,is2Byte)
+  val informCanvas = new Canvas(layeredCanvasWidth,layeredCanvasHeight) //08当前用户状态视图
   val informCanvasCtx = informCanvas.getGraphicsContext2D
-  val informView = new GameCanvas(informCanvas,interactCanvasCtx,layerWindow)
+  val informView = new LayeredCanvas(informCanvas,informCanvasCtx,layerWindow,is2Byte)
+
+  val actionLogWindow = Point(actionLogCanvasWidth,actionLogCanvasHeight)
+  val actionLogCanvas = new Canvas(actionLogCanvasWidth,actionLogCanvasHeight) //09状态log
+  val actionLogCanvasCtx = actionLogCanvas.getGraphicsContext2D
+  val actionLogView = new ActionLogCanvas(actionLogCanvas,actionLogCanvasCtx,actionLogWindow)
+
 
   /**javafx的布局**/
-//  val flow = new FlowPane()
-//  flow.setPrefWrapLength(800) // 预设FlowPane的宽度，使其能够显示两列
-
-  //设置行列之间的间隙大小
-//  flow.setVgap(5)
-//  flow.setHgap(5)
-//  flow.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,allPlayerCanvas,playerCanvas,informCanvas)
-
-  //  val group = new Group()
-//  group.getChildren.addAll(humanCanvas)
-//  val border = new BorderPane()
-//  border.setCenter(group)
-//  border.setRight(flow)
-//  val scene = new Scene(border)
 
   val group = new Group()
-//  val scene = new Scene(group,2000,800)
   val scene = new Scene(group)
   humanCanvas.setLayoutX(0)
-  humanCanvas.setLayoutY(100)
+  humanCanvas.setLayoutY(0)
   group.getChildren.add(humanCanvas)
 
-  //设置分层的布局
-  locationCanvas
-  nonInteractCanvas
-  interactCanvas
-  allPlayerCanvas
-  playerCanvas
-  informCanvas
 
-  val canvasSpace = 5
+  val canvasSpace = 3
 
-//  locationCanvas.setLayoutX(805)
-//  locationCanvas.setLayoutY(0)
-//  nonInteractCanvas.setLayoutX(1210)
-//  nonInteractCanvas.setLayoutY(0)
-//  interactCanvas.setLayoutX(805)
-//  interactCanvas.setLayoutY(205)
-//  allPlayerCanvas.setLayoutX(1210)
-//  allPlayerCanvas.setLayoutY(205)
-//  playerCanvas.setLayoutX(805)
-//  playerCanvas.setLayoutY(410)
-//  informCanvas.setLayoutX(1210)
-//  informCanvas.setLayoutY(410)
-
-
-  locationCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
+  //设置分层视图
+  locationCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace) //01视野在整个地图中的位置
   locationCanvas.setLayoutY(0)
-  nonInteractCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
+
+  nonInteractCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //02视野内的不可变元素
   nonInteractCanvas.setLayoutY(0)
-  interactCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
-  interactCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  allPlayerCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
-  allPlayerCanvas.setLayoutY(layeredCanvasHeight+canvasSpace)
-  playerCanvas.setLayoutX(humanCanvasWidth+canvasSpace)
-  playerCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
-  informCanvas.setLayoutX(humanCanvasWidth+layeredCanvasWidth+2*canvasSpace)
-  informCanvas.setLayoutY(layeredCanvasHeight*2+canvasSpace*2)
+
+  interactCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)  //03视野内的可变元素
+  interactCanvas.setLayoutY(canvasSpace + layeredCanvasHeight)
+
+  kernelCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //04视野内的玩家实体
+  kernelCanvas.setLayoutY(canvasSpace + layeredCanvasHeight)
+
+  allPlayerCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)  //05视野内的所有权视图
+  allPlayerCanvas.setLayoutY(2 * canvasSpace + 2 * layeredCanvasHeight)
+
+  playerCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth) //06视野内的当前玩家资产视图
+  playerCanvas.setLayoutY(2 * canvasSpace + 2 * layeredCanvasHeight)
+
+  pointerCanvas.setLayoutX(humanCanvasWidth + 2 * canvasSpace)//07鼠标指针位置
+  pointerCanvas.setLayoutY(3 * canvasSpace + 3 * layeredCanvasHeight)
+
+  informCanvas.setLayoutX(humanCanvasWidth + 3 * canvasSpace + layeredCanvasWidth)   //08当前用户状态视图
+  informCanvas.setLayoutY(3 * canvasSpace + 3 * layeredCanvasHeight)
+
+  actionLogCanvas.setLayoutX(0)   //09 actionLog
+  actionLogCanvas.setLayoutY(humanCanvasHeight + 1 * canvasSpace)
 
 
-  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,
-    allPlayerCanvas,playerCanvas,informCanvas)
+  group.getChildren.addAll(locationCanvas,nonInteractCanvas,interactCanvas,kernelCanvas,
+    allPlayerCanvas,playerCanvas,pointerCanvas,informCanvas,actionLogCanvas)
+
+  def drawLayered() = {
+    var zoom = (30.0, 30.0)
+    var humanReturn = (new Array[Byte](0),1.toDouble)
+    var localByte = new Array[Byte](0)
+    var noninteractByte = new Array[Byte](0)
+    var interactByte = new Array[Byte](0)
+    var kernelByte = new Array[Byte](0)
+    var allplayerByte = new Array[Byte](0)
+    var playerByte = new Array[Byte](0)
+    var pointerByte = new Array[Byte](0)
+    var infoByte = new Array[Byte](0)
+    //TODO 这里其他数据设置为空
+    gameState match {
+      case GameState.play if grid.myId != ""=>
+
+        actionLogView.addFrameCountActionLog(grid.actionMap.get(grid.frameCount).flatMap(t => t.get(grid.myId)))
+        actionLogView.addFrameCountActionLog(grid.mouseActionMap.get(grid.frameCount).flatMap(t => t.get(grid.myId)))
+        actionLogView.drawLog()
+
+        //screenScale为0.75，即从(800,400)->(1200,600)
+        val data = grid.getGridData(grid.myId,humanCanvasWidth,humanCanvasHeight,0.75)
+        data.playerDetails.find(_.id == grid.myId) match {
+          case Some(p) =>
+            firstCome=false
+            //TODO zoom是否正确
+            zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
+            val basePoint = (p.x.toDouble, p.y.toDouble)
+            humanReturn = humanView.drawPlayState(data,basePoint,zoom)
+            localByte = locationView.drawLocation(basePoint)
+            noninteractByte = nonInteractView.drawNonInteract(basePoint,humanReturn._2)
+            interactByte = interactView.drawInteract(data,basePoint,humanReturn._2)
+            kernelByte = kernelView.drawKernel(data,basePoint,humanReturn._2)
+            allplayerByte = allPlayerView.drawAllPlayer(data,basePoint,humanReturn._2)
+            playerByte = playerView.drawPlayer(data,basePoint,humanReturn._2)
+            pointerByte = pointerView.drawPointer(grid.mouseActionMap,basePoint,humanReturn._2)
+            infoByte = informView.drawInform(Some(data))
+          //TODO 显示击杀弹幕
+          case None =>
+            humanView.drawGameWait(firstCome)
+        }
+      case GameState.dead if deadInfo.isDefined =>
+        humanReturn = (humanView.drawDeadState(deadInfo.get),1.toDouble)
+        infoByte = informView.drawInform(None)
+
+      case GameState.victory if victoryInfo.isDefined=>
+        humanReturn = (humanView.drawVictory(victoryInfo.get),1.toDouble)
+
+      case GameState.allopatry =>
+        humanReturn = (humanView.drawFinishState("存在异地登录"),1.toDouble)
+
+      case GameState.passwordError =>
+        humanReturn = (humanView.drawFinishState("房间密码错误"),1.toDouble)
+
+      case _ =>
+        (BotUtil.emptyArray,1.toDouble)
+    }
+
+
+    (localByte,noninteractByte,interactByte,kernelByte,allplayerByte,playerByte,pointerByte,infoByte,humanReturn._1)
+  }
+
 
   def resetScreen(viewWidth: Int,viewHeight: Int): Unit = {
     //TODO
@@ -121,73 +183,18 @@ class LayeredScene {
     locationView.resetScreen(viewWidth/4,viewHeight/3)
     nonInteractView.resetScreen(viewWidth/4,viewHeight/3)
     interactView.resetScreen(viewWidth/4,viewHeight/3)
+    kernelView.resetScreen(viewWidth/4,viewHeight/3)
     allPlayerView.resetScreen(viewWidth/4,viewHeight/3)
     playerView.resetScreen(viewWidth/4,viewHeight/3)
+    pointerView.resetScreen(viewWidth/4,viewHeight/3)
     informView.resetScreen(viewWidth/4,viewHeight/3)
   }
 
-/*  def draw(myId:String,offsetTime:Long)={
-    var zoom = (30.0, 30.0)
-    val data = grid.getGridData(myId,1200,600)
-    data.playerDetails.find(_.id == myId) match {
-      case Some(p) =>
-        firstCome=false
-        var sumX = 0.0
-        var sumY = 0.0
-        var xMax = 0.0
-        var xMin = 10000.0
-        var yMin = 10000.0
-        var yMax = 0.0
-        //zoom = (p.cells.map(a => a.x+a.radius).max - p.cells.map(a => a.x-a.radius).min, p.cells.map(a => a.y+a.radius).max - p.cells.map(a => a.y-a.radius).min)
-        p.cells.foreach { cell =>
-          val offx = cell.speedX * offsetTime.toDouble / frameRate
-          val offy = cell.speedY * offsetTime.toDouble / frameRate
-          val newX = if ((cell.x + offx) > bounds.x-15) bounds.x-15 else if ((cell.x + offx) <= 15) 15 else cell.x + offx
-          val newY = if ((cell.y + offy) > bounds.y-15) bounds.y-15 else if ((cell.y + offy) <= 15) 15 else cell.y + offy
-          if (newX>xMax) xMax=newX
-          if (newX<xMin) xMin=newX
-          if (newY>yMax) yMax=newY
-          if (newY<yMin) yMin=newY
-          zoom=(xMax-xMin+2*cell.radius,yMax-yMin+2*cell.radius)
-          sumX += newX
-          sumY += newY
-        }
-        val offx = sumX /p.cells.length
-        val offy = sumY /p.cells.length
-        val basePoint = (offx, offy)
-//        val foods=grid.food
-        gameView.drawGrid(myId,data,offsetTime,basePoint,zoom,grid)
-        topView.drawRankMapData(myId,grid.currentRank,data.playerDetails,basePoint,data.playersPosition)
-        gameCanvasCtx.save()
-        gameCanvasCtx.setFont(Font.font(" Helvetica",24))
-        gameCanvasCtx.fillText(s"KILL: ${p.kill}", 250, 10)
-        gameCanvasCtx.fillText(s"SCORE: ${p.cells.map(_.mass).sum.toInt}", 400, 10)
-        gameCanvasCtx.restore()
-        //TODO 绘制fps值
-        //       renderFps(topCanvas,NetDelay.latency)
-        //todo 解决返回值问题
-        val paraBack = gameView.drawKill(myId,grid,isDead,killList)
-        killList=paraBack._1
-        isDead=paraBack._2
-      case None =>
-        gameView.drawGameWait(firstCome)
-    }
-    FpsComp.renderFps(gameCanvasCtx, 550, 10)
-  }*/
+  humanCanvas.requestFocus()
+  humanCanvas.setOnKeyPressed(event => layeredSceneListener.onKeyPressed(event.getCode))
+  humanCanvas.setOnMouseMoved(event => layeredSceneListener.OnMouseMoved(event))
 
-/*  def drawWhenDead(msg:Protocol.UserDeadMessage) = {
-    topView.drawWhenDead(msg)
-  }
-  def drawWhenFinish(msg:String) = {
-    topView.drawWhenFinish(msg)
-  }
-
-  topCanvas.requestFocus()
-  topCanvas.setOnKeyPressed(event => gameSceneListener.onKeyPressed(event.getCode))
-  topCanvas.setOnMouseMoved(event => gameSceneListener.OnMouseMoved(event))*/
-
-
-  def setGameSceneListener(listener: GameSceneListener) {
-    gameSceneListener = listener
+  def setLayeredSceneListener(listener: LayeredSceneListener) {
+    layeredSceneListener = listener
   }
 }

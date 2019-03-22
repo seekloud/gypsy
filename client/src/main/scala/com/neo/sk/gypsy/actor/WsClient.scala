@@ -19,7 +19,6 @@ import com.neo.sk.gypsy.scene.{GameScene, LayeredScene}
 import org.seekloud.byteobject.MiddleBufferInJvm
 import org.seekloud.byteobject.ByteObject._
 import com.neo.sk.gypsy.common.AppSettings
-
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.neo.sk.gypsy.shared.ptcl.Protocol._
 import org.slf4j.LoggerFactory
@@ -83,8 +82,7 @@ object WsClient {
           val connected = response.flatMap { upgrade =>
             if(upgrade.response.status == StatusCodes.SwitchingProtocols){
               val gameScene = new GameScene
-              val layeredScene = new LayeredScene
-              val gameHolder = new GameHolder(stageCtx,gameScene,layeredScene,stream)
+              val gameHolder = new GameHolder(stageCtx,gameScene,stream)
               gameHolder.connectToGameServer()
               Future.successful(s"$logPrefix connect success. EstablishConnectionEs!")
             } else {

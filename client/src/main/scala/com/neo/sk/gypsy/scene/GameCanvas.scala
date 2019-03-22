@@ -8,8 +8,8 @@ import javafx.scene.paint.Color
 import javafx.scene.text.{Font, Text, TextAlignment}
 import com.neo.sk.gypsy.ClientBoot
 import com.neo.sk.gypsy.common.AppSettings
-import com.neo.sk.gypsy.model.GridOnClient
-import com.neo.sk.gypsy.shared.util.utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
+import com.neo.sk.gypsy.model.GameClient
+import com.neo.sk.gypsy.shared.util.Utils.{getZoomRate, normalization, MTime2HMS, Mass2Radius }
 import com.neo.sk.gypsy.common.Constant._
 import com.neo.sk.gypsy.utils.BotUtil
 
@@ -172,10 +172,7 @@ class GameCanvas(canvas: Canvas,
     //绘制当前排行
     ctx.clearRect(0,0,realWindow.x,realWindow.y)
     ctx.setFill(Color.web(MyColors.rankList))
-    ctx.fillRect(realWindow.x-200,20,150,230)
-
-
-    println(s"realWindow排行榜背景${realWindow}")
+    ctx.fillRect(realWindow.x-200,20,170,230)
     //绘制小地图
     ctx.setFont(Font.font("Helvetica",12))
     ctx.setFill(Color.web(MyColors.rankList))
@@ -201,8 +198,9 @@ class GameCanvas(canvas: Canvas,
     }
   }
 
-  def drawKill(myId:String,grid:GridOnClient,isKill:Boolean,killList:List[(Int,String,String)])={
-    if(isKill){
+  def drawKill(myId:String, grid:GameClient, isKill:Boolean, killList:List[(Int,String,String)])={
+    //fixme killList
+    if(isKill && killList.length!=0){
       val showTime = killList.head._1
       val killerName = killList.head._2
       val deadName = killList.head._3
@@ -225,12 +223,15 @@ class GameCanvas(canvas: Canvas,
 //        ctx.setStroke(Color.web("#f32705"))
 //        ctx.strokeText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
         ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(killerName, realWindow.x*0.5 - allWidth, realWindow.y*0.15)
-        ctx.drawImage(youkill,realWindow.x * 0.5 -allWidth + killNameLength + 50,realWindow.y*0.15,32,32)
+        ctx.setTextAlign(TextAlignment.RIGHT)
+        ctx.fillText(killerName, realWindow.x*0.5 - 50, realWindow.y*0.15)
+        ctx.setTextAlign(TextAlignment.CENTER)
+        ctx.drawImage(youkill,realWindow.x * 0.5 - 16,realWindow.y*0.15,32,32)
 //        ctx.setStroke(Color.web("#f32705"))
 //        ctx.strokeText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
 //        ctx.setFill(Color.web("#f27c02"))
-        ctx.fillText(deadName, realWindow.x * 0.5 -allWidth + killNameLength + 32 + 50, realWindow.y*0.15)
+        ctx.setTextAlign(TextAlignment.LEFT)
+        ctx.fillText(deadName, realWindow.x * 0.5 + 50, realWindow.y*0.15)
 //        ctx.strokeRect(12,375,50+killNameLength+deadNameLength+5+25+32,75)
         ctx.restore()
         val killList1 = if (showTime > 1) (showTime - 1, killerName, deadName) :: killList.tail else killList.tail
@@ -245,7 +246,7 @@ class GameCanvas(canvas: Canvas,
 
 
 //  def drawGrid(uid: String, data: GridDataSync,foodMap:Map[Point,Int],offsetTime:Long,firstCome:Boolean,basePoint:(Double,Double),zoom:(Double,Double),gird: GridOnClient)= {
-  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GridOnClient)= {
+  def drawGrid(uid: String, data: GridDataSync,offsetTime:Long,basePoint:(Double,Double),zoom:(Double,Double),grid: GameClient)= {
     //offScreenCanvas:Canvas
     val players = data.playerDetails
     val foods =  grid.food.map(f=>Food(f._2,f._1.x,f._1.y)).toList
@@ -298,7 +299,7 @@ class GameCanvas(canvas: Canvas,
         case 6  => ctx.setFill(Color.web("#cfe6ff"))
         case _  => ctx.setFill(Color.web("#de9dd6"))
       }
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
+      a._2.foreach{case Mass(id,x,y,tx,ty,color,speed) =>
         val deg = Math.atan2(ty, tx)
         val deltaY = speed * Math.sin(deg)
         val deltaX = speed * Math.cos(deg)
@@ -307,11 +308,11 @@ class GameCanvas(canvas: Canvas,
 
         val cellx = x +xPlus*offsetTime.toFloat /frameRate
         val celly = y  +yPlus*offsetTime.toFloat / frameRate
-        val xfix  = if(cellx>bounds.x) bounds.x else if(cellx<0) 0 else cellx
-        val yfix = if(celly>bounds.y) bounds.y else if(celly<0) 0 else celly
-        //centerScale(scale,window.x/2,window.y/2)
+        val borderCalc = Mass2Radius(shotMass) + 5
+        val xfix  = if(cellx> bounds.x  - borderCalc) bounds.x  - borderCalc else if(cellx < borderCalc) borderCalc else cellx
+        val yfix = if(celly> bounds.y  - borderCalc) bounds.y  - borderCalc else if(celly < borderCalc)  borderCalc else celly
         ctx.beginPath()
-        ctx.arc( xfix+offx ,yfix+offy ,r,r,0,360)
+        ctx.arc( xfix+offx ,yfix+offy ,Mass2Radius(shotMass),Mass2Radius(shotMass),0,360)
         ctx.fill()
       }
     }
@@ -464,16 +465,17 @@ class GameCanvas(canvas: Canvas,
       imgOpt.foreach{ img =>
         ctx.drawImage(img, realWindow.x-200, index * textLineHeight+24, 13, 13)
       }
+      ctx.save()
       if(score.id == uid){
-        ctx.save()
         ctx.setFont(Font.font("Helvetica",12))
         ctx.setFill(Color.web("#FFFF33"))
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
-        ctx.restore()
+        drawTextLine(if(score.n.length < 5) s"【$index】: ${score.n.+("   ").take(4)}" else s"【$index】: ${score.n.take(4) + "..."}", realWindow.x-193, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", realWindow.x - 90, if(index>GameConfig.rankShowNum)GameConfig.rankShowNum+1 else index, currentRankBaseLine)
       }else{
-        drawTextLine(s"【${index}】: ${score.n.+("   ").take(4)} 得分:${score.score.toInt}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(if(score.n.length < 5) s"【$index】: ${score.n.+("   ").take(4)}" else s"【$index】: ${score.n.take(4) + "..."}", realWindow.x-193, index , currentRankBaseLine)
+        drawTextLine(s"得分:${score.score.toInt}", realWindow.x - 90, index, currentRankBaseLine)
       }
-
+      ctx.restore()
     }
 
     //绘制小地图
@@ -540,7 +542,7 @@ class GameCanvas(canvas: Canvas,
     ctx.setFont(Font.font("Comic Sans MS",Width *0.03))
     //    val BaseHeight = Height*0.3
     val BaseHeight = Height*0.15
-    var DrawLeft = Width*0.35
+    var DrawLeft = Width*0.30
     var DrawHeight = BaseHeight + Height * 0.1
 
     val congratulation =if(isVictory){
@@ -548,18 +550,19 @@ class GameCanvas(canvas: Canvas,
     }else{
       "Good Game!  Congratulations to: "
     }
-    val text = new Text(congratulation)
-    ctx.fillText(congratulation, Width * 0.5 - text.getLayoutBounds.getWidth.toInt/2, BaseHeight)
-
+//    val text = new Text(congratulation)
     ctx.save()
+    ctx.setTextAlign(TextAlignment.CENTER)
+    ctx.fillText(congratulation, Width * 0.5, BaseHeight)
+
     ctx.setFill(Color.YELLOW)
     val winner = s"${msg.name}"
-    val winnerText = new Text(winner)
-    ctx.fillText(winner, Width * 0.5 - winnerText.getLayoutBounds.getWidth/2, BaseHeight+Height *0.1 )
-    ctx.restore()
+//    val winnerText = new Text(winner)
+    ctx.fillText(winner, Width * 0.5, BaseHeight+Height *0.1 )
     DrawHeight = BaseHeight + Height * 0.15
     ctx.setFont(Font.font("Comic Sans MS",Width *0.02))
 
+    ctx.setTextAlign(TextAlignment.LEFT)
     val Time = MTime2HMS (msg.totalFrame * GameConfig.frameRate)
     ctx.fillText(s"The   Winner  Score  :", DrawLeft, DrawHeight + Height*0.07)
     ctx.fillText(s"Your  Final   Score  :", DrawLeft, DrawHeight + Height*0.07*2)
@@ -567,14 +570,15 @@ class GameCanvas(canvas: Canvas,
     //    ctx.fillText(s"Your  Kill   Num  :", DrawLeft, DrawHeight + Height*0.07*3)
     ctx.setFill(Color.WHITE)
     val winnerScore = new Text("The   Winner  Score  :")
-    DrawLeft = winnerScore.getLayoutBounds.getWidth +  Width*0.35 + 60
+    DrawLeft = DrawLeft + 350
     ctx.fillText(s"${msg.score}", DrawLeft,DrawHeight + Height*0.07)
     ctx.fillText(s"${VictoryMsg._2}", DrawLeft,DrawHeight + Height*0.07*2)
     ctx.fillText(s"${Time}", DrawLeft,DrawHeight + Height*0.07*3)
 
     val reStart = s"Press Space to Start a New Game ୧(●⊙(工)⊙●)୨ "
-    val reStartText = new Text(reStart)
-    ctx.fillText(reStart, Width * 0.5 - reStartText.getLayoutBounds.getWidth / 2,DrawHeight + Height*0.07*5)
+//    val reStartText = new Text(reStart)
+    ctx.fillText(reStart, Width * 0.5, DrawHeight + Height*0.07*5)
+    ctx.restore()
 
   }
 
@@ -632,227 +636,5 @@ class GameCanvas(canvas: Canvas,
     }
 
   }
-
-//  def MTime2HMS(time:Long)={
-//    var ts = (time/1000)
-//    //    println(s"一共有 $ts 秒！")
-//    var result = ""
-//    if(ts/3600>0){
-//      result += s"${ts/3600}小时"
-//    }
-//    ts = ts % 3600
-//    //    println(s"第一次 $ts 秒！")
-//    if(ts/60>0){
-//      result += s"${ts/60}分"
-//    }
-//    ts = ts % 60
-//    //    println(s"第二次 $ts 秒！")
-//    result += s"${ts}秒"
-//    result
-//  }
-  /*********************分层视图400*200****************************/
-
-  /*******************1.视野在整个地图中的位置***********************/
-  def drawLocation(uid:String,data:Protocol.GridDataSync,is2Byte:Boolean)={
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
-    data.playerDetails.foreach{player=>
-      if(player.id == uid){
-        ctx.setFill(Color.GRAY)
-        ctx.fillRect((player.x-600)/12,(player.y - 300)/8,100,75)
-      }
-    }
-    if(is2Byte){
-      BotUtil.canvas2byteArray(canvas)
-    }else{
-      BotUtil.emptyArray
-    }
-  }
-  /********************2.视野内不可交互的元素（地图背景元素）*********************/
-  def drawNonInteract(is2Byte:Boolean) = {
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
-    if(is2Byte){
-      BotUtil.canvas2byteArray(canvas)
-    }else{
-      BotUtil.emptyArray
-    }
-
-  }
-  /********************3.视野内可交互的元素（food，mass，virus）****************/
-  def drawInteract(uid:String,offx:Double,offy:Double,scale:Double,food:List[Food],virus:List[Virus],mass:List[Mass])={
-    centerScale(scale,layeredCanvasWidth/2,layeredCanvasHeight/2)
-    food.groupBy(_.color).foreach{a=>
-      val foodColor = a._1 match{
-        case 0 => "#f3456d"
-        case 1 => "#f49930"
-        case 2 => "#f4d95b"
-        case 3 => "#4cd964"
-        case 4 => "#9fe0f6"
-        case 5 => "#bead92"
-        case 6 => "#cfe6ff"
-        case _ => "#de9dd6"
-      }
-      ctx.setFill(Color.web(foodColor))
-      a._2.foreach{ case Food(color, x, y)=>
-        //        ctx.beginPath()
-        //        ctx.arc(x + offx,y + offy,10,10,0,360)
-        //        ctx.fill()
-        ctx.fillRect(x + offx,y + offy,16,16)
-      }
-    }
-
-    mass.groupBy(_.color).foreach{ a=>
-      a._1 match{
-        case 0 => ctx.setFill(Color.web("#f3456d"))
-        case 1 => ctx.setFill(Color.web("#f49930"))
-        case 2  => ctx.setFill(Color.web("#f4d95b"))
-        case 3  => ctx.setFill(Color.web("#4cd964"))
-        case 4  => ctx.setFill(Color.web("#9fe0f6"))
-        case 5  => ctx.setFill(Color.web("#bead92"))
-        case 6  => ctx.setFill(Color.web("#cfe6ff"))
-        case _  => ctx.setFill(Color.web("#de9dd6"))
-      }
-      a._2.foreach{case Mass(x,y,tx,ty,color,mass,r,speed) =>
-
-        ctx.beginPath()
-        ctx.arc( x+offx ,y+offy ,r,r,0,360)
-        ctx.fill()
-      }
-    }
-
-    virus.foreach { case Virus(vid,x,y,mass,radius,tx,ty,speed) =>
-      ctx.drawImage(img,x-radius+offx,y-radius+offy,radius*2,radius*2)
-    }
-
-
-  }
-  /********************4.视野内包括自己的所有玩家******************************/
-  def drawAllPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
-      val circleColor = color.toInt % 7 match{
-        //纯色星球
-                case 0 => "#b30e35"
-                case 1 => "#a65d0a"
-                case 2  => "#917600"
-                case 3  => "#05851b"
-                case 4  => "#037da6"
-                case 5  => "#875a16"
-                case 6  => "#4174ab"
-                case _  => "#8f3284"
-
-      }
-      ctx.setFill(Color.web(circleColor))
-      cells.sortBy(_.id).foreach{ cell=>
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc( x+offx ,y+offy ,cell.radius,cell.radius,0,360)
-        ctx.fill()
-
-        if(protect){
-          ctx.setFill(Color.web(MyColors.halo))
-          ctx.beginPath()
-          ctx.arc(x+offx,y+offy,cell.radius+15,cell.radius+15,0,360)
-          ctx.fill()
-        }
-        var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-        nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-        ctx.setFont(Font.font("Helvetica",nameFont))
-        val txt3=new Text(name)
-        val nameWidth = txt3.getLayoutBounds.getWidth
-        ctx.setStroke(Color.web("grey"))
-        ctx.strokeText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
-        ctx.setFill(Color.web(MyColors.background))
-        ctx.fillText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
-        ctx.restore()
-      }
-    }
-  }
-  /*********************5.视野内的自己***************************************/
-  def drawPlayer(uid:String,offx:Double,offy:Double,scale:Double,player:List[Player]) = {
-    player.sortBy(_.cells.map(_.mass).sum).foreach { case Player(id, name,color,x,y,tx,ty,kill,protect,_,width,height,cells,startTime) =>
-      if(id == uid){
-        val circleColor = color.toInt % 7 match{
-          //纯色星球
-          case 0 => "#b30e35"
-          case 1 => "#a65d0a"
-          case 2  => "#917600"
-          case 3  => "#05851b"
-          case 4  => "#037da6"
-          case 5  => "#875a16"
-          case 6  => "#4174ab"
-          case _  => "#8f3284"
-
-        }
-        ctx.setFill(Color.web(circleColor))
-        cells.sortBy(_.id).foreach{ cell=>
-          ctx.save()
-          ctx.beginPath()
-          ctx.arc( x+offx ,y+offy ,cell.radius,cell.radius,0,360)
-          ctx.fill()
-
-          if(protect){
-            ctx.setFill(Color.web(MyColors.halo))
-            ctx.beginPath()
-            ctx.arc(x+offx,y+offy,cell.radius+15,cell.radius+15,0,360)
-            ctx.fill()
-          }
-          var nameFont: Double = cell.radius * 2 / sqrt(4 + pow(name.length, 2))
-          nameFont = if (nameFont < 15) 15 else if (nameFont / 2 > cell.radius) cell.radius else nameFont
-          ctx.setFont(Font.font("Helvetica",nameFont))
-          val txt3=new Text(name)
-          val nameWidth = txt3.getLayoutBounds.getWidth
-          ctx.setStroke(Color.web("grey"))
-          ctx.strokeText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
-          ctx.setFill(Color.web(MyColors.background))
-          ctx.fillText(s"$name", x + offx - (nameWidth*nameFont/12.0) / 2, y + offy - (nameFont.toInt / 2 + 2))
-          ctx.restore()
-        }
-      }
-    }
-  }
-  /*********************6.面板状态信息图层************************************/
-  def drawInform(id: String, grid: GridOnClient) = {
-    ctx.setFill(Color.BLACK)
-    ctx.fillRect(0, 0, layeredCanvasWidth, layeredCanvasHeight)
-    //自己放第一个
-    val maxScore = grid.playerMap.map(player =>
-        player._2.cells.map(_.newmass).sum
-    ).toList.max
-    val maxKill = grid.playerMap.map(player =>
-      player._2.kill
-    ).toList.max
-    val myScore = grid.playerMap.filter(_._1 == id)(id).cells.map(_.newmass).sum
-    val myKill = grid.playerMap.filter(_._1 == id)(id).kill
-
-    def drawScoreKill(score: Double,kill: Int, index:Int) = {
-      //score
-      ctx.setFill(ColorsSetting.scoreColor)
-      ctx.fillRect(index * 35, layeredCanvasHeight - (280 * score / maxScore).toInt, informWidth,
-        (280 * score / maxScore).toInt)
-      //kill
-      ctx.setFill(ColorsSetting.killColor)
-      ctx.fillRect(index * 35 + informWidth, layeredCanvasHeight - 280 * kill / maxKill, informWidth, 280 * kill / maxKill)
-    }
-    drawScoreKill(myScore,myKill,0)
-    val sortedPlayerLists = grid.playerMap.filterNot(_._1 == id).values.toList.sortBy(_.cells.map(_.newmass).sum)
-    if(sortedPlayerLists.length <= 10){
-      for(i<-0 until sortedPlayerLists.length){
-        val player = sortedPlayerLists(i)
-        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
-      }
-    } else {
-      //选前十个
-      val sortedPlayerListsT = sortedPlayerLists.take(10)
-      for(i<-0 until sortedPlayerListsT.length){
-        val player = sortedPlayerListsT(i)
-        drawScoreKill(player.cells.map(_.newmass).sum, player.kill, i+1)
-      }
-    }
-
-
-  }
-
-  /********************* 人类视图：800*400 ***********************************/
 
 }

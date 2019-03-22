@@ -19,7 +19,10 @@ object AppSettings {
   val esheepHost = appConfig.getString("esheep.host")
   val esheepDomain = appConfig.getString("esheep.domain")
   val gameId = appConfig.getLong("esheep.gameId")
+
   val isView = appConfig.getBoolean("isView")
+  var isLayer = appConfig.getBoolean("isLayer")
+
   val botInfo = if(!isView) {
     (appConfig.getString("botInfo.botId"), appConfig.getString("botInfo.botKey"))
   } else("","")
@@ -29,5 +32,8 @@ object AppSettings {
   val gameDomain = appConfig.getString("server.domain")
   val botSecure =  appConfig.getString("botSecure.apiToken")
   val isBot = appConfig.getBoolean("isBot")
-
+  val botServerPort = appConfig.getInt("botServerPort")
+  val framePeriod = appConfig.getInt("framePeriod")
+  val isGray = appConfig.getBoolean("isGray")
+  val botTest = appConfig.getBoolean("botTest")
 }
